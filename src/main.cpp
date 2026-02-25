@@ -237,8 +237,6 @@ int main() {
 
     // 深度テストをONにして奥行きに応じて描画できるようにする（描画順ではなく、手前にあるものが上書きされて描画される）
     glEnable(GL_DEPTH_TEST);
-
-    // glm::vec3 lastForward(0.0f, 0.0f, -1.0f);
 		
 	// ゲームループ
     while (!glfwWindowShouldClose(window)) {
@@ -251,15 +249,6 @@ int main() {
             right = glm::normalize(glm::cross(up, glm::vec3(1.0f, 0.0f, 0.0f)));
         // rightとupの外積がforwardになる
         glm::vec3 forward = glm::normalize(glm::cross(right, up));
-
-        // const float poleThreshold = planetRadius * 0.995f;  // 極に近いとみなすしきい値
-        // if (std::abs(characterPos.z) > poleThreshold) {
-        //     // lastForward を接平面に投影して正規化（接線方向にする）
-        //     glm::vec3 tangentForward = lastForward - glm::dot(lastForward, up) * up;
-        //     float len = glm::length(tangentForward);
-        //     if (len > 0.01f)
-        //         forward = glm::normalize(tangentForward);
-        // }
 
         // キー入力に応じてキャラクターの位置を変化させる
         if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
@@ -276,11 +265,6 @@ int main() {
         }
         // 中心からキャラクターまでのベクトルの長さを常に半径にして惑星にくっつける
         characterPos = glm::normalize(characterPos) * planetRadius;
-
-        // if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ||
-        //     glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        //     lastForward = forward;
-        // }
 
         glm::mat4 model = glm::translate(glm::mat4(1.0f), characterPos);
 
