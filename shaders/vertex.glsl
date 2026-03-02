@@ -1,14 +1,25 @@
 #version 330 core
+// 頂点ごとに変わる
 layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoord;
 
+// 1回の描画で1つの値
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
+// フラグメントに渡すためのもの
+out vec3 FragPos;
+out vec3 Normal;
+out vec2 TexCoord;
+
 void main()
-{   
-    // model * vec4 = ワールド座標（modelで移動や拡大ができるがカメラを動かしても常にその位置に描画される）
-    // （上記） * view = カメラ座標（画面中央に描画されていたものが、カメラを左に動かした際に右に描画されるようになる）
-    // （上記） * projection = 3D座標（遠くのものが小さく、近くのものが大きく見える）
+{
+    // フラグメントに渡すものを準備
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    Normal = mat3(transpose(inverse(model))) * aNormal;
+    TexCoord = aTexCoord;
+    // 特別な変数
     gl_Position = projection * view * model * vec4(aPos, 1.0);
 }
