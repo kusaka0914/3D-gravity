@@ -143,6 +143,10 @@ int main() {
     std::vector<LoadedMesh> enemyMeshes = loadMeshFromFile("../assets/models/enemy.obj");
     // 鍵モデルをロードする（敵全員撃破で出現）
     std::vector<LoadedMesh> keyMeshes = loadMeshFromFile("../assets/models/key.obj");
+    // ボートモデル（鍵取得で惑星近くに出現）
+    std::vector<LoadedMesh> boatMeshes = loadMeshFromFile("../assets/models/boat.obj");
+    // スター（惑星2に配置、触れるとゲームクリア）
+    std::vector<LoadedMesh> starMeshes = loadMeshFromFile("../assets/models/star.obj");
 
     // シェーダープログラム内のMVPのIDを探して格納
     GLint locModel = glGetUniformLocation(shaderProgram, "model");
@@ -155,7 +159,7 @@ int main() {
     // 惑星の初期化
     std::vector<Planet> planets = {
         { glm::vec3(0.0f, 0.0f, 0.0f), 8.0f, glm::vec3(1.0f, 0.0f, 0.0f) },
-        // { glm::vec3(12.0f, 0.0f, 0.0f), 10.0f, glm::vec3(0.0f, 1.0f, 0.0f) },
+        { glm::vec3(32.0f, 0.0f, 0.0f), 10.0f, glm::vec3(0.0f, 1.0f, 0.0f) },
     };
 
     const float characterSpeed = 3.5f;
@@ -190,9 +194,27 @@ int main() {
     bool keyVisible = false;
     bool keyObtained = false;
     glm::vec3 keyPos(0.0f);
-    const float keyScale = 0.35f;
-    const float keyPickupRadius = 1.2f;  // この距離以内で触れたら取得
+    const float keyScale = 2.0f;
+    const float keyPickupRadius = 1.2f;
     const glm::vec3 keyColor(0.85f, 0.65f, 0.13f);  // 金色
+
+    // ボート（鍵取得で惑星近くに出現）
+    glm::vec3 boatPos(0.0f);
+    const float boatScale = 0.8f;
+    const float boatTouchRadius = 1.8f;
+    const float playerHeightAboveBoat = 0.7f;
+
+    // ボートで次の惑星へ移動（触れたら少しずつ移動して到着）
+    bool boatTransitionActive = false;
+    float boatTransitionTimer = 0.0f;
+    const float boatTransitionDuration = 5.0f;
+    glm::vec3 boatTransitionStartBoat, boatTransitionEnd;
+
+    // スター（惑星2に配置、触れるとゲームクリア）
+    glm::vec3 starPos = planets[1].center + glm::normalize(glm::vec3(0.0f, 1.0f, 0.6f)) * (planets[1].radius + 0.2f);
+    const float starScale = 0.3f;
+    const float starTouchRadius = 1.5f;
+    bool gameClear = false;
 
     // 時間情報
     double lastTime = glfwGetTime();
@@ -219,6 +241,36 @@ int main() {
         float deltaTime = static_cast<float>(currentTime - lastTime);
         lastTime = currentTime;
         glm::vec3 up = glm::normalize(players[0].pos - planets[players[0].planetIndex].center);
+
+        // ボート移動
+        if (boatTransitionActive) {
+            boatTransitionTimer += deltaTime;
+            // ボード移動がどれくらい進んだかの割合
+            float t = glm::min(1.0f, boatTransitionTimer / boatTransitionDuration);
+            // smoothstep で滑らかに
+            t = t * t * (3.0f - 2.0f * t);
+            // スタート地点から到着点へのベクトルに割合をかけて進む
+            boatPos = boatTransitionStartBoat + (boatTransitionEnd - boatTransitionStartBoat) * t;
+            // 現在のボート位置から一番近い惑星の「上」方向で、プレイヤーをボートの上に置く
+            float d0 = glm::length(boatPos - planets[0].center);
+            float d1 = glm::length(boatPos - planets[1].center);
+            glm::vec3 boatUp = (d0 <= d1)
+                ? glm::normalize(boatPos - planets[0].center)
+                : glm::normalize(boatPos - planets[1].center);
+            players[0].pos = boatPos + boatUp * playerHeightAboveBoat;
+            // 到着処理
+            if (t >= 1.0f) {
+                players[0].planetIndex = 1;
+                boatPos = boatTransitionEnd;
+                players[0].pos = boatTransitionEnd;
+                players[0].onGround = true;
+                players[0].velocity = glm::vec3(0.0f);
+                boatTransitionActive = false;
+            }
+        }
+        if (!boatTransitionActive) {
+            up = glm::normalize(players[0].pos - planets[players[0].planetIndex].center);
+        }
 
         float moveForward = 0.0f;
         float moveLeft = 0.0f;
@@ -293,32 +345,34 @@ int main() {
             }
         }
 
-        if (transitionTimer <= 0.0f && !players[0].isDamaged) {
-            players[0].pos += forward * moveForward * characterSpeed * deltaTime * dashSpeed;
-            players[0].pos += left * moveLeft * characterSpeed * deltaTime * dashSpeed;
-            if (players[0].onGround && jumpPressed) {
-                players[0].velocity += up * 5.0f;
-                players[0].onGround = false;
+        if (!boatTransitionActive) {
+            if (transitionTimer <= 0.0f && !players[0].isDamaged) {
+                players[0].pos += forward * moveForward * characterSpeed * deltaTime * dashSpeed;
+                players[0].pos += left * moveLeft * characterSpeed * deltaTime * dashSpeed;
+                if (players[0].onGround && jumpPressed) {
+                    players[0].velocity += up * 5.0f;
+                    players[0].onGround = false;
+                }
             }
+            // Bボタン：向いている方向へ回避開始（攻撃を受けた時のように少しずつ移動）
+            if (dodgePressed && !dodgePressedPrev && players[0].onGround && dodgeCooldown <= 0.0f && dodgeTimer <= 0.0f) {
+                glm::vec3 dodgeFwd, dodgeLeftUnused;
+                getForwardLeft(up, players[0].facingYaw, dodgeFwd, dodgeLeftUnused);
+                dodgeDir = -dodgeFwd;
+                dodgeTimer = dodgeDuration;
+                dodgeCooldown = dodgeCooldownTime;
+            }
+            if (dodgeTimer > 0.0f) {
+                float dodgeSpeed = dodgeDistance / dodgeDuration;
+                players[0].pos += dodgeDir * dodgeSpeed * deltaTime;
+                glm::vec3 center = planets[players[0].planetIndex].center;
+                float radius = planets[players[0].planetIndex].radius;
+                players[0].pos = center + glm::normalize(players[0].pos - center) * radius;
+                dodgeTimer -= deltaTime;
+            }
+            if (dodgeCooldown > 0.0f) dodgeCooldown -= deltaTime;
+            updatePlayerPhysics(players[0], deltaTime, planets, &transitionTimer);
         }
-        // Bボタン：向いている方向へ回避開始（攻撃を受けた時のように少しずつ移動）
-        if (dodgePressed && !dodgePressedPrev && players[0].onGround && dodgeCooldown <= 0.0f && dodgeTimer <= 0.0f) {
-            glm::vec3 dodgeFwd, dodgeLeftUnused;
-            getForwardLeft(up, players[0].facingYaw, dodgeFwd, dodgeLeftUnused);
-            dodgeDir = -dodgeFwd;
-            dodgeTimer = dodgeDuration;
-            dodgeCooldown = dodgeCooldownTime;
-        }
-        if (dodgeTimer > 0.0f) {
-            float dodgeSpeed = dodgeDistance / dodgeDuration;
-            players[0].pos += dodgeDir * dodgeSpeed * deltaTime;
-            glm::vec3 center = planets[players[0].planetIndex].center;
-            float radius = planets[players[0].planetIndex].radius;
-            players[0].pos = center + glm::normalize(players[0].pos - center) * radius;
-            dodgeTimer -= deltaTime;
-        }
-        if (dodgeCooldown > 0.0f) dodgeCooldown -= deltaTime;
-        updatePlayerPhysics(players[0], deltaTime, planets, &transitionTimer);
 
         if (player2Joined) {
             float moveF2 = 0.0f, moveL2 = 0.0f;
@@ -427,16 +481,40 @@ int main() {
         if (allEnemiesDead && !keyVisible && !keyObtained) {
             keyVisible = true;
             // 惑星表面より少し上に配置（埋まらないようにオフセット）
-            float keyHeight = planets[0].radius + 0.2f;
+            float keyHeight = planets[0].radius + 1.0f;
             keyPos = planets[0].center + glm::normalize(glm::vec3(0.0f, 1.0f, 0.4f)) * keyHeight;
         }
 
-        // 鍵に触れたら取得して消す
+        // 鍵に触れたら取得して消す＆ボートを出現させる
         if (keyVisible) {
             float distToKey = glm::length(players[0].pos - keyPos);
             if (distToKey < keyPickupRadius) {
                 keyVisible = false;
                 keyObtained = true;
+                // ボートを惑星表面の近くに配置（鍵と反対側あたり）
+                float boatHeight = planets[0].radius - 0.15f;
+                boatPos = planets[0].center + glm::normalize(glm::vec3(0.0f, -1.0f, 0.5f)) * boatHeight;
+            }
+        }
+
+        // ボートに触れたら次の惑星へ一緒に移動開始（惑星0にいる時のみ・到着後は発動しない）fa
+        if (!boatTransitionActive && players[0].planetIndex == 0) {
+            float distToBoat = glm::length(players[0].pos - boatPos);
+            if (distToBoat < boatTouchRadius) {
+                boatTransitionActive = true;
+                boatTransitionTimer = 0.0f;
+                boatTransitionStartBoat = boatPos;
+                glm::vec3 toPlanet1 = glm::normalize(planets[1].center - planets[0].center);
+                boatTransitionEnd = planets[1].center - toPlanet1 * planets[1].radius;
+            }
+        }
+
+        // スターに触れたらゲームクリア（惑星2にいる時のみ）
+        if (!gameClear) {
+            float distToStar = glm::length(players[0].pos - starPos);
+            if (distToStar < starTouchRadius) {
+                gameClear = true;
+                std::cout << "Game Clear!" << std::endl;
             }
         }
 
@@ -552,6 +630,20 @@ int main() {
         if (keyVisible) {
             glm::vec3 keyUp = glm::normalize(keyPos - planets[0].center);
             drawCharacter(keyPos, keyScale, keyColor, keyUp, 0.0f, keyMeshes, &keyColor);
+        }
+
+        // ボート描画（鍵取得で出現。惑星0または移動中のみ表示、到着後は非表示）
+        if (keyObtained && (players[0].planetIndex == 0 || boatTransitionActive)) {
+            int boatPlanet = players[0].planetIndex;
+            glm::vec3 boatUp = glm::normalize(boatPos - planets[boatPlanet].center);
+            drawCharacter(boatPos, boatScale, glm::vec3(0.4f, 0.25f, 0.1f), boatUp, 0.0f, boatMeshes);
+        }
+
+        // スター描画（惑星2に配置、ゲームクリア前のみ表示）
+        if (!gameClear) {
+            glm::vec3 starUp = glm::normalize(starPos - planets[1].center);
+            glm::vec3 starColor(1.0f, 0.9f, 0.2f);
+            drawCharacter(starPos, starScale, starColor, starUp, 0.0f, starMeshes);
         }
         };
 
