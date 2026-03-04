@@ -121,3 +121,32 @@ std::vector<LoadedMesh> loadMeshFromFile(const char* path) {
     }
     return results;
 }
+
+bool loadMeshPositionsAndIndices(const char* path,
+    std::vector<float>& outPositions, std::vector<unsigned int>& outIndices) {
+    outPositions.clear();
+    outIndices.clear();
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile(path,
+        aiProcess_Triangulate | aiProcess_FlipUVs);
+    if (!scene || !scene->mMeshes || scene->mNumMeshes == 0) {
+        std::cerr << "Assimp error (mesh positions): " << importer.GetErrorString() << std::endl;
+        return false;
+    }
+    unsigned int vertexOffset = 0;
+    for (unsigned int meshIdx = 0; meshIdx < scene->mNumMeshes; meshIdx++) {
+        const aiMesh* mesh = scene->mMeshes[meshIdx];
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+            outPositions.push_back(mesh->mVertices[i].x);
+            outPositions.push_back(mesh->mVertices[i].y);
+            outPositions.push_back(mesh->mVertices[i].z);
+        }
+        for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+            const aiFace& face = mesh->mFaces[i];
+            for (unsigned int j = 0; j < face.mNumIndices; j++)
+                outIndices.push_back(vertexOffset + face.mIndices[j]);
+        }
+        vertexOffset += mesh->mNumVertices;
+    }
+    return true;
+}

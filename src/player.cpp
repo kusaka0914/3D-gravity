@@ -29,13 +29,16 @@ float getYawFromDirection(const glm::vec3& up, const glm::vec3& dir) {
 }
 
 void updatePlayerPhysics(PlayerState& p, float deltaTime, const std::vector<Planet>& planets,
-    float* transitionTimer) {
+    float* transitionTimer, bool skipGroundSnap) {
     glm::vec3 center = planets[p.planetIndex].center;
     float radius = planets[p.planetIndex].radius;
     glm::vec3 up = glm::normalize(p.pos - center);
 
-    if (p.onGround) {
+    if (p.onGround && !skipGroundSnap) {
         p.pos = center + glm::normalize(p.pos - center) * radius;
+        return;
+    }
+    if (p.onGround && skipGroundSnap) {
         return;
     }
     if (transitionTimer && *transitionTimer > 0.0f) {
@@ -58,7 +61,7 @@ void updatePlayerPhysics(PlayerState& p, float deltaTime, const std::vector<Plan
     center = planets[p.planetIndex].center;
     radius = planets[p.planetIndex].radius;
     float dist = glm::length(p.pos - center);
-    if (dist <= radius) {
+    if (!skipGroundSnap && dist <= radius) {
         p.onGround = true;
         p.pos = center + glm::normalize(p.pos - center) * radius;
         p.velocity = glm::vec3(0, 0, 0);

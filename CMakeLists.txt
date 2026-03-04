@@ -13,6 +13,9 @@ add_executable(engine
     src/model_loader.cpp
     src/planet.cpp
     src/player.cpp
+    src/enemy_loader.cpp
+    src/planet_loader.cpp
+    src/player_loader.cpp
 )
 
 # OpenGLを使うのに必要なヘッダやライブラリを探して見つかったら変数に格納
@@ -21,13 +24,17 @@ find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glm REQUIRED)
 find_package(Assimp REQUIRED)
+find_package(Bullet REQUIRED)
 find_package(SDL2 REQUIRED CONFIG)
 find_package(SDL2_mixer REQUIRED)
+find_package(SDL2_ttf REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 # #includeをしてヘッダを指定できるようにする
 target_include_directories(engine PRIVATE
     ${OPENGL_INCLUDE_DIR}
     ${GLEW_INCLUDE_DIRS}
+    ${BULLET_INCLUDE_DIRS}
 )
 target_link_directories(engine PRIVATE /opt/homebrew/lib)
 # OpenGLなどの関数を呼べるようにするためにリンクする
@@ -38,7 +45,10 @@ target_link_libraries(engine
     glm::glm
     SDL2::SDL2
     assimp
+    ${BULLET_LIBRARIES}
     SDL2_mixer::SDL2_mixer
+    SDL2_ttf::SDL2_ttf
+    yaml-cpp
 )
 
 # 実行時にプロジェクトルートをカレントにする（shaders を読むため）

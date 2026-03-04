@@ -19,6 +19,10 @@ struct PlayerState {
     bool isDamaged = false;
     bool isDamagePrev = false;
     float damageTimer = 0.0f;
+    float attackCooldownRemaining = 0.0f;
+    float attackMoveLockRemaining = 0.0f;   // 攻撃後の移動禁止時間
+    float attackDodgeLockRemaining = 0.0f;  // 攻撃後の回避禁止時間（移動より0.5秒短い）
+    int attackIndex = 0;
 };
 
 void getForwardLeft(const glm::vec3& up, float cameraYaw, glm::vec3& outForward, glm::vec3& outLeft);
@@ -27,7 +31,7 @@ void getForwardLeft(const glm::vec3& up, float cameraYaw, glm::vec3& outForward,
 float getYawFromDirection(const glm::vec3& up, const glm::vec3& dir);
 
 void updatePlayerPhysics(PlayerState& p, float deltaTime, const std::vector<Planet>& planets,
-    float* transitionTimer = nullptr);
+    float* transitionTimer = nullptr, bool skipGroundSnap = false);
 
 glm::mat4 getPlayerView(const PlayerState& p, float cameraDistance, const std::vector<Planet>& planets);
 
