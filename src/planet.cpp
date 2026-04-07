@@ -1,5 +1,12 @@
 #include "planet.h"
+#include "game.h"
 #include <cmath>
+
+Planet::Planet(Game* game)
+    :Actor(game)
+{
+
+}
 
 void buildSphereMesh(unsigned int segmentsLat, unsigned int segmentsLong, float radius,
     std::vector<float>& outVertices, std::vector<unsigned int>& outIndices) {

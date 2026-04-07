@@ -13,7 +13,7 @@ struct PlayerInitialConfig {
     float cameraPitch = 0.4f;
 };
 
-bool loadPlayerInitialFromYaml(const char* path, const std::vector<Planet>& planets,
+bool loadPlayerFromYaml(const char* path, const std::vector<Planet>& planets,
     PlayerInitialConfig& outConfig);
 
 #endif

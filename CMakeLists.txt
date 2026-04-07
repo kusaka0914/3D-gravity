@@ -14,8 +14,10 @@ add_executable(engine
     src/planet.cpp
     src/player.cpp
     src/enemy_loader.cpp
-    src/planet_loader.cpp
     src/player_loader.cpp
+    src/Game.cpp
+    src/VertexArray.cpp
+    src/Enemy.cpp
 )
 
 # OpenGLを使うのに必要なヘッダやライブラリを探して見つかったら変数に格納

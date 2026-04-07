@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-bool loadPlayerInitialFromYaml(const char* path, const std::vector<Planet>& planets,
+bool loadPlayerFromYaml(const char* path, const std::vector<Planet>& planets,
     PlayerInitialConfig& outConfig) {
     try {
         YAML::Node root = YAML::LoadFile(path);
