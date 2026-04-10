@@ -112,7 +112,7 @@ bool Game::Initialize()
     }
 
     // BGMをロードする
-    Mix_Music *normalBGM = Mix_LoadMUS("../assets/audio/normalBGM.wav");
+    Mix_Music* normalBGM = Mix_LoadMUS("../assets/audio/normalBGM.wav");
     if (!normalBGM)
     {
         std::cerr << "Mix_LoadMUS error: " << Mix_GetError() << std::endl;
@@ -124,7 +124,7 @@ bool Game::Initialize()
         Mix_PlayMusic(normalBGM, -1);
     }
 
-    Mix_Music *bossBGM = Mix_LoadMUS("../assets/audio/boss.wav");
+    Mix_Music* bossBGM = Mix_LoadMUS("../assets/audio/boss.wav");
     if (!bossBGM)
     {
         std::cerr << "Mix_LoadMUS (boss BGM) error: " << Mix_GetError() << std::endl;
@@ -135,7 +135,7 @@ bool Game::Initialize()
     }
 
     // 攻撃ヒットSE（SDL_mixer の SE は WAV 形式。attack.mp3 のみの場合は WAV に変換して attack.wav を用意）
-    Mix_Chunk *attackSE = Mix_LoadWAV("../assets/audio/attack.wav");
+    Mix_Chunk* attackSE = Mix_LoadWAV("../assets/audio/attack.wav");
     if (!attackSE)
     {
         std::cerr << "Mix_LoadWAV (attack SE) error: " << Mix_GetError() << std::endl;
@@ -145,7 +145,7 @@ bool Game::Initialize()
         mSEList["attackSE"] = attackSE;
     }
 
-    Mix_Chunk *attackMissSE = Mix_LoadWAV("../assets/audio/attack_miss.wav");
+    Mix_Chunk* attackMissSE = Mix_LoadWAV("../assets/audio/attack_miss.wav");
     if (!attackMissSE)
     {
         std::cerr << "Mix_LoadWAV (attack_miss SE) error: " << Mix_GetError() << std::endl;
@@ -155,7 +155,7 @@ bool Game::Initialize()
         mSEList["attackMissSE"] = attackMissSE;
     }
 
-    Mix_Chunk *attackPreSE = Mix_LoadWAV("../assets/audio/attack_pre.wav");
+    Mix_Chunk* attackPreSE = Mix_LoadWAV("../assets/audio/attack_pre.wav");
     if (!attackPreSE)
     {
         std::cerr << "Mix_LoadWAV (attack_pre SE) error: " << Mix_GetError() << std::endl;
@@ -165,7 +165,7 @@ bool Game::Initialize()
         mSEList["attackPreSE"] = attackPreSE;
     }
 
-    Mix_Chunk *counterSE = Mix_LoadWAV("../assets/audio/counter.wav");
+    Mix_Chunk* counterSE = Mix_LoadWAV("../assets/audio/counter.wav");
     if (!counterSE)
     {
         std::cerr << "Mix_LoadWAV (counter SE) error: " << Mix_GetError() << std::endl;
@@ -175,7 +175,7 @@ bool Game::Initialize()
         mSEList["counterSE"] = counterSE;
     }
 
-    Mix_Chunk *clearSE = Mix_LoadWAV("../assets/audio/clear.wav");
+    Mix_Chunk* clearSE = Mix_LoadWAV("../assets/audio/clear.wav");
     if (!clearSE)
     {
         std::cerr << "Mix_LoadWAV (clear SE) error: " << Mix_GetError() << std::endl;
@@ -847,48 +847,48 @@ void Game::UpdateGame()
     glm::vec3 up = glm::normalize(players[0].pos - planets[players[0].planetIndex].center);
 
     // ボート移動
-    if (boatTransitionActive)
-    {
-        boatTransitionTimer += deltaTime;
-        // ボード移動がどれくらい進んだかの割合
-        float t = glm::min(1.0f, boatTransitionTimer / boatTransitionDuration);
-        // smoothstep で滑らかに
-        t = t * t * (3.0f - 2.0f * t);
-        boatPos = boatTransitionStartBoat + (boatTransitionEnd - boatTransitionStartBoat) * t;
-        // ボート位置から一番近い惑星の「上」方向でプレイヤーをボートの上に
-        int nearestIdx = 0;
-        float nearestD = glm::length(boatPos - planets[0].center);
-        for (size_t i = 1; i < planets.size(); i++)
-        {
-            float d = glm::length(boatPos - planets[i].center);
-            if (d < nearestD)
-            {
-                nearestD = d;
-                nearestIdx = static_cast<int>(i);
-            }
-        }
-        glm::vec3 boatUp = glm::normalize(boatPos - planets[nearestIdx].center);
-        players[0].pos = boatPos + boatUp * playerHeightAboveBoat;
-        // 到着処理
-        if (t >= 1.0f && boatDestinationPlanetIndex >= 0)
-        {
-            players[0].planetIndex = boatDestinationPlanetIndex;
-            boatPos = boatTransitionEnd;
-            players[0].pos = boatTransitionEnd;
-            players[0].onGround = true;
-            players[0].velocity = glm::vec3(0.0f);
-            restartPos = boatTransitionEnd;
-            restartPlanetIndex = boatDestinationPlanetIndex;
-            boatTransitionActive = false;
-            if (bulletGhost)
-            {
-                btTransform t;
-                t.setIdentity();
-                t.setOrigin(btVector3(players[0].pos.x, players[0].pos.y, players[0].pos.z));
-                bulletGhost->setWorldTransform(t);
-            }
-        }
-    }
+    // if (boatTransitionActive)
+    // {
+    //     boatTransitionTimer += deltaTime;
+    //     // ボード移動がどれくらい進んだかの割合
+    //     float t = glm::min(1.0f, boatTransitionTimer / boatTransitionDuration);
+    //     // smoothstep で滑らかに
+    //     t = t * t * (3.0f - 2.0f * t);
+    //     boatPos = boatTransitionStartBoat + (boatTransitionEnd - boatTransitionStartBoat) * t;
+    //     // ボート位置から一番近い惑星の「上」方向でプレイヤーをボートの上に
+    //     int nearestIdx = 0;
+    //     float nearestD = glm::length(boatPos - planets[0].center);
+    //     for (size_t i = 1; i < planets.size(); i++)
+    //     {
+    //         float d = glm::length(boatPos - planets[i].center);
+    //         if (d < nearestD)
+    //         {
+    //             nearestD = d;
+    //             nearestIdx = static_cast<int>(i);
+    //         }
+    //     }
+    //     glm::vec3 boatUp = glm::normalize(boatPos - planets[nearestIdx].center);
+    //     players[0].pos = boatPos + boatUp * playerHeightAboveBoat;
+    //     // 到着処理
+    //     if (t >= 1.0f && boatDestinationPlanetIndex >= 0)
+    //     {
+    //         players[0].planetIndex = boatDestinationPlanetIndex;
+    //         boatPos = boatTransitionEnd;
+    //         players[0].pos = boatTransitionEnd;
+    //         players[0].onGround = true;
+    //         players[0].velocity = glm::vec3(0.0f);
+    //         restartPos = boatTransitionEnd;
+    //         restartPlanetIndex = boatDestinationPlanetIndex;
+    //         boatTransitionActive = false;
+    //         if (bulletGhost)
+    //         {
+    //             btTransform t;
+    //             t.setIdentity();
+    //             t.setOrigin(btVector3(players[0].pos.x, players[0].pos.y, players[0].pos.z));
+    //             bulletGhost->setWorldTransform(t);
+    //         }
+    //     }
+    // }
     if (!boatTransitionActive)
     {
         up = glm::normalize(players[0].pos - planets[players[0].planetIndex].center);
@@ -1075,80 +1075,80 @@ void Game::UpdateGame()
         }
     }
 
-    float planetRadius = planets[players[0].planetIndex].radius;
-    const float attackRangeMargin = 0.2f;
-    for (unique_ptr<Enemy> &ptr : enemies)
-    {
-        EnemyBase &e = *ptr;
-        if (!e.alive)
-            continue;
-        // 追跡：どちらかのプレイヤーに向かう（1P基準で判定）
-        float distToP0 = glm::length(players[0].pos - e.pos);
-        glm::vec3 toPlayer = glm::normalize(players[0].pos - e.pos);
-        if (distToP0 <= EnemyBase::Sensing && e.damageTimer <= 0.0f && !players[0].isDamaged && distToP0 >= e.getRadius())
-        {
-            e.pos += toPlayer * e.speed * deltaTime;
-            float r = planets[e.planetIndex].radius;
-            e.pos = planets[e.planetIndex].center + glm::normalize(e.pos - planets[e.planetIndex].center) * r;
-        }
-        // 攻撃範囲：いずれかのプレイヤーが範囲内なら「範囲内」とする（タイマーは敵ごとに1つなので二重更新しない）
-        float distToP1 = glm::length(players[1].pos - e.pos);
-        bool inRangeOfP0 = (distToP0 <= e.getRadius() + attackRangeMargin);
-        bool inRangeOfP1 = (distToP1 <= e.getRadius() + attackRangeMargin);
-        bool inRangeOfAny = inRangeOfP0 || inRangeOfP1;
-        if (!inRangeOfAny)
-        {
-            e.standByAttackTimer = -1.0f; // 全員範囲外なら idle
-        }
-        else if (e.standByAttackTimer == -1.0f || e.standByAttackTimer == -2.0f)
-        {
-            if (!players[0].isDamagePrev && !players[1].isDamagePrev)
-                e.standByAttackTimer = 2.0f; // 範囲内で idle/攻撃直後のときだけスタンバイ開始（1回だけ）
-        }
-        if (e.standByAttackTimer >= 0.0f)
-        {
-            float prevStandBy = e.standByAttackTimer;
-            e.standByAttackTimer -= deltaTime;
-            if (prevStandBy >= 0.5f && e.standByAttackTimer < 0.5f && attackPreSE)
-            {
-                Mix_PlayChannel(-1, attackPreSE, 0); // 敵の攻撃0.5秒前に鳴らす
-            }
-        }
-        if (e.standByAttackTimer <= 0.0f && inRangeOfAny)
-        {
-            e.standByAttackTimer = -2.0f; // 攻撃終了（次のフレームで範囲内なら再スタンバイ可能）
-            if (inRangeOfP0 && !players[0].isDamagePrev)
-            {
-                players[0].hp -= e.attack;
-                players[0].damageTimer = 1.0f;
-                players[0].isDamaged = true;
-                playerKnockbackFrom = e.pos;
-                if (players[0].hp <= 0)
-                {
-                    players[0].hp = 0;
-                    players[0].pos = restartPos;
-                    players[0].planetIndex = restartPlanetIndex;
-                    players[0].velocity = glm::vec3(0.0f);
-                    players[0].onGround = true;
-                }
-            }
-            if (inRangeOfP1 && !players[1].isDamagePrev)
-            {
-                players[1].hp -= e.attack;
-                players[1].damageTimer = 1.0f;
-                players[1].isDamaged = true;
-                playerKnockbackFrom = e.pos;
-                if (players[1].hp <= 0)
-                {
-                    players[1].hp = 0;
-                    players[1].pos = restartPos;
-                    players[1].planetIndex = restartPlanetIndex;
-                    players[1].velocity = glm::vec3(0.0f);
-                    players[1].onGround = true;
-                }
-            }
-        }
-    }
+    // float planetRadius = planets[players[0].planetIndex].radius;
+    // const float attackRangeMargin = 0.2f;
+    // for (unique_ptr<Enemy> &ptr : enemies)
+    // {
+    //     EnemyBase &e = *ptr;
+    //     if (!e.alive)
+    //         continue;
+    //     // 追跡：どちらかのプレイヤーに向かう（1P基準で判定）
+    //     float distToP0 = glm::length(players[0].pos - e.pos);
+    //     glm::vec3 toPlayer = glm::normalize(players[0].pos - e.pos);
+    //     if (distToP0 <= EnemyBase::Sensing && e.damageTimer <= 0.0f && !players[0].isDamaged && distToP0 >= e.getRadius())
+    //     {
+    //         e.pos += toPlayer * e.speed * deltaTime;
+    //         float r = planets[e.planetIndex].radius;
+    //         e.pos = planets[e.planetIndex].center + glm::normalize(e.pos - planets[e.planetIndex].center) * r;
+    //     }
+    //     // 攻撃範囲：いずれかのプレイヤーが範囲内なら「範囲内」とする（タイマーは敵ごとに1つなので二重更新しない）
+    //     float distToP1 = glm::length(players[1].pos - e.pos);
+    //     bool inRangeOfP0 = (distToP0 <= e.getRadius() + attackRangeMargin);
+    //     bool inRangeOfP1 = (distToP1 <= e.getRadius() + attackRangeMargin);
+    //     bool inRangeOfAny = inRangeOfP0 || inRangeOfP1;
+    //     if (!inRangeOfAny)
+    //     {
+    //         e.standByAttackTimer = -1.0f; // 全員範囲外なら idle
+    //     }
+    //     else if (e.standByAttackTimer == -1.0f || e.standByAttackTimer == -2.0f)
+    //     {
+    //         if (!players[0].isDamagePrev && !players[1].isDamagePrev)
+    //             e.standByAttackTimer = 2.0f; // 範囲内で idle/攻撃直後のときだけスタンバイ開始（1回だけ）
+    //     }
+    //     if (e.standByAttackTimer >= 0.0f)
+    //     {
+    //         float prevStandBy = e.standByAttackTimer;
+    //         e.standByAttackTimer -= deltaTime;
+    //         if (prevStandBy >= 0.5f && e.standByAttackTimer < 0.5f && attackPreSE)
+    //         {
+    //             Mix_PlayChannel(-1, attackPreSE, 0); // 敵の攻撃0.5秒前に鳴らす
+    //         }
+    //     }
+    //     if (e.standByAttackTimer <= 0.0f && inRangeOfAny)
+    //     {
+    //         e.standByAttackTimer = -2.0f; // 攻撃終了（次のフレームで範囲内なら再スタンバイ可能）
+    //         if (inRangeOfP0 && !players[0].isDamagePrev)
+    //         {
+    //             players[0].hp -= e.attack;
+    //             players[0].damageTimer = 1.0f;
+    //             players[0].isDamaged = true;
+    //             playerKnockbackFrom = e.pos;
+    //             if (players[0].hp <= 0)
+    //             {
+    //                 players[0].hp = 0;
+    //                 players[0].pos = restartPos;
+    //                 players[0].planetIndex = restartPlanetIndex;
+    //                 players[0].velocity = glm::vec3(0.0f);
+    //                 players[0].onGround = true;
+    //             }
+    //         }
+    //         if (inRangeOfP1 && !players[1].isDamagePrev)
+    //         {
+    //             players[1].hp -= e.attack;
+    //             players[1].damageTimer = 1.0f;
+    //             players[1].isDamaged = true;
+    //             playerKnockbackFrom = e.pos;
+    //             if (players[1].hp <= 0)
+    //             {
+    //                 players[1].hp = 0;
+    //                 players[1].pos = restartPos;
+    //                 players[1].planetIndex = restartPlanetIndex;
+    //                 players[1].velocity = glm::vec3(0.0f);
+    //                 players[1].onGround = true;
+    //             }
+    //         }
+    //     }
+    // }
 
     // Xボタン攻撃：正面にいる敵のうち最初の1体にダメージ（1Pのみ）。当たらなくても硬直・高さ維持する
     const float attackRange = 1.8f;
@@ -1652,5 +1652,20 @@ void Game::RemoveActor(std::unique_ptr<Actor> actor)
     {
         std::iter_swap(iter, mActors.end() - 1);
         mActors.pop_back();
+    }
+}
+
+void Game::AddPlayer(Player* player)
+{
+    mPlayers.emplace_back(player);
+}
+
+void Game::RemovePlayer(Player* player)
+{
+    auto iter = std::find(mPlayers.begin(), mPlayers.end(), player);
+    if (iter != mPlayers.end())
+    {
+        std::iter_swap(iter, mPlayers.end() - 1);
+        mPlayers.pop_back();
     }
 }

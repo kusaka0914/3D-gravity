@@ -13,6 +13,16 @@ Actor::~Actor(Game* game)
     mGame->RemoveActor(this);
 }
 
+void Actor::Update(float deltaTime)
+{
+    UpdateActor(deltaTime);
+}
+
+void Actor::UpdateActor(float deltaTime)
+{
+    
+}
+
 void Actor::AddComponent(Component* component)
 {
     int myOrder = component->GetUpdateOrder();
