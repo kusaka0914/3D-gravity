@@ -1,9 +1,9 @@
-#include "shader.h"
+#include "Shader.h"
 #include <fstream>
 #include <sstream>
 #include <GL/glew.h>
 
-std::string readFile(const std::string& path) {
+std::string Shader::readFile(const std::string& path) {
 	// ファイルの読み口があるfileを用意（fileはstringにできない）
     std::ifstream file(path);
     // ファイルが開けるか検証
@@ -19,7 +19,7 @@ std::string readFile(const std::string& path) {
     return buf.str();
 }
 
-unsigned int compileShader(unsigned int type, const std::string& source) {
+unsigned int Shader::compileShader(unsigned int type, const std::string& source) {
 	// シェーダを作りますよと教えてGPU側に空のオブジェクトを作ってそのidを返す
     unsigned int id = glCreateShader(type);
     // c_str()でsourceの先頭アドレスを取り出す
@@ -44,7 +44,7 @@ unsigned int compileShader(unsigned int type, const std::string& source) {
     return id;
 }
 
-unsigned int createShaderProgram(const std::string& vertexPath, const std::string& fragmentPath) {
+unsigned int Shader::createShaderProgram(const std::string& vertexPath, const std::string& fragmentPath) {
 	// それぞれのパスからファイルを読み、中身のソースコードを格納する
     std::string vsrc = readFile(vertexPath);
     std::string fsrc = readFile(fragmentPath);

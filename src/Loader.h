@@ -18,8 +18,8 @@ public:
         PlayerInitialConfig& outConfig);
 
     bool loadEnemiesFromYaml(const char* path, const std::vector<Planet>& planets,
-        std::vector<EnemyPtr>& outEnemies);
+        std::vector<class Enemy*>& outEnemies);
 
-    bool loadPlanetsFromYaml(const char* path, std::vector<std::unique_ptr<class Planet>>& outPlanets);
+    bool loadPlanetsFromYaml(Game* game, const char* path, std::vector<std::unique_ptr<class Planet>>& outPlanets);
 private:
 };

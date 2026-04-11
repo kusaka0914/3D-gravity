@@ -1,6 +1,8 @@
 #include "Enemy.h"
 #include "Game.h"
 #include "Planet.h"
+#include "Player.h"
+#include "Stage.h"
 
 Enemy::Enemy(Game* game)
     :Actor(game)
@@ -23,14 +25,16 @@ Enemy::Enemy(Game* game)
 void Enemy::UpdateActor(float deltaTime) {
     Actor::UpdateActor(deltaTime);
     std::vector<class Player*> players = GetGame()->GetPlayers();
+    const auto& seList = GetGame()->GetSEList();
+
     for(auto player : players) {
         glm::vec3 playerPos = player->GetPos();
         float distToPlayer = glm::length(playerPos - mPos);
         glm::vec3 vecToPlayer = glm::normalize(playerPos - mPos);
 
         int currentStageNum = GetGame()->GetCurrentStageNum();
-        Stage* currentStage = GetGame()->GetStages()[currentStageNum].get();
-        Planet* currentPlanet = currentStage->GetPlanets()[mCurrentPlanet].get();
+        Stage* currentStage = GetGame()->GetStages()[currentStageNum];
+        Planet* currentPlanet = currentStage->GetPlanets()[mCurrentPlanet];
 
         // 追跡
         if (distToPlayer <= mSensing && mDamageTimer <= 0.0f && !player->GetIsDamaged() && distToPlayer >= GetRadius())
@@ -59,7 +63,6 @@ void Enemy::UpdateActor(float deltaTime) {
         {
             float prevStandBy = mStandByAttackTimer;
             mStandByAttackTimer -= deltaTime;
-            const auto& seList = GetGame()->GetSEList();
             auto it = seList.find("attackPreSE");
             Mix_Chunk* attackPreSE = (it != seList.end()) ? it->second : nullptr;
             if (prevStandBy >= 0.5f && mStandByAttackTimer < 0.5f && attackPreSE)
@@ -81,11 +84,28 @@ void Enemy::UpdateActor(float deltaTime) {
                 {
                     player->SetHp(0);
                     player->SetPos(player->GetRestartPos());
-                    player->SetPlanetIndex(player->GetRestartPlanetIndex());
-                    player->SetVelocity(0.0f);
+                    player->SetCurrentPlanet(player->GetRestartPlanetIndex());
+                    player->SetVelocity({0.0f, 0.0f, 0.0f});
                     player->SetOnGround(true);
                 }
             }
+        }
+
+        if (mIsDamaged) {
+            mHp -= player->GetAttack();
+            if (mHp <= 0)
+                mDamageTimer = 1.0f;
+            mIsDamaged = false;
+            if (mHp <= 0)
+                mHp = 0;
+        }
+
+        if (mIsCountered) {
+            mStandByAttackTimer = -1.0f;
+            mDamageTimer = 1.0f;
+            mHp -= player->GetAttack() * 2.0f;
+            if (mHp <= 0)
+                mHp = 0;
         }
     }
 }

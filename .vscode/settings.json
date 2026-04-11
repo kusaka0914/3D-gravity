@@ -45,6 +45,9 @@
         "vector": "cpp",
         "__split_buffer": "cpp",
         "list": "cpp",
-        "deque": "cpp"
+        "deque": "cpp",
+        "array": "cpp",
+        "queue": "cpp",
+        "unordered_map": "cpp"
     }
 }

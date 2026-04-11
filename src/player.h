@@ -1,27 +1,29 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "planet.h"
+#include "Planet.h"
+#include "Actor.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 
-class Player : Actor {
+class Player : public Actor {
 public:
     Player(class Game* game);
     ~Player();
 
     void UpdateActor(float deltaTime) override;
 
-    void updatePlayerPhysics(PlayerState& p, float deltaTime, const std::vector<Planet>& planets,
-        float* transitionTimer = nullptr, bool skipGroundSnap = false);
+    // void updatePlayerPhysics(PlayerState& p, float deltaTime, const std::vector<Planet>& planets,
+    //     float* transitionTimer = nullptr, bool skipGroundSnap = false);
     
     void getForwardLeft(const glm::vec3& up, float cameraYaw, glm::vec3& outForward, glm::vec3& outLeft);
     float getYawFromDirection(const glm::vec3& up, const glm::vec3& dir);
-    glm::mat4 getPlayerView(const PlayerState& p, float cameraDistance, const std::vector<Planet>& planets);
+    // glm::mat4 getPlayerView(const PlayerState& p, float cameraDistance, const std::vector<Planet>& planets);
     void getPlayerFallbackTriangle(std::vector<float>& outVertices);
 
     void SetPos(const glm::vec3& pos) { mPos = pos; }
+    void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
     void SetKnockBackFrom(const glm::vec3& knockBackFrom) { mKnockBackFrom = knockBackFrom; }
     void SetRestartPos(const glm::vec3& restartPos) { mRestartPos = restartPos; }
     void SetCurrentPlanet(int planetIndex) { mCurrentPlanet = planetIndex; }
@@ -42,6 +44,7 @@ public:
     void SetRestartPlanetIndex(int restartPlanetIndex) { mRestartPlanetIndex = restartPlanetIndex; }
 
     const glm::vec3& GetPos() const { return mPos; }
+    const glm::vec3& GetUpVec() const { return mUpVec; }
     const glm::vec3& GetKnockBackFrom() const { return mKnockBackFrom; }
     const glm::vec3& GetRestartPos() const { return mRestartPos; }
     int GetCurrentPlanet() const { return mCurrentPlanet; }
@@ -63,22 +66,31 @@ public:
 
 private:
     glm::vec3 mPos;
+    glm::vec3 mUpVec;
     glm::vec3 mKnockBackFrom;
     glm::vec3 mRestartPos;
     int mCurrentPlanet;
     float mCameraYaw;
     float mCameraPitch;
     float mFacingYaw;
+    float mMoveForward;
+    float mMoveLeft;
+    float mAttackStartHeight;
+    float mDodgeTimer;
+    float mDodgeCooldown;
     glm::vec3 mVelocity;
     bool mOnGround;
     float mAttack;
     float mHp;
     bool mIsDamaged;
     bool mIsDamagePrev;
+    bool mDodgePressed;
+    bool mDodgePressedPrev;
     float mDamageTimer;
     float mAttackCooldownRemaining;
     float mAttackMoveLockRemaining;
     float mAttackDodgeLockRemaining;
+    float mAttackHeightLockRemaining;
     int mAttackIndex;
     int mRestartPlanetIndex;
 };

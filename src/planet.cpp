@@ -1,5 +1,8 @@
-#include "planet.h"
-#include "game.h"
+#include "Planet.h"
+#include "Game.h"
+#include "Enemy.h"
+#include "Boat.h"
+#include "Key.h"
 #include <cmath>
 
 Planet::Planet(Game* game)
@@ -8,7 +11,43 @@ Planet::Planet(Game* game)
 
 }
 
-void buildSphereMesh(unsigned int segmentsLat, unsigned int segmentsLong, float radius,
+void Planet::Initialize()
+{
+    auto enemyUnique = std::make_unique<Enemy>(GetGame());
+    Enemy* enemy = enemyUnique.get();
+    GetGame()->AddActor(std::move(enemyUnique));
+    mEnemies.emplace_back(enemy);
+
+    auto boatUnique = std::make_unique<Boat>(GetGame());
+    Boat* boat = boatUnique.get();
+    GetGame()->AddActor(std::move(boatUnique));
+    mBoats.emplace_back(boat);
+
+    auto keyUnique = std::make_unique<Key>(GetGame());
+    Key* key = keyUnique.get();
+    GetGame()->AddActor(std::move(keyUnique));
+    mKey = key;
+}
+
+void Planet::UpdateActor(float deltaTime) {
+    Actor::UpdateActor(deltaTime);
+    
+    // 今いる惑星の敵を全て倒したら鍵を出現させる
+    bool isAllEnemiesDead = true;
+    for (auto enemy : mEnemies) {
+        if (enemy->GetIsAlive())
+        {
+            isAllEnemiesDead = false;
+            break;
+        }
+    }
+    if (isAllEnemiesDead && !mKey->GetIsActive() && !mKey->GetIsObtained())
+    {
+        mKey->SetIsActive(true);
+    }
+}
+
+void Planet::buildSphereMesh(unsigned int segmentsLat, unsigned int segmentsLong, float radius,
     std::vector<float>& outVertices, std::vector<unsigned int>& outIndices) {
     outVertices.clear();
     outIndices.clear();

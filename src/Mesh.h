@@ -15,6 +15,7 @@ struct LoadedMesh {
 
 class Mesh {
 public:
+    unsigned int loadTexture(const char* path);
     std::vector<LoadedMesh> loadMeshFromFile(const char* path);
     /** 当たり判定用：頂点位置(x,y,zの連続)とインデックスを取得。全メッシュを結合する。 */
     bool loadMeshPositionsAndIndices(const char* path,

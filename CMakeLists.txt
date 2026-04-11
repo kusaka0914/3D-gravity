@@ -8,16 +8,21 @@ set(CMAKE_CXX_STANDARD 20)
 
 # .cppをコンパイルして、engineという名前の実行ファイルを作成するという指示
 add_executable(engine
-    src/main.cpp
-    src/shader.cpp
-    src/model_loader.cpp
-    src/planet.cpp
-    src/player.cpp
-    src/enemy_loader.cpp
-    src/player_loader.cpp
-    src/Game.cpp
-    src/VertexArray.cpp
+    src/Actor.cpp
+    src/AudioSystem.cpp
+    src/Boat.cpp
+    src/Component.cpp
     src/Enemy.cpp
+    src/Game.cpp
+    src/Key.cpp
+    src/Loader.cpp
+    src/Main.cpp
+    src/Mesh.cpp
+    src/Planet.cpp
+    src/Player.cpp
+    src/Shader.cpp
+    src/Stage.cpp
+    src/VertexArray.cpp
 )
 
 # OpenGLを使うのに必要なヘッダやライブラリを探して見つかったら変数に格納

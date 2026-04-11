@@ -1,4 +1,4 @@
-#include "./model_loader.h"
+#include "Mesh.h"
 #include <assimp/material.h>
 #include <string>
 #include <vector>
@@ -6,7 +6,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-static unsigned int loadTexture(const char* path) {
+unsigned int Mesh::loadTexture(const char* path) {
     unsigned int texID;
     glGenTextures(1, &texID);
     glBindTexture(GL_TEXTURE_2D, texID);
@@ -31,7 +31,7 @@ static unsigned int loadTexture(const char* path) {
     return texID;
 }
 
-std::vector<LoadedMesh> loadMeshFromFile(const char* path) {
+std::vector<LoadedMesh> Mesh::loadMeshFromFile(const char* path) {
     std::vector<LoadedMesh> results;
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path,
@@ -122,7 +122,7 @@ std::vector<LoadedMesh> loadMeshFromFile(const char* path) {
     return results;
 }
 
-bool loadMeshPositionsAndIndices(const char* path,
+bool Mesh::loadMeshPositionsAndIndices(const char* path,
     std::vector<float>& outPositions, std::vector<unsigned int>& outIndices) {
     outPositions.clear();
     outIndices.clear();
