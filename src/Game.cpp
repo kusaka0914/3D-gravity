@@ -108,81 +108,6 @@ bool Game::Initialize()
     auto audioSystem = std::make_unique<AudioSystem>(this);
     mAudioSystem = std::move(audioSystem);
 
-    // SDL_mixtureの初期化（オーディオを開く）
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) != 0)
-    {
-        std::cerr << "Mix_OpenAudio error: " << Mix_GetError() << std::endl;
-    }
-
-    // BGMをロードする
-    Mix_Music* normalBGM = Mix_LoadMUS("../assets/audio/normalBGM.wav");
-    if (normalBGM)
-    {
-        mBGMList["normalBGM"] = normalBGM;
-        // BGMをループ再生
-        Mix_PlayMusic(normalBGM, -1);
-    }
-    else
-    {
-        std::cerr << "Mix_LoadMUS error: " << Mix_GetError() << std::endl;
-    }
-    Mix_Music* bossBGM = Mix_LoadMUS("../assets/audio/boss.wav");
-    if (bossBGM)
-    {
-        mBGMList["bossBGM"] = bossBGM;
-    }
-    else
-    {
-        std::cerr << "Mix_LoadMUS (boss BGM) error: " << Mix_GetError() << std::endl;
-    }
-
-    // SEをロードする
-    Mix_Chunk* attackSE = Mix_LoadWAV("../assets/audio/attack.wav");
-    if (attackSE)
-    {
-        mSEList["attackSE"] = attackSE;
-    }
-    else
-    {
-        std::cerr << "Mix_LoadWAV (attack SE) error: " << Mix_GetError() << std::endl;
-    }
-    Mix_Chunk* attackMissSE = Mix_LoadWAV("../assets/audio/attack_miss.wav");
-    if (attackMissSE)
-    {
-        mSEList["attackMissSE"] = attackMissSE;
-    }
-    else
-    {
-        std::cerr << "Mix_LoadWAV (attack_miss SE) error: " << Mix_GetError() << std::endl;
-    }
-    Mix_Chunk* attackPreSE = Mix_LoadWAV("../assets/audio/attack_pre.wav");
-    if (attackPreSE)
-    {
-        mSEList["attackPreSE"] = attackPreSE;
-    }
-    else
-    {
-        std::cerr << "Mix_LoadWAV (attack_pre SE) error: " << Mix_GetError() << std::endl;
-    }
-    Mix_Chunk* counterSE = Mix_LoadWAV("../assets/audio/counter.wav");
-    if (counterSE)
-    {
-        mSEList["counterSE"] = counterSE;
-    }
-    else
-    {
-        std::cerr << "Mix_LoadWAV (counter SE) error: " << Mix_GetError() << std::endl;
-    }
-    Mix_Chunk* clearSE = Mix_LoadWAV("../assets/audio/clear.wav");
-    if (clearSE)
-    {
-        mSEList["clearSE"] = clearSE;
-    }
-    else
-    {
-        std::cerr << "Mix_LoadWAV (clear SE) error: " << Mix_GetError() << std::endl;
-    }
-
     // ステージ作成
     auto stageUnique = std::make_unique<Stage>(this);
     Stage* stage = stageUnique.get();
@@ -788,8 +713,6 @@ void Game::UpdateGame()
 
     AudioSystem* audioSystem = mAudioSystem.get();
     audioSystem->Update();
-
-    // glm::vec3 up = glm::normalize(mPlayers[0]->GetPos() - planets[mPlayers[0].planetIndex]->GetCenter());
 
     // ボート移動
     // if (boatTransitionActive)

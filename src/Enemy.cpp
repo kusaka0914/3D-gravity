@@ -25,7 +25,6 @@ Enemy::Enemy(Game* game)
 void Enemy::UpdateActor(float deltaTime) {
     Actor::UpdateActor(deltaTime);
     std::vector<class Player*> players = GetGame()->GetPlayers();
-    const auto& seList = GetGame()->GetSEList();
 
     for(auto player : players) {
         glm::vec3 playerPos = player->GetPos();
@@ -63,12 +62,7 @@ void Enemy::UpdateActor(float deltaTime) {
         {
             float prevStandBy = mStandByAttackTimer;
             mStandByAttackTimer -= deltaTime;
-            auto it = seList.find("attackPreSE");
-            Mix_Chunk* attackPreSE = (it != seList.end()) ? it->second : nullptr;
-            if (prevStandBy >= 0.5f && mStandByAttackTimer < 0.5f && attackPreSE)
-            {
-                Mix_PlayChannel(-1, attackPreSE, 0); // 攻撃直前SE
-            }
+            GetGame()->GetAudioSystem()->PlaySE("attackPreSE");
         }
         // 攻撃
         if (mStandByAttackTimer <= 0.0f && inRangeOfPlayer)

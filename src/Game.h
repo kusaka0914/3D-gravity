@@ -1,4 +1,5 @@
 #include "Actor.h"
+#include "AudioSystem.h"
 #include <map>
 #include <unordered_map>
 #include <GLFW/glfw3.h>
@@ -22,10 +23,9 @@ public:
     SDL_GameController* GetSdlController() const { return mSdlController;}
     const std::vector<std::unique_ptr<class Actor>>& GetActors() const { return mActors; }
     const std::vector<class Player*>& GetPlayers() const { return mPlayers; }
-
-    const std::unordered_map<const char*, Mix_Music*>& GetBGMList() const { return mBGMList; }
-    const std::unordered_map<const char*, Mix_Chunk*>& GetSEList() const { return mSEList; }
     const std::vector<class Stage*>& GetStages() const { return mStages; }
+    AudioSystem* GetAudioSystem() const { return mAudioSystem.get(); }
+
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }
     bool GetIsStageClear() const { return mIsStageClear; }
@@ -39,8 +39,6 @@ private:
     SDL_GameController* mSdlController;
     TTF_Font* mFont;
 
-    std::unordered_map<const char*, Mix_Music*> mBGMList;
-    std::unordered_map<const char*, Mix_Chunk*> mSEList;
     std::unordered_map<const char*, std::unique_ptr<class VertexArray>> mVertexArrays;
 
     std::vector<class Player*> mPlayers;

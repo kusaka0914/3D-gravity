@@ -50,7 +50,7 @@ Player::Player(Game* game)
 
     glm::vec3 center = mCurrentPlanet->GetCenter();
     float radius = mCurrentPlanet->GetRadius();
-    mPos = center + glm::vec3(0.0f, radius, 0.0f);
+    mPos = center + glm::vec3(10.0f, radius, 0.0f);
 }
 
 Player::~Player()
@@ -71,8 +71,8 @@ void Player::ProcessActor()
         const float deadZone = 0.25f;
         const float scale = 1.0f / 32767.0f; // SDL_GameControllerGetAxisの範囲が32767までで、scaleをかけて1.0f以内に抑えるため
         // 左スティックの操作をプレイヤー移動量に
-        mMoveForward += SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_LEFTY) * scale;
-        mMoveLeft += SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_LEFTX) * scale;
+        mMoveForward = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_LEFTY) * scale;
+        mMoveLeft = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_LEFTX) * scale;
         // 触っていない時に動くのを防ぐ
         if (std::abs(mMoveForward) < deadZone)
             mMoveForward = 0.0f;
@@ -87,23 +87,29 @@ void Player::ProcessActor()
         if (std::abs(mCameraStickX) < deadZone)
             mCameraStickX = 0.0f;
 
+        mIsDamaged = false;
         // ジャンプ判定（Aボタン）
+        mJumpPressed = false;
         if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_A))
             mJumpPressed = true;
 
         // 攻撃判定（Xボタン）
+        mAttackPressed = false;
         if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_X))
             mAttackPressed = true;
 
         // 回避（Bボタン）
+        mDodgePressed = false;
         if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_B))
             mDodgePressed = true;
 
         // カウンター（Lボタン）
+        mCounterPressed = false;
         if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_LEFTSHOULDER))
             mCounterPressed = true;
 
         // ダッシュ判定（Rボタン）
+        mDashSpeed = 1.0f;
         if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
             mDashSpeed = 1.5f;
     }
@@ -117,8 +123,6 @@ void Player::UpdateActor(float deltaTime)
     mCameraPitch -= mCameraStickY * cameraSensitivity * deltaTime;
     mCameraPitch = glm::clamp(mCameraPitch, -1.2f, -0.2f);
 
-    Stage* currentStage = GetGame()->GetCurrentStage();
-    const auto& seList = GetGame()->GetSEList();
     std::vector<Enemy*> enemies = mCurrentPlanet->GetEnemies();
 
     mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
@@ -240,6 +244,7 @@ void Player::UpdateActor(float deltaTime)
         dodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
         mVelocity = glm::vec3(0.0f);
     }
+    // 回避中移動
     if (mDodgeTimer > 0.0f)
     {
         const float dodgeDistance = 3.0f;
@@ -252,10 +257,11 @@ void Player::UpdateActor(float deltaTime)
             mPos = center + (mPos - center) / dist * dodgeStartHeight;
         mDodgeTimer -= deltaTime;
     }
+    // 回避クールダウン消費
     if (mDodgeCooldown > 0.0f)
         mDodgeCooldown -= deltaTime;
 
-    // 攻撃後＋0.5秒：攻撃時の高さを維持して浮遊（空中固定）
+    // 攻撃時の高さを維持して浮遊
     if (mAttackHeightLockRemaining > 0.0f)
     {
         glm::vec3 center = mCurrentPlanet->GetCenter();
@@ -297,10 +303,9 @@ void Player::UpdateActor(float deltaTime)
     //         players[0].onGround = false;
     //     }
     // }
-    // 回避中・攻撃空中固定中は重力をかけず、終了後に通常通り落下
-    if (mDodgeTimer <= 0.0f && mAttackHeightLockRemaining <= 0.0f) {
-        // updatePlayerPhysics(players[0], deltaTime, planets, &transitionTimer, bulletOk && bulletWorld);
 
+    // 回避中・空中攻撃中は重力をかけず、終了後に通常通り落下
+    if (mDodgeTimer <= 0.0f && mAttackHeightLockRemaining <= 0.0f) {
         glm::vec3 center = mCurrentPlanet->GetCenter();
         float radius = mCurrentPlanet->GetRadius();
         mUpVec = glm::normalize(mPos - center);
@@ -309,28 +314,13 @@ void Player::UpdateActor(float deltaTime)
         bool skipGroundSnap = false; // TODO:
         if (mOnGround && !skipGroundSnap) {
             mPos = center + glm::normalize(mPos - center) * radius;
-            return;
         }
-        if (mOnGround && skipGroundSnap) {
-            return;
-        }
-        // if (transitionTimer && *transitionTimer > 0.0f) {
-        //     *transitionTimer -= deltaTime;
-        //     return;
-        // }
+
+        // 重力処理
         mVelocity -= mUpVec * 9.8f * deltaTime;
         mPos += mVelocity * deltaTime;
-    
-        // float distToCurrent = glm::length(mPos - center);
-        // for (size_t i = 0; i < planets.size(); i++) {
-        //     if (i == static_cast<size_t>(mCurrentPlanetNum)) continue;
-        //     float d = glm::length(mPos - planets[i].center);
-        //     if (d < planets[i].radius + 2.0f && d < distToCurrent) {
-        //         mCurrentPlanetNum = static_cast<int>(i);
-        //         if (transitionTimer) *transitionTimer = 0.3f;
-        //         break;
-        //     }
-        // }
+
+        // 落下時に初期位置に移動
         float dist = glm::length(mPos - center);
         if (!skipGroundSnap && dist <= radius) {
             mOnGround = true;
@@ -409,10 +399,7 @@ void Player::UpdateActor(float deltaTime)
                     mAttackHeightLockRemaining = 0.5f;
                 else
                     mAttackHeightLockRemaining = mAttackMoveLockRemaining + 0.5f;
-                auto it = seList.find("attackSE");
-                Mix_Chunk* attackSE = (it != seList.end()) ? it->second : nullptr;
-                if (attackSE)
-                    Mix_PlayChannel(-1, attackSE, 0);
+                GetGame()->GetAudioSystem()->PlaySE("attackSE");
                 hitTarget = true;
             }
         }
@@ -438,10 +425,7 @@ void Player::UpdateActor(float deltaTime)
             else
                 mAttackHeightLockRemaining = mAttackMoveLockRemaining + 0.2f;
             
-            auto it = seList.find("attackMissSE");
-            Mix_Chunk* attackMissSE = (it != seList.end()) ? it->second : nullptr;
-            if (attackMissSE)
-                Mix_PlayChannel(-1, attackMissSE, 0);
+            GetGame()->GetAudioSystem()->PlaySE("attackMissSE");
         }
     }
 
@@ -467,10 +451,7 @@ void Player::UpdateActor(float deltaTime)
             if (isHit)
             {
                 enemy->SetIsCountered(true);
-                auto it = seList.find("counterSE");
-                Mix_Chunk* counterSE = (it != seList.end()) ? it->second : nullptr;   
-                if (counterSE)
-                    Mix_PlayChannel(-1, counterSE, 0);
+                GetGame()->GetAudioSystem()->PlaySE("counterSE");
                 break;
             }
         }
@@ -525,47 +506,6 @@ void Player::UpdateActor(float deltaTime)
     mCounterPressedPrev = mCounterPressed;
     mIsDamagePrev = mIsDamaged;
 }
-
-// void Player::updatePlayerPhysics(PlayerState& p, float deltaTime, const std::vector<Planet>& planets,
-//     float* transitionTimer, bool skipGroundSnap) {
-//         glm::vec3 center = mCurrentPlanet->GetCenter();
-//         float radius = mCurrentPlanet->GetRadius();
-//         glm::vec3 mUpVec = glm::normalize(mPos - center);
-    
-//         if (mOnGround && !skipGroundSnap) {
-//             mPos = center + glm::normalize(mPos - center) * radius;
-//             return;
-//         }
-//         if (mOnGround && skipGroundSnap) {
-//             return;
-//         }
-//         if (transitionTimer && *transitionTimer > 0.0f) {
-//             *transitionTimer -= deltaTime;
-//             return;
-//         }
-//         mVelocity -= mUpVec * 9.8f * deltaTime;
-//         mPos += mVelocity * deltaTime;
-    
-        
-//         float distToCurrent = glm::length(mPos - center);
-//         for (size_t i = 0; i < planets.size(); i++) {
-//             if (i == static_cast<size_t>(mCurrentPlanetNum)) continue;
-//             float d = glm::length(mPos - planets[i].center);
-//             if (d < planets[i].radius + 2.0f && d < distToCurrent) {
-//                 mCurrentPlanetNum = static_cast<int>(i);
-//                 if (transitionTimer) *transitionTimer = 0.3f;
-//                 break;
-//             }
-//         }
-//         center = planets[mCurrentPlanetNum].center;
-//         radius = planets[mCurrentPlanetNum].radius;
-//         float dist = glm::length(mPos - center);
-//         if (!skipGroundSnap && dist <= radius) {
-//             mOnGround = true;
-//             mPos = center + glm::normalize(mPos - center) * radius;
-//             mVelocity = glm::vec3(0, 0, 0);
-//         }
-// }
 
 void Player::getForwardLeft(const glm::vec3& mUpVec, float cameraYaw, glm::vec3& outForward, glm::vec3& outLeft) {
     glm::vec3 worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 0, 1)));
