@@ -10,13 +10,14 @@
 class Enemy : public Actor {
 public:
     Enemy(class Game* game);
+    void Initialize() override;
     void UpdateActor(float deltaTime) override;
 
     virtual bool IsBoss() const { return false; }
     float GetRadius() const { return mScale * 3.6f; }
 
     void SetPos(const glm::vec3& pos) { mPos = pos; }
-    void SetCurrentPlanet(int currentPlanet) { mCurrentPlanet = currentPlanet; }
+    void SetCurrentPlanet(int currentPlanet) { mCurrentPlanetNum = currentPlanet; }
     void SetHp(float hp) { mHp = hp; }
     void SetIsAlive(bool isAlive) { mIsAlive = isAlive; }
     void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
@@ -31,7 +32,7 @@ public:
     void SetSensing(float sensing) { mSensing = sensing; }
 
     const glm::vec3& GetPos() const { return mPos; }
-    int GetCurrentPlanet() const { return mCurrentPlanet; }
+    int GetCurrentPlanet() const { return mCurrentPlanetNum; }
     float GetHp() const { return mHp; }
     bool GetIsAlive() const { return mIsAlive; }
     bool GetIsDamaged() const { return mIsDamaged; }
@@ -46,8 +47,9 @@ public:
     float GetSensing() const { return mSensing; }
 
 private:
+    class Planet* mCurrentPlanet;
     glm::vec3 mPos;
-    int mCurrentPlanet;
+    int mCurrentPlanetNum;
     float mHp;
     bool mIsAlive;
     bool mIsDamaged;
@@ -60,16 +62,6 @@ private:
     float mStandByAttackTimer;
     bool mIsAttack;
     float mSensing;
-};
-
-class NormalEnemy : Enemy {
-public:
-    bool IsBoss() const override { return false; }
-};
-
-class BossEnemy : public Enemy {
-public:
-    bool IsBoss() const override { return true; }
 };
 
 #endif

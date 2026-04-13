@@ -2,6 +2,7 @@
 #include "Loader.h"
 #include "Game.h"
 #include "Enemy.h"
+#include "Stage.h"
 #include <yaml-cpp/yaml.h>
 #include <glm/glm.hpp>
 #include <iostream>
@@ -47,55 +48,58 @@ bool Loader::loadPlayerFromYaml(const char* path, const std::vector<Planet*>& pl
     // }
 }
 
-bool Loader::loadEnemiesFromYaml(const char* path, const std::vector<Planet*>& planets,
-    std::vector<Enemy*>& outEnemies) {
-    // outEnemies.clear();
-    // try {
-    //     YAML::Node root = YAML::LoadFile(path);
-    //     if (!root["enemies"] || !root["enemies"].IsSequence()) {
-    //         std::cerr << "enemy_loader: missing or invalid 'enemies' sequence" << std::endl;
-    //         return false;
-    //     }
-    //     for (const YAML::Node& node : root["enemies"]) {
-    //         bool isBoss = node["type"] && node["type"].as<std::string>() == "boss";
-    //         EnemyBase* e = isBoss ? static_cast<EnemyBase*>(new BossEnemy()) : static_cast<EnemyBase*>(new NormalEnemy());
+bool Loader::loadEnemiesFromYaml(const char* path) {
+    try {
+        YAML::Node root = YAML::LoadFile(path);
+        if (!root["enemies"] || !root["enemies"].IsSequence()) {
+            std::cerr << "enemy_loader: missing or invalid 'enemies' sequence" << std::endl;
+            return false;
+        }
+        for (const YAML::Node& node : root["enemies"]) {
+            // bool isBoss = node["type"] && node["type"].as<std::string>() == "boss";
+            // Enemy* enemy = isBoss ? static_cast<Enemy*>(new BossEnemy(mGame)) : static_cast<Enemy*>(new NormalEnemy(mGame));
+            std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(mGame);
+            float hp = node["hp"] ? node["hp"].as<float>() : 10.0f;
+            enemy->SetHp(hp);
 
-    //         float theta = node["theta"] ? node["theta"].as<float>() : 0.0f;
-    //         float u = node["u"] ? node["u"].as<float>() : 0.0f;
-    //         int planetIndex = node["planet_index"] ? node["planet_index"].as<int>() : 0;
-    //         float hp = node["hp"] ? node["hp"].as<float>() : 10.0f;
-    //         e->hp = hp;
-    //         e->planetIndex = planetIndex;
-    //         if (node["model"])
-    //             e->modelPath = node["model"].as<std::string>();
-    //         e->drawScale = node["scale"] ? node["scale"].as<float>() : 0.25f;
-    //         e->speed = node["speed"] ? node["speed"].as<float>() : 2.0f;
-    //         e->attack = node["attack"] ? node["attack"].as<float>() : 20.0f;
+            int planetIndex = node["planet_index"] ? node["planet_index"].as<int>() : 0;
+            enemy->SetCurrentPlanet(planetIndex);
+            
+            if (node["model"]) {
+                std::string modelPath = node["model"].as<std::string>();
+                enemy->SetModelPath(modelPath);
+            }
 
-    //         if (planetIndex < 0 || static_cast<size_t>(planetIndex) >= planets.size()) {
-    //             std::cerr << "enemy_loader: invalid planet_index " << planetIndex << std::endl;
-    //             delete e;
-    //             continue;
-    //         }
-    //         const Planet& p = planets[planetIndex];
-    //         glm::vec3 dir(std::cos(theta), std::sin(theta), u);
-    //         float len = glm::length(dir);
-    //         if (len < 1e-6f) dir = glm::vec3(1.0f, 0.0f, 0.0f);
-    //         else dir /= len;
-    //         e->pos = p.center + p.radius * dir;
+            float scale = node["scale"] ? node["scale"].as<float>() : 0.25f;
+            enemy->SetScale(scale);
 
-    //         outEnemies.push_back(EnemyPtr(e));
-    //     }
-    //     return true;
-    // } catch (const YAML::Exception& ex) {
-    //     std::cerr << "enemy_loader: " << ex.what() << std::endl;
-    //     return false;
-    // }
+            float speed = node["speed"] ? node["speed"].as<float>() : 2.0f;
+            enemy->SetSpeed(speed);
+
+            float attack = node["attack"] ? node["attack"].as<float>() : 20.0f;
+            enemy->SetAttack(attack);
+
+            std::vector<Planet*> planets = GetGame()->GetCurrentStage()->GetPlanets();
+            Planet* p = planets[planetIndex];
+            float theta = node["theta"] ? node["theta"].as<float>() : 0.0f;
+            float u = node["u"] ? node["u"].as<float>() : 0.0f;
+            glm::vec3 dir(std::cos(theta), std::sin(theta), u);
+            float len = glm::length(dir);
+            if (len < 1e-6f) dir = glm::vec3(1.0f, 0.0f, 0.0f);
+            else dir /= len;
+            enemy->SetPos(p->GetCenter() + p->GetRadius() * dir);
+
+            GetGame()->GetCurrentStage()->GetPlanets()[planetIndex]->AddEnemy(enemy.release());
+        }
+        return true;
+    } catch (const YAML::Exception& ex) {
+        std::cerr << "enemy_loader: " << ex.what() << std::endl;
+        return false;
+    }
 }
 
-bool Loader::loadPlanetsFromYaml(const char* path, std::vector<Planet*>& outPlanets) {
+bool Loader::loadPlanetsFromYaml(const char* path) {
     // 惑星配列の初期化
-    outPlanets.clear();
     try {
         YAML::Node root = YAML::LoadFile(path);
         // 失敗処理
@@ -134,7 +138,7 @@ bool Loader::loadPlanetsFromYaml(const char* path, std::vector<Planet*>& outPlan
                 p->SetModelPath(modelPath);
             }
             // 惑星配列に追加
-            outPlanets.emplace_back(p.release());
+            GetGame()->GetCurrentStage()->AddPlanet(p.release());
         }
         return true;
     } catch (const YAML::Exception& ex) {

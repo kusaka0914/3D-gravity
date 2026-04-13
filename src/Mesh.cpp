@@ -55,23 +55,23 @@ std::vector<LoadedMesh> Mesh::loadMeshFromFile(const char* path) {
         std::vector<unsigned int> indices;
 
         for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
-            vertices.push_back(mesh->mVertices[i].x);
-            vertices.push_back(mesh->mVertices[i].y);
-            vertices.push_back(mesh->mVertices[i].z);
+            vertices.emplace_back(mesh->mVertices[i].x);
+            vertices.emplace_back(mesh->mVertices[i].y);
+            vertices.emplace_back(mesh->mVertices[i].z);
             if (hasNormals) {
-                vertices.push_back(mesh->mNormals[i].x);
-                vertices.push_back(mesh->mNormals[i].y);
-                vertices.push_back(mesh->mNormals[i].z);
+                vertices.emplace_back(mesh->mNormals[i].x);
+                vertices.emplace_back(mesh->mNormals[i].y);
+                vertices.emplace_back(mesh->mNormals[i].z);
             }
             if (hasUV) {
-                vertices.push_back(mesh->mTextureCoords[0][i].x);
-                vertices.push_back(mesh->mTextureCoords[0][i].y);
+                vertices.emplace_back(mesh->mTextureCoords[0][i].x);
+                vertices.emplace_back(mesh->mTextureCoords[0][i].y);
             }
         }
         for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
             aiFace& face = mesh->mFaces[i];
             for (unsigned int j = 0; j < face.mNumIndices; j++)
-                indices.push_back(face.mIndices[j]);
+                indices.emplace_back(face.mIndices[j]);
         }
 
         unsigned int VAO, VBO, EBO;
@@ -118,7 +118,7 @@ std::vector<LoadedMesh> Mesh::loadMeshFromFile(const char* path) {
                 result.textureID = loadTexture(fullPath.c_str());
             }
         }
-        results.push_back(result);
+        results.emplace_back(result);
     }
     return results;
 }
@@ -138,14 +138,14 @@ bool Mesh::loadMeshPositionsAndIndices(const char* path,
     for (unsigned int meshIdx = 0; meshIdx < scene->mNumMeshes; meshIdx++) {
         const aiMesh* mesh = scene->mMeshes[meshIdx];
         for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
-            outPositions.push_back(mesh->mVertices[i].x);
-            outPositions.push_back(mesh->mVertices[i].y);
-            outPositions.push_back(mesh->mVertices[i].z);
+            outPositions.emplace_back(mesh->mVertices[i].x);
+            outPositions.emplace_back(mesh->mVertices[i].y);
+            outPositions.emplace_back(mesh->mVertices[i].z);
         }
         for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
             const aiFace& face = mesh->mFaces[i];
             for (unsigned int j = 0; j < face.mNumIndices; j++)
-                outIndices.push_back(vertexOffset + face.mIndices[j]);
+                outIndices.emplace_back(vertexOffset + face.mIndices[j]);
         }
         vertexOffset += mesh->mNumVertices;
     }

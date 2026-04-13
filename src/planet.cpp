@@ -66,9 +66,9 @@ void Planet::buildSphereMesh(unsigned int segmentsLat, unsigned int segmentsLong
             float x = radius * std::sin(phi) * std::cos(theta);
             float y = radius * std::cos(phi);
             float z = radius * std::sin(phi) * std::sin(theta);
-            outVertices.push_back(x);
-            outVertices.push_back(y);
-            outVertices.push_back(z);
+            outVertices.emplace_back(x);
+            outVertices.emplace_back(y);
+            outVertices.emplace_back(z);
         }
     }
 
@@ -85,12 +85,12 @@ void Planet::buildSphereMesh(unsigned int segmentsLat, unsigned int segmentsLong
             unsigned int i2 = i0 + (segmentsLong + 1);
             unsigned int i3 = i2 + 1;
             // 四角形を2つの三角形に分ける
-            outIndices.push_back(i0);
-            outIndices.push_back(i2);
-            outIndices.push_back(i1);
-            outIndices.push_back(i1);
-            outIndices.push_back(i2);
-            outIndices.push_back(i3);
+            outIndices.emplace_back(i0);
+            outIndices.emplace_back(i2);
+            outIndices.emplace_back(i1);
+            outIndices.emplace_back(i1);
+            outIndices.emplace_back(i2);
+            outIndices.emplace_back(i3);
         }
     }
 }

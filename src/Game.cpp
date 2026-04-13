@@ -240,22 +240,22 @@ bool Game::Initialize()
     }
 
     // 惑星をYAMLから読み込み
-    Stage* currentStage = mStages[mCurrentStageNum];
-    std::vector<Planet*> planets = currentStage->GetPlanets();
     auto loader = std::make_unique<Loader>(this);
     static const char *const planetsYamlPath = "../assets/data/planets.yaml";
-    if (!loader->loadPlanetsFromYaml(planetsYamlPath, planets)) {
+    if (!loader->loadPlanetsFromYaml(planetsYamlPath)) {
         std::cerr << "Planet YAML load failed" << std::endl;
     }
-    // // 惑星ごとのモデルをロード
+
+    std::vector<Planet*> planets = mCurrentStage->GetPlanets();
+    // 惑星ごとのモデルをロード
     for (auto planet : planets)
     {
-        std::unordered_map<std::string, std::vector<LoadedMesh>> planetMeshesByPath = currentStage->GetPlanetMeshesByPath();
+        std::unordered_map<std::string, std::vector<LoadedMesh>> planetMeshesByPath = mCurrentStage->GetPlanetMeshesByPath();
         if (planetMeshesByPath.find(planet->GetModelPath()) == planetMeshesByPath.end())
         {
             std::string path = "../assets/models/" + planet->GetModelPath();
             auto planetMeshes = mesh->loadMeshFromFile(path.c_str());
-            currentStage->AddPlanetMesh(planet->GetModelPath(), planetMeshes);
+            mCurrentStage->AddPlanetMesh(planet->GetModelPath(), planetMeshes);
         }
     }
 
@@ -284,36 +284,24 @@ bool Game::Initialize()
     // int restartPlanetIndex = 0;
     // bool mIsPlayer2Joined = false;
 
-    // static const char *const enemiesYamlPath = "../assets/data/enemies.yaml";
-    // // 敵を YAML から読み込み（失敗時は1体のデフォルト）
-    // std::vector<unique_ptr<Enemy>> enemies;
-    // if (!loadEnemiesFromYaml(enemiesYamlPath, planets, enemies))
-    // {
-    //     auto def = std::make_unique<NormalEnemy>();
-    //     glm::vec3 center = planets[0]->GetCenter();
-    //     float radius = planets[0]->GetRadius();
-    //     def->pos = center + radius * glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f));
-    //     def->planetIndex = 0;
-    //     def->hp = 10.0f;
-    //     def->modelPath = "enemy.obj";
-    //     def->drawScale = 0.25f;
-    //     def->speed = 2.0f;
-    //     def->attack = 20.0f;
-    //     enemies.push_back(std::move(def));
-    //     std::cerr << "Enemy YAML load failed, using 1 default enemy." << std::endl;
-    // }
-    // // 敵ごとのモデルをロード（同じ modelPath は1回だけ）
-    // std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath;
-    // for (const unique_ptr<Enemy> &p : enemies)
-    // {
-    //     const std::string &pathKey = p->modelPath;
-    //     if (enemyMeshesByPath.find(pathKey) == enemyMeshesByPath.end())
-    //     {
-    //         std::string path = "../assets/models/" + pathKey;
-    //         enemyMeshesByPath[pathKey] = loadMeshFromFile(path.c_str());
-    //     }
-    // }
-    // glm::vec3 playerKnockbackFrom(0.0f);
+    static const char *const enemiesYamlPath = "../assets/data/enemies.yaml";
+    // 敵を YAML から読み込み（失敗時は1体のデフォルト）
+    if (!loader->loadEnemiesFromYaml(enemiesYamlPath))
+    {
+        std::cerr << "Enemy YAML load failed, using 1 default enemy." << std::endl;
+    }
+    // 敵ごとのモデルをロード
+    std::vector<Enemy*> enemies = GetCurrentStage()->GetPlanets()[0]->GetEnemies();
+    for (auto enemy : enemies)
+    {
+        std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = mCurrentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
+        if (enemyMeshesByPath.find(enemy->GetModelPath()) == enemyMeshesByPath.end())
+        {
+            std::string path = "../assets/models/" + enemy->GetModelPath();
+            auto enemyMeshes = mesh->loadMeshFromFile(path.c_str());
+            mCurrentStage->GetPlanets()[0]->AddEnemyMesh(enemy->GetModelPath(), enemyMeshes);
+        }
+    }
 
     // // 鍵（現在の惑星で最後に倒した敵の場所に出現）
     // bool keyVisible = false;
@@ -348,13 +336,6 @@ bool Game::Initialize()
 
     // // 時間情報
     mLastTime = glfwGetTime();
-    // float transitionTimer = 0.0f;
-    // float damageTimer = 0.0f;
-    // bool attackPressedPrev = false;
-    // bool counterKeyPressedPrev = false;
-    // float dodgeStartHeight = 0.0f;          // 空中回避時の惑星中心からの距離（浮遊高さ）
-    // float attackStartHeight = 0.0f;         // 攻撃硬直時の惑星中心からの距離（浮遊高さ）
-    // float attackHeightLockRemaining = 0.0f; // 攻撃後の空中固定時間（硬直＋0.5秒）
 
     // // 深度テストをONにして奥行きに応じて描画できるようにする（描画順ではなく、手前にあるものが上書きされて描画される）
     glEnable(GL_DEPTH_TEST);
@@ -406,7 +387,7 @@ bool Game::Initialize()
     //             btVector3 v2(center.x + radius * pos[i2 * 3], center.y + radius * pos[i2 * 3 + 1], center.z + radius * pos[i2 * 3 + 2]);
     //             triMesh->addTriangle(v0, v1, v2);
     //         }
-    //         bulletPlanetMeshes.push_back(triMesh);
+    //         bulletPlanetMeshes.emplace_back(triMesh);
     //         // #region agent log
     //         {
     //             std::ostringstream ds;
@@ -415,7 +396,7 @@ bool Game::Initialize()
     //         }
     //         // #endregion
     //         btBvhTriangleMeshShape *shape = new btBvhTriangleMeshShape(triMesh, true);
-    //         bulletPlanetShapes.push_back(shape);
+    //         bulletPlanetShapes.emplace_back(shape);
     //         btTransform startTransform;
     //         startTransform.setIdentity();
     //         startTransform.setOrigin(btVector3(0, 0, 0));
@@ -424,7 +405,7 @@ bool Game::Initialize()
     //         body->setWorldTransform(startTransform);
     //         body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     //         bulletWorld->addRigidBody(body, (short)btBroadphaseProxy::DefaultFilter, (short)-1);
-    //         bulletPlanetBodies.push_back(body);
+    //         bulletPlanetBodies.emplace_back(body);
     //     }
     //     bulletOk = !bulletPlanetBodies.empty();
     //     // #region agent log
@@ -1193,7 +1174,7 @@ void Game::UpdateGame()
     // for (const unique_ptr<Enemy> &p : enemies)
     // {
     //     if (p->planetIndex == mPlayers[0].planetIndex)
-    //         currentPlanetEnemies.push_back(p.get());
+    //         currentPlanetEnemies.emplace_back(p.get());
     // }
     // bool allEnemiesDead = true;
     // for (EnemyBase *e : currentPlanetEnemies)
@@ -1403,56 +1384,58 @@ void Game::GenerateOutput()
             drawCharacter(mPlayers[1]->GetPos(), playerScale, glm::vec3(1.0f, 0.5f, 0.0f), up1, mPlayers[1]->GetFacingYaw(),  mPlayers[1]->GetPlayerMeshes());
         }
 
-        // 敵描画（惑星に立ててプレイヤー方向を向く、modelPath と drawScale はデータ駆動）+ 頭上にID
-        // for (size_t ei = 0; ei < enemies.size(); ei++)
-        // {
-        //     const EnemyBase &e = *enemies[ei];
-        //     if (!e.alive)
-        //         continue;
-        //     auto eit = enemyMeshesByPath.find(e->GetModelPath());
-        //     if (eit == enemyMeshesByPath.end() || eit->second.empty())
-        //         eit = enemyMeshesByPath.find("enemy.obj");
-        //     if (eit == enemyMeshesByPath.end() || eit->second.empty())
-        //         continue;
-        //     glm::vec3 enemyUp = glm::normalize(e->GetPos() - planets[e.planetIndex]->GetCenter());
-        //     glm::vec3 toPlayer = glm::normalize(mPlayers[0]->GetPos() - e->GetPos());
-        //     float enemyFacingYaw = getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
-        //     drawCharacter(e->GetPos(), e.drawScale, glm::vec3(0.0f, 1.0f, 0.0f), enemyUp, enemyFacingYaw, eit->second);
-        //     // 敵の頭上にID（1始まり）をビルボード表示
-        //     if (mFont)
-        //     {
-        //         auto [texId, texSize] = getTextTexture(std::to_string(ei + 1));
-        //         if (texId != 0 && texSize.x > 0 && texSize.y > 0)
-        //         {
-        //             glm::vec3 camPos(glm::inverse(viewMat)[3]);
-        //             glm::vec3 quadCenter = e->GetPos() + enemyUp * 0.8f;
-        //             glm::vec3 forward = glm::normalize(camPos - quadCenter);
-        //             glm::vec3 right = glm::normalize(glm::cross(enemyUp, forward));
-        //             if (glm::length(right) < 0.01f)
-        //                 right = glm::normalize(glm::cross(enemyUp, glm::vec3(0, 0, 1)));
-        //             glm::vec3 upQuad = glm::cross(forward, right);
-        //             float w = enemyLabelHeight * static_cast<float>(texSize.x) / static_cast<float>(texSize.y);
-        //             glm::mat4 billboard(1.0f);
-        //             billboard[0] = glm::vec4(right * w, 0.0f);
-        //             billboard[1] = glm::vec4(upQuad * enemyLabelHeight, 0.0f);
-        //             billboard[2] = glm::vec4(forward, 0.0f);
-        //             billboard[3] = glm::vec4(quadCenter, 1.0f);
-        //             glEnable(GL_BLEND);
-        //             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        //             glDepthMask(GL_FALSE);
-        //             glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
-        //             glActiveTexture(GL_TEXTURE0);
-        //             glBindTexture(GL_TEXTURE_2D, texId);
-        //             glUniform1i(locUseTexture, 1);
-        //             glUniform3f(locObjectColor, 1.0f, 1.0f, 1.0f);
-        //             glBindVertexArray(textQuadVAO);
-        //             glDrawArrays(GL_TRIANGLES, 0, 6);
-        //             glUniform1i(locUseTexture, 0);
-        //             glDepthMask(GL_TRUE);
-        //             glDisable(GL_BLEND);
-        //         }
-        //     }
-        // }
+        std::vector<Enemy*> enemies = mCurrentStage->GetPlanets()[mPlayers[0]->GetCurrentPlanetNum()]->GetEnemies();
+        // 敵描画
+        for (size_t ei = 0; ei < enemies.size(); ei++)
+        {
+            Enemy*& enemy = enemies[ei];
+            if (!enemy->GetIsAlive())
+                continue;
+            std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = mCurrentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
+            auto eit = enemyMeshesByPath.find(enemy->GetModelPath());
+            if (eit == enemyMeshesByPath.end() || eit->second.empty())
+                eit = enemyMeshesByPath.find("enemy.obj");
+            if (eit == enemyMeshesByPath.end() || eit->second.empty())
+                continue;
+            glm::vec3 enemyUp = glm::normalize(enemy->GetPos() - planets[enemy->GetCurrentPlanet()]->GetCenter());
+            glm::vec3 toPlayer = glm::normalize(mPlayers[0]->GetPos() - enemy->GetPos());
+            float enemyFacingYaw = mPlayers[0]->getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
+            drawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec3(0.0f, 1.0f, 0.0f), enemyUp, enemyFacingYaw, eit->second);
+            // 敵の頭上にID（1始まり）をビルボード表示
+            // if (mFont)
+            // {
+            //     auto [texId, texSize] = getTextTexture(std::to_string(ei + 1));
+            //     if (texId != 0 && texSize.x > 0 && texSize.y > 0)
+            //     {
+            //         glm::vec3 camPos(glm::inverse(viewMat)[3]);
+            //         glm::vec3 quadCenter = e->GetPos() + enemyUp * 0.8f;
+            //         glm::vec3 forward = glm::normalize(camPos - quadCenter);
+            //         glm::vec3 right = glm::normalize(glm::cross(enemyUp, forward));
+            //         if (glm::length(right) < 0.01f)
+            //             right = glm::normalize(glm::cross(enemyUp, glm::vec3(0, 0, 1)));
+            //         glm::vec3 upQuad = glm::cross(forward, right);
+            //         float w = enemyLabelHeight * static_cast<float>(texSize.x) / static_cast<float>(texSize.y);
+            //         glm::mat4 billboard(1.0f);
+            //         billboard[0] = glm::vec4(right * w, 0.0f);
+            //         billboard[1] = glm::vec4(upQuad * enemyLabelHeight, 0.0f);
+            //         billboard[2] = glm::vec4(forward, 0.0f);
+            //         billboard[3] = glm::vec4(quadCenter, 1.0f);
+            //         glEnable(GL_BLEND);
+            //         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //         glDepthMask(GL_FALSE);
+            //         glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
+            //         glActiveTexture(GL_TEXTURE0);
+            //         glBindTexture(GL_TEXTURE_2D, texId);
+            //         glUniform1i(locUseTexture, 1);
+            //         glUniform3f(locObjectColor, 1.0f, 1.0f, 1.0f);
+            //         glBindVertexArray(textQuadVAO);
+            //         glDrawArrays(GL_TRIANGLES, 0, 6);
+            //         glUniform1i(locUseTexture, 0);
+            //         glDepthMask(GL_TRUE);
+            //         glDisable(GL_BLEND);
+            //     }
+            // }
+        }
 
         // // 鍵描画（出現した惑星上で表示）
         // if (keyVisible && keyPlanetIndex >= 0 && static_cast<size_t>(keyPlanetIndex) < planets.size())

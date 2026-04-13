@@ -8,7 +8,7 @@
 class Stage : public Actor {
 public:
     Stage(class Game* game);
-    void Initialize();
+    void Initialize() override;
     void AddPlanet(class Planet* planet) { mPlanets.emplace_back(planet); }
     void AddPlanetMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mPlanetMeshesByPath[modelPath] = meshes; }
 

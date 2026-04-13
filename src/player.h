@@ -71,11 +71,17 @@ public:
 
 private:
     class Planet* mCurrentPlanet;
+
     glm::vec3 mPos;
     glm::vec3 mUpVec;
     glm::vec3 mKnockBackFrom;
     glm::vec3 mRestartPos;
+    glm::vec3 mVelocity;
+
     int mCurrentPlanetNum;
+    int mAttackIndex;
+    int mRestartPlanetIndex;
+
     float mCameraYaw;
     float mCameraPitch;
     float mFacingYaw;
@@ -84,13 +90,18 @@ private:
     float mAttackStartHeight;
     float mDodgeTimer;
     float mDodgeCooldown;
-    float mDashSpeed;
+    float mMoveSpeed;
     float mCameraStickX;
     float mCameraStickY;
-    glm::vec3 mVelocity;
-    bool mOnGround;
     float mAttack;
     float mHp;
+    float mDamageTimer;
+    float mAttackCooldownRemaining;
+    float mAttackMoveLockRemaining;
+    float mAttackDodgeLockRemaining;
+    float mAttackHeightLockRemaining;
+
+    bool mOnGround;
     bool mIsDamaged;
     bool mIsDamagePrev;
     bool mDodgePressed;
@@ -100,13 +111,6 @@ private:
     bool mAttackPressedPrev; 
     bool mCounterPressed;
     bool mCounterPressedPrev;
-    float mDamageTimer;
-    float mAttackCooldownRemaining;
-    float mAttackMoveLockRemaining;
-    float mAttackDodgeLockRemaining;
-    float mAttackHeightLockRemaining;
-    int mAttackIndex;
-    int mRestartPlanetIndex;
 
     std::vector<struct LoadedMesh> mPlayerMeshes;
 };

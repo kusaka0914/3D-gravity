@@ -6,8 +6,8 @@
 
 Enemy::Enemy(Game* game)
     :Actor(game)
-    ,mPos({0.0f, 0.0f, 0.0f})
-    ,mCurrentPlanet(0)
+    ,mPos({0.0f, 8.0f, 0.0f})
+    ,mCurrentPlanetNum(0)
     ,mHp(10.0f)
     ,mIsAlive(true)
     ,mDamageTimer(0.0f)
@@ -19,7 +19,14 @@ Enemy::Enemy(Game* game)
     ,mIsAttack(false)
     ,mSensing(6.0f)
 {
+    
+}
 
+void Enemy::Initialize()
+{
+    // glm::vec3 center = mCurrentPlanet->GetCenter();
+    // float radius = mCurrentPlanet->GetRadius();
+    // mPos = center + glm::vec3(0.0f, radius, 0.0f);
 }
 
 void Enemy::UpdateActor(float deltaTime) {
@@ -33,7 +40,7 @@ void Enemy::UpdateActor(float deltaTime) {
 
         int currentStageNum = GetGame()->GetCurrentStageNum();
         Stage* currentStage = GetGame()->GetStages()[currentStageNum];
-        Planet* currentPlanet = currentStage->GetPlanets()[mCurrentPlanet];
+        Planet* currentPlanet = currentStage->GetPlanets()[mCurrentPlanetNum];
 
         // 追跡
         if (distToPlayer <= mSensing && mDamageTimer <= 0.0f && !player->GetIsDamaged() && distToPlayer >= GetRadius())

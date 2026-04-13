@@ -55,6 +55,8 @@
         "set": "cpp",
         "hash_map": "cpp",
         "hash_set": "cpp",
-        "forward_list": "cpp"
+        "forward_list": "cpp",
+        "stack": "cpp",
+        "__node_handle": "cpp"
     }
 }

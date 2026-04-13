@@ -2,6 +2,7 @@
 #define PLANET_H
 
 #include "Actor.h"
+#include "Mesh.h"
 #include <glm/glm.hpp>
 #include <memory>
 #include <string>
@@ -10,8 +11,10 @@
 class Planet : public Actor {
 public:
     Planet(class Game* game);
-    void Initialize();
+    void Initialize() override;
     void UpdateActor(float deltaTime) override;
+    void AddEnemy(class Enemy* enemy) { mEnemies.emplace_back(enemy); }
+    void AddEnemyMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mEnemyMeshesByPath[modelPath] = meshes; }
 
     void buildSphereMesh(unsigned int segmentsLat, unsigned int segmentsLong, float radius,
         std::vector<float>& outVertices, std::vector<unsigned int>& outIndices);
@@ -27,6 +30,7 @@ public:
     const std::vector<class Enemy*>& GetEnemies() const { return mEnemies; }
     const std::vector<class Boat*>& GetBoats() const { return mBoats; }
     class Key* GetKey() const { return mKey; }
+    const std::unordered_map<std::string, std::vector<LoadedMesh>>& GetEnemyMeshesByPath() const { return mEnemyMeshesByPath; }
 
 private:
     glm::vec3 mCenter;
@@ -36,6 +40,8 @@ private:
     std::vector<class Enemy*> mEnemies;
     std::vector<class Boat*> mBoats;
     class Key* mKey;
+
+    std::unordered_map<std::string, std::vector<LoadedMesh>> mEnemyMeshesByPath;
 };
 
 #endif

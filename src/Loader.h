@@ -17,9 +17,8 @@ public:
     Loader(class Game* game);
     bool loadPlayerFromYaml(const char* path, const std::vector<Planet*>& planets,
         PlayerInitialConfig& outConfig);
-    bool loadEnemiesFromYaml(const char* path, const std::vector<Planet*>& planets,
-        std::vector<class Enemy*>& outEnemies);
-    bool loadPlanetsFromYaml(const char* path, std::vector<class Planet*>& outPlanets);
+    bool loadEnemiesFromYaml(const char* path);
+    bool loadPlanetsFromYaml(const char* path);
     
     Game* GetGame() const { return mGame; }
 private:

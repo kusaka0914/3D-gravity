@@ -13,6 +13,11 @@ Actor::~Actor()
     
 }
 
+void Actor::Initialize()
+{
+    
+}
+
 void Actor::ProcessInput()
 {
     ProcessActor();
