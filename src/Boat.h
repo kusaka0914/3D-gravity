@@ -12,7 +12,7 @@ public:
     Boat(class Game* game);
     void UpdateActor(float deltaTime) override;
 
-    void SetCurrentPlanet(int currentPlanet) { mCurrentPlanet = currentPlanet; }
+    void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
     void SetIsMoving(bool isMoving) { mIsMoving = isMoving; }
     void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetTransitionTimer(float transitionTimer) { mTransitionTimer = transitionTimer; }
@@ -20,7 +20,7 @@ public:
     void SetPos(const glm::vec3& pos) { mPos = pos; }
     void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
 
-    int GetCurrentPlanet() const { return mCurrentPlanet; }
+    int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
     int GetStartPlanet() const { return mStartPlanet; }
     int GetDestPlanet() const { return mDestPlanet; }
     bool GetIsMoving() const { return mIsMoving; }
@@ -34,7 +34,7 @@ public:
     const glm::vec3& GetUpVec() const { return mUpVec; }
 
 private:
-    int mCurrentPlanet;
+    int mCurrentPlanetNum;
     int mStartPlanet;
     int mDestPlanet;
     bool mIsMoving;

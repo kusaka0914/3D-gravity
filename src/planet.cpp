@@ -6,9 +6,14 @@
 #include <cmath>
 
 Planet::Planet(Game* game)
-    :Actor(game)
+    : Actor(game)
+    , mCenter(0.0f)
+    , mRadius(8.0f)
+    , mColor(1.0f)
+    , mModelPath("planet.obj")
+    , mKey(nullptr)
 {
-
+    Initialize();
 }
 
 void Planet::Initialize()

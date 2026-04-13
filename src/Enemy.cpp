@@ -84,7 +84,7 @@ void Enemy::UpdateActor(float deltaTime) {
                 {
                     player->SetHp(0);
                     player->SetPos(player->GetRestartPos());
-                    player->SetCurrentPlanet(player->GetRestartPlanetIndex());
+                    player->SetCurrentPlanetNum(player->GetRestartPlanetIndex());
                     player->SetVelocity({0.0f, 0.0f, 0.0f});
                     player->SetOnGround(true);
                 }

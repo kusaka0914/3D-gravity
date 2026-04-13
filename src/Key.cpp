@@ -16,7 +16,7 @@ void Key::UpdateActor(float deltaTime)
     std::vector<class Player*> players = GetGame()->GetPlayers();
     if (GetIsActive()) {
         for (auto player : players) {
-            mCurrentPlanet = player->GetCurrentPlanet();
+            mCurrentPlanet = player->GetCurrentPlanetNum();
             // mPos = lastDefeatedEnemyPos; // 最後に倒した敵の場所に鍵を出す
 
             // 鍵に触れたら取得して消す＆ボートを出現させる

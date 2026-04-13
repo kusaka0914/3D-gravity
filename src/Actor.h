@@ -9,6 +9,8 @@ public:
     ~Actor();
     void Update(float deltaTime);
     virtual void UpdateActor(float deltaTime);
+    void ProcessInput();
+    virtual void ProcessActor();
     void AddComponent(class Component* component);
     void RemoveComponent(class Component* component);
 

@@ -14,9 +14,9 @@ void AudioSystem::Update()
     bool isStageClear = GetGame()->GetIsStageClear();
     const auto& bgmList = GetGame()->GetBGMList();
     // 惑星2にいるときはBGMをboss.wavに切り替え（ゲームクリア後はBGMを流さない）
-    if (!isStageClear && players[0]->GetCurrentPlanet() != mCurrentBgmPlanetIndex)
+    if (!isStageClear && players[0]->GetCurrentPlanetNum() != mCurrentBgmPlanetIndex)
     {
-        mCurrentBgmPlanetIndex = players[0]->GetCurrentPlanet();
+        mCurrentBgmPlanetIndex = players[0]->GetCurrentPlanetNum();
         auto it = bgmList.find("bossBGM");
         Mix_Music* bossBGM = (it != bgmList.end()) ? it->second : nullptr;
         it = bgmList.find("normalBGM");

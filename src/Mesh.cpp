@@ -2,6 +2,7 @@
 #include <assimp/material.h>
 #include <string>
 #include <vector>
+#include <GL/glew.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"

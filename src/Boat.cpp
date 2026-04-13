@@ -4,35 +4,33 @@
 #include "Game.h"
 
 Boat::Boat(Game* game)
-    :Actor(game)
+    : Actor(game)
+    , mCurrentPlanetNum(0)
+    , mStartPlanet(0)
+    , mDestPlanet(0)
+    , mIsMoving(false)
+    , mIsActive(false)
+    , mTransitionTimer(0.0f)
+    , mTransitionDuration(2.0f)
+    , mProgress(0.0f)
+    , mPos(0.0f)
+    , mStartPos(0.0f)
+    , mDestPos(0.0f)
+    , mUpVec(0.0f, 1.0f, 0.0f)
 {
-    int currentStageNum = GetGame()->GetCurrentStageNum();
-    Stage* currentStage = GetGame()->GetStages()[currentStageNum];
-    mPlanets = currentStage->GetPlanets();
+    // int currentStageNum = GetGame()->GetCurrentStageNum();
+    // Stage* currentStage = GetGame()->GetStages()[currentStageNum];
+    // mPlanets = currentStage->GetPlanets();
 }
 
 void Boat::UpdateActor(float deltaTime)
 {
     // 表示中
     if (GetIsActive()) {
-        // int curIdx = GetCurrentPlanet();
-        // boatSpawnPlanetIndex = curIdx;
-        // // 現在惑星から一番近い別惑星を到着先に
-        // float nearestDist = 1e30f;
-        // for (size_t i = 0; i < mPlanets.size(); i++)
-        // {
-        //     if (static_cast<int>(i) == curIdx)
-        //         continue;
-        //     float d = glm::length(mPlanets[i].center - mPlanets[curIdx].center);
-        //     if (d < nearestDist)
-        //     {
-        //         nearestDist = d;
-        //         boatDestinationPlanetIndex = static_cast<int>(i);
-        //     }
-        // }
-        // // ボートを現在惑星の表面近くに配置
-        // float boatHeight = mPlanets[curIdx].radius - 0.15f;
-        // boatPos = mPlanets[curIdx].center + glm::normalize(glm::vec3(0.0f, -1.0f, 0.5f)) * boatHeight;
+        Planet* currentPlanet = mPlanets[mCurrentPlanetNum];
+        // ボートを現在惑星の表面近くに配置
+        float boatHeight = currentPlanet->GetRadius() - 0.15f;
+        mPos = currentPlanet->GetCenter() + glm::normalize(glm::vec3(0.0f, -1.0f, 0.5f)) * boatHeight;
     }
     // 移動中
     if (GetIsMoving())
@@ -49,10 +47,10 @@ void Boat::UpdateActor(float deltaTime)
         // ボートから一番近い惑星を現在の惑星に更新
         float startDist = glm::length(mPos - mPlanets[mStartPlanet]->GetCenter());
         float destDist = glm::length(mPos - mPlanets[mDestPlanet]->GetCenter());
-        mCurrentPlanet = (startDist < destDist) ? startDist : destDist;
+        mCurrentPlanetNum = (startDist < destDist) ? mStartPlanet : mDestPlanet;
 
         // 上ベクトルを更新
-        mUpVec = glm::normalize(mPos - mPlanets[mCurrentPlanet]->GetCenter());
+        mUpVec = glm::normalize(mPos - mPlanets[mCurrentPlanetNum]->GetCenter());
         if (mProgress >= 1.0f)
         {
             mPos = mDestPos;

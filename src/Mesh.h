@@ -1,6 +1,8 @@
+#ifndef MESH_H
+#define MESH_H
+
 #include <iostream>
 #include <vector>
-#include <GL/glew.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -23,4 +25,4 @@ public:
 private:
 
 };
-
+#endif

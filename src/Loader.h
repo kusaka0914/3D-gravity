@@ -14,12 +14,14 @@ struct PlayerInitialConfig {
 
 class Loader {
 public:
-    bool loadPlayerFromYaml(class Game* game, const char* path, const std::vector<Planet>& planets,
+    Loader(class Game* game);
+    bool loadPlayerFromYaml(const char* path, const std::vector<Planet*>& planets,
         PlayerInitialConfig& outConfig);
-
-    bool loadEnemiesFromYaml(const char* path, const std::vector<Planet>& planets,
+    bool loadEnemiesFromYaml(const char* path, const std::vector<Planet*>& planets,
         std::vector<class Enemy*>& outEnemies);
-
-    bool loadPlanetsFromYaml(Game* game, const char* path, std::vector<std::unique_ptr<class Planet>>& outPlanets);
+    bool loadPlanetsFromYaml(const char* path, std::vector<class Planet*>& outPlanets);
+    
+    Game* GetGame() const { return mGame; }
 private:
+    Game* mGame;
 };
