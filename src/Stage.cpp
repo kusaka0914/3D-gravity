@@ -6,12 +6,14 @@
 Stage::Stage(Game* game)
     :Actor(game)
 {
-    Initialize();
+    
 }
 
 void Stage::Initialize()
 {
     auto planetUnique = std::make_unique<Planet>(GetGame());
+    planetUnique->SetCurrentStage(this);
+    planetUnique->Initialize();
     Planet* planet = planetUnique.get();
     GetGame()->AddActor(std::move(planetUnique));
     mPlanets.emplace_back(planet);

@@ -1,10 +1,11 @@
 # プレイヤーパラメータ
-# theta: 周方向 [rad], u: 高さ, planet_index: 惑星番号
+# theta: 周方向 [rad], u: 高さ, currentPlanetNum: 惑星番号
 # hp: 体力, attack: 攻撃力, camera_pitch: カメラのピッチ
 players:
   - theta: 0.0
     u: 0.3
-    planet_index: 0
+    currentPlanetNum: 0
     hp: 100
-    attack: 10
+    # attack: 10
+    attack: 60
     camera_pitch: 0.4

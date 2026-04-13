@@ -16,8 +16,9 @@ public:
     virtual bool IsBoss() const { return false; }
     float GetRadius() const { return mScale * 3.6f; }
 
+    void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(const glm::vec3& pos) { mPos = pos; }
-    void SetCurrentPlanet(int currentPlanet) { mCurrentPlanetNum = currentPlanet; }
+    void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
     void SetHp(float hp) { mHp = hp; }
     void SetIsAlive(bool isAlive) { mIsAlive = isAlive; }
     void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
@@ -31,8 +32,9 @@ public:
     void SetIsAttack(bool isAttack) { mIsAttack = isAttack; }
     void SetSensing(float sensing) { mSensing = sensing; }
 
+    class Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
     const glm::vec3& GetPos() const { return mPos; }
-    int GetCurrentPlanet() const { return mCurrentPlanetNum; }
+    int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
     float GetHp() const { return mHp; }
     bool GetIsAlive() const { return mIsAlive; }
     bool GetIsDamaged() const { return mIsDamaged; }

@@ -6,9 +6,12 @@
 #include "Boat.h"
 
 Key::Key(Game* game)
-    :Actor(game)
+    : Actor(game)
+    , mPos({0.0f, 8.0f, 0.0f})
+    , mIsActive(false)
+    , mIsObtained(false)
+    , mCurrentPlanet(0)
 {
-
 }
 
 void Key::UpdateActor(float deltaTime)

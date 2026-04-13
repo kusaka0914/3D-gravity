@@ -25,7 +25,9 @@ VertexArray::VertexArray(const float* verts, unsigned int numVerts, const unsign
 
 VertexArray::~VertexArray()
 {
-
+    glDeleteVertexArrays(1, &mVertexArray);
+    glDeleteBuffers(1, &mVertexBuffer);
+    glDeleteBuffers(1, &mIndexBuffer);
 }
 
 void VertexArray::SetActive() {

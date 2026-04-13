@@ -3,6 +3,7 @@
 #include "Enemy.h"
 #include "Boat.h"
 #include "Key.h"
+#include "Stage.h"
 #include <cmath>
 
 Planet::Planet(Game* game)
@@ -13,17 +14,13 @@ Planet::Planet(Game* game)
     , mModelPath("planet.obj")
     , mKey(nullptr)
 {
-    Initialize();
+    
 }
 
 void Planet::Initialize()
 {
-    auto enemyUnique = std::make_unique<Enemy>(GetGame());
-    Enemy* enemy = enemyUnique.get();
-    GetGame()->AddActor(std::move(enemyUnique));
-    mEnemies.emplace_back(enemy);
-
     auto boatUnique = std::make_unique<Boat>(GetGame());
+    boatUnique->SetPlanets(GetCurrentStage()->GetPlanets());
     Boat* boat = boatUnique.get();
     GetGame()->AddActor(std::move(boatUnique));
     mBoats.emplace_back(boat);

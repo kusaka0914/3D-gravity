@@ -16,13 +16,17 @@ public:
     void AddEnemy(class Enemy* enemy) { mEnemies.emplace_back(enemy); }
     void AddEnemyMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mEnemyMeshesByPath[modelPath] = meshes; }
 
+    void SetCurrentStage(class Stage* currentStage) { mCurrentStage = currentStage; }
     void buildSphereMesh(unsigned int segmentsLat, unsigned int segmentsLong, float radius,
         std::vector<float>& outVertices, std::vector<unsigned int>& outIndices);
+    void SetStageNum(int stageNum) { mStageNum = stageNum; }
     void SetCenter(glm::vec3 center) { mCenter = center; }
     void SetRadius(float radius) { mRadius = radius; }
     void SetColor(glm::vec3 color) { mColor = color; }
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
 
+    class Stage* GetCurrentStage() const { return mCurrentStage; }
+    int GetStageNum() const { return mStageNum; }
     const glm::vec3& GetCenter() const { return mCenter; }
     float GetRadius() const { return mRadius; }
     const glm::vec3& GetColor() const { return mColor; }
@@ -33,6 +37,8 @@ public:
     const std::unordered_map<std::string, std::vector<LoadedMesh>>& GetEnemyMeshesByPath() const { return mEnemyMeshesByPath; }
 
 private:
+    class Stage* mCurrentStage;
+    int mStageNum;
     glm::vec3 mCenter;
     float mRadius;
     glm::vec3 mColor;

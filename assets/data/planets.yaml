@@ -5,11 +5,14 @@ planets:
     radius: 8.0
     color: [1.0, 0.0, 0.0]
     model: planet.obj
+    stageNum: 0
   - center: [32.0, 0.0, 0.0]
     radius: 8.0
     color: [0.0, 1.0, 0.0]
     model: planet_2.obj
+    stageNum: 0
   - center: [64.0, 0.0, 0.0]
     radius: 8.0
     color: [0.0, 1.0, 0.0]
     model: planet.obj
+    stageNum: 0

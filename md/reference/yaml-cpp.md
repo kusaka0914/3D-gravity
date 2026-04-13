@@ -1,0 +1,1 @@
+https://jp-seemore.com/iot/24472/

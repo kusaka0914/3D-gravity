@@ -15,9 +15,6 @@ public:
 
     void ProcessActor() override;
     void UpdateActor(float deltaTime) override;
-
-    // void updatePlayerPhysics(PlayerState& p, float deltaTime, const std::vector<Planet>& planets,
-    //     float* transitionTimer = nullptr, bool skipGroundSnap = false);
     
     void getForwardLeft(const glm::vec3& up, float cameraYaw, glm::vec3& outForward, glm::vec3& outLeft);
     float getYawFromDirection(const glm::vec3& up, const glm::vec3& dir);
@@ -44,8 +41,9 @@ public:
     void SetAttackDodgeLockRemaining(float attackDodgeLockRemaining) { mAttackDodgeLockRemaining = attackDodgeLockRemaining; }
     void SetAttackIndex(int attackIndex) { mAttackIndex = attackIndex; }
     void SetRestartPlanetIndex(int restartPlanetIndex) { mRestartPlanetIndex = restartPlanetIndex; }
-    void SetPlayerMeshes(const std::vector<struct LoadedMesh> playerMeshes) { mPlayerMeshes = playerMeshes; }
+    void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
 
+    Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
     const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
     const glm::vec3& GetKnockBackFrom() const { return mKnockBackFrom; }
@@ -67,7 +65,7 @@ public:
     int GetAttackIndex() const { return mAttackIndex; }
     int GetRestartPlanetIndex() const { return mRestartPlanetIndex; }
 
-    const std::vector<struct LoadedMesh>& GetPlayerMeshes() const { return mPlayerMeshes; }
+    const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
 
 private:
     class Planet* mCurrentPlanet;
@@ -112,7 +110,7 @@ private:
     bool mCounterPressed;
     bool mCounterPressedPrev;
 
-    std::vector<struct LoadedMesh> mPlayerMeshes;
+    std::vector<struct LoadedMesh> mMeshes;
 };
 
 

@@ -4,6 +4,7 @@
 class Shader {
 public:
     Shader();
+    ~Shader();
 
     std::string readFile(const std::string& path);
     unsigned int compileShader(unsigned int type, const std::string& source);

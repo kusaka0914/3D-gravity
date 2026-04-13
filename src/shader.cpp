@@ -15,6 +15,11 @@ Shader::Shader()
     mLocDiffuseTexture = glGetUniformLocation(mShaderProgram, "diffuseTexture");
 }
 
+Shader::~Shader()
+{
+    glDeleteProgram(mShaderProgram);
+}
+
 std::string Shader::readFile(const std::string& path) {
 	// ファイルの読み口があるfileを用意（fileはstringにできない）
     std::ifstream file(path);

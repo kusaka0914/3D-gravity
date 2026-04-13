@@ -10,6 +10,8 @@
 #include "AudioSystem.h"
 #include "Mesh.h"
 #include "Loader.h"
+#include "Key.h"
+#include "Boat.h"
 #include "Game.h"
 #include <GLFW/glfw3.h>
 #include <SDL.h>
@@ -33,6 +35,7 @@
 Game::Game()
     :mReloadKeyPressedPrev(false)
     ,mCurrentStageNum(0) 
+    ,mIsPlayer2Joined(false)
 {
     
 }
@@ -79,14 +82,7 @@ bool Game::Initialize()
         return false;
     }
 
-    mShader = std::make_unique<Shader>();
-    if (!mShader->GetShaderProgram())
-    {
-        glfwTerminate();
-        return false;
-    }
-
-    // コントローラー設定
+    // コントローラー接続
     mSdlController = nullptr;
     // SDLのゲームパッド用サブシステムを有効にする
     if (SDL_Init(SDL_INIT_GAMECONTROLLER) == 0)
@@ -105,8 +101,14 @@ bool Game::Initialize()
             }
         }
     }
-    auto audioSystem = std::make_unique<AudioSystem>(this);
-    mAudioSystem = std::move(audioSystem);
+
+    mAudioSystem = std::make_unique<AudioSystem>(this);
+    mShader = std::make_unique<Shader>();
+    if (!mShader->GetShaderProgram())
+    {
+        glfwTerminate();
+        return false;
+    }
 
     // ステージ作成
     auto stageUnique = std::make_unique<Stage>(this);
@@ -114,40 +116,6 @@ bool Game::Initialize()
     mActors.emplace_back(std::move(stageUnique));
     mStages.emplace_back(stage);
     mCurrentStage = mStages[0];
-
-    // プレイヤー作成
-    auto playerUnique = std::make_unique<Player>(this);
-    Player* player = playerUnique.get();
-    mActors.emplace_back(std::move(playerUnique));
-    mPlayers.emplace_back(player);
-
-    Planet* planet = mStages[0]->GetPlanets()[0];
-
-    // 描画する三角形の3頂点の座標（プレイヤー用フォールバック）
-    std::vector<float> fallbackTriangleVertices;
-    player->getPlayerFallbackTriangle(fallbackTriangleVertices);
-    mVertexArrays["triangle"] = std::make_unique<VertexArray>(fallbackTriangleVertices.data(), 9, nullptr, 0);
-
-    // 球の頂点座標を格納する配列
-    std::vector<float> sphereVertices;
-    // どの頂点で三角形を作るかを表すインデックスの配列
-    std::vector<unsigned int> sphereIndices;
-    planet->buildSphereMesh(18, 18, 1.0f, sphereVertices, sphereIndices);
-    mVertexArrays["sphere"] = std::make_unique<VertexArray>(sphereVertices.data(), 972, sphereIndices.data(), 1944);
-
-    auto mesh = std::make_unique<Mesh>();
-
-    for (auto player : mPlayers) {
-        std::string path = "../assets/models/player.obj";
-        std::vector<LoadedMesh> playerMeshes = mesh->loadMeshFromFile(path.c_str());
-        player->SetPlayerMeshes(playerMeshes);
-    }
-    // 鍵モデルをロードする（敵全員撃破で出現）
-    std::vector<LoadedMesh> keyMeshes = mesh->loadMeshFromFile("../assets/models/key.obj");
-    // ボートモデル（鍵取得で惑星近くに出現）
-    std::vector<LoadedMesh> boatMeshes = mesh->loadMeshFromFile("../assets/models/boat.obj");
-    // スター（惑星2に配置、触れるとゲームクリア）
-    std::vector<LoadedMesh> starMeshes = mesh->loadMeshFromFile("../assets/models/star.obj");
 
     // フォント
     mFont = nullptr;
@@ -164,133 +132,102 @@ bool Game::Initialize()
         if (mFont)
             break;
     }
-    // フォント失敗処理
-    if (!mFont)
-        std::cerr << "No mFont loaded. Enemy ID labels will not be shown." << std::endl;
 
     std::unordered_map<std::string, std::pair<GLuint, glm::ivec2>> textTextureCache;
     // 敵のどれくらい上にラベルを描画するのか
     const float enemyLabelHeight = 0.5f;
 
-    // テキスト用四角形
-    unsigned int textQuadVAO, textQuadVBO;
-    {
-        float quad[] = {
-            -0.5f,
-            -0.5f,
-            0.0f,
-            0.0f,
-            0.0f,
-            1.0f,
-            0.0f,
-            1.0f,
-            0.5f,
-            -0.5f,
-            0.0f,
-            0.0f,
-            0.0f,
-            1.0f,
-            1.0f,
-            1.0f,
-            0.5f,
-            0.5f,
-            0.0f,
-            0.0f,
-            0.0f,
-            1.0f,
-            1.0f,
-            0.0f,
-            -0.5f,
-            -0.5f,
-            0.0f,
-            0.0f,
-            0.0f,
-            1.0f,
-            0.0f,
-            1.0f,
-            0.5f,
-            0.5f,
-            0.0f,
-            0.0f,
-            0.0f,
-            1.0f,
-            1.0f,
-            0.0f,
-            -0.5f,
-            0.5f,
-            0.0f,
-            0.0f,
-            0.0f,
-            1.0f,
-            0.0f,
-            0.0f,
-        };
-        glGenVertexArrays(1, &textQuadVAO);
-        glGenBuffers(1, &textQuadVBO);
-        glBindVertexArray(textQuadVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, textQuadVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
-        glEnableVertexAttribArray(2);
-        glBindVertexArray(0);
-    }
+    std::vector<float> textLabel = {
+        -0.5f,
+        -0.5f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+        1.0f,
+        0.5f,
+        -0.5f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        1.0f,
+        1.0f,
+        0.5f,
+        0.5f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        1.0f,
+        0.0f,
+        -0.5f,
+        -0.5f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+        1.0f,
+        0.5f,
+        0.5f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        1.0f,
+        0.0f,
+        -0.5f,
+        0.5f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+        0.0f,
+    };
+    mVertexArrays["text"] = std::make_unique<VertexArray>(textLabel.data(), 972, nullptr, 0);
 
+    mLoader = std::make_unique<Loader>(this); 
     // 惑星をYAMLから読み込み
-    auto loader = std::make_unique<Loader>(this);
-    static const char *const planetsYamlPath = "../assets/data/planets.yaml";
-    if (!loader->loadPlanetsFromYaml(planetsYamlPath)) {
+    if (!mLoader->loadPlanetsFromYaml("../assets/data/planets.yaml")) {
         std::cerr << "Planet YAML load failed" << std::endl;
     }
-
     std::vector<Planet*> planets = mCurrentStage->GetPlanets();
-    // 惑星ごとのモデルをロード
+    for (auto planet : planets)
+    {
+        planet->Initialize();
+    }
+    // プレイヤーをYAMLから読み込み
+    if (!mLoader->loadPlayersFromYaml("../assets/data/players.yaml")) {
+        std::cerr << "Player YAML load failed" << std::endl;
+    }
+    // 敵をYAMLから読み込み
+    if (!mLoader->loadEnemiesFromYaml("../assets/data/enemies.yaml"))
+    {
+        std::cerr << "Enemy YAML load failed, using 1 default enemy." << std::endl;
+    }
+
+    mMesh = std::make_unique<Mesh>();
+    // プレイヤーモデルをロード
+    for (auto player : mPlayers) {
+        std::string path = "../assets/models/player.obj";
+        std::vector<LoadedMesh> playerMeshes = mMesh->loadMeshFromFile(path.c_str());
+        player->SetMeshes(playerMeshes);
+    }
+    // 惑星モデルをロード
     for (auto planet : planets)
     {
         std::unordered_map<std::string, std::vector<LoadedMesh>> planetMeshesByPath = mCurrentStage->GetPlanetMeshesByPath();
         if (planetMeshesByPath.find(planet->GetModelPath()) == planetMeshesByPath.end())
         {
             std::string path = "../assets/models/" + planet->GetModelPath();
-            auto planetMeshes = mesh->loadMeshFromFile(path.c_str());
+            auto planetMeshes = mMesh->loadMeshFromFile(path.c_str());
             mCurrentStage->AddPlanetMesh(planet->GetModelPath(), planetMeshes);
         }
     }
-
-    // // 1P/2P 状態（players[0]=1P, mPlayers[1]=2P）
-    // PlayerState mPlayers[2];
-    // static const char *const playersYamlPath = "../assets/data/mPlayers.yaml";
-    // PlayerInitialConfig playerInitial;
-    // if (loadPlayerFromYaml(playersYamlPath, planets, playerInitial))
-    // {
-    //     mPlayers[0]->GetPos() = playerInitial->GetPos();
-    //     mPlayers[0].planetIndex = playerInitial.planetIndex;
-    //     mPlayers[0].cameraPitch = playerInitial.cameraPitch;
-    //     mPlayers[0].attack = playerInitial.attack;
-    //     mPlayers[0].hp = playerInitial.hp;
-    // }
-    // else
-    // {
-    //     mPlayers[0]->GetPos() = glm::vec3(8.0f, planets[0]->GetRadius(), 2.5f);
-    //     mPlayers[0].planetIndex = 0;
-    //     mPlayers[0].cameraPitch = 0.4f;
-    //     mPlayers[0].attack = 10.0f;
-    //     mPlayers[0].hp = 100.0f;
-    //     std::cerr << "Player YAML load failed, using default 1P config." << std::endl;
-    // }
-    // glm::vec3 restartPos = mPlayers[0]->GetPos();
-    // int restartPlanetIndex = 0;
-    // bool mIsPlayer2Joined = false;
-
-    static const char *const enemiesYamlPath = "../assets/data/enemies.yaml";
-    // 敵を YAML から読み込み（失敗時は1体のデフォルト）
-    if (!loader->loadEnemiesFromYaml(enemiesYamlPath))
-    {
-        std::cerr << "Enemy YAML load failed, using 1 default enemy." << std::endl;
-    }
-    // 敵ごとのモデルをロード
+    // 敵モデルをロード
     std::vector<Enemy*> enemies = GetCurrentStage()->GetPlanets()[0]->GetEnemies();
     for (auto enemy : enemies)
     {
@@ -298,35 +235,25 @@ bool Game::Initialize()
         if (enemyMeshesByPath.find(enemy->GetModelPath()) == enemyMeshesByPath.end())
         {
             std::string path = "../assets/models/" + enemy->GetModelPath();
-            auto enemyMeshes = mesh->loadMeshFromFile(path.c_str());
+            auto enemyMeshes = mMesh->loadMeshFromFile(path.c_str());
             mCurrentStage->GetPlanets()[0]->AddEnemyMesh(enemy->GetModelPath(), enemyMeshes);
         }
     }
+    Planet* currentPlanet = mPlayers[0]->GetCurrentPlanet();
+    // 鍵モデルをロード
+    Key* key = currentPlanet->GetKey();
+    std::vector<LoadedMesh> keyMeshes = mMesh->loadMeshFromFile("../assets/models/key.obj");
+    key->SetMeshes(keyMeshes);
+    // ボートモデルをロード
+    std::vector<Boat*> boats = currentPlanet->GetBoats();
+    std::vector<LoadedMesh> boatMeshes = mMesh->loadMeshFromFile("../assets/models/boat.obj");
+    for (auto boat : boats) {
+        boat->SetMeshes(boatMeshes);
+    }
+    // スターモデルをロード
+    std::vector<LoadedMesh> starMeshes = mMesh->loadMeshFromFile("../assets/models/star.obj");
 
-    // // 鍵（現在の惑星で最後に倒した敵の場所に出現）
-    // bool keyVisible = false;
-    // bool keyObtained = false;
-    // glm::vec3 keyPos(0.0f);
-    // int keyPlanetIndex = -1;
-    // glm::vec3 lastDefeatedEnemyPos(0.0f); // 現在惑星で最後に倒した敵の位置
-    // const float keyScale = 2.0f;
-    // // const float keyPickupRadius = 1.2f;
-    // const glm::vec3 keyColor(0.85f, 0.65f, 0.13f); // 金色
-
-    // // ボート
-    // glm::vec3 boatPos(0.0f);
-    // const float boatScale = 0.8f;
-    // const float boatTouchRadius = 1.8f;
-
-    // // ボートで次の惑星へ移動（触れたら少しずつ移動して到着）
-    // bool boatTransitionActive = false;
-    // float boatTransitionTimer = 0.0f;
-    // const float boatTransitionDuration = 5.0f;
-    // glm::vec3 boatTransitionStartBoat, boatTransitionEnd;
-    // int boatDestinationPlanetIndex = -1;
-    // int currentBgmPlanetIndex = -1; // 現在流しているBGMの惑星（惑星2ならboss.wav）
-
-    // // スター（鍵ルートの到着先 or ボス撃破で出現）
+    // スター（鍵ルートの到着先 or ボス撃破で出現）
     // glm::vec3 starPos(0.0f);
     // const float starScale = 0.3f;
     // const float starTouchRadius = 1.5f;
@@ -334,10 +261,10 @@ bool Game::Initialize()
     // bool starVisibleFromBoss = false; // ボス撃破でスター出現したか
     // int starBossPlanetIndex = -1;     // ボス撃破で出たスターの惑星番号
 
-    // // 時間情報
+    // 時間情報
     mLastTime = glfwGetTime();
 
-    // // 深度テストをONにして奥行きに応じて描画できるようにする（描画順ではなく、手前にあるものが上書きされて描画される）
+    // 深度テストをONにして奥行きに応じて描画できるようにする（描画順ではなく、手前にあるものが上書きされて描画される）
     glEnable(GL_DEPTH_TEST);
 
     // // Bullet Physics：惑星メッシュの当たり判定（惑星ごとに modelPath のメッシュを使用）
@@ -489,42 +416,20 @@ void Game::RunLoop()
 
 void Game::Shutdown()
 {
-    // // ゲーム終了処理
-    // if (mSdlController)
-    // {
-    //     SDL_GameControllerClose(mSdlController);
-    // }
+    // ゲーム終了処理
+    if (mSdlController)
+    {
+        SDL_GameControllerClose(mSdlController);
+    }
     // for (auto &p : textTextureCache)
     //     glDeleteTextures(1, &p.second.first);
-    // if (mFont) TTF_CloseFontmFontt);
-    // TTF_Quit();
-    // glDeleteVertexArrays(1, &textQuadVAO);
-    // glDeleteBuffers(1, &textQuadVBO);
-    // SDL_Quit();
+    if (mFont) TTF_CloseFont(mFont);
+    TTF_Quit();
+    SDL_Quit();
 
-    // // 再生中の曲を止める（オーディオは開いたままだから他の曲を流せる）
-    // Mix_HaltMusic();
-    // // 曲データを解放する
-    // if (normalBGM)
-    //     Mix_FreeMusic(normalBGM);
-    // if (bossBGM)
-    //     Mix_FreeMusic(bossBGM);
-    // if (attackSE)
-    //     Mix_FreeChunk(attackSE);
-    // if (attackMissSE)
-    //     Mix_FreeChunk(attackMissSE);
-    // if (attackPreSE)
-    //     Mix_FreeChunk(attackPreSE);
-    // if (counterSE)
-    //     Mix_FreeChunk(counterSE);
-    // if (clearSE)
-    //     Mix_FreeChunk(clearSE);
-    // // オーディオを閉じる（曲を流せなくなる）
-    // Mix_CloseAudio();
-
-    // glDeleteVertexArrays(1, &VAO);
-    // glDeleteBuffers(1, &VBO);
-    // glDeleteProgram(shaderProgram);
+    // 再生中の曲を止める（オーディオは開いたままだから他の曲を流せる）
+    Mix_HaltMusic();
+    Mix_CloseAudio();
 
     // if (bulletWorld)
     // {
@@ -576,8 +481,8 @@ void Game::Shutdown()
     //     delete bulletCollisionConfig;
     // }
 
-    // glfwDestroyWindow(mWindow);
-    // glfwTerminate();
+    glfwDestroyWindow(mWindow);
+    glfwTerminate();
 }
 
 void Game::ProcessInput()
@@ -1125,7 +1030,7 @@ void Game::UpdateGame()
     //         attackHeightLockRemaining = 0.0f;
     // }
 
-    // 以下はまだ
+    // glm::vec3 lastDefeatedEnemyPos(0.0f); // 現在惑星で最後に倒した敵の位置
     // for (unique_ptr<Enemy> &ptr : enemies)
     // {
     //     EnemyBase &e = *ptr;
@@ -1156,7 +1061,6 @@ void Game::UpdateGame()
     //         }
     //     }
     // }
-    // ここまで
 
     // if (mPlayers[0].damageTimer > 0.0f)
     // {
@@ -1196,6 +1100,7 @@ void Game::UpdateGame()
     // if (keyVisible)
     // {
     //     float distToKey = glm::length(mPlayers[0]->GetPos() - keyPos);
+    //     const float keyPickupRadius = 1.2f;
     //     if (distToKey < keyPickupRadius)
     //     {
     //         keyVisible = false;
@@ -1226,6 +1131,7 @@ void Game::UpdateGame()
     // if (!boatTransitionActive && keyObtained && boatSpawnPlanetIndex >= 0 && boatDestinationPlanetIndex >= 0 && mPlayers[0].planetIndex == boatSpawnPlanetIndex)
     // {
     //     float distToBoat = glm::length(mPlayers[0]->GetPos() - boatPos);
+    //     const float boatTouchRadius = 1.8f;
     //     if (distToBoat < boatTouchRadius)
     //     {
     //         boatTransitionActive = true;
@@ -1262,7 +1168,7 @@ void Game::GenerateOutput()
     glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // // これから描画するときにどのプログラムを使うのか設定
+    // これから描画するときにどのプログラムを使うのか設定
     glUseProgram(mShader->GetShaderProgram());
 
     int fbWidth, fbHeight;
@@ -1312,7 +1218,6 @@ void Game::GenerateOutput()
             }
             else
             {
-                std::cerr << "Mesh empty" << std::endl;
                 // glBindVertexArray(sphereVAO);
                 // glUniform1i(locUseTexture, 0);
                 // glDrawElements(GL_TRIANGLES, sphereIndexCount, GL_UNSIGNED_INT, 0);
@@ -1363,7 +1268,6 @@ void Game::GenerateOutput()
             }
             else
             {
-                std::cerr << "Mesh empty" << std::endl;
                 // glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
                 // glBindVertexArray(VAO);
                 // glm::vec3 c = colorOverride ? *colorOverride : fallbackColor;
@@ -1375,13 +1279,13 @@ void Game::GenerateOutput()
         const float playerScale = 0.25f;
         // 1Pの描画
         glm::vec3 up0 = glm::normalize(mPlayers[0]->GetPos() - planets[mPlayers[0]->GetCurrentPlanetNum()]->GetCenter());
-        drawCharacter(mPlayers[0]->GetPos(), playerScale, glm::vec3(0.0f, 0.0f, 1.0f), up0, mPlayers[0]->GetFacingYaw(), mPlayers[0]->GetPlayerMeshes());
+        drawCharacter(mPlayers[0]->GetPos(), playerScale, glm::vec3(0.0f, 0.0f, 1.0f), up0, mPlayers[0]->GetFacingYaw(), mPlayers[0]->GetMeshes());
 
         // 2Pの描画
         if (mIsPlayer2Joined)
         {
             glm::vec3 up1 = glm::normalize(mPlayers[1]->GetPos() - planets[mPlayers[1]->GetCurrentPlanetNum()]->GetCenter());
-            drawCharacter(mPlayers[1]->GetPos(), playerScale, glm::vec3(1.0f, 0.5f, 0.0f), up1, mPlayers[1]->GetFacingYaw(),  mPlayers[1]->GetPlayerMeshes());
+            drawCharacter(mPlayers[1]->GetPos(), playerScale, glm::vec3(1.0f, 0.5f, 0.0f), up1, mPlayers[1]->GetFacingYaw(),  mPlayers[1]->GetMeshes());
         }
 
         std::vector<Enemy*> enemies = mCurrentStage->GetPlanets()[mPlayers[0]->GetCurrentPlanetNum()]->GetEnemies();
@@ -1397,7 +1301,7 @@ void Game::GenerateOutput()
                 eit = enemyMeshesByPath.find("enemy.obj");
             if (eit == enemyMeshesByPath.end() || eit->second.empty())
                 continue;
-            glm::vec3 enemyUp = glm::normalize(enemy->GetPos() - planets[enemy->GetCurrentPlanet()]->GetCenter());
+            glm::vec3 enemyUp = glm::normalize(enemy->GetPos() - enemy->GetCurrentPlanet()->GetCenter());
             glm::vec3 toPlayer = glm::normalize(mPlayers[0]->GetPos() - enemy->GetPos());
             float enemyFacingYaw = mPlayers[0]->getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
             drawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec3(0.0f, 1.0f, 0.0f), enemyUp, enemyFacingYaw, eit->second);
@@ -1437,34 +1341,27 @@ void Game::GenerateOutput()
             // }
         }
 
-        // // 鍵描画（出現した惑星上で表示）
-        // if (keyVisible && keyPlanetIndex >= 0 && static_cast<size_t>(keyPlanetIndex) < planets.size())
-        // {
-        //     glm::vec3 keyUp = glm::normalize(keyPos - planets[keyPlanetIndex]->GetCenter());
-        //     drawCharacter(keyPos, keyScale, keyColor, keyUp, 0.0f, keyMeshes, &keyColor);
-        // }
+        // 鍵描画（出現した惑星上で表示）
+        Planet* currentPlanet = mPlayers[0]->GetCurrentPlanet();
+        Key* key = currentPlanet->GetKey();
+        if (key->GetIsActive())
+        {
+            const float keyScale = 2.0f;
+            const glm::vec3 keyColor(0.85f, 0.65f, 0.13f); // 金色
+            glm::vec3 keyUp = glm::normalize(key->GetPos() - currentPlanet->GetCenter());
+            drawCharacter(key->GetPos(), keyScale, keyColor, keyUp, 0.0f, key->GetMeshes(), &keyColor);
+        }
 
-        // // ボート描画（ボートが出現した惑星にいる時か移動中のみ表示）
-        // if (keyObtained && boatSpawnPlanetIndex >= 0 &&
-        //     (mPlayers[0].planetIndex == boatSpawnPlanetIndex || boatTransitionActive))
-        // {
-        //     int drawPlanet = boatTransitionActive ? 0 : boatSpawnPlanetIndex;
-        //     if (boatTransitionActive)
-        //     {
-        //         float nearestD = glm::length(boatPos - planets[0]->GetCenter());
-        //         for (size_t i = 1; i < planets.size(); i++)
-        //         {
-        //             float d = glm::length(boatPos - planets[i]->GetCenter());
-        //             if (d < nearestD)
-        //             {
-        //                 nearestD = d;
-        //                 drawPlanet = static_cast<int>(i);
-        //             }
-        //         }
-        //     }
-        //     glm::vec3 boatUp = glm::normalize(boatPos - planets[drawPlanet]->GetCenter());
-        //     drawCharacter(boatPos, boatScale, glm::vec3(0.4f, 0.25f, 0.1f), boatUp, 0.0f, boatMeshes);
-        // }
+        std::vector<Boat*> boats = currentPlanet->GetBoats();
+        // ボート描画（ボートが出現した惑星にいる時か移動中のみ表示）
+        for (auto boat : boats) {
+        if (boat->GetIsActive())
+            {
+                const float boatScale = 0.8f;
+                glm::vec3 boatUp = glm::normalize(boat->GetPos() - currentPlanet->GetCenter());
+                drawCharacter(boat->GetPos(), boatScale, glm::vec3(0.4f, 0.25f, 0.1f), boatUp, 0.0f, boat->GetMeshes());
+            }
+        }
 
         // // スター描画（ボス撃破後のみ存在・描画）
         // if (!gameClear)
@@ -1501,11 +1398,6 @@ void Game::GenerateOutput()
 
     // // バッファーを入れ替える
     glfwSwapBuffers(mWindow);
-}
-
-void Game::AddActor(std::unique_ptr<Actor> actor)
-{
-    mActors.emplace_back(std::move(actor));
 }
 
 void Game::RemoveActor(std::unique_ptr<Actor> actor)

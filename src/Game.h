@@ -17,8 +17,9 @@ public:
     void RunLoop();
     void Shutdown();
 
-    void AddActor(std::unique_ptr<class Actor> actor);
+    void AddActor(std::unique_ptr<class Actor> actor) { mActors.emplace_back(std::move(actor)); };
 	void RemoveActor(std::unique_ptr<class Actor> actor);
+    void AddPlayer(class Player* player) { mPlayers.emplace_back(player); };
 
     SDL_GameController* GetSdlController() const { return mSdlController;}
     const std::vector<std::unique_ptr<class Actor>>& GetActors() const { return mActors; }
@@ -47,6 +48,8 @@ private:
 
     std::unique_ptr<class AudioSystem> mAudioSystem;
     std::unique_ptr<class Shader> mShader;
+    std::unique_ptr<class Loader> mLoader;
+    std::unique_ptr<class Mesh> mMesh;
 
     Stage* mCurrentStage;
 

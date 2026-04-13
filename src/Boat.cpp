@@ -13,14 +13,12 @@ Boat::Boat(Game* game)
     , mTransitionTimer(0.0f)
     , mTransitionDuration(2.0f)
     , mProgress(0.0f)
-    , mPos(0.0f)
+    , mPos({0.0f, 8.0f, 0.0f})
     , mStartPos(0.0f)
     , mDestPos(0.0f)
     , mUpVec(0.0f, 1.0f, 0.0f)
 {
-    // int currentStageNum = GetGame()->GetCurrentStageNum();
-    // Stage* currentStage = GetGame()->GetStages()[currentStageNum];
-    // mPlanets = currentStage->GetPlanets();
+
 }
 
 void Boat::UpdateActor(float deltaTime)
