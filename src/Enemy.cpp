@@ -46,7 +46,7 @@ void Enemy::UpdateActor(float deltaTime) {
 
             if(mOnGround) {
                 // 追跡
-                if (distToPlayer <= mSensing && mDamageTimer <= 0.0f && !player->GetIsDamaged() && distToPlayer >= GetRadius())
+                if (distToPlayer <= mSensing && mDamageTimer <= 0.0f && !player->GetIsDamaged() && distToPlayer >= GetRadius() + 0.2f)
                 {
                     mPos += vecToPlayer * mSpeed * deltaTime;
                     float planetRadius = currentPlanet->GetRadius();

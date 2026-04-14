@@ -179,6 +179,22 @@ void Player::UpdateActor(float deltaTime)
     {
         glm::vec3 moveDelta = mForwardVec * mMoveForward * mMoveSpeed * deltaTime + mLeftVec * mMoveLeft * mMoveSpeed * deltaTime;
         glm::vec3 desiredPos = mPos + moveDelta;
+
+        glm::vec3 center = mCurrentPlanet->GetCenter();
+        float planetRadius = mCurrentPlanet->GetRadius();
+
+        // 敵との当たり判定
+        for (auto* enemy : enemies)
+        {
+            if (!enemy->GetIsAlive())
+                continue;
+            glm::vec3 ePos = enemy->GetPos();
+            glm::vec3 toDesired = desiredPos - ePos;
+            float d = glm::length(toDesired);
+            float minDist = enemy->GetRadius();
+            if (d < minDist && d > 1e-5f)
+                desiredPos = ePos + (toDesired / d) * minDist;
+        }
         // 壁当たり：球スイープで移動経路に障害があれば移動を打ち切り
         // if (bulletOk && bulletWorld && bulletWallSphere && glm::length(moveDelta) > 1e-5f)
         // {

@@ -14,7 +14,7 @@ public:
     void UpdateActor(float deltaTime) override;
 
     virtual bool IsBoss() const { return false; }
-    float GetRadius() const { return mScale * 3.6f; }
+    float GetRadius() const { return mScale * 3.0f; }
 
     void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(const glm::vec3& pos) { mPos = pos; }
@@ -50,6 +50,7 @@ public:
     float GetSpeed() const { return mSpeed; }
     float GetAttack() const { return mAttack; }
     float GetStandByAttackTimer() const { return mStandByAttackTimer; }
+    float GetLaunchedTimer() const { return mLaunchedTimer; }
     bool GetIsAttack() const { return mIsAttack; }
     float GetSensing() const { return mSensing; }
 
