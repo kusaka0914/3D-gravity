@@ -27,6 +27,7 @@ public:
     void SetKnockBackFrom(const glm::vec3& knockBackFrom) { mKnockBackFrom = knockBackFrom; }
     void SetRestartPos(const glm::vec3& restartPos) { mRestartPos = restartPos; }
     void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
+    void SetPlayerNum(int playerNum) { mPlayerNum = playerNum; }
     void SetCameraYaw(float cameraYaw) { mCameraYaw = cameraYaw; }
     void SetCameraPitch(float cameraPitch) { mCameraPitch = cameraPitch; }
     void SetFacingYaw(float facingYaw) { mFacingYaw = facingYaw; }
@@ -76,10 +77,12 @@ private:
     glm::vec3 mKnockBackFrom;
     glm::vec3 mRestartPos;
     glm::vec3 mVelocity;
+    glm::vec3 mDodgeDir;
 
     int mCurrentPlanetNum;
     int mAttackIndex;
     int mRestartPlanetIndex;
+    int mPlayerNum;
 
     float mCameraYaw;
     float mCameraPitch;
@@ -89,6 +92,7 @@ private:
     float mAttackStartHeight;
     float mDodgeTimer;
     float mDodgeCooldown;
+    float mDodgeStartHeight;
     float mMoveSpeed;
     float mCameraStickX;
     float mCameraStickY;

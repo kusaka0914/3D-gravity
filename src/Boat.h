@@ -14,7 +14,10 @@ public:
     void UpdateActor(float deltaTime) override;
 
     void SetPlanets(std::vector<class Planet*> planets) { mPlanets = planets; }
+    void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
+    void SetStartPlanet(int startPlanetNum) { mStartPlanet = startPlanetNum; }
+    void SetDestPlanet(int destPlanetNum) { mDestPlanet = destPlanetNum; }
     void SetIsMoving(bool isMoving) { mIsMoving = isMoving; }
     void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetTransitionTimer(float transitionTimer) { mTransitionTimer = transitionTimer; }

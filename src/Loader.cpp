@@ -4,6 +4,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Stage.h"
+#include "Boat.h"
 #include <yaml-cpp/yaml.h>
 #include <glm/glm.hpp>
 #include <iostream>
@@ -21,8 +22,10 @@ bool Loader::loadPlayersFromYaml(const char* path) {
             std::cerr << "Loader: missing or invalid 'players' sequence" << std::endl;
             return false;
         }
+        int playerNum = 0;
         for (const YAML::Node& node : root["players"]) {
             std::unique_ptr<Player> player = std::make_unique<Player>(mGame);
+            playerNum++;
 
             int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
             player->SetCurrentPlanetNum(currentPlanetNum);
@@ -35,6 +38,8 @@ bool Loader::loadPlayersFromYaml(const char* path) {
 
             float cameraPitch = node["camera_pitch"] ? node["camera_pitch"].as<float>() : 0.4f;
             player->SetCameraPitch(cameraPitch);
+
+            player->SetPlayerNum(playerNum);
 
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
             float theta = node["theta"] ? node["theta"].as<float>() : 0.0f;
@@ -67,6 +72,9 @@ bool Loader::loadEnemiesFromYaml(const char* path) {
         for (const YAML::Node& node : root["enemies"]) {
             std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(mGame);
 
+            bool isBoss = node["isBoss"] ? node["isBoss"].as<int>() : false;
+            enemy->SetIsBoss(isBoss);
+
             float hp = node["hp"] ? node["hp"].as<float>() : 10.0f;
             enemy->SetHp(hp);
 
@@ -96,6 +104,8 @@ bool Loader::loadEnemiesFromYaml(const char* path) {
             else dir /= len;
             glm::vec3 pos = currentPlanet->GetCenter() + currentPlanet->GetRadius() * dir;
             enemy->SetPos(pos);
+
+            currentPlanet->RemoveAllEnemy();
 
             Enemy* enemy_ptr = enemy.get();
             GetGame()->AddActor(std::move(enemy));
@@ -163,6 +173,40 @@ bool Loader::loadPlanetsFromYaml(const char* path) {
         return true;
     } catch (const YAML::Exception& ex) {
         std::cerr << "Planet Load error: " << ex.what() << std::endl;
+        return false;
+    }
+}
+
+bool Loader::loadBoatsFromYaml(const char* path)
+{
+    try {
+        YAML::Node root = YAML::LoadFile(path);
+        if (!root["boats"] || !root["boats"].IsSequence()) {
+            std::cerr << "Loader: missing or invalid 'boats' sequence" << std::endl;
+            return false;
+        }
+        for (auto node : root["boats"]){
+            std::unique_ptr<Boat> boat = std::make_unique<Boat>(GetGame());
+
+            int startPlanet = node["startPlanet"] ? node["startPlanet"].as<int>() : 0;
+            boat->SetStartPlanet(startPlanet);
+            boat->SetCurrentPlanetNum(startPlanet);
+
+            int destPlanet = node["destPlanet"] ? node["destPlanet"].as<int>() : 0;
+            boat->SetDestPlanet(destPlanet);
+
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[startPlanet];
+            boat->SetCurrentPlanet(currentPlanet);
+
+            boat->SetPlanets(GetGame()->GetCurrentStage()->GetPlanets());
+
+            Boat* boat_ptr = boat.get();
+            GetGame()->AddActor(std::move(boat));
+            currentPlanet->AddBoat(boat_ptr);
+        }
+        return true;
+    } catch (const YAML::Exception& ex) {
+        std::cerr << "Boats Load error: " << ex.what() << std::endl;
         return false;
     }
 }

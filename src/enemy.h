@@ -23,6 +23,7 @@ public:
     void SetIsAlive(bool isAlive) { mIsAlive = isAlive; }
     void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
     void SetIsCountered(bool isCountered) { mIsCountered = isCountered; }
+    void SetIsBoss(bool isBoss) { mIsBoss = isBoss; }
     void SetDamageTimer(float damageTimer) { mDamageTimer = damageTimer; }
     void SetModelPath(const std::string& modelPath) { mModelPath = modelPath; }
     void SetScale(float scale) { mScale = scale; }
@@ -39,6 +40,7 @@ public:
     bool GetIsAlive() const { return mIsAlive; }
     bool GetIsDamaged() const { return mIsDamaged; }
     bool GetIsCountered() const { return mIsCountered; }
+    bool GetIsBoss() const { return mIsBoss; }
     float GetDamageTimer() const { return mDamageTimer; }
     const std::string& GetModelPath() const { return mModelPath; }
     float GetScale() const { return mScale; }
@@ -56,6 +58,7 @@ private:
     bool mIsAlive;
     bool mIsDamaged;
     bool mIsCountered;
+    bool mIsBoss;
     float mDamageTimer;
     std::string mModelPath;
     float mScale;

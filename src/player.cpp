@@ -3,6 +3,7 @@
 #include "Boat.h"
 #include "Key.h"
 #include "Stage.h"
+#include "Star.h"
 #include "Game.h"
 #include <cmath>
 
@@ -44,7 +45,6 @@ Player::Player(Game* game)
     , mAttackDodgeLockRemaining(0.0f)
     , mAttackHeightLockRemaining(0.0f)
     , mAttackIndex(0)
-    , mRestartPlanetIndex(0)
 {
     Stage* currentStage = GetGame()->GetCurrentStage();
     mCurrentPlanet = currentStage->GetPlanets()[0];
@@ -52,6 +52,9 @@ Player::Player(Game* game)
     glm::vec3 center = mCurrentPlanet->GetCenter();
     float radius = mCurrentPlanet->GetRadius();
     mPos = center + glm::vec3(10.0f, radius, 0.0f);
+
+    mRestartPos = mPos;
+    mRestartPlanetIndex = mCurrentPlanetNum;
 }
 
 Player::~Player()
@@ -67,7 +70,7 @@ void Player::ProcessActor()
     // コントローラーの状態更新
     SDL_GameControllerUpdate();
     SDL_GameController* sdlController = GetGame()->GetSdlController();
-    if (sdlController && SDL_GameControllerGetAttached(sdlController))
+    if (sdlController && SDL_GameControllerGetAttached(sdlController) && mPlayerNum == 1)
     {
         const float deadZone = 0.25f;
         const float scale = 1.0f / 32767.0f; // SDL_GameControllerGetAxisの範囲が32767までで、scaleをかけて1.0f以内に抑えるため
@@ -112,6 +115,50 @@ void Player::ProcessActor()
         mMoveSpeed = 2.0f;
         if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
             mMoveSpeed = 3.0f;
+    }
+
+    if (GetGame()->GetIsPlayer2Joined() && mPlayerNum != 1)
+    {
+        GLFWwindow* window = GetGame()->GetWindow();
+        bool jumpPressed = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
+        mMoveSpeed = (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) ? 2.0f : 3.0f;
+        mMoveForward = 0.0f;
+        mMoveLeft = 0.0f;
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            mMoveForward -= 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            mMoveForward += 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            mMoveLeft -= 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            mMoveLeft += 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+            mCounterPressed = true;
+        // if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        //     mCameraYaw -= cameraSensitivity * deltaTime;
+        // if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        //     mCameraYaw += cameraSensitivity * deltaTime;
+
+        glm::vec3 up = glm::normalize(mPos - mCurrentPlanet->GetCenter());
+        // glm::vec3 fwd, left;
+        // getForwardLeft(up, mCameraYaw, fwd, left);
+        // if (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f)
+        // {
+        //     glm::vec3 moveDir = fwd * mMoveForward + left * mMoveLeft;
+        //     float len = glm::length(moveDir);
+        //     if (len > 0.001f)
+        //     {
+        //         moveDir /= len;
+        //         mFacingYaw = getYawFromDirection(up, moveDir) + 3.14159265f;
+        //     }
+        // }
+        // mPos += fwd * mMoveForward * dashSpeed * deltaTime;
+        // mPos += left * mMoveLeft * dashSpeed * deltaTime;
+        if (mOnGround && jumpPressed)
+        {
+            mVelocity += up * 5.0f;
+            mOnGround = false;
+        }
     }
 }
 
@@ -197,17 +244,15 @@ void Player::UpdateActor(float deltaTime)
 
     const float dodgeDuration = 0.5f;
     const float dodgeCooldownTime = 1.0f;
-    float dodgeStartHeight = 0.0f;
-    glm::vec3 dodgeDir(0.0f);
     // 向いている方向へ回避開始
     if (mDodgePressed && !mDodgePressedPrev && mDodgeCooldown <= 0.0f && mDodgeTimer <= 0.0f && mAttackDodgeLockRemaining <= 0.0f)
     {
         glm::vec3 dodgeFwd, dodgeLeftUnused;
         getForwardLeft(mUpVec, mFacingYaw, dodgeFwd, dodgeLeftUnused);
-        dodgeDir = -dodgeFwd;
+        mDodgeDir = -dodgeFwd;
         mDodgeTimer = dodgeDuration;
         mDodgeCooldown = dodgeCooldownTime;
-        dodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
+        mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
         mVelocity = glm::vec3(0.0f);
     }
     // 回避中移動
@@ -215,12 +260,12 @@ void Player::UpdateActor(float deltaTime)
     {
         const float dodgeDistance = 3.0f;
         float dodgeSpeed = dodgeDistance / dodgeDuration;
-        mPos += dodgeDir * dodgeSpeed * deltaTime;
+        mPos += mDodgeDir * dodgeSpeed * deltaTime;
         glm::vec3 center = mCurrentPlanet->GetCenter();
         // 空中回避：直前の高さを維持して浮遊
         float dist = glm::length(mPos - center);
         if (dist > 1e-6f)
-            mPos = center + (mPos - center) / dist * dodgeStartHeight;
+            mPos = center + (mPos - center) / dist * mDodgeStartHeight;
         mDodgeTimer -= deltaTime;
     }
     // 回避クールダウン消費
@@ -511,6 +556,21 @@ void Player::UpdateActor(float deltaTime)
             //     t.setOrigin(btVector3(players[0].pos.x, players[0].pos.y, players[0].pos.z));
             //     bulletGhost->setWorldTransform(t);
             // }
+        }
+    }
+
+    // スターに触れたらゲームクリア
+    Star* star = mCurrentPlanet->GetStar();
+    if (star->GetIsActive())
+    {
+        float distToStar = glm::length(mPos - star->GetPos());
+        const float starTouchRadius = 1.5f;
+        if (distToStar < starTouchRadius)
+        {
+            star->SetIsActive(false);
+            Mix_HaltMusic();
+            GetGame()->GetAudioSystem()->PlaySE("clearSE");
+            std::cout << "Game Clear!" << std::endl;
         }
     }
 

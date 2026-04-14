@@ -5,7 +5,6 @@
 
 Boat::Boat(Game* game)
     : Actor(game)
-    , mCurrentPlanetNum(0)
     , mStartPlanet(0)
     , mDestPlanet(1)
     , mIsMoving(false)
@@ -17,7 +16,7 @@ Boat::Boat(Game* game)
     , mDestPos(0.0f)
     , mUpVec(0.0f, 1.0f, 0.0f)
 {
-
+    mCurrentPlanetNum = mStartPlanet;
 }
 
 void Boat::UpdateActor(float deltaTime)

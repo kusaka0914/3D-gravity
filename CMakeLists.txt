@@ -22,6 +22,7 @@ add_executable(engine
     src/Player.cpp
     src/Shader.cpp
     src/Stage.cpp
+    src/Star.cpp
     src/VertexArray.cpp
 )
 

@@ -12,6 +12,7 @@
 #include "Loader.h"
 #include "Key.h"
 #include "Boat.h"
+#include "Star.h"
 #include "Game.h"
 #include <GLFW/glfw3.h>
 #include <SDL.h>
@@ -134,8 +135,6 @@ bool Game::Initialize()
     }
 
     std::unordered_map<std::string, std::pair<GLuint, glm::ivec2>> textTextureCache;
-    // 敵のどれくらい上にラベルを描画するのか
-    const float enemyLabelHeight = 0.5f;
 
     std::vector<float> textLabel = {
         -0.5f,
@@ -206,7 +205,12 @@ bool Game::Initialize()
     // 敵をYAMLから読み込み
     if (!mLoader->loadEnemiesFromYaml("../assets/data/enemies.yaml"))
     {
-        std::cerr << "Enemy YAML load failed, using 1 default enemy." << std::endl;
+        std::cerr << "Enemy YAML load failed" << std::endl;
+    }
+    // ボートをYAMLから読み込み
+    if (!mLoader->loadBoatsFromYaml("../assets/data/boats.yaml"))
+    {
+        std::cerr << "Boats YAML load failed" << std::endl;
     }
 
     mMesh = std::make_unique<Mesh>();
@@ -244,22 +248,16 @@ bool Game::Initialize()
     Key* key = currentPlanet->GetKey();
     std::vector<LoadedMesh> keyMeshes = mMesh->loadMeshFromFile("../assets/models/key.obj");
     key->SetMeshes(keyMeshes);
+    // スターモデルをロード
+    Star* star = currentPlanet->GetStar();
+    std::vector<LoadedMesh> starMeshes = mMesh->loadMeshFromFile("../assets/models/star.obj");
+    star->SetMeshes(starMeshes);
     // ボートモデルをロード
     std::vector<Boat*> boats = currentPlanet->GetBoats();
     std::vector<LoadedMesh> boatMeshes = mMesh->loadMeshFromFile("../assets/models/boat.obj");
     for (auto boat : boats) {
         boat->SetMeshes(boatMeshes);
     }
-    // スターモデルをロード
-    std::vector<LoadedMesh> starMeshes = mMesh->loadMeshFromFile("../assets/models/star.obj");
-
-    // スター（鍵ルートの到着先 or ボス撃破で出現）
-    // glm::vec3 starPos(0.0f);
-    // const float starScale = 0.3f;
-    // const float starTouchRadius = 1.5f;
-    // bool gameClear = false;
-    // bool starVisibleFromBoss = false; // ボス撃破でスター出現したか
-    // int starBossPlanetIndex = -1;     // ボス撃破で出たスターの惑星番号
 
     // 時間情報
     mLastTime = glfwGetTime();
@@ -406,8 +404,7 @@ void Game::RunLoop()
     // ゲームループ
     while (!glfwWindowShouldClose(mWindow))
     {
-        // 入力などのイベントを処理する
-        glfwPollEvents();
+        glfwPollEvents(); // 入力などのイベントを処理する
         ProcessInput();
         UpdateGame();
         GenerateOutput();
@@ -491,96 +488,44 @@ void Game::ProcessInput()
         Actor* actor = actor_unique.get();
         actor->ProcessInput();
     }
-    // // 敵データのホットリロード
-    // bool reloadPressed = (glfwGetKey(mWindow, GLFW_KEY_R) == GLFW_PRESS);
-    // if (reloadPressed && !mReloadKeyPressedPrev)
-    // {
-    //     std::vector<std::unique_ptr<Enemy>> newEnemies;
-    //     if (loadEnemiesFromYaml(enemiesYamlPath, planets, newEnemies))
-    //     {
-    //         enemies = std::move(newEnemies);
-    //         enemyMeshesByPath.clear();
-    //         for (const unique_ptr<Enemy> &p : enemies)
-    //         {
-    //             const std::string &pathKey = p->modelPath;
-    //             if (enemyMeshesByPath.find(pathKey) == enemyMeshesByPath.end())
-    //             {
-    //                 std::string path = "../assets/models/" + pathKey;
-    //                 enemyMeshesByPath[pathKey] = loadMeshFromFile(path.c_str());
-    //             }
-    //         }
-    //         std::cout << "Enemies reloaded (" << enemies.size() << " enemies)" << std::endl;
-    //     }
-    //     else
-    //     {
-    //         std::cout << "Enemy reload failed." << std::endl;
-    //     }
-    // }
-    // mReloadKeyPressedPrev = reloadPressed;
+    // 敵データのホットリロード
+    bool reloadPressed = (glfwGetKey(mWindow, GLFW_KEY_R) == GLFW_PRESS);
+    if (reloadPressed && !mReloadKeyPressedPrev)
+    {
+        if (!mLoader->loadEnemiesFromYaml("../assets/data/enemies.yaml"))
+        {
+            std::cerr << "Enemy YAML load failed" << std::endl;
+        }
+        std::vector<Enemy*> enemies = GetCurrentStage()->GetPlanets()[0]->GetEnemies();
+        for (auto enemy : enemies)
+        {
+            std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = mCurrentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
+            if (enemyMeshesByPath.find(enemy->GetModelPath()) == enemyMeshesByPath.end())
+            {
+                std::string path = "../assets/models/" + enemy->GetModelPath();
+                auto enemyMeshes = mMesh->loadMeshFromFile(path.c_str());
+                mCurrentStage->GetPlanets()[0]->AddEnemyMesh(enemy->GetModelPath(), enemyMeshes);
+            }
+        }
+    }
+    mReloadKeyPressedPrev = reloadPressed;
 
-    // // Pキーで2P参加（1回だけ反応）
-    // bool pKeyNow = (glfwGetKey(mWindow, GLFW_KEY_P) == GLFW_PRESS);
-    // if (pKeyNow && !mIsPlayer2Joined)
-    // {
-    //     mIsPlayer2Joined = true;
-    //     mPlayers[1] = mPlayers[0];
-    //     mPlayers[1]->GetPos() = planets[mPlayers[0].planetIndex]->GetCenter() + glm::normalize(mPlayers[0]->GetPos() - planets[mPlayers[0].planetIndex]->GetCenter()) * planets[mPlayers[0].planetIndex]->GetRadius();
-    //     glm::vec3 fwdP, ignoreL;
-    //     getForwardLeft(up, mPlayers[0].cameraYaw, fwdP, ignoreL);
-    //     mPlayers[1]->GetPos() += fwdP * 2.0f;
-    //     mPlayers[1]->GetPos() = planets[mPlayers[0].planetIndex]->GetCenter() + glm::normalize(mPlayers[1]->GetPos() - planets[mPlayers[0].planetIndex]->GetCenter()) * planets[mPlayers[0].planetIndex]->GetRadius();
-    //     mPlayers[1].velocity = glm::vec3(0, 0, 0);
-    //     mPlayers[1].onGround = true;
-    //     mPlayers[1].attack = 10.0f;
-    //     mPlayers[1].hp = 100.0f;
-    // } 
+    // Pキーで2P参加（1回だけ反応）
+    bool pKeyNow = (glfwGetKey(mWindow, GLFW_KEY_P) == GLFW_PRESS);
+    if (pKeyNow && !mIsPlayer2Joined)
+    {
+        // 2P作成
+        mIsPlayer2Joined = true;
+        std::unique_ptr<Player> player2 =std::make_unique<Player>(this);
+        Player* player2_ptr = player2.get();
+        mActors.emplace_back(std::move(player2));
+        mPlayers.emplace_back(player2_ptr);
 
-    // if (glfwGetKey(mWindow, GLFW_KEY_L) == GLFW_PRESS)
-    //     counterPressed = true;
-
-    // if (mIsPlayer2Joined)
-    // {
-    //     float moveF2 = 0.0f, moveL2 = 0.0f;
-    //     bool jump2 = (glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS);
-    //     float dash2 = (glfwGetKey(mWindow, GLFW_KEY_R) == GLFW_PRESS) ? 1.5f : 1.0f;
-    //     if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS)
-    //         moveF2 -= 1.0f;
-    //     if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS)
-    //         moveF2 += 1.0f;
-    //     if (glfwGetKey(mWindow, GLFW_KEY_A) == GLFW_PRESS)
-    //         moveL2 -= 1.0f;
-    //     if (glfwGetKey(mWindow, GLFW_KEY_D) == GLFW_PRESS)
-    //         moveL2 += 1.0f;
-    //     if (glfwGetKey(mWindow, GLFW_KEY_Q) == GLFW_PRESS)
-    //         mPlayers[1].cameraYaw -= cameraSensitivity * deltaTime;
-    //     if (glfwGetKey(mWindow, GLFW_KEY_E) == GLFW_PRESS)
-    //         mPlayers[1].cameraYaw += cameraSensitivity * deltaTime;
-
-    //     glm::vec3 up2 = glm::normalize(mPlayers[1]->GetPos() - planets[mPlayers[1].planetIndex]->GetCenter());
-    //     glm::vec3 fwd2, left2;
-    //     getForwardLeft(up2, mPlayers[1].cameraYaw, fwd2, left2);
-    //     if (std::abs(moveF2) > 0.01f || std::abs(moveL2) > 0.01f)
-    //     {
-    //         glm::vec3 moveDir2 = fwd2 * moveF2 + left2 * moveL2;
-    //         float len2 = glm::length(moveDir2);
-    //         if (len2 > 0.001f)
-    //         {
-    //             moveDir2 /= len2;
-    //             mPlayers[1]->GetFacingYaw() = getYawFromDirection(up2, moveDir2) + 3.14159265f;
-    //         }
-    //     }
-    //     if (transitionTimer <= 0.0f)
-    //     {
-    //         mPlayers[1]->GetPos() += fwd2 * moveF2 * characterSpeed * deltaTime * dash2;
-    //         mPlayers[1]->GetPos() += left2 * moveL2 * characterSpeed * deltaTime * dash2;
-    //         if (mPlayers[1].onGround && jump2)
-    //         {
-    //             mPlayers[1].velocity += up2 * 5.0f;
-    //             mPlayers[1].onGround = false;
-    //         }
-    //     }
-    //     // updatePlayerPhysics(mPlayers[1], deltaTime, planets, &transitionTimer);
-    // }
+        // 2Pモデルロード
+        std::string path = "../assets/models/player.obj";
+        std::vector<LoadedMesh> playerMeshes = mMesh->loadMeshFromFile(path.c_str());
+        mPlayers[1]->SetMeshes(playerMeshes);
+    } 
 
     if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS || (mSdlController && SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_BACK)))
         glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
@@ -599,565 +544,6 @@ void Game::UpdateGame()
 
     AudioSystem* audioSystem = mAudioSystem.get();
     audioSystem->Update();
-
-    // ボート移動
-    // if (boatTransitionActive)
-    // {
-    //     boatTransitionTimer += deltaTime;
-    //     // ボード移動がどれくらい進んだかの割合
-    //     float t = glm::min(1.0f, boatTransitionTimer / boatTransitionDuration);
-    //     // smoothstep で滑らかに
-    //     t = t * t * (3.0f - 2.0f * t);
-    //     boatPos = boatTransitionStartBoat + (boatTransitionEnd - boatTransitionStartBoat) * t;
-    //     // ボート位置から一番近い惑星の「上」方向でプレイヤーをボートの上に
-    //     int nearestIdx = 0;
-    //     float nearestD = glm::length(boatPos - planets[0]->GetCenter());
-    //     for (size_t i = 1; i < planets.size(); i++)
-    //     {
-    //         float d = glm::length(boatPos - planets[i]->GetCenter());
-    //         if (d < nearestD)
-    //         {
-    //             nearestD = d;
-    //             nearestIdx = static_cast<int>(i);
-    //         }
-    //     }
-    //     glm::vec3 boatUp = glm::normalize(boatPos - planets[nearestIdx]->GetCenter());
-    //     mPlayers[0]->GetPos() = boatPos + boatUp * playerHeightAboveBoat;
-    //     // 到着処理
-    //     if (t >= 1.0f && boatDestinationPlanetIndex >= 0)
-    //     {
-    //         mPlayers[0].planetIndex = boatDestinationPlanetIndex;
-    //         boatPos = boatTransitionEnd;
-    //         mPlayers[0]->GetPos() = boatTransitionEnd;
-    //         mPlayers[0].onGround = true;
-    //         mPlayers[0].velocity = glm::vec3(0.0f);
-    //         restartPos = boatTransitionEnd;
-    //         restartPlanetIndex = boatDestinationPlanetIndex;
-    //         boatTransitionActive = false;
-    //         if (bulletGhost)
-    //         {
-    //             btTransform t;
-    //             t.setIdentity();
-    //             t.setOrigin(btVector3(mPlayers[0]->GetPos().x, mPlayers[0]->GetPos().y, mPlayers[0]->GetPos().z));
-    //             bulletGhost->setWorldTransform(t);
-    //         }
-    //     }
-    // }
-    // if (!boatTransitionActive)
-    // {        
-    //     up = glm::normalize(mPlayers[0]->GetPos() - planets[mPlayers[0].planetIndex]->GetCenter());
-    // }
-
-    // 惑星2にいるときはBGMをboss.wavに切り替え（ゲームクリア後はBGMを流さない）
-    // if (!gameClear && mPlayers[0].planetIndex != currentBgmPlanetIndex)
-    // {
-    //     currentBgmPlanetIndex = mPlayers[0].planetIndex;
-    //     if (currentBgmPlanetIndex == 1 && bossBGM)
-    //     {
-    //         Mix_PlayMusic(bossBGM, -1);
-    //     }
-    //     else if (normalBGM)
-    //     {
-    //         Mix_PlayMusic(normalBGM, -1);
-    //     }
-    // }
-
-    // glm::vec3 forward, left;
-    // getForwardLeft(up, mPlayers[0].cameraYaw, forward, left);
-
-    // // スティックを倒した方向を向く。移動ロック中は地上のみ向き固定、空中攻撃中は向き替え可
-    // if ((mPlayers[0].attackMoveLockRemaining <= 0.0f || !mPlayers[0].onGround) && (std::abs(moveForward) > 0.01f || std::abs(moveLeft) > 0.01f))
-    // {
-    //     glm::vec3 moveDir = forward * moveForward + left * moveLeft;
-    //     float len = glm::length(moveDir);
-    //     if (len > 0.001f)
-    //     {
-    //         // 移動方向を正規化
-    //         moveDir /= len;
-    //         mPlayers[0]->GetFacingYaw() = getYawFromDirection(up, moveDir) + 3.14159265f;
-    //     }
-    // }
-
-    // if (!boatTransitionActive)
-    // {
-    //     if (transitionTimer <= 0.0f && !mPlayers[0].isDamaged && mPlayers[0].attackMoveLockRemaining <= 0.0f && dodgeTimer <= 0.0f)
-    //     {
-    //         glm::vec3 moveDelta = forward * moveForward * characterSpeed * deltaTime * dashSpeed + left * moveLeft * characterSpeed * deltaTime * dashSpeed;
-    //         glm::vec3 desiredPos = mPlayers[0]->GetPos() + moveDelta;
-    //         // 壁当たり：球スイープで移動経路に障害があれば移動を打ち切り
-    //         if (bulletOk && bulletWorld && bulletWallSphere && glm::length(moveDelta) > 1e-5f)
-    //         {
-    //             glm::vec3 upForSweep = glm::normalize(mPlayers[0]->GetPos() - planets[mPlayers[0].planetIndex]->GetCenter());
-    //             glm::vec3 sweepFrom = mPlayers[0]->GetPos() + upForSweep * 0.4f; // 腰高で判定（地面に当たりにくくする）
-    //             glm::vec3 sweepTo = desiredPos + upForSweep * 0.4f;
-    //             btTransform fromBt, toBt;
-    //             fromBt.setIdentity();
-    //             fromBt.setOrigin(btVector3(sweepFrom.x, sweepFrom.y, sweepFrom.z));
-    //             toBt.setIdentity();
-    //             toBt.setOrigin(btVector3(sweepTo.x, sweepTo.y, sweepTo.z));
-    //             btVector3 sweepFromBt(sweepFrom.x, sweepFrom.y, sweepFrom.z);
-    //             btVector3 sweepToBt(sweepTo.x, sweepTo.y, sweepTo.z);
-    //             btCollisionWorld::ClosestConvexResultCallback sweepCallback(sweepFromBt, sweepToBt);
-    //             bulletWorld->convexSweepTest(bulletWallSphere, fromBt, toBt, sweepCallback);
-    //             if (sweepCallback.hasHit())
-    //             {
-    //                 // 壁手前で一度止め、残りを壁に沿う方向（スライド）に投影して進める
-    //                 float allowFrac = std::max(0.0f, sweepCallback.m_closestHitFraction - 0.02f);
-    //                 glm::vec3 posAfterHit = mPlayers[0]->GetPos() + moveDelta * allowFrac;
-    //                 glm::vec3 hitNormGlm(
-    //                     sweepCallback.m_hitNormalWorld.x(),
-    //                     sweepCallback.m_hitNormalWorld.y(),
-    //                     sweepCallback.m_hitNormalWorld.z());
-    //                 // 阻害された移動を壁面に投影 → 壁沿いのスライドベクトル
-    //                 glm::vec3 blocked = moveDelta * (1.0f - allowFrac);
-    //                 glm::vec3 slideVec = blocked - hitNormGlm * glm::dot(blocked, hitNormGlm);
-    //                 const float slideEps = 1e-4f;
-    //                 if (glm::length(slideVec) > slideEps)
-    //                 {
-    //                     glm::vec3 slideFrom = posAfterHit + upForSweep * 0.4f;
-    //                     glm::vec3 slideTo = slideFrom + slideVec;
-    //                     btTransform fromBt2, toBt2;
-    //                     fromBt2.setIdentity();
-    //                     fromBt2.setOrigin(btVector3(slideFrom.x, slideFrom.y, slideFrom.z));
-    //                     toBt2.setIdentity();
-    //                     toBt2.setOrigin(btVector3(slideTo.x, slideTo.y, slideTo.z));
-    //                     btVector3 sFrom(slideFrom.x, slideFrom.y, slideFrom.z);
-    //                     btVector3 sTo(slideTo.x, slideTo.y, slideTo.z);
-    //                     btCollisionWorld::ClosestConvexResultCallback slideCallback(sFrom, sTo);
-    //                     bulletWorld->convexSweepTest(bulletWallSphere, fromBt2, toBt2, slideCallback);
-    //                     float slideAllow = slideCallback.hasHit()
-    //                                            ? std::max(0.0f, slideCallback.m_closestHitFraction - 0.02f)
-    //                                            : 1.0f;
-    //                     desiredPos = posAfterHit + slideVec * slideAllow;
-    //                 }
-    //                 else
-    //                 {
-    //                     desiredPos = posAfterHit;
-    //                 }
-    //             }
-    //         }
-    //         mPlayers[0]->GetPos() = desiredPos;
-    //         if (mPlayers[0].onGround && jumpPressed)
-    //         {
-    //             mPlayers[0].velocity += up * 5.0f;
-    //             mPlayers[0].onGround = false;
-    //         }
-    //     }
-    //     // Bボタン：向いている方向へ回避開始
-    //     if (dodgePressed && !dodgePressedPrev && dodgeCooldown <= 0.0f && dodgeTimer <= 0.0f && mPlayers[0].attackDodgeLockRemaining <= 0.0f)
-    //     {
-    //         glm::vec3 dodgeFwd, dodgeLeftUnused;
-    //         getForwardLeft(up, mPlayers[0]->GetFacingYaw(), dodgeFwd, dodgeLeftUnused);
-    //         dodgeDir = -dodgeFwd;
-    //         dodgeTimer = dodgeDuration;
-    //         dodgeCooldown = dodgeCooldownTime;
-    //         dodgeStartHeight = glm::length(mPlayers[0]->GetPos() - planets[mPlayers[0].planetIndex]->GetCenter());
-    //         mPlayers[0].velocity = glm::vec3(0.0f); // 回避後に通常落下するためリセット
-    //     }
-    //     if (dodgeTimer > 0.0f)
-    //     {
-    //         float dodgeSpeed = dodgeDistance / dodgeDuration;
-    //         mPlayers[0]->GetPos() += dodgeDir * dodgeSpeed * deltaTime;
-    //         glm::vec3 center = planets[mPlayers[0].planetIndex]->GetCenter();
-    //         // 空中回避：直前の高さ（惑星中心からの距離）を維持して浮遊
-    //         float dist = glm::length(mPlayers[0]->GetPos() - center);
-    //         if (dist > 1e-6f)
-    //             mPlayers[0]->GetPos() = center + (mPlayers[0]->GetPos() - center) / dist * dodgeStartHeight;
-    //         dodgeTimer -= deltaTime;
-    //     }
-    //     if (dodgeCooldown > 0.0f)
-    //         dodgeCooldown -= deltaTime;
-
-    //     // 攻撃後＋0.5秒：攻撃時の高さを維持して浮遊（空中固定）
-    //     if (attackHeightLockRemaining > 0.0f)
-    //     {
-    //         glm::vec3 center = planets[mPlayers[0].planetIndex]->GetCenter();
-    //         float dist = glm::length(mPlayers[0]->GetPos() - center);
-    //         if (dist > 1e-6f)
-    //             mPlayers[0]->GetPos() = center + (mPlayers[0]->GetPos() - center) / dist * attackStartHeight;
-    //     }
-    //     // Bullet レイキャスト：足元にメッシュがあれば地形に沿わせ、穴の上なら重力で落ちる
-    //     // 回避中・攻撃硬直中は浮遊のためスキップ。上昇中（ジャンプ直後）もスキップし、地上 or 落下中のみ判定
-    //     glm::vec3 upForJump = glm::normalize(mPlayers[0]->GetPos() - planets[mPlayers[0].planetIndex]->GetCenter());
-    //     bool isRising = glm::dot(mPlayers[0].velocity, upForJump) > 0.5f;
-    //     bool meshGround = false;
-    //     if (dodgeTimer <= 0.0f && attackHeightLockRemaining <= 0.0f && bulletOk && bulletWorld && !isRising)
-    //     {
-    //         glm::vec3 center = planets[mPlayers[0].planetIndex]->GetCenter();
-    //         glm::vec3 upDir = glm::normalize(mPlayers[0]->GetPos() - center);
-    //         glm::vec3 rayFrom3 = mPlayers[0]->GetPos() + upDir * 0.1f;
-    //         glm::vec3 rayTo3 = mPlayers[0]->GetPos() - upDir * 0.1f;
-    //         btVector3 rayFrom(rayFrom3.x, rayFrom3.y, rayFrom3.z);
-    //         btVector3 rayTo(rayTo3.x, rayTo3.y, rayTo3.z);
-    //         btCollisionWorld::ClosestRayResultCallback rayCallback(rayFrom, rayTo);
-    //         bulletWorld->rayTest(rayFrom, rayTo, rayCallback);
-    //         if (rayCallback.hasHit())
-    //         {
-    //             btVector3 hitPt = rayCallback.m_hitPointWorld;
-    //             glm::vec3 hitPos(hitPt.x(), hitPt.y(), hitPt.z());
-    //             float hitDist = glm::length(hitPos - center);
-    //             float playerDist = glm::length(mPlayers[0]->GetPos() - center);
-    //             if (playerDist - hitDist < 2.0f)
-    //             {
-    //                 mPlayers[0]->GetPos() = hitPos;
-    //                 mPlayers[0].onGround = true;
-    //                 mPlayers[0].velocity = glm::vec3(0.0f);
-    //                 meshGround = true;
-    //             }
-    //         }
-    //         if (!meshGround && mPlayers[0].onGround)
-    //         {
-    //             mPlayers[0].onGround = false;
-    //         }
-    //     }
-    //     // 回避中・攻撃空中固定中は重力をかけず、終了後に通常通り落下
-    //     if (dodgeTimer <= 0.0f && attackHeightLockRemaining <= 0.0f)
-    //         updatePlayerPhysics(mPlayers[0], deltaTime, planets, &transitionTimer, bulletOk && bulletWorld);
-
-    //     // 落下して惑星内部にめり込んだらリスタート地点へ
-    //     if (bulletOk && bulletWorld)
-    //     {
-    //         float dist = glm::length(mPlayers[0]->GetPos() - planets[mPlayers[0].planetIndex]->GetCenter());
-    //         float r = planets[mPlayers[0].planetIndex]->GetRadius();
-    //         if (dist < r * 0.5f)
-    //         {
-    //             mPlayers[0]->GetPos() = restartPos;
-    //             mPlayers[0].planetIndex = restartPlanetIndex;
-    //             mPlayers[0].velocity = glm::vec3(0.0f);
-    //             mPlayers[0].onGround = true;
-    //         }
-    //     }
-    // }
-
-    // float planetRadius = planets[mPlayers[0].planetIndex]->GetRadius();
-    // const float attackRangeMargin = 0.2f;
-    // for (unique_ptr<Enemy> &ptr : enemies)
-    // {
-    //     EnemyBase &e = *ptr;
-    //     if (!e.alive)
-    //         continue;
-    //     // 追跡：どちらかのプレイヤーに向かう（1P基準で判定）
-    //     float distToP0 = glm::length(mPlayers[0]->GetPos() - e->GetPos());
-    //     glm::vec3 toPlayer = glm::normalize(mPlayers[0]->GetPos() - e->GetPos());
-    //     if (distToP0 <= EnemyBase::Sensing && e.damageTimer <= 0.0f && !mPlayers[0].isDamaged && distToP0 >= e.getRadius())
-    //     {
-    //         e->GetPos() += toPlayer * e.speed * deltaTime;
-    //         float r = planets[e.planetIndex]->GetRadius();
-    //         e->GetPos() = planets[e.planetIndex]->GetCenter() + glm::normalize(e->GetPos() - planets[e.planetIndex]->GetCenter()) * r;
-    //     }
-    //     // 攻撃範囲：いずれかのプレイヤーが範囲内なら「範囲内」とする（タイマーは敵ごとに1つなので二重更新しない）
-    //     float distToP1 = glm::length(mPlayers[1]->GetPos() - e->GetPos());
-    //     bool inRangeOfP0 = (distToP0 <= e.getRadius() + attackRangeMargin);
-    //     bool inRangeOfP1 = (distToP1 <= e.getRadius() + attackRangeMargin);
-    //     bool inRangeOfAny = inRangeOfP0 || inRangeOfP1;
-    //     if (!inRangeOfAny)
-    //     {
-    //         e.standByAttackTimer = -1.0f; // 全員範囲外なら idle
-    //     }
-    //     else if (e.standByAttackTimer == -1.0f || e.standByAttackTimer == -2.0f)
-    //     {
-    //         if (!mPlayers[0].isDamagePrev && !mPlayers[1].isDamagePrev)
-    //             e.standByAttackTimer = 2.0f; // 範囲内で idle/攻撃直後のときだけスタンバイ開始（1回だけ）
-    //     }
-    //     if (e.standByAttackTimer >= 0.0f)
-    //     {
-    //         float prevStandBy = e.standByAttackTimer;
-    //         e.standByAttackTimer -= deltaTime;
-    //         if (prevStandBy >= 0.5f && e.standByAttackTimer < 0.5f && attackPreSE)
-    //         {
-    //             Mix_PlayChannel(-1, attackPreSE, 0); // 敵の攻撃0.5秒前に鳴らす
-    //         }
-    //     }
-    //     if (e.standByAttackTimer <= 0.0f && inRangeOfAny)
-    //     {
-    //         e.standByAttackTimer = -2.0f; // 攻撃終了（次のフレームで範囲内なら再スタンバイ可能）
-    //         if (inRangeOfP0 && !mPlayers[0].isDamagePrev)
-    //         {
-    //             mPlayers[0].hp -= e.attack;
-    //             mPlayers[0].damageTimer = 1.0f;
-    //             mPlayers[0].isDamaged = true;
-    //             playerKnockbackFrom = e->GetPos();
-    //             if (mPlayers[0].hp <= 0)
-    //             {
-    //                 mPlayers[0].hp = 0;
-    //                 mPlayers[0]->GetPos() = restartPos;
-    //                 mPlayers[0].planetIndex = restartPlanetIndex;
-    //                 mPlayers[0].velocity = glm::vec3(0.0f);
-    //                 mPlayers[0].onGround = true;
-    //             }
-    //         }
-    //         if (inRangeOfP1 && !mPlayers[1].isDamagePrev)
-    //         {
-    //             mPlayers[1].hp -= e.attack;
-    //             mPlayers[1].damageTimer = 1.0f;
-    //             mPlayers[1].isDamaged = true;
-    //             playerKnockbackFrom = e->GetPos();
-    //             if (mPlayers[1].hp <= 0)
-    //             {
-    //                 mPlayers[1].hp = 0;
-    //                 mPlayers[1]->GetPos() = restartPos;
-    //                 mPlayers[1].planetIndex = restartPlanetIndex;
-    //                 mPlayers[1].velocity = glm::vec3(0.0f);
-    //                 mPlayers[1].onGround = true;
-    //             }
-    //         }
-    //     }
-    // }
-
-    // // Xボタン攻撃：正面にいる敵のうち最初の1体にダメージ（1Pのみ）。当たらなくても硬直・高さ維持する
-    // const float attackRange = 1.8f;
-    // const float attackAngle = 0.8f;
-    // if (attackPressed && !attackPressedPrev && mPlayers[0].attackCooldownRemaining <= 0.0f)
-    // {
-    //     attackStartHeight = glm::length(mPlayers[0]->GetPos() - planets[mPlayers[0].planetIndex]->GetCenter());
-    //     mPlayers[0].velocity = glm::vec3(0.0f);
-    //     bool hitTarget = false;
-    //     glm::vec3 attackFwd, attackLeftUnused;
-    //     getForwardLeft(up, mPlayers[0]->GetFacingYaw(), attackFwd, attackLeftUnused);
-    //     for (unique_ptr<Enemy> &ptr : enemies)
-    //     {
-    //         EnemyBase &e = *ptr;
-    //         if (!e.alive)
-    //             continue;
-    //         glm::vec3 toEnemy = glm::normalize(e->GetPos() - mPlayers[0]->GetPos());
-    //         float dot = glm::dot(-attackFwd, toEnemy);
-    //         float dist = glm::length(e->GetPos() - mPlayers[0]->GetPos());
-    //         float effectiveRange = attackRange + e.getRadius();
-    //         if (dist <= effectiveRange && dot >= attackAngle)
-    //         {
-    //             e.hp -= mPlayers[0].attack;
-    //             if (e.hp <= 0)
-    //                 e.damageTimer = 1.0f; // 死ぬ時だけノックバック
-    //             if (attackSE)
-    //                 Mix_PlayChannel(-1, attackSE, 0);
-    //             mPlayers[0].attackCooldownRemaining = 0.3f;
-    //             mPlayers[0].attackIndex++;
-    //             bool wasThirdHit = false;
-    //             if (mPlayers[0].attackIndex == 3)
-    //             {
-    //                 wasThirdHit = true;
-    //                 mPlayers[0].attackCooldownRemaining = 1.5f;
-    //                 mPlayers[0].attackIndex = 0;
-    //             }
-    //             mPlayers[0].attackMoveLockRemaining = std::min(mPlayers[0].attackCooldownRemaining, 1.0f) + 0.5f;
-    //             mPlayers[0].attackDodgeLockRemaining = std::max(0.0f, mPlayers[0].attackMoveLockRemaining - 0.5f);
-    //             if (wasThirdHit && !mPlayers[0].onGround)
-    //                 attackHeightLockRemaining = 0.5f; // 空中で最後の攻撃は0.5秒だけ浮遊してから落下
-    //             else
-    //                 attackHeightLockRemaining = mPlayers[0].attackMoveLockRemaining + 0.5f;
-    //             hitTarget = true;
-    //             if (e.hp <= 0)
-    //             {
-    //                 e.hp = 0;
-    //             };
-    //             break;
-    //         }
-    //     }
-    //     if (!hitTarget)
-    //     {
-    //         mPlayers[0].attackCooldownRemaining = 0.3f;
-    //         mPlayers[0].attackIndex++;
-    //         bool wasThirdHit = false;
-    //         if (mPlayers[0].attackIndex == 3)
-    //         {
-    //             wasThirdHit = true;
-    //             mPlayers[0].attackCooldownRemaining = 1.5f;
-    //             mPlayers[0].attackIndex = 0;
-    //         }
-    //         mPlayers[0].attackMoveLockRemaining = std::min(mPlayers[0].attackCooldownRemaining, 1.0f) + 0.5f;
-    //         mPlayers[0].attackDodgeLockRemaining = std::max(0.0f, mPlayers[0].attackMoveLockRemaining - 0.5f);
-    //         if (wasThirdHit && !mPlayers[0].onGround)
-    //             attackHeightLockRemaining = 0.7f; // 空中で最後の攻撃は0.5秒だけ浮遊してから落下
-    //         else
-    //             attackHeightLockRemaining = mPlayers[0].attackMoveLockRemaining + 0.2f;
-    //         if (attackMissSE)
-    //             Mix_PlayChannel(-1, attackMissSE, 0);
-    //     }
-    // }
-
-    // // L（L1）カウンター：敵のstandByAttackTimerが0.2f以下の時に押すと成功、counter.wav・ノックバック・攻撃力2倍ダメージ
-    // if (counterPressed && !counterKeyPressedPrev && !boatTransitionActive)
-    // {
-    //     glm::vec3 counterFwd, counterLeftUnused;
-    //     getForwardLeft(up, mPlayers[0]->GetFacingYaw(), counterFwd, counterLeftUnused);
-    //     for (unique_ptr<Enemy> &ptr : enemies)
-    //     {
-    //         EnemyBase &e = *ptr;
-    //         if (!e.alive)
-    //             continue;
-    //         if (e.standByAttackTimer <= 0.0f || e.standByAttackTimer > 0.2f)
-    //             continue;
-    //         glm::vec3 toEnemy = glm::normalize(e->GetPos() - mPlayers[0]->GetPos());
-    //         float dot = glm::dot(-counterFwd, toEnemy);
-    //         float dist = glm::length(e->GetPos() - mPlayers[0]->GetPos());
-    //         float effectiveRange = attackRange + e.getRadius();
-    //         if (dist <= effectiveRange && dot >= attackAngle)
-    //         {
-    //             if (counterSE)
-    //                 Mix_PlayChannel(-1, counterSE, 0);
-    //             e.standByAttackTimer = -1.0f;     // 敵の攻撃をキャンセル
-    //             e.damageTimer = 1.0f;             // ノックバック
-    //             e.hp -= 2.0f * mPlayers[0].attack; // 攻撃力2倍ダメージ
-    //             if (e.hp <= 0)
-    //                 e.hp = 0;
-    //             break;
-    //         }
-    //     }
-    // }
-
-    // if (mPlayers[0].attackCooldownRemaining >= 0.0f)
-    // {
-    //     mPlayers[0].attackCooldownRemaining -= deltaTime;
-    // }
-    // if (mPlayers[0].attackMoveLockRemaining > 0.0f)
-    // {
-    //     mPlayers[0].attackMoveLockRemaining -= deltaTime;
-    //     if (mPlayers[0].attackMoveLockRemaining < 0.0f)
-    //         mPlayers[0].attackMoveLockRemaining = 0.0f;
-    //     if (mPlayers[0].attackMoveLockRemaining <= 0.0f)
-    //         mPlayers[0].attackIndex = 0; // 歩けるようになったらコンボリセット
-    // }
-    // if (mPlayers[0].attackDodgeLockRemaining > 0.0f)
-    // {
-    //     mPlayers[0].attackDodgeLockRemaining -= deltaTime;
-    //     if (mPlayers[0].attackDodgeLockRemaining < 0.0f)
-    //         mPlayers[0].attackDodgeLockRemaining = 0.0f;
-    // }
-    // if (attackHeightLockRemaining > 0.0f)
-    // {
-    //     attackHeightLockRemaining -= deltaTime;
-    //     if (attackHeightLockRemaining < 0.0f)
-    //         attackHeightLockRemaining = 0.0f;
-    // }
-
-    // glm::vec3 lastDefeatedEnemyPos(0.0f); // 現在惑星で最後に倒した敵の位置
-    // for (unique_ptr<Enemy> &ptr : enemies)
-    // {
-    //     EnemyBase &e = *ptr;
-    //     if (e.damageTimer > 0.0f)
-    //     {
-    //         glm::vec3 toEnemy = glm::normalize(e->GetPos() - mPlayers[0]->GetPos());
-    //         e->GetPos() += toEnemy * deltaTime;
-    //         e->GetPos() = planets[e.planetIndex]->GetCenter() + glm::normalize(e->GetPos() - planets[e.planetIndex]->GetCenter()) * planets[e.planetIndex]->GetRadius();
-    //         e.damageTimer -= deltaTime;
-    //     }
-    //     else
-    //     {
-    //         if (e.hp <= 0)
-    //         {
-    //             e.hp = 0;
-    //             e.alive = false;
-    //             // 現在の惑星で倒した敵の位置を記録（鍵出現位置に使う）
-    //             if (e.planetIndex == mPlayers[0].planetIndex)
-    //                 lastDefeatedEnemyPos = e->GetPos();
-    //             // ボス撃破でスター出現（撃破前のボスがいた場所に置く）
-    //             if (e.isBoss() && !starVisibleFromBoss &&
-    //                 e.planetIndex >= 0 && static_cast<size_t>(e.planetIndex) < planets.size())
-    //             {
-    //                 starVisibleFromBoss = true;
-    //                 starBossPlanetIndex = e.planetIndex;
-    //                 starPos = e->GetPos(); // ボスがいた場所
-    //             }
-    //         }
-    //     }
-    // }
-
-    // if (mPlayers[0].damageTimer > 0.0f)
-    // {
-    //     glm::vec3 toPlayer = glm::normalize(mPlayers[0]->GetPos() - playerKnockbackFrom);
-    //     mPlayers[0]->GetPos() += toPlayer * deltaTime;
-    //     mPlayers[0].damageTimer -= deltaTime;
-    // }
-    // else
-    // {
-    //     mPlayers[0].isDamaged = false;
-    // }
-
-    // // 今いる惑星の敵を全て倒したら鍵を出現させる
-    // std::vector<EnemyBase *> currentPlanetEnemies;
-    // for (const unique_ptr<Enemy> &p : enemies)
-    // {
-    //     if (p->planetIndex == mPlayers[0].planetIndex)
-    //         currentPlanetEnemies.emplace_back(p.get());
-    // }
-    // bool allEnemiesDead = true;
-    // for (EnemyBase *e : currentPlanetEnemies)
-    // {
-    //     if (e->alive)
-    //     {
-    //         allEnemiesDead = false;
-    //         break;
-    //     }
-    // }
-    // if (allEnemiesDead && !keyVisible && !keyObtained)
-    // {
-    //     keyVisible = true;
-    //     keyPlanetIndex = mPlayers[0].planetIndex;
-    //     keyPos = lastDefeatedEnemyPos; // 最後に倒した敵の場所に鍵を出す
-    // }
-
-    // // 鍵に触れたら取得して消す＆ボートを出現させる
-    // if (keyVisible)
-    // {
-    //     float distToKey = glm::length(mPlayers[0]->GetPos() - keyPos);
-    //     const float keyPickupRadius = 1.2f;
-    //     if (distToKey < keyPickupRadius)
-    //     {
-    //         keyVisible = false;
-    //         keyObtained = true;
-    //         int curIdx = mPlayers[0].planetIndex;
-    //         boatSpawnPlanetIndex = curIdx;
-    //         // 現在惑星から一番近い別惑星を到着先に
-    //         float nearestDist = 1e30f;
-    //         for (size_t i = 0; i < planets.size(); i++)
-    //         {
-    //             if (static_cast<int>(i) == curIdx)
-    //                 continue;
-    //             float d = glm::length(planets[i]->GetCenter() - planets[curIdx]->GetCenter());
-    //             if (d < nearestDist)
-    //             {
-    //                 nearestDist = d;
-    //                 boatDestinationPlanetIndex = static_cast<int>(i);
-    //             }
-    //         }
-    //         // ボートを現在惑星の表面近くに配置
-    //         float boatHeight = planets[curIdx]->GetRadius() - 0.15f;
-    //         boatPos = planets[curIdx]->GetCenter() + glm::normalize(glm::vec3(0.0f, -1.0f, 0.5f)) * boatHeight;
-    //     }
-    // }
-
-    // 以下はまだ
-    // // ボートに触れたら到着先へ移動開始（ボートが出現した惑星にいる時のみ）
-    // if (!boatTransitionActive && keyObtained && boatSpawnPlanetIndex >= 0 && boatDestinationPlanetIndex >= 0 && mPlayers[0].planetIndex == boatSpawnPlanetIndex)
-    // {
-    //     float distToBoat = glm::length(mPlayers[0]->GetPos() - boatPos);
-    //     const float boatTouchRadius = 1.8f;
-    //     if (distToBoat < boatTouchRadius)
-    //     {
-    //         boatTransitionActive = true;
-    //         boatTransitionTimer = 0.0f;
-    //         boatTransitionStartBoat = boatPos;
-    //         const Planet &dest = planets[boatDestinationPlanetIndex];
-    //         const Planet &from = planets[boatSpawnPlanetIndex];
-    //         glm::vec3 toDest = glm::normalize(dest->GetCenter() - from->GetCenter());
-    //         boatTransitionEnd = dest->GetCenter() - toDest * dest->GetRadius();
-    //     }
-    // }
-
-    // // スターに触れたらゲームクリア（ボス撃破で出現したスターが存在するときだけ判定）
-    // bool starExists = (starVisibleFromBoss && mPlayers[0].planetIndex == starBossPlanetIndex);
-    // if (!gameClear && starExists)
-    // {
-    //     float distToStar = glm::length(mPlayers[0]->GetPos() - starPos);
-    //     if (distToStar < starTouchRadius)
-    //     {
-    //         gameClear = true;
-    //         Mix_HaltMusic();
-    //         if (clearSE)
-    //             Mix_PlayChannel(-1, clearSE, 0);
-    //         std::cout << "Game Clear!" << std::endl;
-    //     }
-    // }
 }
 
 void Game::GenerateOutput()
@@ -1318,6 +704,8 @@ void Game::GenerateOutput()
             //         if (glm::length(right) < 0.01f)
             //             right = glm::normalize(glm::cross(enemyUp, glm::vec3(0, 0, 1)));
             //         glm::vec3 upQuad = glm::cross(forward, right);
+            //         敵のどれくらい上にラベルを描画するのか
+            //         const float enemyLabelHeight = 0.5f;
             //         float w = enemyLabelHeight * static_cast<float>(texSize.x) / static_cast<float>(texSize.y);
             //         glm::mat4 billboard(1.0f);
             //         billboard[0] = glm::vec4(right * w, 0.0f);
@@ -1363,19 +751,15 @@ void Game::GenerateOutput()
             }
         }
 
-        // // スター描画（ボス撃破後のみ存在・描画）
-        // if (!gameClear)
-        // {
-        //     int starPlanetIdx = -1;
-        //     if (starVisibleFromBoss && starBossPlanetIndex >= 0 && static_cast<size_t>(starBossPlanetIndex) < planets.size())
-        //         starPlanetIdx = starBossPlanetIndex;
-        //     if (starPlanetIdx >= 0)
-        //     {
-        //         glm::vec3 starUp = glm::normalize(starPos - planets[starPlanetIdx]->GetCenter());
-        //         glm::vec3 starColor(1.0f, 0.9f, 0.2f);
-        //         drawCharacter(starPos, starScale, starColor, starUp, 0.0f, starMeshes);
-        //     }
-        // }
+        // スター描画（ボス撃破後のみ存在・描画）
+        Star* star = currentPlanet->GetStar();
+        if (star->GetIsActive())
+        {
+            glm::vec3 starUp = glm::normalize(star->GetPos() - currentPlanet->GetCenter());
+            glm::vec3 starColor(1.0f, 0.9f, 0.2f);
+            const float starScale = 0.3f;
+            drawCharacter(star->GetPos(), starScale, starColor, starUp, 0.0f, star->GetMeshes());
+        }
     };
 
     if (!mIsPlayer2Joined)

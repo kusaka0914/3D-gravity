@@ -4,6 +4,7 @@
 #include "Boat.h"
 #include "Key.h"
 #include "Stage.h"
+#include "Star.h"
 #include <cmath>
 
 Planet::Planet(Game* game)
@@ -19,16 +20,15 @@ Planet::Planet(Game* game)
 
 void Planet::Initialize()
 {
-    auto boatUnique = std::make_unique<Boat>(GetGame());
-    boatUnique->SetPlanets(GetCurrentStage()->GetPlanets());
-    Boat* boat = boatUnique.get();
-    GetGame()->AddActor(std::move(boatUnique));
-    mBoats.emplace_back(boat);
-
     auto keyUnique = std::make_unique<Key>(GetGame());
     Key* key = keyUnique.get();
     GetGame()->AddActor(std::move(keyUnique));
     mKey = key;
+
+    auto starUnique = std::make_unique<Star>(GetGame());
+    Star* star = starUnique.get();
+    GetGame()->AddActor(std::move(starUnique));
+    mStar = star;
 }
 
 void Planet::UpdateActor(float deltaTime) {

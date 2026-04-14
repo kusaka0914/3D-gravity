@@ -21,6 +21,7 @@ public:
 	void RemoveActor(std::unique_ptr<class Actor> actor);
     void AddPlayer(class Player* player) { mPlayers.emplace_back(player); };
 
+    GLFWwindow* GetWindow() const { return mWindow; }
     SDL_GameController* GetSdlController() const { return mSdlController;}
     const std::vector<std::unique_ptr<class Actor>>& GetActors() const { return mActors; }
     const std::vector<class Player*>& GetPlayers() const { return mPlayers; }
@@ -30,6 +31,7 @@ public:
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }
     bool GetIsStageClear() const { return mIsStageClear; }
+    bool GetIsPlayer2Joined() const { return mIsPlayer2Joined; }
 
 private:
     void ProcessInput();

@@ -14,7 +14,10 @@ public:
     void Initialize() override;
     void UpdateActor(float deltaTime) override;
     void AddEnemy(class Enemy* enemy) { mEnemies.emplace_back(enemy); }
+    void AddBoat(class Boat* boat) { mBoats.emplace_back(boat); }
     void AddEnemyMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mEnemyMeshesByPath[modelPath] = meshes; }
+
+    void RemoveAllEnemy() { for(int i = 0; i < mEnemies.size(); i++) mEnemies.pop_back(); }
 
     void SetCurrentStage(class Stage* currentStage) { mCurrentStage = currentStage; }
     void buildSphereMesh(unsigned int segmentsLat, unsigned int segmentsLong, float radius,
@@ -34,6 +37,7 @@ public:
     const std::vector<class Enemy*>& GetEnemies() const { return mEnemies; }
     const std::vector<class Boat*>& GetBoats() const { return mBoats; }
     class Key* GetKey() const { return mKey; }
+    class Star* GetStar() const { return mStar; }
     const std::unordered_map<std::string, std::vector<LoadedMesh>>& GetEnemyMeshesByPath() const { return mEnemyMeshesByPath; }
 
 private:
@@ -46,6 +50,7 @@ private:
     std::vector<class Enemy*> mEnemies;
     std::vector<class Boat*> mBoats;
     class Key* mKey;
+    class Star* mStar;
 
     std::unordered_map<std::string, std::vector<LoadedMesh>> mEnemyMeshesByPath;
 };

@@ -45,12 +45,12 @@ enemies:
   #   speed: 2.0
   #   attack: 20.0
   # # ボス（撃破でスター出現）
-  # - type: boss
-  #   theta: 6.083
-  #   u: -0.8
-  #   currentPlanetNum: 1
-  #   hp: 300
-  #   modelPath: enemy.obj
-  #   scale: 1.0
-  #   speed: 4.0
-  #   attack: 20.0
+  - isBoss : 1
+    theta: 6.083
+    u: -0.8
+    currentPlanetNum: 1
+    hp: 300
+    modelPath: enemy.obj
+    scale: 1.0
+    speed: 4.0
+    attack: 20.0

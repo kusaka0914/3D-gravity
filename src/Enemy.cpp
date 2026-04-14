@@ -1,4 +1,5 @@
 #include "Enemy.h"
+#include "Star.h"
 #include "Game.h"
 #include "Planet.h"
 #include "Player.h"
@@ -52,7 +53,7 @@ void Enemy::UpdateActor(float deltaTime) {
             const float attackRangeMargin = 0.2f;
             bool inRangeOfPlayer = (distToPlayer <= GetRadius() + attackRangeMargin);
             // 攻撃タイマー開始
-            if (inRangeOfPlayer)
+            if (inRangeOfPlayer && mStandByAttackTimer <= 0.0f)
             {
                 if (!player->GetIsDamagePrev())
                     mStandByAttackTimer = 2.0f;
@@ -101,6 +102,7 @@ void Enemy::UpdateActor(float deltaTime) {
                 mHp -= player->GetAttack() * 2.0f;
                 if (mHp <= 0)
                     mHp = 0;
+                mIsCountered = false;
             }
         
             if (mDamageTimer > 0.0f)
@@ -119,14 +121,14 @@ void Enemy::UpdateActor(float deltaTime) {
                     // // 現在の惑星で倒した敵の位置を記録（鍵出現位置に使う）
                     // if (e.planetIndex == mPlayers[0].planetIndex)
                     //     lastDefeatedEnemyPos = mPos();
-                    // // ボス撃破でスター出現（撃破前のボスがいた場所に置く）
-                    // if (e.isBoss() && !starVisibleFromBoss &&
-                    //     e.planetIndex >= 0 && static_cast<size_t>(e.planetIndex) < planets.size())
-                    // {
-                    //     starVisibleFromBoss = true;
-                    //     starBossPlanetIndex = e.planetIndex;
-                    //     starPos = mPos(); // ボスがいた場所
-                    // }
+                    // ボス撃破でスター出現（撃破前のボスがいた場所に置く）
+                    Star* star = mCurrentPlanet->GetStar();
+                    if (mIsBoss)
+                    {
+                        star->SetIsActive(true);
+                        star->SetCurrentPlanet(mCurrentPlanetNum);
+                        star->SetPos(mPos);
+                    }
                 }
             }
         }
