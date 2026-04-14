@@ -43,7 +43,7 @@ Player::Player(Game* game)
     , mAttackCooldownRemaining(0.0f)
     , mAttackMoveLockRemaining(0.0f)
     , mAttackDodgeLockRemaining(0.0f)
-    , mAttackHeightLockRemaining(0.0f)
+    , mAttackHeightLockRemaining(-5.0f)
     , mAttackIndex(0)
 {
     Stage* currentStage = GetGame()->GetCurrentStage();
@@ -120,7 +120,7 @@ void Player::ProcessActor()
     if (GetGame()->GetIsPlayer2Joined() && mPlayerNum != 1)
     {
         GLFWwindow* window = GetGame()->GetWindow();
-        bool jumpPressed = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
+        mJumpPressed = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
         mMoveSpeed = (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) ? 2.0f : 3.0f;
         mMoveForward = 0.0f;
         mMoveLeft = 0.0f;
@@ -139,12 +139,9 @@ void Player::ProcessActor()
         // if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         //     mCameraYaw += cameraSensitivity * deltaTime;
 
-        glm::vec3 up = glm::normalize(mPos - mCurrentPlanet->GetCenter());
-        // glm::vec3 fwd, left;
-        // getForwardLeft(up, mCameraYaw, fwd, left);
         // if (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f)
         // {
-        //     glm::vec3 moveDir = fwd * mMoveForward + left * mMoveLeft;
+        //     glm::vec3 moveDir = mForwardVec * mMoveForward + mLeftVec * mMoveLeft;
         //     float len = glm::length(moveDir);
         //     if (len > 0.001f)
         //     {
@@ -152,13 +149,8 @@ void Player::ProcessActor()
         //         mFacingYaw = getYawFromDirection(up, moveDir) + 3.14159265f;
         //     }
         // }
-        // mPos += fwd * mMoveForward * dashSpeed * deltaTime;
-        // mPos += left * mMoveLeft * dashSpeed * deltaTime;
-        if (mOnGround && jumpPressed)
-        {
-            mVelocity += up * 5.0f;
-            mOnGround = false;
-        }
+        // mPos += mForwardVec * mMoveForward * dashSpeed * deltaTime;
+        // mPos += mLeftVec * mMoveLeft * dashSpeed * deltaTime;
     }
 }
 
@@ -173,13 +165,19 @@ void Player::UpdateActor(float deltaTime)
     std::vector<Enemy*> enemies = mCurrentPlanet->GetEnemies();
 
     mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
+    glm::vec3 worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 0, 1)));
+    if (glm::length(worldLeft) < 0.01f)
+        worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(1, 0, 0)));
+    mForwardVec = glm::normalize(glm::cross(worldLeft, mUpVec) * std::cos(mCameraYaw) - std::sin(mCameraYaw) * worldLeft);
+    mLeftVec = glm::normalize(glm::cross(mUpVec, mForwardVec));
 
-    glm::vec3 forward, left;
-    getForwardLeft(mUpVec, mCameraYaw, forward, left);
+    mFacingForwardVec = glm::normalize(glm::cross(worldLeft, mUpVec) * std::cos(mFacingYaw) - std::sin(mFacingYaw) * worldLeft);
+    mFacingLeftVec = glm::normalize(glm::cross(mUpVec, mFacingForwardVec));
+
     // プレイヤー移動（ダメージ時、空中固定時、回避時以外）
     if (!mIsDamaged && mAttackMoveLockRemaining <= 0.0f && mDodgeTimer <= 0.0f)
     {
-        glm::vec3 moveDelta = forward * mMoveForward * mMoveSpeed * deltaTime + left * mMoveLeft * mMoveSpeed * deltaTime;
+        glm::vec3 moveDelta = mForwardVec * mMoveForward * mMoveSpeed * deltaTime + mLeftVec * mMoveLeft * mMoveSpeed * deltaTime;
         glm::vec3 desiredPos = mPos + moveDelta;
         // 壁当たり：球スイープで移動経路に障害があれば移動を打ち切り
         // if (bulletOk && bulletWorld && bulletWallSphere && glm::length(moveDelta) > 1e-5f)
@@ -247,9 +245,7 @@ void Player::UpdateActor(float deltaTime)
     // 向いている方向へ回避開始
     if (mDodgePressed && !mDodgePressedPrev && mDodgeCooldown <= 0.0f && mDodgeTimer <= 0.0f && mAttackDodgeLockRemaining <= 0.0f)
     {
-        glm::vec3 dodgeFwd, dodgeLeftUnused;
-        getForwardLeft(mUpVec, mFacingYaw, dodgeFwd, dodgeLeftUnused);
-        mDodgeDir = -dodgeFwd;
+        mDodgeDir = -mFacingForwardVec;
         mDodgeTimer = dodgeDuration;
         mDodgeCooldown = dodgeCooldownTime;
         mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
@@ -357,7 +353,7 @@ void Player::UpdateActor(float deltaTime)
     // スティックを倒した方向を向く。移動ロック中は地上のみ向き固定、空中攻撃中は向き替え可
     if ((mAttackMoveLockRemaining <= 0.0f || !mOnGround) && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
     {
-        glm::vec3 moveDir = forward * mMoveForward + left * mMoveLeft;
+        glm::vec3 moveDir = mForwardVec * mMoveForward + mLeftVec * mMoveLeft;
         float len = glm::length(moveDir);
         if (len > 0.001f)
         {
@@ -371,71 +367,66 @@ void Player::UpdateActor(float deltaTime)
     const float attackRange = 1.8f;
     const float attackAngle = 0.8f;
     bool canAttack = mAttackPressed && !mAttackPressedPrev && mAttackCooldownRemaining <= 0.0f;
-    glm::vec3 attackFwd, attackLeftUnused;
     if (canAttack)
     {
         mAttackStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
         mVelocity = glm::vec3(0.0f);
-        bool hitTarget = false;
-        getForwardLeft(mUpVec, mFacingYaw, attackFwd, attackLeftUnused);
+        mAttackMotionTimer = 0.3f;
 
+        auto applyAttackLocksFromCooldown = [this]() {
+            mAttackMoveLockRemaining = std::min(mAttackCooldownRemaining, 0.5f) + 0.2f;
+            mAttackDodgeLockRemaining = std::max(0.0f, mAttackMoveLockRemaining - 0.5f);
+            if (!mOnGround)
+            {
+                mAttackCooldownRemaining = 0.2f;
+                if (mAttackHeightLockRemaining <= -1.0f)
+                    mAttackHeightLockRemaining = 1.5f;
+            }
+        };
+
+        std::vector<Enemy*> hitEnemies;
         for (auto& enemy : enemies)
         {
-            glm::vec3 enemyPos = enemy->GetPos();
             if (!enemy->GetIsAlive())
                 continue;
-            
+            glm::vec3 enemyPos = enemy->GetPos();
             glm::vec3 toEnemy = glm::normalize(enemyPos - mPos);
             float dist = glm::length(enemyPos - mPos);
-            float dot = glm::dot(-attackFwd, toEnemy);
+            float dot = glm::dot(-mFacingForwardVec, toEnemy);
             float effectiveRange = attackRange + enemy->GetRadius();
-
-            bool isHit = dist <= effectiveRange && dot >= attackAngle;
-            if (isHit)
-            {
-                enemy->SetIsDamaged(true);
-
-                mAttackCooldownRemaining = 0.3f;
-                mAttackIndex++;
-                bool wasThirdHit = false;
-                if (mAttackIndex == 3)
-                {
-                    wasThirdHit = true;
-                    mAttackCooldownRemaining = 1.5f;
-                    mAttackIndex = 0;
-                }
-                mAttackMoveLockRemaining = std::min(mAttackCooldownRemaining, 1.0f) + 0.5f;
-                mAttackDodgeLockRemaining = std::max(0.0f, mAttackMoveLockRemaining - 0.5f);
-                if (wasThirdHit && !mOnGround)
-                    mAttackHeightLockRemaining = 0.5f;
-                else
-                    mAttackHeightLockRemaining = mAttackMoveLockRemaining + 0.5f;
-                GetGame()->GetAudioSystem()->PlaySE("attackSE");
-                hitTarget = true;
-            }
+            if (dist <= effectiveRange && dot >= attackAngle)
+                hitEnemies.push_back(enemy);
         }
 
-        if (!hitTarget)
+        if (!hitEnemies.empty())
+        {
+            for (Enemy* enemy : hitEnemies)
+                enemy->SetIsDamaged(true);
+
+            mAttackCooldownRemaining = 0.3f;
+            mAttackIndex++;
+            if (mAttackIndex == 3)
+            {
+                mAttackIndex = 0;
+                for (Enemy* enemy : hitEnemies)
+                {
+                    if (enemy->GetOnGround())
+                        enemy->SetIsLaunched(true);
+                }
+            }
+            applyAttackLocksFromCooldown();
+            GetGame()->GetAudioSystem()->PlaySE("attackSE");
+        }
+        else
         {
             mAttackCooldownRemaining = 0.3f;
             mAttackIndex++;
-
-            bool wasThirdHit = false;
             if (mAttackIndex == 3)
             {
-                wasThirdHit = true;
-                mAttackCooldownRemaining = 1.5f;
+                mAttackCooldownRemaining = 1.0f;
                 mAttackIndex = 0;
             }
-
-            mAttackMoveLockRemaining = std::min(mAttackCooldownRemaining, 1.0f) + 0.5f;
-            mAttackDodgeLockRemaining = std::max(0.0f, mAttackMoveLockRemaining - 0.5f);
-
-            if (wasThirdHit && !mOnGround)
-                mAttackHeightLockRemaining = 0.7f;
-            else
-                mAttackHeightLockRemaining = mAttackMoveLockRemaining + 0.2f;
-            
+            applyAttackLocksFromCooldown();
             GetGame()->GetAudioSystem()->PlaySE("attackMissSE");
         }
     }
@@ -443,8 +434,6 @@ void Player::UpdateActor(float deltaTime)
     // カウンター
     if (mCounterPressed && !mCounterPressedPrev)
     {
-        glm::vec3 counterFwd, counterLeftUnused;
-        getForwardLeft(mUpVec, mFacingYaw, counterFwd, counterLeftUnused);
         for (auto& enemy : enemies)
         {
             glm::vec3 enemyPos = enemy->GetPos();
@@ -456,7 +445,7 @@ void Player::UpdateActor(float deltaTime)
                 
             glm::vec3 toEnemy = glm::normalize(enemyPos - mPos);
             float dist = glm::length(enemyPos - mPos);
-            float dot = glm::dot(-attackFwd, toEnemy);
+            float dot = glm::dot(-mFacingForwardVec, toEnemy);
             float effectiveRange = attackRange + enemy->GetRadius();
             bool isHit = dist <= effectiveRange && dot >= attackAngle;
             if (isHit)
@@ -472,6 +461,17 @@ void Player::UpdateActor(float deltaTime)
     if (mAttackCooldownRemaining >= 0.0f)
     {
         mAttackCooldownRemaining -= deltaTime;
+    }
+
+    // 攻撃モーション
+    if (mAttackMotionTimer >= 0.0f)
+    {
+        mAttackMotionTimer -= deltaTime;
+        if (mAttackMotionTimer >= 0.15f) {
+            mPos += -mFacingForwardVec * 5.0f * deltaTime;
+        }else {
+            mPos -= -mFacingForwardVec * 5.0f * deltaTime;
+        }
     }
 
     // 移動クールダウンタイム減少
@@ -493,12 +493,7 @@ void Player::UpdateActor(float deltaTime)
     }
 
     // 空中浮遊クールダウンタイム減少
-    if (mAttackHeightLockRemaining > 0.0f)
-    {
-        mAttackHeightLockRemaining -= deltaTime;
-        if (mAttackHeightLockRemaining < 0.0f)
-            mAttackHeightLockRemaining = 0.0f;
-    }
+    mAttackHeightLockRemaining -= deltaTime;
 
     // ダメージを受けた際のノックバック
     if (mDamageTimer > 0.0f)
@@ -580,14 +575,6 @@ void Player::UpdateActor(float deltaTime)
     mIsDamagePrev = mIsDamaged;
 }
 
-void Player::getForwardLeft(const glm::vec3& mUpVec, float cameraYaw, glm::vec3& outForward, glm::vec3& outLeft) {
-    glm::vec3 worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 0, 1)));
-    if (glm::length(worldLeft) < 0.01f)
-        worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(1, 0, 0)));
-    outForward = glm::normalize(glm::cross(worldLeft, mUpVec) * std::cos(cameraYaw) - std::sin(cameraYaw) * worldLeft);
-    outLeft = glm::normalize(glm::cross(mUpVec, outForward));
-}
-
 float Player::getYawFromDirection(const glm::vec3& mUpVec, const glm::vec3& dir) {
     glm::vec3 worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 0, 1)));
     if (glm::length(worldLeft) < 0.01f)
@@ -598,21 +585,8 @@ float Player::getYawFromDirection(const glm::vec3& mUpVec, const glm::vec3& dir)
 
 glm::mat4 Player::getPlayerView() {
     const float cameraDistance = 12.0f;
-    glm::vec3 fwd, left;
-    getForwardLeft(mUpVec, mCameraYaw, fwd, left);
-    glm::vec3 back = glm::normalize(-fwd);
+    glm::vec3 back = glm::normalize(-mForwardVec);
     glm::vec3 cameraDir = glm::normalize(std::cos(mCameraPitch) * back + std::sin(mCameraPitch) * mUpVec);
     glm::vec3 cameraPos = mPos - cameraDir * cameraDistance;
     return glm::lookAt(cameraPos, mPos, mUpVec);
-}
-
-void Player::getPlayerFallbackTriangle(std::vector<float>& outVertices) {
-    outVertices.clear();
-    // 描画する三角形の3頂点の座標
-    float v[] = {
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f
-    };
-    for (float x : v) outVertices.emplace_back(x);
 }

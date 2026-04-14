@@ -8,15 +8,18 @@
 Enemy::Enemy(Game* game)
     :Actor(game)
     ,mPos({0.0f, 8.0f, 0.0f})
+    ,mVelocity(0.0f)
     ,mCurrentPlanetNum(0)
     ,mHp(10.0f)
     ,mIsAlive(true)
+    ,mOnGround(true)
     ,mDamageTimer(-1.0f)
     ,mModelPath("enemy.obj")
     ,mScale(0.25f)
     ,mSpeed(2.0f)
     ,mAttack(20.0f)
     ,mStandByAttackTimer(-1.0f)
+    ,mLaunchedTimer(-1.0f)
     ,mIsAttack(false)
     ,mSensing(6.0f)
 {
@@ -41,48 +44,50 @@ void Enemy::UpdateActor(float deltaTime) {
             Stage* currentStage = GetGame()->GetCurrentStage();
             Planet* currentPlanet = currentStage->GetPlanets()[mCurrentPlanetNum];
 
-            // 追跡
-            if (distToPlayer <= mSensing && mDamageTimer <= 0.0f && !player->GetIsDamaged() && distToPlayer >= GetRadius())
-            {
-                mPos += vecToPlayer * mSpeed * deltaTime;
-                float planetRadius = currentPlanet->GetRadius();
-                glm::vec3 planetCenter = currentPlanet->GetCenter();
-                mPos = planetCenter + glm::normalize(mPos - planetCenter) * planetRadius;
-            }
-
-            const float attackRangeMargin = 0.2f;
-            bool inRangeOfPlayer = (distToPlayer <= GetRadius() + attackRangeMargin);
-            // 攻撃タイマー開始
-            if (inRangeOfPlayer && mStandByAttackTimer <= 0.0f)
-            {
-                if (!player->GetIsDamagePrev())
-                    mStandByAttackTimer = 2.0f;
-            }
-            // 攻撃準備
-            if (mStandByAttackTimer >= 0.0f)
-            {
-                float prevStandBy = mStandByAttackTimer;
-                mStandByAttackTimer -= deltaTime;
-                if(prevStandBy >= 0.5f && mStandByAttackTimer <= 0.5f)
-                    GetGame()->GetAudioSystem()->PlaySE("attackPreSE");
-            }
-            // 攻撃
-            if (mStandByAttackTimer <= 0.0f && inRangeOfPlayer)
-            {
-                mStandByAttackTimer = -1.0f;
-                if (!player->GetIsDamagePrev())
+            if(mOnGround) {
+                // 追跡
+                if (distToPlayer <= mSensing && mDamageTimer <= 0.0f && !player->GetIsDamaged() && distToPlayer >= GetRadius())
                 {
-                    player->SetHp(player->GetHp() - mAttack);
-                    player->SetDamageTimer(1.0f);
-                    player->SetIsDamaged(true);
-                    player->SetKnockBackFrom(mPos);
-                    if (player->GetHp() <= 0)
+                    mPos += vecToPlayer * mSpeed * deltaTime;
+                    float planetRadius = currentPlanet->GetRadius();
+                    glm::vec3 planetCenter = currentPlanet->GetCenter();
+                    mPos = planetCenter + glm::normalize(mPos - planetCenter) * planetRadius;
+                }
+
+                const float attackRangeMargin = 0.2f;
+                bool inRangeOfPlayer = (distToPlayer <= GetRadius() + attackRangeMargin);
+                // 攻撃タイマー開始
+                if (inRangeOfPlayer && mStandByAttackTimer <= 0.0f)
+                {
+                    if (!player->GetIsDamagePrev())
+                        mStandByAttackTimer = 2.0f;
+                }
+                // 攻撃準備
+                if (mStandByAttackTimer >= 0.0f)
+                {
+                    float prevStandBy = mStandByAttackTimer;
+                    mStandByAttackTimer -= deltaTime;
+                    if(prevStandBy >= 0.5f && mStandByAttackTimer <= 0.5f)
+                        GetGame()->GetAudioSystem()->PlaySE("attackPreSE");
+                }
+                // 攻撃
+                if (mStandByAttackTimer <= 0.0f && inRangeOfPlayer)
+                {
+                    mStandByAttackTimer = -1.0f;
+                    if (!player->GetIsDamagePrev())
                     {
-                        player->SetHp(0);
-                        player->SetPos(player->GetRestartPos());
-                        player->SetCurrentPlanetNum(player->GetRestartPlanetIndex());
-                        player->SetVelocity({0.0f, 0.0f, 0.0f});
-                        player->SetOnGround(true);
+                        player->SetHp(player->GetHp() - mAttack);
+                        player->SetDamageTimer(1.0f);
+                        player->SetIsDamaged(true);
+                        player->SetKnockBackFrom(mPos);
+                        if (player->GetHp() <= 0)
+                        {
+                            player->SetHp(0);
+                            player->SetPos(player->GetRestartPos());
+                            player->SetCurrentPlanetNum(player->GetRestartPlanetIndex());
+                            player->SetVelocity({0.0f, 0.0f, 0.0f});
+                            player->SetOnGround(true);
+                        }
                     }
                 }
             }
@@ -103,6 +108,43 @@ void Enemy::UpdateActor(float deltaTime) {
                 if (mHp <= 0)
                     mHp = 0;
                 mIsCountered = false;
+            }
+
+            glm::vec3 center = mCurrentPlanet->GetCenter();
+            float radius = mCurrentPlanet->GetRadius();
+            if (mOnGround) {
+                mPos = center + glm::normalize(mPos - center) * radius;
+            }
+
+            mUpVec = glm::normalize(mPos - center);
+            if (mIsLaunched) {
+                mVelocity += mUpVec * 5.0f;
+                mOnGround = false;
+                mIsLaunched = false;
+            }
+
+            // 重力処理
+            glm::vec3 prevVelocity = mVelocity;
+            if (mLaunchedTimer <= 0.0f) {
+                mPos += mVelocity * deltaTime;
+                mVelocity -= mUpVec * 9.8f * deltaTime;
+            } 
+            float vPrev = dot(prevVelocity, mUpVec);
+            float vNow  = dot(mVelocity, mUpVec);
+
+            if (vPrev > 0.0f && vNow <= 0.0f) {
+                mLaunchedTimer = 2.0f;
+            }
+
+            if (mLaunchedTimer >= 0.0f) {
+                mLaunchedTimer -= deltaTime;
+            }
+
+            // 落下時に初期位置に移動
+            float dist = glm::length(mPos - center);
+            if (dist <= radius) {
+                mOnGround = true;
+                mVelocity = glm::vec3(0, 0, 0);
             }
         
             if (mDamageTimer > 0.0f)

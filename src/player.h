@@ -16,10 +16,8 @@ public:
     void ProcessActor() override;
     void UpdateActor(float deltaTime) override;
     
-    void getForwardLeft(const glm::vec3& up, float cameraYaw, glm::vec3& outForward, glm::vec3& outLeft);
     float getYawFromDirection(const glm::vec3& up, const glm::vec3& dir);
     glm::mat4 getPlayerView();
-    void getPlayerFallbackTriangle(std::vector<float>& outVertices);
 
     void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(const glm::vec3& pos) { mPos = pos; }
@@ -48,6 +46,10 @@ public:
     Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
     const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
+    const glm::vec3& GetForwardVec() const { return mForwardVec; }
+    const glm::vec3& GetLeftVec() const { return mLeftVec; }
+    const glm::vec3& GetFacingForwardVec() const { return mFacingForwardVec; }
+    const glm::vec3& GetFacingLeftVec() const { return mFacingLeftVec; }
     const glm::vec3& GetKnockBackFrom() const { return mKnockBackFrom; }
     const glm::vec3& GetRestartPos() const { return mRestartPos; }
     int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
@@ -74,6 +76,10 @@ private:
 
     glm::vec3 mPos;
     glm::vec3 mUpVec;
+    glm::vec3 mForwardVec;
+    glm::vec3 mLeftVec;
+    glm::vec3 mFacingForwardVec;
+    glm::vec3 mFacingLeftVec;
     glm::vec3 mKnockBackFrom;
     glm::vec3 mRestartPos;
     glm::vec3 mVelocity;
@@ -103,6 +109,7 @@ private:
     float mAttackMoveLockRemaining;
     float mAttackDodgeLockRemaining;
     float mAttackHeightLockRemaining;
+    float mAttackMotionTimer;
 
     bool mOnGround;
     bool mIsDamaged;

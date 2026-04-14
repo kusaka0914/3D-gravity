@@ -236,12 +236,9 @@ bool Game::Initialize()
     for (auto enemy : enemies)
     {
         std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = mCurrentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
-        if (enemyMeshesByPath.find(enemy->GetModelPath()) == enemyMeshesByPath.end())
-        {
-            std::string path = "../assets/models/" + enemy->GetModelPath();
-            auto enemyMeshes = mMesh->loadMeshFromFile(path.c_str());
-            mCurrentStage->GetPlanets()[0]->AddEnemyMesh(enemy->GetModelPath(), enemyMeshes);
-        }
+        std::string path = "../assets/models/" + enemy->GetModelPath();
+        auto enemyMeshes = mMesh->loadMeshFromFile(path.c_str());
+        mCurrentStage->GetPlanets()[0]->AddEnemyMesh(enemy->GetModelPath(), enemyMeshes);
     }
     Planet* currentPlanet = mPlayers[0]->GetCurrentPlanet();
     // 鍵モデルをロード
@@ -614,8 +611,12 @@ void Game::GenerateOutput()
                                  const glm::vec3 &up, float yaw, const std::vector<LoadedMesh> &meshes,
                                  const glm::vec3 *colorOverride = nullptr)
         {
-            glm::vec3 fwd, left;
-            mPlayers[0]->getForwardLeft(up, yaw, fwd, left);
+            glm::vec3 upN = glm::normalize(up);
+            glm::vec3 worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 0, 1)));
+            if (glm::length(worldLeft) < 0.01f)
+                worldLeft = glm::normalize(glm::cross(upN, glm::vec3(1, 0, 0)));
+            glm::vec3 fwd = glm::normalize(glm::cross(worldLeft, upN) * std::cos(yaw) - std::sin(yaw) * worldLeft);
+            glm::vec3 left = glm::normalize(glm::cross(upN, fwd));
             glm::vec3 right = -left;
             glm::mat4 orient = glm::mat4(1.0f);
             orient[0] = glm::vec4(-fwd, 0.0f);

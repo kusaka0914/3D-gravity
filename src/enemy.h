@@ -24,6 +24,7 @@ public:
     void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
     void SetIsCountered(bool isCountered) { mIsCountered = isCountered; }
     void SetIsBoss(bool isBoss) { mIsBoss = isBoss; }
+    void SetIsLaunched(bool isLaunched) { mIsLaunched = isLaunched; }
     void SetDamageTimer(float damageTimer) { mDamageTimer = damageTimer; }
     void SetModelPath(const std::string& modelPath) { mModelPath = modelPath; }
     void SetScale(float scale) { mScale = scale; }
@@ -41,6 +42,8 @@ public:
     bool GetIsDamaged() const { return mIsDamaged; }
     bool GetIsCountered() const { return mIsCountered; }
     bool GetIsBoss() const { return mIsBoss; }
+    bool GetIsLaunched() const { return mIsLaunched; }
+    bool GetOnGround() const { return mOnGround; }
     float GetDamageTimer() const { return mDamageTimer; }
     const std::string& GetModelPath() const { return mModelPath; }
     float GetScale() const { return mScale; }
@@ -53,18 +56,23 @@ public:
 private:
     class Planet* mCurrentPlanet;
     glm::vec3 mPos;
+    glm::vec3 mVelocity;
+    glm::vec3 mUpVec;
     int mCurrentPlanetNum;
     float mHp;
     bool mIsAlive;
     bool mIsDamaged;
     bool mIsCountered;
     bool mIsBoss;
+    bool mIsLaunched;
+    bool mOnGround;
     float mDamageTimer;
     std::string mModelPath;
     float mScale;
     float mSpeed;
     float mAttack;
     float mStandByAttackTimer;
+    float mLaunchedTimer;
     bool mIsAttack;
     float mSensing;
 };
