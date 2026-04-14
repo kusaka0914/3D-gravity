@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Boat.h"
+#include "Key.h"
 #include "Stage.h"
 #include "Game.h"
 #include <cmath>
@@ -125,38 +126,6 @@ void Player::UpdateActor(float deltaTime)
     std::vector<Enemy*> enemies = mCurrentPlanet->GetEnemies();
 
     mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
-
-    // ボート移動
-    std::vector<Boat*> boats = mCurrentPlanet->GetBoats();
-    for (auto boat : boats) {
-        bool moving = boat->GetIsMoving();
-        if (moving) {
-            // ボートと一緒にプレイヤーを移動
-            glm::vec3 boatPos = boat->GetPos();
-            glm::vec3 boatUpVec = boat->GetUpVec();
-            const float playerHeightAboveBoat = 0.7f;
-            mPos = boatPos + boatUpVec * playerHeightAboveBoat;
-
-            float progress = boat->GetProgress();
-            // 到着処理
-            if (progress >= 1.0f)
-            {
-                mCurrentPlanetNum = boat->GetDestPlanet();
-                mPos = boat->GetDestPos();
-                mOnGround = true;
-                mVelocity = glm::vec3(0.0f);
-                mRestartPos = boat->GetDestPos();
-                mRestartPlanetIndex = boat->GetDestPlanet();
-                // if (bulletGhost)
-                // {
-                //     btTransform t;
-                //     t.setIdentity();
-                //     t.setOrigin(btVector3(players[0].pos.x, players[0].pos.y, players[0].pos.z));
-                //     bulletGhost->setWorldTransform(t);
-                // }
-            }
-        }
-    }
 
     glm::vec3 forward, left;
     getForwardLeft(mUpVec, mCameraYaw, forward, left);
@@ -496,6 +465,53 @@ void Player::UpdateActor(float deltaTime)
     else
     {
         mIsDamaged = false;
+    }
+
+    std::vector<Boat*> boats = mCurrentPlanet->GetBoats();
+    Key* key = mCurrentPlanet->GetKey();
+    // ボートに触れたら到着先へ移動開始（ボートが出現した惑星にいる時のみ）
+    for (auto boat : boats) {
+        if (!boat->GetIsMoving() && key->GetIsObtained() && mCurrentPlanetNum == boat->GetCurrentPlanetNum())
+        {
+            float distToBoat = glm::length(mPos - boat->GetPos());
+            const float boatTouchRadius = 1.8f;
+            if (distToBoat < boatTouchRadius)
+            {
+                boat->SetIsMoving(true);
+            }
+        }
+    }
+
+    // ボート移動
+    for (auto boat : boats) {
+        bool moving = boat->GetIsMoving();
+        if (moving) {
+            // ボートと一緒にプレイヤーを移動
+            glm::vec3 boatPos = boat->GetPos();
+            glm::vec3 boatUpVec = boat->GetUpVec();
+            const float playerHeightAboveBoat = 0.7f;
+            mPos = boatPos + boatUpVec * playerHeightAboveBoat;
+        }
+        float progress = boat->GetProgress();
+        // 到着処理
+        std::vector<Planet*> planets = GetGame()->GetCurrentStage()->GetPlanets();
+        if (progress >= 1.0f)
+        {
+            mCurrentPlanetNum = boat->GetDestPlanet();
+            mCurrentPlanet = planets[mCurrentPlanetNum];
+            mPos = boat->GetDestPos();
+            mOnGround = true;
+            mVelocity = glm::vec3(0.0f);
+            mRestartPos = boat->GetDestPos();
+            mRestartPlanetIndex = boat->GetDestPlanet();
+            // if (bulletGhost)
+            // {
+            //     btTransform t;
+            //     t.setIdentity();
+            //     t.setOrigin(btVector3(players[0].pos.x, players[0].pos.y, players[0].pos.z));
+            //     bulletGhost->setWorldTransform(t);
+            // }
+        }
     }
 
     mAttackPressedPrev = mAttackPressed;

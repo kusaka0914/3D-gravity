@@ -29,7 +29,6 @@ public:
     bool GetIsMoving() const { return mIsMoving; }
     bool GetIsActive() const { return mIsActive; }
     float GetTransitionTimer() const { return mTransitionTimer; }
-    float GetTransitionDuration() const { return mTransitionDuration; }
     float GetProgress() const { return mProgress; }
     const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetStartPos() const { return mStartPos; }
@@ -46,7 +45,6 @@ private:
     bool mIsMoving;
     bool mIsActive;
     float mTransitionTimer;
-    float mTransitionDuration;
     float mProgress;
     glm::vec3 mPos;
     glm::vec3 mStartPos;

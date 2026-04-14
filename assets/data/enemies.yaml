@@ -12,45 +12,45 @@ enemies:
     scale: 0.25
     speed: 2.0
     attack: 20.0
-  - theta: 2.056
-    u: 1.0
-    currentPlanetNum: 0
-    hp: 60
-    modelPath: enemy.obj
-    scale: 0.25
-    speed: 2.0
-    attack: 20.0
-  - theta: 3.513
-    u: -0.6
-    currentPlanetNum: 0
-    hp: 60
-    modelPath: enemy.obj
-    scale: 0.25
-    speed: 2.0
-    attack: 20.0
-  - theta: 3.969
-    u: 0.8
-    currentPlanetNum: 0
-    hp: 60
-    modelPath: enemy.obj
-    scale: 0.25
-    speed: 2.0
-    attack: 20.0
-  - theta: 5.026
-    u: 1.6
-    currentPlanetNum: 0
-    hp: 60
-    modelPath: enemy.obj
-    scale: 0.25
-    speed: 2.0
-    attack: 20.0
-  # ボス（撃破でスター出現）
-  - type: boss
-    theta: 6.083
-    u: -0.8
-    currentPlanetNum: 1
-    hp: 300
-    modelPath: enemy.obj
-    scale: 1.0
-    speed: 4.0
-    attack: 20.0
+  # - theta: 2.056
+  #   u: 1.0
+  #   currentPlanetNum: 0
+  #   hp: 60
+  #   modelPath: enemy.obj
+  #   scale: 0.25
+  #   speed: 2.0
+  #   attack: 20.0
+  # - theta: 3.513
+  #   u: -0.6
+  #   currentPlanetNum: 0
+  #   hp: 60
+  #   modelPath: enemy.obj
+  #   scale: 0.25
+  #   speed: 2.0
+  #   attack: 20.0
+  # - theta: 3.969
+  #   u: 0.8
+  #   currentPlanetNum: 0
+  #   hp: 60
+  #   modelPath: enemy.obj
+  #   scale: 0.25
+  #   speed: 2.0
+  #   attack: 20.0
+  # - theta: 5.026
+  #   u: 1.6
+  #   currentPlanetNum: 0
+  #   hp: 60
+  #   modelPath: enemy.obj
+  #   scale: 0.25
+  #   speed: 2.0
+  #   attack: 20.0
+  # # ボス（撃破でスター出現）
+  # - type: boss
+  #   theta: 6.083
+  #   u: -0.8
+  #   currentPlanetNum: 1
+  #   hp: 300
+  #   modelPath: enemy.obj
+  #   scale: 1.0
+  #   speed: 4.0
+  #   attack: 20.0

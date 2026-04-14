@@ -21,6 +21,7 @@ public:
     glm::mat4 getPlayerView();
     void getPlayerFallbackTriangle(std::vector<float>& outVertices);
 
+    void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(const glm::vec3& pos) { mPos = pos; }
     void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
     void SetKnockBackFrom(const glm::vec3& knockBackFrom) { mKnockBackFrom = knockBackFrom; }
