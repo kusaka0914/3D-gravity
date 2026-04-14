@@ -1,5 +1,5 @@
-#ifndef KEY_H
-#define KEY_H
+#ifndef Star_H
+#define Star_H
 
 #include "Actor.h"
 #include "Mesh.h"
@@ -8,11 +8,12 @@
 #include <string>
 #include <vector>
 
-class Key : public Actor {
+class Star : public Actor {
 public:
-    Key(class Game* game);
+    Star(class Game* game);
     void UpdateActor(float deltaTime) override;
 
+    void SetPos(glm::vec3& pos) { mPos = pos; }
     void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetIsObtained(bool isObtained) { mIsObtained = isObtained; }
     void SetCurrentPlanet(int currentPlanet) { mCurrentPlanet = currentPlanet; }

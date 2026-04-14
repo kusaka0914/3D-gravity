@@ -1,6 +1,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include "Mesh.h"
 #include "Planet.h"
 #include "Actor.h"
 #include <glm/glm.hpp>
@@ -12,21 +13,21 @@ public:
     Player(class Game* game);
     ~Player();
 
+    void ProcessActor() override;
     void UpdateActor(float deltaTime) override;
-
-    // void updatePlayerPhysics(PlayerState& p, float deltaTime, const std::vector<Planet>& planets,
-    //     float* transitionTimer = nullptr, bool skipGroundSnap = false);
     
     void getForwardLeft(const glm::vec3& up, float cameraYaw, glm::vec3& outForward, glm::vec3& outLeft);
     float getYawFromDirection(const glm::vec3& up, const glm::vec3& dir);
-    // glm::mat4 getPlayerView(const PlayerState& p, float cameraDistance, const std::vector<Planet>& planets);
+    glm::mat4 getPlayerView();
     void getPlayerFallbackTriangle(std::vector<float>& outVertices);
 
+    void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(const glm::vec3& pos) { mPos = pos; }
     void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
     void SetKnockBackFrom(const glm::vec3& knockBackFrom) { mKnockBackFrom = knockBackFrom; }
     void SetRestartPos(const glm::vec3& restartPos) { mRestartPos = restartPos; }
-    void SetCurrentPlanet(int planetIndex) { mCurrentPlanet = planetIndex; }
+    void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
+    void SetPlayerNum(int playerNum) { mPlayerNum = playerNum; }
     void SetCameraYaw(float cameraYaw) { mCameraYaw = cameraYaw; }
     void SetCameraPitch(float cameraPitch) { mCameraPitch = cameraPitch; }
     void SetFacingYaw(float facingYaw) { mFacingYaw = facingYaw; }
@@ -42,12 +43,14 @@ public:
     void SetAttackDodgeLockRemaining(float attackDodgeLockRemaining) { mAttackDodgeLockRemaining = attackDodgeLockRemaining; }
     void SetAttackIndex(int attackIndex) { mAttackIndex = attackIndex; }
     void SetRestartPlanetIndex(int restartPlanetIndex) { mRestartPlanetIndex = restartPlanetIndex; }
+    void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
 
+    Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
     const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
     const glm::vec3& GetKnockBackFrom() const { return mKnockBackFrom; }
     const glm::vec3& GetRestartPos() const { return mRestartPos; }
-    int GetCurrentPlanet() const { return mCurrentPlanet; }
+    int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
     float GetCameraYaw() const { return mCameraYaw; }
     float GetCameraPitch() const { return mCameraPitch; }
     float GetFacingYaw() const { return mFacingYaw; }
@@ -64,12 +67,23 @@ public:
     int GetAttackIndex() const { return mAttackIndex; }
     int GetRestartPlanetIndex() const { return mRestartPlanetIndex; }
 
+    const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
+
 private:
+    class Planet* mCurrentPlanet;
+
     glm::vec3 mPos;
     glm::vec3 mUpVec;
     glm::vec3 mKnockBackFrom;
     glm::vec3 mRestartPos;
-    int mCurrentPlanet;
+    glm::vec3 mVelocity;
+    glm::vec3 mDodgeDir;
+
+    int mCurrentPlanetNum;
+    int mAttackIndex;
+    int mRestartPlanetIndex;
+    int mPlayerNum;
+
     float mCameraYaw;
     float mCameraPitch;
     float mFacingYaw;
@@ -78,21 +92,30 @@ private:
     float mAttackStartHeight;
     float mDodgeTimer;
     float mDodgeCooldown;
-    glm::vec3 mVelocity;
-    bool mOnGround;
+    float mDodgeStartHeight;
+    float mMoveSpeed;
+    float mCameraStickX;
+    float mCameraStickY;
     float mAttack;
     float mHp;
-    bool mIsDamaged;
-    bool mIsDamagePrev;
-    bool mDodgePressed;
-    bool mDodgePressedPrev;
     float mDamageTimer;
     float mAttackCooldownRemaining;
     float mAttackMoveLockRemaining;
     float mAttackDodgeLockRemaining;
     float mAttackHeightLockRemaining;
-    int mAttackIndex;
-    int mRestartPlanetIndex;
+
+    bool mOnGround;
+    bool mIsDamaged;
+    bool mIsDamagePrev;
+    bool mDodgePressed;
+    bool mDodgePressedPrev;
+    bool mJumpPressed;
+    bool mAttackPressed; 
+    bool mAttackPressedPrev; 
+    bool mCounterPressed;
+    bool mCounterPressedPrev;
+
+    std::vector<struct LoadedMesh> mMeshes;
 };
 
 

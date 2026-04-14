@@ -3,30 +3,32 @@
 #include "Enemy.h"
 #include "Boat.h"
 #include "Key.h"
+#include "Stage.h"
+#include "Star.h"
 #include <cmath>
 
 Planet::Planet(Game* game)
-    :Actor(game)
+    : Actor(game)
+    , mCenter(0.0f)
+    , mRadius(8.0f)
+    , mColor(1.0f)
+    , mModelPath("planet.obj")
+    , mKey(nullptr)
 {
-
+    
 }
 
 void Planet::Initialize()
 {
-    auto enemyUnique = std::make_unique<Enemy>(GetGame());
-    Enemy* enemy = enemyUnique.get();
-    GetGame()->AddActor(std::move(enemyUnique));
-    mEnemies.emplace_back(enemy);
-
-    auto boatUnique = std::make_unique<Boat>(GetGame());
-    Boat* boat = boatUnique.get();
-    GetGame()->AddActor(std::move(boatUnique));
-    mBoats.emplace_back(boat);
-
     auto keyUnique = std::make_unique<Key>(GetGame());
     Key* key = keyUnique.get();
     GetGame()->AddActor(std::move(keyUnique));
     mKey = key;
+
+    auto starUnique = std::make_unique<Star>(GetGame());
+    Star* star = starUnique.get();
+    GetGame()->AddActor(std::move(starUnique));
+    mStar = star;
 }
 
 void Planet::UpdateActor(float deltaTime) {
@@ -61,9 +63,9 @@ void Planet::buildSphereMesh(unsigned int segmentsLat, unsigned int segmentsLong
             float x = radius * std::sin(phi) * std::cos(theta);
             float y = radius * std::cos(phi);
             float z = radius * std::sin(phi) * std::sin(theta);
-            outVertices.push_back(x);
-            outVertices.push_back(y);
-            outVertices.push_back(z);
+            outVertices.emplace_back(x);
+            outVertices.emplace_back(y);
+            outVertices.emplace_back(z);
         }
     }
 
@@ -80,12 +82,12 @@ void Planet::buildSphereMesh(unsigned int segmentsLat, unsigned int segmentsLong
             unsigned int i2 = i0 + (segmentsLong + 1);
             unsigned int i3 = i2 + 1;
             // 四角形を2つの三角形に分ける
-            outIndices.push_back(i0);
-            outIndices.push_back(i2);
-            outIndices.push_back(i1);
-            outIndices.push_back(i1);
-            outIndices.push_back(i2);
-            outIndices.push_back(i3);
+            outIndices.emplace_back(i0);
+            outIndices.emplace_back(i2);
+            outIndices.emplace_back(i1);
+            outIndices.emplace_back(i1);
+            outIndices.emplace_back(i2);
+            outIndices.emplace_back(i3);
         }
     }
 }

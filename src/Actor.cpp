@@ -13,6 +13,21 @@ Actor::~Actor()
     
 }
 
+void Actor::Initialize()
+{
+    
+}
+
+void Actor::ProcessInput()
+{
+    ProcessActor();
+}
+
+void Actor::ProcessActor()
+{
+    
+}
+
 void Actor::Update(float deltaTime)
 {
     UpdateActor(deltaTime);
