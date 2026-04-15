@@ -84,6 +84,33 @@ void AudioSystem::Initialize()
     {
         std::cerr << "Mix_LoadWAV (clear SE) error: " << Mix_GetError() << std::endl;
     }
+    Mix_Chunk* attackAirSE = Mix_LoadWAV("../assets/audio/attackAir.wav");
+    if (attackAirSE)
+    {
+        mSEList["attackAirSE"] = attackAirSE;
+    }
+    else
+    {
+        std::cerr << "Mix_LoadWAV (attackAir SE) error: " << Mix_GetError() << std::endl;
+    }
+    Mix_Chunk* defeatSE = Mix_LoadWAV("../assets/audio/Defeat.wav");
+    if (defeatSE)
+    {
+        mSEList["defeatSE"] = defeatSE;
+    }
+    else
+    {
+        std::cerr << "Mix_LoadWAV (defeat SE) error: " << Mix_GetError() << std::endl;
+    }
+    Mix_Chunk* damagedSE = Mix_LoadWAV("../assets/audio/Damaged.wav");
+    if (damagedSE)
+    {
+        mSEList["damagedSE"] = damagedSE;
+    }
+    else
+    {
+        std::cerr << "Mix_LoadWAV (damaged SE) error: " << Mix_GetError() << std::endl;
+    }
 }
 
 void AudioSystem::Update()

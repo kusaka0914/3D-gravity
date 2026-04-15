@@ -64,11 +64,18 @@ bool Loader::loadPlayersFromYaml(const char* path) {
 
 bool Loader::loadEnemiesFromYaml(const char* path) {
     try {
+        int currentPlanetNum = 0;
         YAML::Node root = YAML::LoadFile(path);
         if (!root["enemies"] || !root["enemies"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'enemies' sequence" << std::endl;
             return false;
         }
+        for (const YAML::Node& node : root["enemies"]) {
+            currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            currentPlanet->RemoveAllEnemy();
+        }
+
         for (const YAML::Node& node : root["enemies"]) {
             std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(mGame);
 
@@ -78,7 +85,7 @@ bool Loader::loadEnemiesFromYaml(const char* path) {
             float hp = node["hp"] ? node["hp"].as<float>() : 10.0f;
             enemy->SetHp(hp);
 
-            int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
             enemy->SetCurrentPlanetNum(currentPlanetNum);
             
             std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "";
@@ -104,8 +111,6 @@ bool Loader::loadEnemiesFromYaml(const char* path) {
             else dir /= len;
             glm::vec3 pos = currentPlanet->GetCenter() + currentPlanet->GetRadius() * dir;
             enemy->SetPos(pos);
-
-            currentPlanet->RemoveAllEnemy();
 
             Enemy* enemy_ptr = enemy.get();
             GetGame()->AddActor(std::move(enemy));

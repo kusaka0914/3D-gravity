@@ -44,9 +44,12 @@ void Enemy::UpdateActor(float deltaTime) {
             Stage* currentStage = GetGame()->GetCurrentStage();
             Planet* currentPlanet = currentStage->GetPlanets()[mCurrentPlanetNum];
 
-            if(mOnGround) {
+            const float attackRangeMargin = 0.2f;
+            bool inRangeOfPlayer = (distToPlayer <= GetRadius() + attackRangeMargin);
+
+            if(mOnGround && mDamageTimer <= 0.0f) {
                 // 追跡
-                if (distToPlayer <= mSensing && mDamageTimer <= 0.0f && !player->GetIsDamaged() && distToPlayer >= GetRadius() + 0.2f)
+                if (distToPlayer <= mSensing && mDamageTimer <= 0.0f && !player->GetIsDamaged() && distToPlayer >= GetRadius() + 0.2f && mStandByAttackTimer <= 0.0f && mAttackMotionTimer <= 0.0f)
                 {
                     mPos += vecToPlayer * mSpeed * deltaTime;
                     float planetRadius = currentPlanet->GetRadius();
@@ -54,13 +57,13 @@ void Enemy::UpdateActor(float deltaTime) {
                     mPos = planetCenter + glm::normalize(mPos - planetCenter) * planetRadius;
                 }
 
-                const float attackRangeMargin = 0.2f;
-                bool inRangeOfPlayer = (distToPlayer <= GetRadius() + attackRangeMargin);
                 // 攻撃タイマー開始
                 if (inRangeOfPlayer && mStandByAttackTimer <= 0.0f)
                 {
-                    if (!player->GetIsDamagePrev())
-                        mStandByAttackTimer = 2.0f;
+                    if (!player->GetIsDamagePrev()) {
+                        mIsPreparing = true;
+                        mStandByAttackTimer = 1.0f;
+                    }
                 }
                 // 攻撃準備
                 if (mStandByAttackTimer >= 0.0f)
@@ -71,24 +74,12 @@ void Enemy::UpdateActor(float deltaTime) {
                         GetGame()->GetAudioSystem()->PlaySE("attackPreSE");
                 }
                 // 攻撃
-                if (mStandByAttackTimer <= 0.0f && inRangeOfPlayer)
+                if (mStandByAttackTimer <= 0.0f && mIsPreparing)
                 {
                     mStandByAttackTimer = -1.0f;
-                    if (!player->GetIsDamagePrev())
-                    {
-                        player->SetHp(player->GetHp() - mAttack);
-                        player->SetDamageTimer(1.0f);
-                        player->SetIsDamaged(true);
-                        player->SetKnockBackFrom(mPos);
-                        if (player->GetHp() <= 0)
-                        {
-                            player->SetHp(0);
-                            player->SetPos(player->GetRestartPos());
-                            player->SetCurrentPlanetNum(player->GetRestartPlanetIndex());
-                            player->SetVelocity({0.0f, 0.0f, 0.0f});
-                            player->SetOnGround(true);
-                        }
-                    }
+                    mAttackMotionTimer = 1.0f;
+                    mIsPreparing = false;
+                    mIsHit = false;
                 }
             }
 
@@ -97,16 +88,18 @@ void Enemy::UpdateActor(float deltaTime) {
                 if (mHp <= 0) {
                     mDamageTimer = 1.0f;
                     mHp = 0;
+                    GetGame()->GetAudioSystem()->PlaySE("defeatSE");
                 }
                 mIsDamaged = false;
             }
 
             if (mIsCountered) {
                 mStandByAttackTimer = -1.0f;
-                mDamageTimer = 1.0f;
+                mDamageTimer = 0.3f;
                 mHp -= player->GetAttack() * 2.0f;
                 if (mHp <= 0)
                     mHp = 0;
+                    GetGame()->GetAudioSystem()->PlaySE("DefeatSE");
                 mIsCountered = false;
             }
 
@@ -121,6 +114,8 @@ void Enemy::UpdateActor(float deltaTime) {
                 mVelocity += mUpVec * 5.0f;
                 mOnGround = false;
                 mIsLaunched = false;
+                mStandByAttackTimer = -1.0f;
+                mIsPreparing = false;
             }
 
             // 重力処理
@@ -140,6 +135,34 @@ void Enemy::UpdateActor(float deltaTime) {
                 mLaunchedTimer -= deltaTime;
             }
 
+            if (mAttackMotionTimer >= 0.0f)
+            {
+                mAttackMotionTimer -= deltaTime;
+                glm::vec3 toPlayer = glm::normalize(player->GetPos() - mPos);
+                if (mAttackMotionTimer >= 0.3f) {
+                    mPos += toPlayer * 2.5f * deltaTime;
+                }else {
+                    mPos -= toPlayer * 2.5f * deltaTime;
+                }
+                if (!player->GetIsDamagePrev() && inRangeOfPlayer && !mIsHit)
+                {
+                    GetGame()->GetAudioSystem()->PlaySE("damagedSE");
+                    player->SetHp(player->GetHp() - mAttack);
+                    player->SetDamageTimer(1.0f);
+                    player->SetIsDamaged(true);
+                    player->SetKnockBackFrom(mPos);
+                    mIsHit = true;
+                    if (player->GetHp() <= 0)
+                    {
+                        player->SetHp(0);
+                        player->SetPos(player->GetRestartPos());
+                        player->SetCurrentPlanetNum(player->GetRestartPlanetIndex());
+                        player->SetVelocity({0.0f, 0.0f, 0.0f});
+                        player->SetOnGround(true);
+                    }
+                }
+            }
+
             // 落下時に初期位置に移動
             float dist = glm::length(mPos - center);
             if (dist <= radius) {
@@ -150,8 +173,10 @@ void Enemy::UpdateActor(float deltaTime) {
             if (mDamageTimer > 0.0f)
             {
                 glm::vec3 toEnemy = glm::normalize(mPos - player->GetPos());
-                mPos += toEnemy * deltaTime;
-                mPos = mCurrentPlanet->GetCenter() + glm::normalize(mPos - mCurrentPlanet->GetCenter()) * mCurrentPlanet->GetRadius();
+                mPos += toEnemy * 3.0f * deltaTime;
+                mLaunchedTimer = 0.0f;
+                mPos += mVelocity * deltaTime;
+                mVelocity -= mUpVec * 28.4f * deltaTime;
                 mDamageTimer -= deltaTime;
             }
             else

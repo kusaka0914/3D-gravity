@@ -87,6 +87,7 @@ private:
 
     int mCurrentPlanetNum;
     int mAttackIndex;
+    int mAirAttackIndex;
     int mRestartPlanetIndex;
     int mPlayerNum;
 
@@ -110,6 +111,7 @@ private:
     float mAttackDodgeLockRemaining;
     float mAttackHeightLockRemaining;
     float mAttackMotionTimer;
+    float mCounterCooldownRemaining;
 
     bool mOnGround;
     bool mIsDamaged;

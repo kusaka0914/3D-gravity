@@ -67,6 +67,8 @@ private:
     bool mIsBoss;
     bool mIsLaunched;
     bool mOnGround;
+    bool mIsPreparing;
+    bool mIsHit;
     float mDamageTimer;
     std::string mModelPath;
     float mScale;
@@ -74,6 +76,7 @@ private:
     float mAttack;
     float mStandByAttackTimer;
     float mLaunchedTimer;
+    float mAttackMotionTimer;
     bool mIsAttack;
     float mSensing;
 };

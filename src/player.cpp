@@ -45,6 +45,7 @@ Player::Player(Game* game)
     , mAttackDodgeLockRemaining(0.0f)
     , mAttackHeightLockRemaining(-5.0f)
     , mAttackIndex(0)
+    , mAirAttackIndex(0)
 {
     Stage* currentStage = GetGame()->GetCurrentStage();
     mCurrentPlanet = currentStage->GetPlanets()[0];
@@ -70,7 +71,7 @@ void Player::ProcessActor()
     // コントローラーの状態更新
     SDL_GameControllerUpdate();
     SDL_GameController* sdlController = GetGame()->GetSdlController();
-    if (sdlController && SDL_GameControllerGetAttached(sdlController) && mPlayerNum == 1)
+    if (sdlController && SDL_GameControllerGetAttached(sdlController) && mPlayerNum == 1 && mDamageTimer <= 0.0f)
     {
         const float deadZone = 0.25f;
         const float scale = 1.0f / 32767.0f; // SDL_GameControllerGetAxisの範囲が32767までで、scaleをかけて1.0f以内に抑えるため
@@ -98,7 +99,7 @@ void Player::ProcessActor()
 
         // 攻撃判定（Xボタン）
         mAttackPressed = false;
-        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_X))
+        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_X) && mAirAttackIndex == 0)
             mAttackPressed = true;
 
         // 回避（Bボタン）
@@ -256,7 +257,7 @@ void Player::UpdateActor(float deltaTime)
         }
     }
 
-    const float dodgeDuration = 0.5f;
+    const float dodgeDuration = 0.2f;
     const float dodgeCooldownTime = 1.0f;
     // 向いている方向へ回避開始
     if (mDodgePressed && !mDodgePressedPrev && mDodgeCooldown <= 0.0f && mDodgeTimer <= 0.0f && mAttackDodgeLockRemaining <= 0.0f)
@@ -270,9 +271,20 @@ void Player::UpdateActor(float deltaTime)
     // 回避中移動
     if (mDodgeTimer > 0.0f)
     {
-        const float dodgeDistance = 3.0f;
+        const float dodgeDistance = 1.5f;
         float dodgeSpeed = dodgeDistance / dodgeDuration;
-        mPos += mDodgeDir * dodgeSpeed * deltaTime;
+        glm::vec3 moveDelta = mDodgeDir * dodgeSpeed * deltaTime;
+        glm::vec3 desiredPos = mPos + moveDelta;
+        for (auto enemy : enemies) {
+            glm::vec3 ePos = enemy->GetPos();
+            glm::vec3 toDesired = desiredPos - ePos;
+            float d = glm::length(toDesired);
+            float minDist = enemy->GetRadius();
+            if (d < minDist && d > 1e-5f)
+                desiredPos = ePos + (toDesired / d) * minDist;
+        }
+        
+        mPos = desiredPos;
         glm::vec3 center = mCurrentPlanet->GetCenter();
         // 空中回避：直前の高さを維持して浮遊
         float dist = glm::length(mPos - center);
@@ -281,8 +293,9 @@ void Player::UpdateActor(float deltaTime)
         mDodgeTimer -= deltaTime;
     }
     // 回避クールダウン消費
-    if (mDodgeCooldown > 0.0f)
+    if (mDodgeCooldown > 0.0f && mAttackHeightLockRemaining <= 0.0f) {
         mDodgeCooldown -= deltaTime;
+    }
 
     // 攻撃時の高さを維持して浮遊
     if (mAttackHeightLockRemaining > 0.0f)
@@ -367,7 +380,7 @@ void Player::UpdateActor(float deltaTime)
     // }
 
     // スティックを倒した方向を向く。移動ロック中は地上のみ向き固定、空中攻撃中は向き替え可
-    if ((mAttackMoveLockRemaining <= 0.0f || !mOnGround) && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
+    if ((mAttackMoveLockRemaining <= 0.0f) && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
     {
         glm::vec3 moveDir = mForwardVec * mMoveForward + mLeftVec * mMoveLeft;
         float len = glm::length(moveDir);
@@ -383,7 +396,7 @@ void Player::UpdateActor(float deltaTime)
     const float attackRange = 1.8f;
     const float attackAngle = 0.8f;
     bool canAttack = mAttackPressed && !mAttackPressedPrev && mAttackCooldownRemaining <= 0.0f;
-    if (canAttack)
+    if (canAttack || (mAirAttackIndex > 0 && mAttackMotionTimer < 0))
     {
         mAttackStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
         mVelocity = glm::vec3(0.0f);
@@ -395,8 +408,14 @@ void Player::UpdateActor(float deltaTime)
             if (!mOnGround)
             {
                 mAttackCooldownRemaining = 0.2f;
+                mAirAttackIndex++;
+                if (mAirAttackIndex == 5) {
+                    mAirAttackIndex = 0;
+                }
                 if (mAttackHeightLockRemaining <= -1.0f)
                     mAttackHeightLockRemaining = 1.5f;
+            } else {
+                mAirAttackIndex = 0;
             }
         };
 
@@ -452,11 +471,16 @@ void Player::UpdateActor(float deltaTime)
     {
         for (auto& enemy : enemies)
         {
+            if (mCounterCooldownRemaining > 0.0f)
+                continue;
             glm::vec3 enemyPos = enemy->GetPos();
             float enemyStandByAttackTimer = enemy->GetStandByAttackTimer() ;
             if (!enemy->GetIsAlive())
                 continue;
-            if (enemyStandByAttackTimer <= 0.0f || enemyStandByAttackTimer > 0.2f)
+            if (enemyStandByAttackTimer > 0.5f){
+                mCounterCooldownRemaining = 0.5f;
+            }
+            if (enemyStandByAttackTimer <= 0.3f || enemyStandByAttackTimer > 0.5f)
                 continue;
                 
             glm::vec3 toEnemy = glm::normalize(enemyPos - mPos);
@@ -468,9 +492,14 @@ void Player::UpdateActor(float deltaTime)
             {
                 enemy->SetIsCountered(true);
                 GetGame()->GetAudioSystem()->PlaySE("counterSE");
-                break;
+                mAttackMotionTimer = 0.3f;
             }
         }
+    }
+
+    if (mCounterCooldownRemaining >= 0.0f)
+    {
+        mCounterCooldownRemaining -= deltaTime;
     }
 
     // 攻撃クールダウンタイム減少

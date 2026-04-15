@@ -7,7 +7,7 @@
 
 Star::Star(Game* game)
     : Actor(game)
-    , mPos({0.0f, 8.0f, 0.0f})
+    , mPos({32.0f, 8.0f, 0.0f})
     , mIsActive(false)
     , mIsObtained(false)
     , mCurrentPlanet(0)
