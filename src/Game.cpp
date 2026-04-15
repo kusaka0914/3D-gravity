@@ -103,6 +103,21 @@ bool Game::Initialize()
         }
     }
 
+    // フォント
+    const char *fontPaths[] = {
+        "../assets/fonts/font.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "/Library/Fonts/Arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    };
+    // 最初に見つかったフォントを用いる
+    for (const char *path : fontPaths)
+    {
+        mFont = TTF_OpenFont(path, 24);
+        if (mFont)
+            break;
+    }
+
     mAudioSystem = std::make_unique<AudioSystem>(this);
     mShader = std::make_unique<Shader>();
     if (!mShader->GetShaderProgram())
@@ -118,75 +133,15 @@ bool Game::Initialize()
     mStages.emplace_back(stage);
     mCurrentStage = mStages[0];
 
-    // フォント
-    mFont = nullptr;
-    const char *fontPaths[] = {
-        "../assets/fonts/font.ttf",
-        "/System/Library/Fonts/Supplemental/Arial.ttf",
-        "/Library/Fonts/Arial.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    };
-    // 最初に見つかったフォントを用いる
-    for (const char *path : fontPaths)
-    {
-        mFont = TTF_OpenFont(path, 24);
-        if (mFont)
-            break;
-    }
-
-    std::unordered_map<std::string, std::pair<GLuint, glm::ivec2>> textTextureCache;
-
     std::vector<float> textLabel = {
-        -0.5f,
-        -0.5f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        1.0f,
-        0.5f,
-        -0.5f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        1.0f,
-        1.0f,
-        0.5f,
-        0.5f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        1.0f,
-        0.0f,
-        -0.5f,
-        -0.5f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        1.0f,
-        0.5f,
-        0.5f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        1.0f,
-        0.0f,
-        -0.5f,
-        0.5f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        0.0f,
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+        0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
     };
-    mVertexArrays["text"] = std::make_unique<VertexArray>(textLabel.data(), 972, nullptr, 0);
+    mVertexArrays["text"] = std::make_unique<VertexArray>(textLabel.data(), 6, nullptr, 0);
 
     mLoader = std::make_unique<Loader>(this); 
     // 惑星をYAMLから読み込み
@@ -363,36 +318,6 @@ bool Game::Initialize()
     //         std::cerr << "Bullet: planet mesh load failed, using sphere collision." << std::endl;
     //     bulletOk = false;
     // }
-
-    // // 文字列→テクスチャ（敵ID表示用、キャッシュ付き）
-    // auto getTextTexture = [&](const std::string &s) -> std::pair<GLuint, glm::ivec2>
-    // {
-    //     if (!mFont || s.empty())
-    //         return {0, {0, 0}};
-    //     auto it = textTextureCache.find(s);
-    //     if (it != textTextureCache.end())
-    //         return it->second;
-    //     SDL_Color white = {255, 255, 255, 255};
-    //     SDL_Surface *surf = TTF_RenderText_Blended(mFont, s.c_str(), white);
-    //     if (!surf)
-    //         return {0, {0, 0}};
-    //     SDL_Surface *rgba = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
-    //     SDL_FreeSurface(surf);
-    //     if (!rgba)
-    //         return {0, {0, 0}};
-    //     int tw = rgba->w, th = rgba->h;
-    //     GLuint tex;
-    //     glGenTextures(1, &tex);
-    //     glBindTexture(GL_TEXTURE_2D, tex);
-    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tw, th, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    //     SDL_FreeSurface(rgba);
-    //     textTextureCache[s] = {tex, {tw, th}};
-    //     return {tex, {tw, th}};
-    // };
     return true;
 }
 
@@ -693,41 +618,71 @@ void Game::GenerateOutput()
             float enemyFacingYaw = mPlayers[0]->getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
             drawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec3(0.0f, 1.0f, 0.0f), enemyUp, enemyFacingYaw, eit->second);
             // 敵の頭上にID（1始まり）をビルボード表示
-            // if (mFont)
-            // {
-            //     auto [texId, texSize] = getTextTexture(std::to_string(ei + 1));
-            //     if (texId != 0 && texSize.x > 0 && texSize.y > 0)
-            //     {
-            //         glm::vec3 camPos(glm::inverse(viewMat)[3]);
-            //         glm::vec3 quadCenter = e->GetPos() + enemyUp * 0.8f;
-            //         glm::vec3 forward = glm::normalize(camPos - quadCenter);
-            //         glm::vec3 right = glm::normalize(glm::cross(enemyUp, forward));
-            //         if (glm::length(right) < 0.01f)
-            //             right = glm::normalize(glm::cross(enemyUp, glm::vec3(0, 0, 1)));
-            //         glm::vec3 upQuad = glm::cross(forward, right);
-            //         敵のどれくらい上にラベルを描画するのか
-            //         const float enemyLabelHeight = 0.5f;
-            //         float w = enemyLabelHeight * static_cast<float>(texSize.x) / static_cast<float>(texSize.y);
-            //         glm::mat4 billboard(1.0f);
-            //         billboard[0] = glm::vec4(right * w, 0.0f);
-            //         billboard[1] = glm::vec4(upQuad * enemyLabelHeight, 0.0f);
-            //         billboard[2] = glm::vec4(forward, 0.0f);
-            //         billboard[3] = glm::vec4(quadCenter, 1.0f);
-            //         glEnable(GL_BLEND);
-            //         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            //         glDepthMask(GL_FALSE);
-            //         glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
-            //         glActiveTexture(GL_TEXTURE0);
-            //         glBindTexture(GL_TEXTURE_2D, texId);
-            //         glUniform1i(locUseTexture, 1);
-            //         glUniform3f(locObjectColor, 1.0f, 1.0f, 1.0f);
-            //         glBindVertexArray(textQuadVAO);
-            //         glDrawArrays(GL_TRIANGLES, 0, 6);
-            //         glUniform1i(locUseTexture, 0);
-            //         glDepthMask(GL_TRUE);
-            //         glDisable(GL_BLEND);
-            //     }
-            // }
+            if (mFont)
+            {
+                std::unordered_map<std::string, std::pair<GLuint, glm::ivec2>> textTextureCache;
+                // 文字列→テクスチャ（敵ID表示用、キャッシュ付き）
+                auto getTextTexture = [&](const std::string &s) -> std::pair<GLuint, glm::ivec2>
+                {
+                    if (!mFont || s.empty())
+                        return {0, {0, 0}};
+                    auto it = textTextureCache.find(s);
+                    if (it != textTextureCache.end())
+                        return it->second;
+                    SDL_Color white = {255, 255, 255, 255};
+                    SDL_Surface *surf = TTF_RenderText_Blended(mFont, s.c_str(), white);
+                    if (!surf)
+                        return {0, {0, 0}};
+                    SDL_Surface *rgba = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
+                    SDL_FreeSurface(surf);
+                    if (!rgba)
+                        return {0, {0, 0}};
+                    int tw = rgba->w, th = rgba->h;
+                    GLuint tex;
+                    glGenTextures(1, &tex);
+                    glBindTexture(GL_TEXTURE_2D, tex);
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tw, th, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                    SDL_FreeSurface(rgba);
+                    textTextureCache[s] = {tex, {tw, th}};
+                    return {tex, {tw, th}};
+                };
+                auto [texId, texSize] = getTextTexture(std::to_string(ei + 1));
+                if (texId != 0 && texSize.x > 0 && texSize.y > 0)
+                {
+                    glm::vec3 camPos(glm::inverse(viewMat)[3]);
+                    glm::vec3 quadCenter = enemy->GetPos() + enemyUp * 0.8f;
+                    glm::vec3 forward = glm::normalize(camPos - quadCenter);
+                    glm::vec3 right = glm::normalize(glm::cross(enemyUp, forward));
+                    if (glm::length(right) < 0.01f)
+                        right = glm::normalize(glm::cross(enemyUp, glm::vec3(0, 0, 1)));
+                    glm::vec3 upQuad = glm::cross(forward, right);
+                    // 敵のどれくらい上にラベルを描画するのか
+                    const float enemyLabelHeight = 0.5f;
+                    float w = enemyLabelHeight * static_cast<float>(texSize.x) / static_cast<float>(texSize.y);
+                    glm::mat4 billboard(1.0f);
+                    billboard[0] = glm::vec4(right * w, 0.0f);
+                    billboard[1] = glm::vec4(upQuad * enemyLabelHeight, 0.0f);
+                    billboard[2] = glm::vec4(forward, 0.0f);
+                    billboard[3] = glm::vec4(quadCenter, 1.0f);
+                    glEnable(GL_BLEND);
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                    glDepthMask(GL_FALSE);
+                    glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, texId);
+                    glUniform1i(locUseTexture, 1);
+                    glUniform3f(locObjectColor, 1.0f, 1.0f, 1.0f);
+                    mVertexArrays["text"]->SetActive();
+                    glDrawArrays(GL_TRIANGLES, 0, 6);
+                    glUniform1i(locUseTexture, 0);
+                    glDepthMask(GL_TRUE);
+                    glDisable(GL_BLEND);
+                }
+            }
         }
 
         // 鍵描画（出現した惑星上で表示）
