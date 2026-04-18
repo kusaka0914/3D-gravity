@@ -3,6 +3,7 @@
 #include <map>
 #include <unordered_map>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 #include <SDL.h>
 #include <SDL_mixer.h>
 #include <memory>
@@ -23,10 +24,13 @@ public:
 
     GLFWwindow* GetWindow() const { return mWindow; }
     SDL_GameController* GetSdlController() const { return mSdlController;}
+    TTF_Font* GetFont() const { return mFont; }
+    const std::unordered_map<const char*, std::unique_ptr<class VertexArray>>& GetVertexArrays() const { return mVertexArrays; }
     const std::vector<std::unique_ptr<class Actor>>& GetActors() const { return mActors; }
     const std::vector<class Player*>& GetPlayers() const { return mPlayers; }
     const std::vector<class Stage*>& GetStages() const { return mStages; }
     AudioSystem* GetAudioSystem() const { return mAudioSystem.get(); }
+    class Shader* GetShader() const { return mShader.get(); }
 
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }
@@ -49,6 +53,7 @@ private:
     std::vector<class Stage*> mStages;
 
     std::unique_ptr<class AudioSystem> mAudioSystem;
+    std::unique_ptr<class UIRenderer> mUIRenderer;
     std::unique_ptr<class Shader> mShader;
     std::unique_ptr<class Loader> mLoader;
     std::unique_ptr<class Mesh> mMesh;

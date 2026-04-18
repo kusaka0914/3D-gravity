@@ -13,6 +13,7 @@
 #include "Key.h"
 #include "Boat.h"
 #include "Star.h"
+#include "UIRenderer.h"
 #include "Game.h"
 #include <GLFW/glfw3.h>
 #include <SDL.h>
@@ -105,21 +106,22 @@ bool Game::Initialize()
 
     // フォント
     const char *fontPaths[] = {
-        "../assets/fonts/font.ttf",
+        "../assets/fonts/NotoSansJP-Black.ttf",
         "/System/Library/Fonts/Supplemental/Arial.ttf",
-        "/Library/Fonts/Arial.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     };
     // 最初に見つかったフォントを用いる
     for (const char *path : fontPaths)
     {
         mFont = TTF_OpenFont(path, 24);
-        if (mFont)
+        if (mFont){
+            std::cout << path << std::endl;
             break;
+        }
     }
 
     mAudioSystem = std::make_unique<AudioSystem>(this);
     mShader = std::make_unique<Shader>();
+    mUIRenderer = std::make_unique<UIRenderer>(this);
     if (!mShader->GetShaderProgram())
     {
         glfwTerminate();
@@ -134,12 +136,12 @@ bool Game::Initialize()
     mCurrentStage = mStages[0];
 
     std::vector<float> textLabel = {
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-        -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+        0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+        -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
     };
     mVertexArrays["text"] = std::make_unique<VertexArray>(textLabel.data(), 6, nullptr, 0);
 
@@ -187,13 +189,15 @@ bool Game::Initialize()
         }
     }
     // 敵モデルをロード
-    std::vector<Enemy*> enemies = GetCurrentStage()->GetPlanets()[0]->GetEnemies();
-    for (auto enemy : enemies)
-    {
-        std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = mCurrentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
-        std::string path = "../assets/models/" + enemy->GetModelPath();
-        auto enemyMeshes = mMesh->loadMeshFromFile(path.c_str());
-        mCurrentStage->GetPlanets()[0]->AddEnemyMesh(enemy->GetModelPath(), enemyMeshes);
+    for (auto planet : planets) {
+        std::vector<Enemy*> enemies = planet->GetEnemies();
+        for (auto enemy : enemies)
+        {
+            std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = mCurrentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
+            std::string path = "../assets/models/" + enemy->GetModelPath();
+            auto enemyMeshes = mMesh->loadMeshFromFile(path.c_str());
+            mCurrentStage->GetPlanets()[0]->AddEnemyMesh(enemy->GetModelPath(), enemyMeshes);
+        }
     }
     Planet* currentPlanet = mPlayers[0]->GetCurrentPlanet();
     // 鍵モデルをロード
@@ -490,6 +494,7 @@ void Game::GenerateOutput()
         GLint locObjectColor = mShader->GetLocObjectColor();
         GLint locUseTexture = mShader->GetLocUseTexture();
         GLint locDiffuseTexture = mShader->GetLocDiffuseTexture();
+
         // CPU側のMVPをシェーダーのそれぞれのuniformに渡して使えるようにしている
         // 惑星描画
         glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(viewMat));
@@ -716,6 +721,8 @@ void Game::GenerateOutput()
             const float starScale = 0.3f;
             drawCharacter(star->GetPos(), starScale, starColor, starUp, 0.0f, star->GetMeshes());
         }
+
+        mUIRenderer->DrawTextBox(fbWidth, fbHeight, 40, 400, 200, 0, 0, {0.0f, 0.0f, 0.0f}, "こんにちは");
     };
 
     if (!mIsPlayer2Joined)
@@ -736,7 +743,7 @@ void Game::GenerateOutput()
         drawScene(view2P, projHalf);
     }
 
-    // // バッファーを入れ替える
+    // バッファーを入れ替える
     glfwSwapBuffers(mWindow);
 }
 

@@ -23,6 +23,7 @@ add_executable(engine
     src/Shader.cpp
     src/Stage.cpp
     src/Star.cpp
+    src/UIRenderer.cpp
     src/VertexArray.cpp
 )
 

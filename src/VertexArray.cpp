@@ -18,7 +18,7 @@ VertexArray::VertexArray(const float* verts, unsigned int numVerts, const unsign
     // VBO上のデータを3つ区切りで読んでlocation 0に渡すことを設定している
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(sizeof(float) * 3));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(sizeof(float) * 5));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(sizeof(float) * 6));
     // location 0をオンにする
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);

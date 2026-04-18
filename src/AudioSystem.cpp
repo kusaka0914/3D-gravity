@@ -3,7 +3,7 @@
 #include "Player.h"
 
 AudioSystem::AudioSystem(Game* game)
-: mGame(game)
+    : mGame(game)
 {
     Initialize();
 }
@@ -125,13 +125,9 @@ void AudioSystem::Update()
         Mix_Music* bossBGM = (it != mBGMList.end()) ? it->second : nullptr;
         it = mBGMList.find("normalBGM");
         Mix_Music* normalBGM = (it != mBGMList.end()) ? it->second : nullptr;
-        if (mCurrentBgmPlanetIndex == 1 && bossBGM)
+        if (mCurrentBgmPlanetIndex == 2 && bossBGM)
         {
             Mix_PlayMusic(bossBGM, -1);
-        }
-        else if (normalBGM)
-        {
-            Mix_PlayMusic(normalBGM, -1);
         }
     }
 }

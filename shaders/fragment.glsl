@@ -10,13 +10,13 @@ in vec2 TexCoord;
 // デフォルトの色
 uniform vec3 objectColor;
 // テクスチャを使うのか
-uniform bool useTexture;
+uniform int useTexture;
 // 実際のテクスチャ
 uniform sampler2D diffuseTexture;
 
 void main()
 {
-    if (useTexture) {
+    if (useTexture != 0) {
         // 頂点シェーダーから渡されたテクスチャのUV座標から色を取得
         FragColor = texture(diffuseTexture, TexCoord);
     } else {
