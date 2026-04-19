@@ -556,7 +556,7 @@ void Player::UpdateActor(float deltaTime)
     Key* key = mCurrentPlanet->GetKey();
     // ボートに触れたら到着先へ移動開始（ボートが出現した惑星にいる時のみ）
     for (auto boat : boats) {
-        if (!boat->GetIsMoving() && key->GetIsObtained() && mCurrentPlanetNum == boat->GetCurrentPlanetNum())
+        if (!boat->GetIsMoving() && key->GetCollectableComponent()->GetIsObtained() && mCurrentPlanetNum == boat->GetCurrentPlanetNum())
         {
             float distToBoat = glm::length(mPos - boat->GetPos());
             const float boatTouchRadius = 1.8f;

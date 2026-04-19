@@ -1,5 +1,5 @@
-#ifndef KEY_H
-#define KEY_H
+#ifndef boatParts_H
+#define boatParts_H
 
 #include "Actor.h"
 #include "Mesh.h"
@@ -9,12 +9,12 @@
 #include <vector>
 #include "CollectableComponent.h"
 
-class Key : public Actor {
+class BoatParts : public Actor {
 public:
-    Key(class Game* game);
+    BoatParts(class Game* game);
     void UpdateActor(float deltaTime) override;
 
-    void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
+    void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(glm::vec3& pos) { mPos = pos; }
     void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
 
@@ -23,7 +23,7 @@ public:
     const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
 
 private:
-    Planet* mCurrentPlanet;
+    class Planet* mCurrentPlanet;
     CollectableComponent* mCollectableComponent;
     glm::vec3 mPos;
 

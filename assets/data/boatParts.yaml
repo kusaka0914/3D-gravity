@@ -1,4 +1,4 @@
 boatParts :
   - currentPlanetNum : 0
-    theta : 0
-    u : 0
+    theta : 0.0
+    u : 0.0

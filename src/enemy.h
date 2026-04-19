@@ -35,7 +35,7 @@ public:
     void SetSensing(float sensing) { mSensing = sensing; }
 
     class Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
-    const glm::vec3& GetPos() const { return mPos; }
+    const glm::vec3& GetPos() const override { return mPos; }
     int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
     float GetHp() const { return mHp; }
     bool GetIsAlive() const { return mIsAlive; }

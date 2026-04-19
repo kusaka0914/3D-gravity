@@ -19,7 +19,7 @@ public:
     void SetCurrentPlanet(int currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
 
-    glm::vec3 GetPos() const { return mPos; }
+    const glm::vec3& GetPos() const override{ return mPos; }
     bool GetIsActive() const { return mIsActive; }
     bool GetIsObtained() const { return mIsObtained; }
     int GetCurrentPlanet() const { return mCurrentPlanet; }

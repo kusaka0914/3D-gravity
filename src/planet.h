@@ -15,6 +15,7 @@ public:
     void UpdateActor(float deltaTime) override;
     void AddEnemy(class Enemy* enemy) { mEnemies.emplace_back(enemy); }
     void AddBoat(class Boat* boat) { mBoats.emplace_back(boat); }
+    void AddBoatParts(class BoatParts* boatParts) { mBoatParts.emplace_back(boatParts); }
     void AddEnemyMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mEnemyMeshesByPath[modelPath] = meshes; }
 
     void RemoveAllEnemy() { for(int i = 0; i < mEnemies.size(); i++) mEnemies.pop_back(); }
@@ -27,6 +28,7 @@ public:
     void SetRadius(float radius) { mRadius = radius; }
     void SetColor(glm::vec3 color) { mColor = color; }
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
+    void SetKey(class Key* key) { mKey = key; }
 
     class Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetStageNum() const { return mStageNum; }
@@ -36,6 +38,7 @@ public:
     const std::string& GetModelPath() const { return mModelPath; }
     const std::vector<class Enemy*>& GetEnemies() const { return mEnemies; }
     const std::vector<class Boat*>& GetBoats() const { return mBoats; }
+    const std::vector<class BoatParts*>& GetBoatParts() const { return mBoatParts; }
     class Key* GetKey() const { return mKey; }
     class Star* GetStar() const { return mStar; }
     const std::unordered_map<std::string, std::vector<LoadedMesh>>& GetEnemyMeshesByPath() const { return mEnemyMeshesByPath; }
@@ -49,6 +52,7 @@ private:
     std::string mModelPath;
     std::vector<class Enemy*> mEnemies;
     std::vector<class Boat*> mBoats;
+    std::vector<class BoatParts*> mBoatParts;
     class Key* mKey;
     class Star* mStar;
 

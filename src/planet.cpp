@@ -20,11 +20,6 @@ Planet::Planet(Game* game)
 
 void Planet::Initialize()
 {
-    auto keyUnique = std::make_unique<Key>(GetGame());
-    Key* key = keyUnique.get();
-    GetGame()->AddActor(std::move(keyUnique));
-    mKey = key;
-
     auto starUnique = std::make_unique<Star>(GetGame());
     Star* star = starUnique.get();
     GetGame()->AddActor(std::move(starUnique));
@@ -43,9 +38,9 @@ void Planet::UpdateActor(float deltaTime) {
             break;
         }
     }
-    if (isAllEnemiesDead && !mKey->GetIsActive() && !mKey->GetIsObtained())
+    if (isAllEnemiesDead && !mKey->GetCollectableComponent()->GetIsActive() && !mKey->GetCollectableComponent()->GetIsObtained())
     {
-        mKey->SetIsActive(true);
+        mKey->GetCollectableComponent()->SetIsActive(true);
     }
 }
 

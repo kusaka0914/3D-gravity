@@ -11,6 +11,8 @@ add_executable(engine
     src/Actor.cpp
     src/AudioSystem.cpp
     src/Boat.cpp
+    src/BoatParts.cpp
+    src/CollectableComponent.cpp
     src/Component.cpp
     src/Enemy.cpp
     src/Game.cpp

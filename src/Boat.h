@@ -33,7 +33,7 @@ public:
     bool GetIsActive() const { return mIsActive; }
     float GetTransitionTimer() const { return mTransitionTimer; }
     float GetProgress() const { return mProgress; }
-    const glm::vec3& GetPos() const { return mPos; }
+    const glm::vec3& GetPos() const override { return mPos; }
     const glm::vec3& GetStartPos() const { return mStartPos; }
     const glm::vec3& GetDestPos() const { return mDestPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }

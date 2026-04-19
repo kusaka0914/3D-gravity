@@ -31,6 +31,10 @@ void Actor::ProcessActor()
 void Actor::Update(float deltaTime)
 {
     UpdateActor(deltaTime);
+    for (auto& component : mComponents) {
+        Component* comp = component.get();
+        comp->Update(deltaTime);
+    }
 }
 
 void Actor::UpdateActor(float deltaTime)
@@ -38,7 +42,7 @@ void Actor::UpdateActor(float deltaTime)
     
 }
 
-void Actor::AddComponent(Component* component)
+void Actor::AddComponent(std::unique_ptr<Component> component)
 {
     int myOrder = component->GetUpdateOrder();
     auto iter = mComponents.begin();
@@ -47,10 +51,10 @@ void Actor::AddComponent(Component* component)
             break;
         }
     }
-    mComponents.insert(iter, component);
+    mComponents.insert(iter, std::move(component));
 }
 
-void Actor::RemoveComponent(Component* component)
+void Actor::RemoveComponent(std::unique_ptr<Component> component)
 {
     auto iter = std::find(mComponents.begin(), mComponents.end(), component);
     if (iter != mComponents.end()) {

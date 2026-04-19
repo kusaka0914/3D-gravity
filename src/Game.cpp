@@ -14,6 +14,7 @@
 #include "Boat.h"
 #include "Star.h"
 #include "UIRenderer.h"
+#include "BoatParts.h"
 #include "Game.h"
 #include <GLFW/glfw3.h>
 #include <SDL.h>
@@ -169,6 +170,16 @@ bool Game::Initialize()
     {
         std::cerr << "Boats YAML load failed" << std::endl;
     }
+    // ボートのかけらをYAMLから読み込み
+    if (!mLoader->loadBoatPartsFromYaml("../assets/data/boatParts.yaml"))
+    {
+        std::cerr << "BoatParts YAML load failed" << std::endl;
+    }
+    // 鍵をYAMLから読み込み
+    if (!mLoader->loadKeysFromYaml("../assets/data/keys.yaml"))
+    {
+        std::cerr << "keys YAML load failed" << std::endl;
+    }
 
     mMesh = std::make_unique<Mesh>();
     // プレイヤーモデルをロード
@@ -213,6 +224,11 @@ bool Game::Initialize()
     std::vector<LoadedMesh> boatMeshes = mMesh->loadMeshFromFile("../assets/models/boat.obj");
     for (auto boat : boats) {
         boat->SetMeshes(boatMeshes);
+    }
+    std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
+    std::vector<LoadedMesh> boatPartsMeshes = mMesh->loadMeshFromFile("../assets/models/boat.obj");
+    for (auto parts : boatParts) {
+        parts->SetMeshes(boatPartsMeshes);
     }
 
     // 時間情報
@@ -486,6 +502,17 @@ void Game::GenerateOutput()
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(mWindow, &fbWidth, &fbHeight);
 
+    // 今つながっているコントローラーの数を取得してループ
+    for (int i = 0; i < SDL_NumJoysticks(); ++i)
+    {
+        // i番目がゲームコントローラーとして認識できるか判定
+        if (SDL_IsGameController(i))
+        {
+            // それをゲームコントローラーとして開く
+            mSdlController = SDL_GameControllerOpen(i);
+        }
+    }
+
     auto drawScene = [&](const glm::mat4 &viewMat, const glm::mat4 &projMat)
     {
         GLint locModel = mShader->GetLocModel();
@@ -690,10 +717,10 @@ void Game::GenerateOutput()
             }
         }
 
-        // 鍵描画（出現した惑星上で表示）
+        // 鍵描画
         Planet* currentPlanet = mPlayers[0]->GetCurrentPlanet();
         Key* key = currentPlanet->GetKey();
-        if (key->GetIsActive())
+        if (key->GetCollectableComponent()->GetIsActive())
         {
             const float keyScale = 2.0f;
             const glm::vec3 keyColor(0.85f, 0.65f, 0.13f); // 金色
@@ -702,9 +729,9 @@ void Game::GenerateOutput()
         }
 
         std::vector<Boat*> boats = currentPlanet->GetBoats();
-        // ボート描画（ボートが出現した惑星にいる時か移動中のみ表示）
+        // ボート描画
         for (auto boat : boats) {
-        if (boat->GetIsActive())
+            if (boat->GetIsActive())
             {
                 const float boatScale = 0.8f;
                 glm::vec3 boatUp = glm::normalize(boat->GetPos() - currentPlanet->GetCenter());
@@ -712,7 +739,17 @@ void Game::GenerateOutput()
             }
         }
 
-        // スター描画（ボス撃破後のみ存在・描画）
+        // ボートのかけら描画
+        std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
+        for (auto parts : boatParts) { 
+            if (parts->GetCollectableComponent()->GetIsActive()) {
+                const float boatPartsScale = 1.0f;
+                glm::vec3 boatPartsUp = glm::normalize(parts->GetPos() - currentPlanet->GetCenter());
+                drawCharacter(parts->GetPos(), boatPartsScale, glm::vec3(0.4f, 0.25f, 0.1f), boatPartsUp, 0.0f, parts->GetMeshes());
+            }
+        }
+
+        // スター描画
         Star* star = currentPlanet->GetStar();
         if (star->GetIsActive())
         {

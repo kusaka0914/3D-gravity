@@ -8,36 +8,18 @@
 Key::Key(Game* game)
     : Actor(game)
     , mPos({0.0f, 8.0f, 0.0f})
-    , mIsActive(false)
-    , mIsObtained(false)
-    , mCurrentPlanet(0)
 {
+    std::unique_ptr<CollectableComponent> collectableComponent = std::make_unique<CollectableComponent>(this, 100, false);
+    mCollectableComponent = collectableComponent.get();
+    AddComponent(std::move(collectableComponent));
 }
 
 void Key::UpdateActor(float deltaTime)
 {
-    std::vector<class Player*> players = GetGame()->GetPlayers();
-    if (GetIsActive()) {
-        for (auto player : players) {
-            mCurrentPlanet = player->GetCurrentPlanetNum();
-            // mPos = lastDefeatedEnemyPos; // 最後に倒した敵の場所に鍵を出す
-
-            // 鍵に触れたら取得して消す＆ボートを出現させる
-            float distToKey = glm::length(player->GetPos() - mPos);
-            const float keyPickupRadius = 1.2f;
-            if (distToKey < keyPickupRadius)
-            {
-                mIsActive = false;
-                mIsObtained = true;
-
-                int currentStageNum = GetGame()->GetCurrentStageNum();
-                Stage* currentStage = GetGame()->GetStages()[currentStageNum];
-                std::vector<Planet*> planets = currentStage->GetPlanets();
-                std::vector<Boat*> boats = planets[mCurrentPlanet]->GetBoats();
-                for (auto boat : boats) {
-                    boat->SetIsActive(true);
-                }
-            }
+    if (mCollectableComponent->GetIsObtained()) {
+        std::vector<Boat*> boats = mCurrentPlanet->GetBoats();
+        for (auto boat : boats) {
+            boat->SetIsActive(true);
         }
     }
 }

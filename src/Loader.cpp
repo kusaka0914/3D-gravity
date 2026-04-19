@@ -1,11 +1,12 @@
 #include "Planet.h"
 #include "Loader.h"
 #include "Game.h"
+#include "Key.h"
 #include "Player.h"
 #include "Enemy.h"
 #include "Stage.h"
 #include "Boat.h"
-#include <yaml-cpp/yaml.h>
+#include "BoatParts.h"
 #include <glm/glm.hpp>
 #include <iostream>
 
@@ -42,13 +43,7 @@ bool Loader::loadPlayersFromYaml(const char* path) {
             player->SetPlayerNum(playerNum);
 
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
-            float theta = node["theta"] ? node["theta"].as<float>() : 0.0f;
-            float u = node["u"] ? node["u"].as<float>() : 0.0f;
-            glm::vec3 dir(std::cos(theta), std::sin(theta), u);
-            float len = glm::length(dir);
-            if (len < 1e-6f) dir = glm::vec3(1.0f, 0.0f, 0.0f);
-            else dir /= len;
-            glm::vec3 pos = currentPlanet->GetCenter() + currentPlanet->GetRadius() * dir;
+            glm::vec3 pos = CalculatePos(node, currentPlanet);
             player->SetPos(pos);
 
             Player* player_ptr = player.get();
@@ -103,13 +98,7 @@ bool Loader::loadEnemiesFromYaml(const char* path) {
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
             enemy->SetCurrentPlanet(currentPlanet);
 
-            float theta = node["theta"] ? node["theta"].as<float>() : 0.0f;
-            float u = node["u"] ? node["u"].as<float>() : 0.0f;
-            glm::vec3 dir(std::cos(theta), std::sin(theta), u);
-            float len = glm::length(dir);
-            if (len < 1e-6f) dir = glm::vec3(1.0f, 0.0f, 0.0f);
-            else dir /= len;
-            glm::vec3 pos = currentPlanet->GetCenter() + currentPlanet->GetRadius() * dir;
+            glm::vec3 pos = CalculatePos(node, currentPlanet);
             enemy->SetPos(pos);
 
             Enemy* enemy_ptr = enemy.get();
@@ -214,4 +203,74 @@ bool Loader::loadBoatsFromYaml(const char* path)
         std::cerr << "Boats Load error: " << ex.what() << std::endl;
         return false;
     }
+}
+
+bool Loader::loadBoatPartsFromYaml(const char* path)
+{
+    try {
+        YAML::Node root = YAML::LoadFile(path);
+        if (!root["boatParts"] || !root["boatParts"].IsSequence()) {
+            std::cerr << "Loader: missing or invalid 'boatParts' sequence" << std::endl;
+            return false;
+        }
+        for (auto node : root["boatParts"]){
+            std::unique_ptr<BoatParts> boatParts = std::make_unique<BoatParts>(GetGame());
+
+            int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            boatParts->SetCurrentPlanet(currentPlanet);
+
+            glm::vec3 pos = CalculatePos(node, currentPlanet);
+            boatParts->SetPos(pos);
+
+            BoatParts* boatParts_ptr = boatParts.get();
+            GetGame()->AddActor(std::move(boatParts));
+            currentPlanet->AddBoatParts(boatParts_ptr);
+        }
+        return true;
+    } catch (const YAML::Exception& ex) {
+        std::cerr << "Boats Load error: " << ex.what() << std::endl;
+        return false;
+    }
+}
+
+bool Loader::loadKeysFromYaml(const char* path)
+{
+    try {
+        YAML::Node root = YAML::LoadFile(path);
+        if (!root["keys"] || !root["keys"].IsSequence()) {
+            std::cerr << "Loader: missing or invalid 'keys' sequence" << std::endl;
+            return false;
+        }
+        for (auto node : root["keys"]){
+            std::unique_ptr<Key> keys = std::make_unique<Key>(GetGame());
+
+            int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            keys->SetCurrentPlanet(currentPlanet);
+
+            glm::vec3 pos = CalculatePos(node, currentPlanet);
+            keys->SetPos(pos);
+
+            Key* keys_ptr = keys.get();
+            GetGame()->AddActor(std::move(keys));
+            currentPlanet->SetKey(keys_ptr);
+        }
+        return true;
+    } catch (const YAML::Exception& ex) {
+        std::cerr << "Boats Load error: " << ex.what() << std::endl;
+        return false;
+    }
+}
+
+glm::vec3 Loader::CalculatePos(YAML::Node node, Planet* currentPlanet) {
+    float theta = node["theta"] ? node["theta"].as<float>() : 0.0f;
+    float u = node["u"] ? node["u"].as<float>() : 0.0f;
+    glm::vec3 dir(std::cos(theta), std::sin(theta), u);
+    float len = glm::length(dir);
+    if (len < 1e-6f) dir = glm::vec3(1.0f, 0.0f, 0.0f);
+    else dir /= len;
+
+    glm::vec3 pos = currentPlanet->GetCenter() + currentPlanet->GetRadius() * dir;
+    return pos;
 }

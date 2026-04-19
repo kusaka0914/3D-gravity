@@ -7,7 +7,8 @@ public:
     virtual void Update(float deltaTime);
     virtual void ProcessInput(const uint8_t* state);
     int GetUpdateOrder() const { return mUpdateOrder; }
+    class Actor* GetOwner() const { return mOwner; }
 protected:
-    class Actor* mOwner;
+    Actor* mOwner;
     int mUpdateOrder;
 };
