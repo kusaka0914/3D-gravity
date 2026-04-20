@@ -157,6 +157,9 @@ bool Loader::loadPlanetsFromYaml(const char* path) {
             int stageNum = node["stageNum"] ? node["stageNum"].as<int>() : 0;
             planet->SetStageNum(stageNum);
 
+            std::string keySpawnCondition = node["keySpawnCondition"] ? node["keySpawnCondition"].as<std::string>() : "";
+            planet->SetKeySpawnCondition(keySpawnCondition);
+
             Stage* currentStage = GetGame()->GetStages()[stageNum];
             // 惑星配列に追加
             planet->SetCurrentStage(currentStage);

@@ -17,7 +17,11 @@ public:
     void RemoveComponent(std::unique_ptr<Component> component);
 
     Game* GetGame() const { return mGame; }
-    virtual const glm::vec3& GetPos() const { return {0.0f, 0.0f, 0.0f}; };
+    virtual const glm::vec3& GetPos() const
+    {
+        static const glm::vec3 kZero(0.0f, 0.0f, 0.0f);
+        return kZero;
+    }
 private:
     std::vector<std::unique_ptr<Component>> mComponents;
     class Game* mGame;

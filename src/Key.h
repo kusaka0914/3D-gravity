@@ -26,6 +26,7 @@ private:
     Planet* mCurrentPlanet;
     CollectableComponent* mCollectableComponent;
     glm::vec3 mPos;
+    glm::vec3 mUpVec;
 
     std::vector<struct LoadedMesh> mMeshes;
 };

@@ -31,6 +31,7 @@ public:
     const std::vector<class Stage*>& GetStages() const { return mStages; }
     AudioSystem* GetAudioSystem() const { return mAudioSystem.get(); }
     class Shader* GetShader() const { return mShader.get(); }
+    class PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }
 
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }
@@ -55,6 +56,7 @@ private:
     std::unique_ptr<class AudioSystem> mAudioSystem;
     std::unique_ptr<class UIRenderer> mUIRenderer;
     std::unique_ptr<class Shader> mShader;
+    std::unique_ptr<class PhysicsSystem> mPhysicsSystem;
     std::unique_ptr<class Loader> mLoader;
     std::unique_ptr<class Mesh> mMesh;
 

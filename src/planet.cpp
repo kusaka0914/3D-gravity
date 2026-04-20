@@ -5,6 +5,7 @@
 #include "Key.h"
 #include "Stage.h"
 #include "Star.h"
+#include "BoatParts.h"
 #include <cmath>
 
 Planet::Planet(Game* game)
@@ -29,18 +30,38 @@ void Planet::Initialize()
 void Planet::UpdateActor(float deltaTime) {
     Actor::UpdateActor(deltaTime);
     
-    // 今いる惑星の敵を全て倒したら鍵を出現させる
-    bool isAllEnemiesDead = true;
-    for (auto enemy : mEnemies) {
-        if (enemy->GetIsAlive())
-        {
-            isAllEnemiesDead = false;
+    switch(mKeySpawnCondition) {
+        case KeySpawnCondition::AllEnemiesDead: {
+            // 今いる惑星の敵を全て倒したら鍵を出現させる
+            bool isAllEnemiesDead = true;
+            for (auto enemy : mEnemies) {
+                if (enemy->GetIsAlive())
+                {
+                    isAllEnemiesDead = false;
+                    break;
+                }
+            }
+            if (isAllEnemiesDead && !mKey->GetCollectableComponent()->GetIsActive() && !mKey->GetCollectableComponent()->GetIsObtained())
+            {
+                mKey->GetCollectableComponent()->SetIsActive(true);
+            }
             break;
         }
-    }
-    if (isAllEnemiesDead && !mKey->GetCollectableComponent()->GetIsActive() && !mKey->GetCollectableComponent()->GetIsObtained())
-    {
-        mKey->GetCollectableComponent()->SetIsActive(true);
+        case KeySpawnCondition::AllBoatPartsCollected: {
+            bool isAllBoatPartsCollected = true;
+            for (auto parts : mBoatParts) {
+                if (parts->GetCollectableComponent()->GetIsActive())
+                {
+                    isAllBoatPartsCollected = false;
+                    break;
+                }
+            }
+            if (isAllBoatPartsCollected && !mKey->GetCollectableComponent()->GetIsActive() && !mKey->GetCollectableComponent()->GetIsObtained())
+            {
+                mKey->GetCollectableComponent()->SetIsActive(true);
+            }
+            break;
+        }
     }
 }
 

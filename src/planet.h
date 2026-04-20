@@ -10,6 +10,12 @@
 
 class Planet : public Actor {
 public:
+    enum class KeySpawnCondition {
+        AllEnemiesDead,
+        AllBoatPartsCollected,
+        None
+    };
+
     Planet(class Game* game);
     void Initialize() override;
     void UpdateActor(float deltaTime) override;
@@ -29,6 +35,15 @@ public:
     void SetColor(glm::vec3 color) { mColor = color; }
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
     void SetKey(class Key* key) { mKey = key; }
+    void SetKeySpawnCondition(std::string keySpawnCondition) { 
+        if(keySpawnCondition == "AllEnemiesDead") {
+            mKeySpawnCondition = KeySpawnCondition::AllEnemiesDead;
+        }else if(keySpawnCondition == "AllBoatPartsCollected") {
+            mKeySpawnCondition = KeySpawnCondition::AllBoatPartsCollected;
+        }else {
+            mKeySpawnCondition = KeySpawnCondition::None;
+        }
+    }
 
     class Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetStageNum() const { return mStageNum; }
@@ -55,6 +70,8 @@ private:
     std::vector<class BoatParts*> mBoatParts;
     class Key* mKey;
     class Star* mStar;
+
+    KeySpawnCondition mKeySpawnCondition;
 
     std::unordered_map<std::string, std::vector<LoadedMesh>> mEnemyMeshesByPath;
 };

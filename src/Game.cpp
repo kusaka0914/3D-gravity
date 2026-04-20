@@ -15,6 +15,7 @@
 #include "Star.h"
 #include "UIRenderer.h"
 #include "BoatParts.h"
+#include "PhysicsSystem.h"
 #include "Game.h"
 #include <GLFW/glfw3.h>
 #include <SDL.h>
@@ -66,7 +67,8 @@ bool Game::Initialize()
     const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
     // ゲーム用のウィンドウを作成する
-    mWindow = glfwCreateWindow(mode->width, mode->height, "Engine", monitor, nullptr);
+    // mWindow = glfwCreateWindow(mode->width, mode->height, "Engine", monitor, nullptr);
+    mWindow = glfwCreateWindow(800, 600, "Engine", nullptr, nullptr);
     if (!mWindow)
     {
         std::cerr << "Failed to create mWindow" << std::endl;
@@ -181,6 +183,9 @@ bool Game::Initialize()
         std::cerr << "keys YAML load failed" << std::endl;
     }
 
+    // Physics（Bullet）初期化：惑星/プレイヤー生成後に行う
+    mPhysicsSystem = std::make_unique<PhysicsSystem>(this);
+
     mMesh = std::make_unique<Mesh>();
     // プレイヤーモデルをロード
     for (auto player : mPlayers) {
@@ -225,8 +230,9 @@ bool Game::Initialize()
     for (auto boat : boats) {
         boat->SetMeshes(boatMeshes);
     }
+    // ボートのかけらモデルをロード
     std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
-    std::vector<LoadedMesh> boatPartsMeshes = mMesh->loadMeshFromFile("../assets/models/boat.obj");
+    std::vector<LoadedMesh> boatPartsMeshes = mMesh->loadMeshFromFile("../assets/models/boatParts.obj");
     for (auto parts : boatParts) {
         parts->SetMeshes(boatPartsMeshes);
     }
@@ -237,107 +243,7 @@ bool Game::Initialize()
     // 深度テストをONにして奥行きに応じて描画できるようにする（描画順ではなく、手前にあるものが上書きされて描画される）
     glEnable(GL_DEPTH_TEST);
 
-    // // Bullet Physics：惑星メッシュの当たり判定（惑星ごとに modelPath のメッシュを使用）
-    // bool bulletOk = false;
-    // btDefaultCollisionConfiguration *bulletCollisionConfig = nullptr;
-    // btCollisionDispatcher *bulletDispatcher = nullptr;
-    // btBroadphaseInterface *bulletBroadphase = nullptr;
-    // btSequentialImpulseConstraintSolver *bulletSolver = nullptr;
-    // btDiscreteDynamicsWorld *bulletWorld = nullptr;
-    // std::vector<btTriangleMesh *> bulletPlanetMeshes;
-    // std::vector<btBvhTriangleMeshShape *> bulletPlanetShapes;
-    // std::vector<btRigidBody *> bulletPlanetBodies;
-    // btPairCachingGhostObject *bulletGhost = nullptr;
-    // btCapsuleShape *bulletCapsule = nullptr;
-    // btSphereShape *bulletWallSphere = nullptr; // 壁当たり用スイープ
-    // btKinematicCharacterController *bulletCharController = nullptr;
 
-    // if (!planets.empty())
-    // {
-    //     bulletCollisionConfig = new btDefaultCollisionConfiguration();
-    //     bulletDispatcher = new btCollisionDispatcher(bulletCollisionConfig);
-    //     bulletBroadphase = new btDbvtBroadphase();
-    //     bulletSolver = new btSequentialImpulseConstraintSolver();
-    //     bulletWorld = new btDiscreteDynamicsWorld(bulletDispatcher, bulletBroadphase, bulletSolver, bulletCollisionConfig);
-    //     bulletWorld->setGravity(btVector3(0, -9.8f, 0));
-    //     bulletBroadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
-
-    //     std::vector<float> pos;
-    //     std::vector<unsigned int> idx;
-    //     for (size_t p = 0; p < planets.size(); p++)
-    //     {
-    //         pos.clear();
-    //         idx.clear();
-    //         std::string meshPath = "../assets/models/" + planets[p]->GetModelPath();
-    //         if (!loadMeshPositionsAndIndices(meshPath.c_str(), pos, idx) || pos.size() < 9 || idx.size() < 3)
-    //             continue;
-    //         const glm::vec3 &center = planets[p]->GetCenter();
-    //         float radius = planets[p]->GetRadius();
-    //         btTriangleMesh *triMesh = new btTriangleMesh();
-    //         for (size_t i = 0; i + 2 < idx.size(); i += 3)
-    //         {
-    //             unsigned int i0 = idx[i], i1 = idx[i + 1], i2 = idx[i + 2];
-    //             if (i0 * 3 + 2 >= pos.size() || i1 * 3 + 2 >= pos.size() || i2 * 3 + 2 >= pos.size())
-    //                 continue;
-    //             btVector3 v0(center.x + radius * pos[i0 * 3], center.y + radius * pos[i0 * 3 + 1], center.z + radius * pos[i0 * 3 + 2]);
-    //             btVector3 v1(center.x + radius * pos[i1 * 3], center.y + radius * pos[i1 * 3 + 1], center.z + radius * pos[i1 * 3 + 2]);
-    //             btVector3 v2(center.x + radius * pos[i2 * 3], center.y + radius * pos[i2 * 3 + 1], center.z + radius * pos[i2 * 3 + 2]);
-    //             triMesh->addTriangle(v0, v1, v2);
-    //         }
-    //         bulletPlanetMeshes.emplace_back(triMesh);
-    //         // #region agent log
-    //         {
-    //             std::ostringstream ds;
-    //             ds << "{\"planet\":" << p << ",\"numTriangles\":" << triMesh->getNumTriangles() << "}";
-    //             debug_log("E", "planet_mesh_built", ds.str());
-    //         }
-    //         // #endregion
-    //         btBvhTriangleMeshShape *shape = new btBvhTriangleMeshShape(triMesh, true);
-    //         bulletPlanetShapes.emplace_back(shape);
-    //         btTransform startTransform;
-    //         startTransform.setIdentity();
-    //         startTransform.setOrigin(btVector3(0, 0, 0));
-    //         btRigidBody::btRigidBodyConstructionInfo rbInfo(0, nullptr, shape);
-    //         btRigidBody *body = new btRigidBody(rbInfo);
-    //         body->setWorldTransform(startTransform);
-    //         body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-    //         bulletWorld->addRigidBody(body, (short)btBroadphaseProxy::DefaultFilter, (short)-1);
-    //         bulletPlanetBodies.emplace_back(body);
-    //     }
-    //     bulletOk = !bulletPlanetBodies.empty();
-    //     // #region agent log
-    //     {
-    //         debug_log("A", "collision_setup", "{\"ghostGroup\":\"CharacterFilter\",\"ghostMask\":\"-1\",\"staticGroup\":\"DefaultFilter\",\"staticMask\":\"-1\",\"ghostSpawnOffset\":true}");
-    //     }
-    //     // #endregion
-
-    //     const float capRadius = 0.35f;
-    //     const float capHeight = 0.8f;
-    //     bulletCapsule = new btCapsuleShape(capRadius, capHeight);
-    //     bulletWallSphere = new btSphereShape(0.35f); // 壁スイープ用（キャラ半径程度）
-    //     bulletGhost = new btPairCachingGhostObject();
-    //     bulletGhost->setCollisionShape(bulletCapsule);
-    //     bulletGhost->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
-    //     btTransform ghostTrans;
-    //     ghostTrans.setIdentity();
-    //     glm::vec3 spawnUp = glm::normalize(mPlayers[0]->GetPos() - planets[0]->GetCenter());
-    //     float capHalf = capHeight * 0.5f;
-    //     glm::vec3 ghostOrigin = mPlayers[0]->GetPos() + spawnUp * (capHalf + 0.15f);
-    //     ghostTrans.setOrigin(btVector3(ghostOrigin.x, ghostOrigin.y, ghostOrigin.z));
-    //     bulletGhost->setWorldTransform(ghostTrans);
-    //     bulletWorld->addCollisionObject(bulletGhost, (short)btBroadphaseProxy::CharacterFilter, (short)-1);
-    //     bulletCharController = new btKinematicCharacterController(bulletGhost, bulletCapsule, 0.35f);
-    //     bulletCharController->setGravity(btVector3(0, -9.8f, 0));
-    //     bulletCharController->setJumpSpeed(5.0f);
-    //     bulletCharController->setFallSpeed(55.0f);
-    //     bulletWorld->addAction(bulletCharController);
-    // }
-    // else
-    // {
-    //     if (!bulletOk)
-    //         std::cerr << "Bullet: planet mesh load failed, using sphere collision." << std::endl;
-    //     bulletOk = false;
-    // }
     return true;
 }
 
@@ -370,56 +276,6 @@ void Game::Shutdown()
     Mix_HaltMusic();
     Mix_CloseAudio();
 
-    // if (bulletWorld)
-    // {
-    //     if (bulletCharController)
-    //     {
-    //         bulletWorld->removeAction(bulletCharController);
-    //         delete bulletCharController;
-    //         bulletCharController = nullptr;
-    //     }
-    //     if (bulletGhost)
-    //     {
-    //         bulletWorld->removeCollisionObject(bulletGhost);
-    //         delete bulletGhost;
-    //         bulletGhost = nullptr;
-    //     }
-    //     if (bulletCapsule)
-    //     {
-    //         delete bulletCapsule;
-    //         bulletCapsule = nullptr;
-    //     }
-    //     if (bulletWallSphere)
-    //     {
-    //         delete bulletWallSphere;
-    //         bulletWallSphere = nullptr;
-    //     }
-    //     for (btRigidBody *b : bulletPlanetBodies)
-    //     {
-    //         if (b)
-    //         {
-    //             bulletWorld->removeRigidBody(b);
-    //             delete b;
-    //         }
-    //     }
-    //     for (btBvhTriangleMeshShape *s : bulletPlanetShapes)
-    //     {
-    //         if (s)
-    //             delete s;
-    //     }
-    //     for (btTriangleMesh *m : bulletPlanetMeshes)
-    //     {
-    //         if (m)
-    //             delete m;
-    //     }
-    //     delete bulletWorld;
-    //     bulletWorld = nullptr;
-    //     delete bulletSolver;
-    //     delete bulletBroadphase;
-    //     delete bulletDispatcher;
-    //     delete bulletCollisionConfig;
-    // }
-
     glfwDestroyWindow(mWindow);
     glfwTerminate();
 }
@@ -434,9 +290,30 @@ void Game::ProcessInput()
     bool reloadPressed = (glfwGetKey(mWindow, GLFW_KEY_R) == GLFW_PRESS);
     if (reloadPressed && !mReloadKeyPressedPrev)
     {
+        std::cout << "reset" << std::endl;
+        // プレイヤーをYAMLから読み込み
+        if (!mLoader->loadPlayersFromYaml("../assets/data/players.yaml")) {
+            std::cerr << "Player YAML load failed" << std::endl;
+        }
+        // 敵をYAMLから読み込み
         if (!mLoader->loadEnemiesFromYaml("../assets/data/enemies.yaml"))
         {
             std::cerr << "Enemy YAML load failed" << std::endl;
+        }
+        // ボートをYAMLから読み込み
+        if (!mLoader->loadBoatsFromYaml("../assets/data/boats.yaml"))
+        {
+            std::cerr << "Boats YAML load failed" << std::endl;
+        }
+        // ボートのかけらをYAMLから読み込み
+        if (!mLoader->loadBoatPartsFromYaml("../assets/data/boatParts.yaml"))
+        {
+            std::cerr << "BoatParts YAML load failed" << std::endl;
+        }
+        // 鍵をYAMLから読み込み
+        if (!mLoader->loadKeysFromYaml("../assets/data/keys.yaml"))
+        {
+            std::cerr << "keys YAML load failed" << std::endl;
         }
         std::vector<Enemy*> enemies = GetCurrentStage()->GetPlanets()[0]->GetEnemies();
         for (auto enemy : enemies)
@@ -486,6 +363,11 @@ void Game::UpdateGame()
 
     AudioSystem* audioSystem = mAudioSystem.get();
     audioSystem->Update();
+
+    if (mPhysicsSystem)
+    {
+        mPhysicsSystem->Update();
+    }
 }
 
 void Game::GenerateOutput()
@@ -743,7 +625,7 @@ void Game::GenerateOutput()
         std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
         for (auto parts : boatParts) { 
             if (parts->GetCollectableComponent()->GetIsActive()) {
-                const float boatPartsScale = 1.0f;
+                const float boatPartsScale = 0.5f;
                 glm::vec3 boatPartsUp = glm::normalize(parts->GetPos() - currentPlanet->GetCenter());
                 drawCharacter(parts->GetPos(), boatPartsScale, glm::vec3(0.4f, 0.25f, 0.1f), boatPartsUp, 0.0f, parts->GetMeshes());
             }

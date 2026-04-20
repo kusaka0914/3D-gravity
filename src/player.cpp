@@ -5,6 +5,8 @@
 #include "Stage.h"
 #include "Star.h"
 #include "Game.h"
+#include "PhysicsSystem.h"
+#include <btBulletDynamicsCommon.h>
 #include <cmath>
 
 Player::Player(Game* game)
@@ -165,10 +167,18 @@ void Player::UpdateActor(float deltaTime)
 
     std::vector<Enemy*> enemies = mCurrentPlanet->GetEnemies();
 
+    PhysicsSystem* physics = GetGame()->GetPhysicsSystem();
+    const bool bulletOk = physics && physics->IsBulletInitialized();
+    btDiscreteDynamicsWorld* bulletWorld = physics ? physics->GetBulletWorld() : nullptr;
+    btSphereShape* bulletWallSphere = physics ? physics->GetBulletWallSphere() : nullptr;
+
     mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
-    glm::vec3 worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 0, 1)));
+    glm::vec3 worldLeft = glm::cross(mUpVec, glm::vec3(0, 0, 1));
+    std::cout << glm::length(worldLeft) << std::endl;
     if (glm::length(worldLeft) < 0.01f)
-        worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(1, 0, 0)));
+        worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 1, 0)));
+    else 
+        worldLeft = glm::normalize(worldLeft);
     mForwardVec = glm::normalize(glm::cross(worldLeft, mUpVec) * std::cos(mCameraYaw) - std::sin(mCameraYaw) * worldLeft);
     mLeftVec = glm::normalize(glm::cross(mUpVec, mForwardVec));
 
@@ -197,57 +207,57 @@ void Player::UpdateActor(float deltaTime)
                 desiredPos = ePos + (toDesired / d) * minDist;
         }
         // 壁当たり：球スイープで移動経路に障害があれば移動を打ち切り
-        // if (bulletOk && bulletWorld && bulletWallSphere && glm::length(moveDelta) > 1e-5f)
-        // {
-        //     glm::vec3 upForSweep = glm::normalize(players[0].pos - planets[players[0].planetIndex].center);
-        //     glm::vec3 sweepFrom = players[0].pos + upForSweep * 0.4f; // 腰高で判定（地面に当たりにくくする）
-        //     glm::vec3 sweepTo = desiredPos + upForSweep * 0.4f;
-        //     btTransform fromBt, toBt;
-        //     fromBt.setIdentity();
-        //     fromBt.setOrigin(btVector3(sweepFrom.x, sweepFrom.y, sweepFrom.z));
-        //     toBt.setIdentity();
-        //     toBt.setOrigin(btVector3(sweepTo.x, sweepTo.y, sweepTo.z));
-        //     btVector3 sweepFromBt(sweepFrom.x, sweepFrom.y, sweepFrom.z);
-        //     btVector3 sweepToBt(sweepTo.x, sweepTo.y, sweepTo.z);
-        //     btCollisionWorld::ClosestConvexResultCallback sweepCallback(sweepFromBt, sweepToBt);
-        //     bulletWorld->convexSweepTest(bulletWallSphere, fromBt, toBt, sweepCallback);
-        //     if (sweepCallback.hasHit())
-        //     {
-        //         // 壁手前で一度止め、残りを壁に沿う方向（スライド）に投影して進める
-        //         float allowFrac = std::max(0.0f, sweepCallback.m_closestHitFraction - 0.02f);
-        //         glm::vec3 posAfterHit = players[0].pos + moveDelta * allowFrac;
-        //         glm::vec3 hitNormGlm(
-        //             sweepCallback.m_hitNormalWorld.x(),
-        //             sweepCallback.m_hitNormalWorld.y(),
-        //             sweepCallback.m_hitNormalWorld.z());
-        //         // 阻害された移動を壁面に投影 → 壁沿いのスライドベクトル
-        //         glm::vec3 blocked = moveDelta * (1.0f - allowFrac);
-        //         glm::vec3 slideVec = blocked - hitNormGlm * glm::dot(blocked, hitNormGlm);
-        //         const float slideEps = 1e-4f;
-        //         if (glm::length(slideVec) > slideEps)
-        //         {
-        //             glm::vec3 slideFrom = posAfterHit + upForSweep * 0.4f;
-        //             glm::vec3 slideTo = slideFrom + slideVec;
-        //             btTransform fromBt2, toBt2;
-        //             fromBt2.setIdentity();
-        //             fromBt2.setOrigin(btVector3(slideFrom.x, slideFrom.y, slideFrom.z));
-        //             toBt2.setIdentity();
-        //             toBt2.setOrigin(btVector3(slideTo.x, slideTo.y, slideTo.z));
-        //             btVector3 sFrom(slideFrom.x, slideFrom.y, slideFrom.z);
-        //             btVector3 sTo(slideTo.x, slideTo.y, slideTo.z);
-        //             btCollisionWorld::ClosestConvexResultCallback slideCallback(sFrom, sTo);
-        //             bulletWorld->convexSweepTest(bulletWallSphere, fromBt2, toBt2, slideCallback);
-        //             float slideAllow = slideCallback.hasHit()
-        //                                 ? std::max(0.0f, slideCallback.m_closestHitFraction - 0.02f)
-        //                                 : 1.0f;
-        //             desiredPos = posAfterHit + slideVec * slideAllow;
-        //         }
-        //         else
-        //         {
-        //             desiredPos = posAfterHit;
-        //         }
-        //     }
-        // }
+        if (bulletOk && bulletWorld && bulletWallSphere && glm::length(moveDelta) > 1e-5f)
+        {
+            glm::vec3 upForSweep = glm::normalize(mPos - mCurrentPlanet->GetCenter());
+            glm::vec3 sweepFrom = mPos + upForSweep * 0.4f; // 腰高で判定（地面に当たりにくくする）
+            glm::vec3 sweepTo = desiredPos + upForSweep * 0.4f;
+            btTransform fromBt, toBt;
+            fromBt.setIdentity();
+            fromBt.setOrigin(btVector3(sweepFrom.x, sweepFrom.y, sweepFrom.z));
+            toBt.setIdentity();
+            toBt.setOrigin(btVector3(sweepTo.x, sweepTo.y, sweepTo.z));
+            btVector3 sweepFromBt(sweepFrom.x, sweepFrom.y, sweepFrom.z);
+            btVector3 sweepToBt(sweepTo.x, sweepTo.y, sweepTo.z);
+            btCollisionWorld::ClosestConvexResultCallback sweepCallback(sweepFromBt, sweepToBt);
+            bulletWorld->convexSweepTest(bulletWallSphere, fromBt, toBt, sweepCallback);
+            if (sweepCallback.hasHit())
+            {
+                // 壁手前で一度止め、残りを壁に沿う方向（スライド）に投影して進める
+                float allowFrac = std::max(0.0f, sweepCallback.m_closestHitFraction - 0.02f);
+                glm::vec3 posAfterHit = mPos + moveDelta * allowFrac;
+                glm::vec3 hitNormGlm(
+                    sweepCallback.m_hitNormalWorld.x(),
+                    sweepCallback.m_hitNormalWorld.y(),
+                    sweepCallback.m_hitNormalWorld.z());
+                // 阻害された移動を壁面に投影 → 壁沿いのスライドベクトル
+                glm::vec3 blocked = moveDelta * (1.0f - allowFrac);
+                glm::vec3 slideVec = blocked - hitNormGlm * glm::dot(blocked, hitNormGlm);
+                const float slideEps = 1e-4f;
+                if (glm::length(slideVec) > slideEps)
+                {
+                    glm::vec3 slideFrom = posAfterHit + upForSweep * 0.4f;
+                    glm::vec3 slideTo = slideFrom + slideVec;
+                    btTransform fromBt2, toBt2;
+                    fromBt2.setIdentity();
+                    fromBt2.setOrigin(btVector3(slideFrom.x, slideFrom.y, slideFrom.z));
+                    toBt2.setIdentity();
+                    toBt2.setOrigin(btVector3(slideTo.x, slideTo.y, slideTo.z));
+                    btVector3 sFrom(slideFrom.x, slideFrom.y, slideFrom.z);
+                    btVector3 sTo(slideTo.x, slideTo.y, slideTo.z);
+                    btCollisionWorld::ClosestConvexResultCallback slideCallback(sFrom, sTo);
+                    bulletWorld->convexSweepTest(bulletWallSphere, fromBt2, toBt2, slideCallback);
+                    float slideAllow = slideCallback.hasHit()
+                                        ? std::max(0.0f, slideCallback.m_closestHitFraction - 0.02f)
+                                        : 1.0f;
+                    desiredPos = posAfterHit + slideVec * slideAllow;
+                }
+                else
+                {
+                    desiredPos = posAfterHit;
+                }
+            }
+        }
         mPos = desiredPos;
         // ジャンプ処理
         if (mOnGround && mJumpPressed)
@@ -307,38 +317,39 @@ void Player::UpdateActor(float deltaTime)
     }
     // Bullet レイキャスト：足元にメッシュがあれば地形に沿わせ、穴の上なら重力で落ちる
     // 回避中・攻撃硬直中は浮遊のためスキップ。上昇中（ジャンプ直後）もスキップし、地上 or 落下中のみ判定
-    // glm::vec3 upForJump = glm::normalize(players[0].pos - planets[players[0].planetIndex].center);
-    // bool isRising = glm::dot(players[0].velocity, upForJump) > 0.5f;
-    // bool meshGround = false;
-    // if (mDodgeTimer <= 0.0f && mAttackHeightLockRemaining <= 0.0f && bulletOk && bulletWorld && !isRising)
-    // {
-    //     glm::vec3 center = planets[players[0].planetIndex].center;
-    //     glm::vec3 upDir = glm::normalize(players[0].pos - center);
-    //     glm::vec3 rayFrom3 = players[0].pos + upDir * 0.1f;
-    //     glm::vec3 rayTo3 = players[0].pos - upDir * 0.1f;
-    //     btVector3 rayFrom(rayFrom3.x, rayFrom3.y, rayFrom3.z);
-    //     btVector3 rayTo(rayTo3.x, rayTo3.y, rayTo3.z);
-    //     btCollisionWorld::ClosestRayResultCallback rayCallback(rayFrom, rayTo);
-    //     bulletWorld->rayTest(rayFrom, rayTo, rayCallback);
-    //     if (rayCallback.hasHit())
-    //     {
-    //         btVector3 hitPt = rayCallback.m_hitPointWorld;
-    //         glm::vec3 hitPos(hitPt.x(), hitPt.y(), hitPt.z());
-    //         float hitDist = glm::length(hitPos - center);
-    //         float playerDist = glm::length(players[0].pos - center);
-    //         if (playerDist - hitDist < 2.0f)
-    //         {
-    //             players[0].pos = hitPos;
-    //             players[0].onGround = true;
-    //             players[0].velocity = glm::vec3(0.0f);
-    //             meshGround = true;
-    //         }
-    //     }
-    //     if (!meshGround && players[0].onGround)
-    //     {
-    //         players[0].onGround = false;
-    //     }
-    // }
+    glm::vec3 upForJump = glm::normalize(mPos - mCurrentPlanet->GetCenter());
+    bool isRising = glm::dot(mVelocity, upForJump) > 0.5f;
+    bool meshGround = false;
+    if (mDodgeTimer <= 0.0f && mAttackHeightLockRemaining <= 0.0f && bulletOk && bulletWorld && !isRising)
+    {
+        glm::vec3 center = mCurrentPlanet->GetCenter();
+        glm::vec3 upDir = glm::normalize(mPos - center);
+        glm::vec3 rayFrom3 = mPos + upDir * 0.1f;
+        glm::vec3 rayTo3 = mPos - upDir * 0.1f;
+        btVector3 rayFrom(rayFrom3.x, rayFrom3.y, rayFrom3.z);
+        btVector3 rayTo(rayTo3.x, rayTo3.y, rayTo3.z);
+        btCollisionWorld::ClosestRayResultCallback rayCallback(rayFrom, rayTo);
+        bulletWorld->rayTest(rayFrom, rayTo, rayCallback);
+        if (rayCallback.hasHit())
+        {
+            btVector3 hitPt = rayCallback.m_hitPointWorld;
+            glm::vec3 hitPos(hitPt.x(), hitPt.y(), hitPt.z());
+            float hitDist = glm::length(hitPos - center);
+            const auto& players = GetGame()->GetPlayers();
+            float playerDist = players.empty() ? 0.0f : glm::length(players[0]->GetPos() - center);
+            if (playerDist - hitDist < 2.0f)
+            {
+                mPos = hitPos;
+                mOnGround = true;
+                mVelocity = glm::vec3(0.0f);
+                meshGround = true;
+            }
+        }
+        if (!meshGround && mOnGround)
+        {
+            mOnGround = false;
+        }
+    }
 
     // 回避中・空中攻撃中は重力をかけず、終了後に通常通り落下
     if (mDodgeTimer <= 0.0f && mAttackHeightLockRemaining <= 0.0f) {
@@ -346,8 +357,7 @@ void Player::UpdateActor(float deltaTime)
         float radius = mCurrentPlanet->GetRadius();
         mUpVec = glm::normalize(mPos - center);
     
-        // bool skipGroundSnap = bulletOk && bulletWorld;
-        bool skipGroundSnap = false; // TODO:
+        bool skipGroundSnap = bulletOk && bulletWorld;
         if (mOnGround && !skipGroundSnap) {
             mPos = center + glm::normalize(mPos - center) * radius;
         }
@@ -366,18 +376,20 @@ void Player::UpdateActor(float deltaTime)
     }
 
     // 落下して惑星内部にめり込んだらリスタート地点へ
-    // if (bulletOk && bulletWorld)
-    // {
-    //     float dist = glm::length(players[0].pos - planets[players[0].planetIndex].center);
-    //     float r = planets[players[0].planetIndex].radius;
-    //     if (dist < r * 0.5f)
-    //     {
-    //         players[0].pos = restartPos;
-    //         players[0].planetIndex = restartPlanetIndex;
-    //         players[0].velocity = glm::vec3(0.0f);
-    //         players[0].onGround = true;
-    //     }
-    // }
+    if (bulletOk && bulletWorld)
+    {
+        glm::vec3 center = mCurrentPlanet->GetCenter();
+        float r = mCurrentPlanet->GetRadius();
+        float dist = glm::length(mPos - center);
+        if (dist < r * 0.5f)
+        {
+            mPos = mRestartPos;
+            mCurrentPlanetNum = mRestartPlanetIndex;
+            mCurrentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[mCurrentPlanetNum];
+            mVelocity = glm::vec3(0.0f);
+            mOnGround = true;
+        }
+    }
 
     // スティックを倒した方向を向く。移動ロック中は地上のみ向き固定、空中攻撃中は向き替え可
     if ((mAttackMoveLockRemaining <= 0.0f) && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
