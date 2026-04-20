@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include <glm/glm.hpp>
 
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
@@ -28,10 +29,11 @@ public:
     bool IsBulletInitialized() const { return mBulletInitialized; }
     btDiscreteDynamicsWorld* GetBulletWorld() const { return mBulletWorld; }
     btSphereShape* GetBulletWallSphere() const { return mBulletWallSphere; }
+
+    glm::vec3 CheckCollision(glm::vec3 moveDelta, glm::vec3 desiredPos);
 private:
     class Game* mGame;
 
-    // Bullet state (owned by this system)
     bool mBulletInitialized;
     btDefaultCollisionConfiguration* mBulletCollisionConfig;
     btCollisionDispatcher* mBulletDispatcher;
@@ -48,7 +50,6 @@ private:
     btSphereShape* mBulletWallSphere;
     btKinematicCharacterController* mBulletCharController;
 
-    // Local mesh loader for collision cooking (keeps Game API unchanged)
-    std::unique_ptr<class Mesh> mMeshLoader;
+    class Mesh* mMeshLoader;
 };
 #endif

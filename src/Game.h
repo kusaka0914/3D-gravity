@@ -32,6 +32,7 @@ public:
     AudioSystem* GetAudioSystem() const { return mAudioSystem.get(); }
     class Shader* GetShader() const { return mShader.get(); }
     class PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }
+    class Mesh* GetMesh() const { return mMesh.get(); }
 
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }

@@ -4,7 +4,7 @@ planets:
   - center: [0.0, 0.0, 0.0]
     radius: 8.0
     color: [1.0, 0.0, 0.0]
-    model: planet.obj
+    model: planet_3.obj
     stageNum: 0
     keySpawnCondition: AllBoatPartsCollected
   - center: [32.0, 0.0, 0.0]
