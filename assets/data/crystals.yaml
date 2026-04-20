@@ -1,9 +1,15 @@
 crystals :
   - currentPlanetNum : 0
-    theta : -0.5
-    u : 0.0
+    theta : 79.7
+    u : 1.2
     height : 0.0
-  - currentPlanetNum : 1
-    theta : 100.0
-    u : 0.0
-    height : 0.0
+    scale : 0.0075
+    count : 1
+    radius : 1.0
+  - currentPlanetNum : 0
+    theta : -0.35
+    u : 0.3
+    height : 0.5
+    scale : 0.02
+    count : 5
+    radius : 2.3

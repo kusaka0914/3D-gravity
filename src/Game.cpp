@@ -779,9 +779,8 @@ void Game::GenerateOutput()
         if (!crystals.empty()) {
             for (auto crystal : crystals) { 
                 if (crystal->GetDestructibleComponent()->GetIsActive()) {
-                    const float crystalScale = 0.0075f;
                     glm::vec3 crystalUp = glm::normalize(crystal->GetPos() - currentPlanet->GetCenter());
-                    drawCharacter(crystal->GetPos(), crystalScale, glm::vec3(0.4f, 0.25f, 0.1f), crystalUp, 0.0f, crystal->GetMeshes());
+                    drawCharacter(crystal->GetPos(), crystal->GetScale(), glm::vec3(0.4f, 0.25f, 0.1f), crystalUp, 0.0f, crystal->GetMeshes());
                 }
             }
         }

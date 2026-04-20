@@ -14,10 +14,14 @@ public:
 
     void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetIsDestroyed(bool isDestroyed) { mIsDestroyed = isDestroyed; }
+    void SetDestroyCount(int destroyCount) { mDestroyCount = destroyCount; }
 
     bool GetIsActive() const { return mIsActive; }
     bool GetIsDestroyed() const { return mIsDestroyed; }
+    int GetDestroyCount() const { return mDestroyCount; }
 private:
     bool mIsActive;
     bool mIsDestroyed;
+    bool mIsAttackedPrev;
+    int mDestroyCount;
 };

@@ -12,9 +12,9 @@ boatParts :
     u : -0.8
     height : 2.3
   - currentPlanetNum : 0
-    theta : -0.5
-    u : 0.0
-    height : 0.0
+    theta : -0.35
+    u : 0.3
+    height : 1.0
   - currentPlanetNum : 0
-    theta : 80.0
-    u : 0.0
+    theta : 79.7
+    u : 1.2

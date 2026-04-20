@@ -13,15 +13,23 @@ void DestructibleComponent::Update(float deltaTime)
 {
     std::vector<Player*> players = GetOwner()->GetGame()->GetPlayers();
     if (mIsActive) {
+        std::cout << mDestroyCount << std::endl;
         // 攻撃中のプレイヤーが触れたら破壊
         for (auto player : players) {
             float distTo = glm::length(player->GetPos() - GetOwner()->GetPos()); 
-            const float destroyRadius = 2.0f;
-            if (distTo < destroyRadius && player->GetAttackMotionTimer() > 0.0f)
+            if (player->GetAttackMotionTimer() < 0.0f) {
+                mIsAttackedPrev = false;
+            }
+            if (distTo < GetOwner()->GetRadius() && player->GetAttackMotionTimer() > 0.0f && !mIsAttackedPrev)
             {
-                mIsActive = false;
-                mIsDestroyed = true;
-                GetOwner()->GetGame()->GetAudioSystem()->PlaySE("destroySE");
+                mDestroyCount--;
+                if (mDestroyCount <= 0) {
+                    mDestroyCount = 0;
+                    mIsActive = false;
+                    mIsDestroyed = true;
+                    GetOwner()->GetGame()->GetAudioSystem()->PlaySE("destroySE");
+                }
+                mIsAttackedPrev = true;
             }
         }
     }

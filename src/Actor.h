@@ -21,6 +21,11 @@ public:
         static const glm::vec3 kZero(0.0f, 0.0f, 0.0f);
         return kZero;
     }
+
+    virtual float GetRadius() const
+    {
+        return 0.0f;
+    }
 private:
     std::vector<std::unique_ptr<Component>> mComponents;
     class Game* mGame;

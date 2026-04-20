@@ -13,7 +13,7 @@ public:
     void UpdateActor(float deltaTime) override;
 
     virtual bool IsBoss() const { return false; }
-    float GetRadius() const { return mScale * 3.0f; }
+    float GetRadius() const override { return mScale * 3.0f; }
 
     void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(const glm::vec3& pos) { mPos = pos; }

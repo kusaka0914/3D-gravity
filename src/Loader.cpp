@@ -322,6 +322,15 @@ bool Loader::loadCrystalsFromYaml(const char* path)
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             crystal->SetPos(pos);
 
+            float scale = node["scale"] ? node["scale"].as<float>() : 0.0f;
+            crystal->SetScale(scale);
+
+            float radius = node["radius"] ? node["radius"].as<float>() : 0.0f;
+            crystal->SetRadius(radius);
+
+            int count = node["count"] ? node["count"].as<int>() : 0;
+            crystal->GetDestructibleComponent()->SetDestroyCount(count);
+
             Crystal* crystal_ptr = crystal.get();
             GetGame()->AddActor(std::move(crystal));
             currentPlanet->AddCrystals(crystal_ptr);
