@@ -1,5 +1,4 @@
-#ifndef PLAYER_H
-#define PLAYER_H
+#pragma once
 
 #include "Mesh.h"
 #include "Planet.h"
@@ -66,6 +65,7 @@ public:
     float GetAttackCooldownRemaining() const { return mAttackCooldownRemaining; }
     float GetAttackMoveLockRemaining() const { return mAttackMoveLockRemaining; }
     float GetAttackDodgeLockRemaining() const { return mAttackDodgeLockRemaining; }
+    float GetAttackMotionTimer() const { return mAttackMotionTimer; }
     int GetAttackIndex() const { return mAttackIndex; }
     int GetRestartPlanetIndex() const { return mRestartPlanetIndex; }
 
@@ -126,6 +126,3 @@ private:
 
     std::vector<struct LoadedMesh> mMeshes;
 };
-
-
-#endif

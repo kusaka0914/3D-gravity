@@ -1,5 +1,4 @@
-#ifndef PHYSICSSYSTEM_H
-#define PHYSICSSYSTEM_H
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -52,4 +51,3 @@ private:
 
     class Mesh* mMeshLoader;
 };
-#endif

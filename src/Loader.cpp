@@ -7,6 +7,7 @@
 #include "Stage.h"
 #include "Boat.h"
 #include "BoatParts.h"
+#include "Crystal.h"
 #include <glm/glm.hpp>
 #include <iostream>
 
@@ -23,6 +24,7 @@ bool Loader::loadPlayersFromYaml(const char* path) {
             std::cerr << "Loader: missing or invalid 'players' sequence" << std::endl;
             return false;
         }
+        GetGame()->RemoveAllPlayer();
         int playerNum = 0;
         for (const YAML::Node& node : root["players"]) {
             std::unique_ptr<Player> player = std::make_unique<Player>(mGame);
@@ -120,6 +122,11 @@ bool Loader::loadPlanetsFromYaml(const char* path) {
             std::cerr << "Loader: missing or invalid 'planets' sequence" << std::endl;
             return false;
         }
+        for (const YAML::Node& node : root["planets"]) {
+            int stageNum = node["stageNum"] ? node["stageNum"].as<int>() : 0;
+            Stage* currentStage = GetGame()->GetStages()[stageNum];
+            currentStage->RemoveAllPlanet();
+        }
         // 配列の各要素を回す
         for (const YAML::Node& node : root["planets"]) {
             // 惑星の初期化
@@ -177,11 +184,18 @@ bool Loader::loadPlanetsFromYaml(const char* path) {
 bool Loader::loadBoatsFromYaml(const char* path)
 {
     try {
+        int currentPlanetNum = 0;
         YAML::Node root = YAML::LoadFile(path);
         if (!root["boats"] || !root["boats"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'boats' sequence" << std::endl;
             return false;
         }
+        for (const YAML::Node& node : root["boats"]) {
+            currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            currentPlanet->RemoveAllBoat();
+        }
+
         for (auto node : root["boats"]){
             std::unique_ptr<Boat> boat = std::make_unique<Boat>(GetGame());
 
@@ -194,6 +208,9 @@ bool Loader::loadBoatsFromYaml(const char* path)
 
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[startPlanet];
             boat->SetCurrentPlanet(currentPlanet);
+
+            glm::vec3 pos = CalculatePos(node, currentPlanet);
+            boat->SetPos(pos);
 
             boat->SetPlanets(GetGame()->GetCurrentStage()->GetPlanets());
 
@@ -211,11 +228,18 @@ bool Loader::loadBoatsFromYaml(const char* path)
 bool Loader::loadBoatPartsFromYaml(const char* path)
 {
     try {
+        int currentPlanetNum = 0;
         YAML::Node root = YAML::LoadFile(path);
         if (!root["boatParts"] || !root["boatParts"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'boatParts' sequence" << std::endl;
             return false;
         }
+        for (const YAML::Node& node : root["boatParts"]) {
+            currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            currentPlanet->RemoveAllBoatParts();
+        }
+
         for (auto node : root["boatParts"]){
             std::unique_ptr<BoatParts> boatParts = std::make_unique<BoatParts>(GetGame());
 
@@ -240,24 +264,31 @@ bool Loader::loadBoatPartsFromYaml(const char* path)
 bool Loader::loadKeysFromYaml(const char* path)
 {
     try {
+        int currentPlanetNum = 0;
         YAML::Node root = YAML::LoadFile(path);
         if (!root["keys"] || !root["keys"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'keys' sequence" << std::endl;
             return false;
         }
+        for (const YAML::Node& node : root["keys"]) {
+            currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            currentPlanet->RemoveKey();
+        }
+
         for (auto node : root["keys"]){
-            std::unique_ptr<Key> keys = std::make_unique<Key>(GetGame());
+            std::unique_ptr<Key> key = std::make_unique<Key>(GetGame());
 
             int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
-            keys->SetCurrentPlanet(currentPlanet);
+            key->SetCurrentPlanet(currentPlanet);
 
             glm::vec3 pos = CalculatePos(node, currentPlanet);
-            keys->SetPos(pos);
+            key->SetPos(pos);
 
-            Key* keys_ptr = keys.get();
-            GetGame()->AddActor(std::move(keys));
-            currentPlanet->SetKey(keys_ptr);
+            Key* key_ptr = key.get();
+            GetGame()->AddActor(std::move(key));
+            currentPlanet->SetKey(key_ptr);
         }
         return true;
     } catch (const YAML::Exception& ex) {
@@ -266,14 +297,51 @@ bool Loader::loadKeysFromYaml(const char* path)
     }
 }
 
+bool Loader::loadCrystalsFromYaml(const char* path)
+{
+    try {
+        int currentPlanetNum = 0;
+        YAML::Node root = YAML::LoadFile(path);
+        if (!root["crystals"] || !root["crystals"].IsSequence()) {
+            std::cerr << "Loader: missing or invalid 'crystals' sequence" << std::endl;
+            return false;
+        }
+        for (const YAML::Node& node : root["crystals"]) {
+            currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            currentPlanet->RemoveAllCrystals();
+        }
+
+        for (auto node : root["crystals"]){
+            std::unique_ptr<Crystal> crystal = std::make_unique<Crystal>(GetGame());
+
+            int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            crystal->SetCurrentPlanet(currentPlanet);
+
+            glm::vec3 pos = CalculatePos(node, currentPlanet);
+            crystal->SetPos(pos);
+
+            Crystal* crystal_ptr = crystal.get();
+            GetGame()->AddActor(std::move(crystal));
+            currentPlanet->AddCrystals(crystal_ptr);
+        }
+        return true;
+    } catch (const YAML::Exception& ex) {
+        std::cerr << "Crystals Load error: " << ex.what() << std::endl;
+        return false;
+    }
+}
+
 glm::vec3 Loader::CalculatePos(YAML::Node node, Planet* currentPlanet) {
     float theta = node["theta"] ? node["theta"].as<float>() : 0.0f;
     float u = node["u"] ? node["u"].as<float>() : 0.0f;
+    float height = node["height"] ? node["height"].as<float>() : 0.0f;
     glm::vec3 dir(std::cos(theta), std::sin(theta), u);
     float len = glm::length(dir);
     if (len < 1e-6f) dir = glm::vec3(1.0f, 0.0f, 0.0f);
     else dir /= len;
 
-    glm::vec3 pos = currentPlanet->GetCenter() + currentPlanet->GetRadius() * dir;
+    glm::vec3 pos = currentPlanet->GetCenter() + (currentPlanet->GetRadius() + height) * dir;
     return pos;
 }

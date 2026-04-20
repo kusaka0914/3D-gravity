@@ -20,7 +20,9 @@ public:
 
     void AddActor(std::unique_ptr<class Actor> actor) { mActors.emplace_back(std::move(actor)); };
 	void RemoveActor(std::unique_ptr<class Actor> actor);
+    void RemoveAllActor() { for(int i = 0; i < mActors.size(); i++) mActors.pop_back(); }
     void AddPlayer(class Player* player) { mPlayers.emplace_back(player); };
+    void RemoveAllPlayer() { for(int i = 0; i < mPlayers.size(); i++) mPlayers.pop_back(); }
 
     GLFWwindow* GetWindow() const { return mWindow; }
     SDL_GameController* GetSdlController() const { return mSdlController;}

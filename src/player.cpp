@@ -265,7 +265,6 @@ void Player::UpdateActor(float deltaTime)
         if (rayCallback.hasHit())
         {
             btVector3 hitPt = rayCallback.m_hitPointWorld;
-            std::cout << hitPt.x() << " " << hitPt.y() << " " << hitPt.z() << std::endl;
             glm::vec3 hitPos(hitPt.x(), hitPt.y(), hitPt.z());
             
             mPos = hitPos;

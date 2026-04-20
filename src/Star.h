@@ -1,5 +1,4 @@
-#ifndef Star_H
-#define Star_H
+#pragma once
 
 #include "Actor.h"
 #include "Mesh.h"
@@ -33,4 +32,3 @@ private:
 
     std::vector<struct LoadedMesh> mMeshes;
 };
-#endif

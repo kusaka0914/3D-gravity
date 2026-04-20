@@ -1,5 +1,4 @@
-#ifndef BOAT_H
-#define BOAT_H
+#pragma once
 
 #include "Actor.h"
 #include "Mesh.h"
@@ -56,4 +55,3 @@ private:
     std::vector<class Planet*> mPlanets;
     std::vector<struct LoadedMesh> mMeshes;
 };
-#endif

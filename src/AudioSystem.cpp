@@ -111,6 +111,15 @@ void AudioSystem::Initialize()
     {
         std::cerr << "Mix_LoadWAV (damaged SE) error: " << Mix_GetError() << std::endl;
     }
+    Mix_Chunk* destroySE = Mix_LoadWAV("../assets/audio/Destroy.wav");
+    if (destroySE)
+    {
+        mSEList["destroySE"] = destroySE;
+    }
+    else
+    {
+        std::cerr << "Mix_LoadWAV (destroy SE) error: " << Mix_GetError() << std::endl;
+    }
 }
 
 void AudioSystem::Update()

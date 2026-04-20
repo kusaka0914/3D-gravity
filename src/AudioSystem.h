@@ -1,5 +1,5 @@
-#ifndef AUDIOSYSTEM_H
-#define AUDIOSYSTEM_H
+#pragma once
+
 #include <vector>
 #include <unordered_map>
 #include <string>
@@ -21,4 +21,3 @@ private:
     std::unordered_map<const char*, Mix_Chunk*> mSEList;
     int mCurrentBgmPlanetIndex;
 };
-#endif

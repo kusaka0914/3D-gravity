@@ -1,5 +1,4 @@
-#ifndef ENEMY_H
-#define ENEMY_H
+#pragma once
 
 #include "Actor.h"
 #include <glm/glm.hpp>
@@ -80,5 +79,3 @@ private:
     bool mIsAttack;
     float mSensing;
 };
-
-#endif

@@ -21,13 +21,6 @@ Boat::Boat(Game* game)
 
 void Boat::UpdateActor(float deltaTime)
 {
-    // 表示中
-    if (GetIsActive()) {
-        Planet* currentPlanet = mPlanets[mCurrentPlanetNum];
-        // ボートを現在惑星の表面近くに配置
-        float boatHeight = currentPlanet->GetRadius() - 0.15f;
-        mPos = currentPlanet->GetCenter() + glm::normalize(glm::vec3(0.0f, -1.0f, 0.5f)) * boatHeight;
-    }
     // 移動中
     if (GetIsMoving())
     {   

@@ -1,5 +1,4 @@
-#ifndef ACTOR_H
-#define ACTOR_H
+#pragma once
 
 #include <vector>
 #include <glm/glm.hpp>
@@ -26,4 +25,3 @@ private:
     std::vector<std::unique_ptr<Component>> mComponents;
     class Game* mGame;
 };
-#endif

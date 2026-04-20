@@ -5,6 +5,7 @@
 #include "Planet.h"
 #include "Player.h"
 #include "Enemy.h"
+#include "Crystal.h"
 
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
@@ -202,6 +203,20 @@ glm::vec3 PhysicsSystem::CheckCollision(glm::vec3 moveDelta, glm::vec3 desiredPo
         float minDist = enemy->GetRadius();
         if (d < minDist && d > 1e-5f)
             return ePos + (toDesired / d) * minDist;
+    }
+
+    std::vector<Crystal*> crystals = players[0]->GetCurrentPlanet()->GetCrystals();
+    // クリスタルとの当たり判定
+    for (auto* crystal : crystals)
+    {
+        if (!crystal->GetDestructibleComponent()->GetIsActive())
+            continue;
+        glm::vec3 cPos = crystal->GetPos();
+        glm::vec3 toDesired = desiredPos - cPos;
+        float d = glm::length(toDesired);
+        float minDist = crystal->GetRadius();
+        if (d < minDist && d > 1e-5f)
+            return cPos + (toDesired / d) * minDist;
     }
 
     // 壁当たり：球スイープで移動経路に障害があれば移動を打ち切り

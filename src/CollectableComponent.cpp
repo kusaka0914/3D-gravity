@@ -15,9 +15,9 @@ void CollectableComponent::Update(float deltaTime)
     if (mIsActive) {
         // プレイヤーが触れたら取得して消す
         for (auto player : players) {
-            float distTo = glm::length(player->GetPos() - GetOwner()->GetPos());            
-            const float pickupRadius = 1.2f;
-            if (distTo < pickupRadius)
+            float distTo = glm::length(player->GetPos() - GetOwner()->GetPos()); 
+            const float pickupRadius = 0.8f;
+            if (distTo < pickupRadius && player->GetAttackMotionTimer() < 0.0f)
             {
                 mIsActive = false;
                 mIsObtained = true;

@@ -13,6 +13,7 @@ public:
     bool loadBoatsFromYaml(const char* path);
     bool loadBoatPartsFromYaml(const char* path);
     bool loadKeysFromYaml(const char* path);
+    bool loadCrystalsFromYaml(const char* path);
     
     Game* GetGame() const { return mGame; }
 private:

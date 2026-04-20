@@ -6,6 +6,7 @@
 #include "Stage.h"
 #include "Star.h"
 #include "BoatParts.h"
+#include "Crystal.h"
 #include <cmath>
 
 Planet::Planet(Game* game)
@@ -62,6 +63,8 @@ void Planet::UpdateActor(float deltaTime) {
             }
             break;
         }
+        default:
+            break;
     }
 }
 

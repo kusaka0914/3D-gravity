@@ -1,5 +1,4 @@
-#ifndef PLANET_H
-#define PLANET_H
+#pragma once
 
 #include "Actor.h"
 #include "Mesh.h"
@@ -22,9 +21,15 @@ public:
     void AddEnemy(class Enemy* enemy) { mEnemies.emplace_back(enemy); }
     void AddBoat(class Boat* boat) { mBoats.emplace_back(boat); }
     void AddBoatParts(class BoatParts* boatParts) { mBoatParts.emplace_back(boatParts); }
+    void AddCrystals(class Crystal* crystal) { mCrystals.emplace_back(crystal); }
     void AddEnemyMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mEnemyMeshesByPath[modelPath] = meshes; }
 
     void RemoveAllEnemy() { for(int i = 0; i < mEnemies.size(); i++) mEnemies.pop_back(); }
+    void RemoveAllBoat() { for(int i = 0; i < mBoats.size(); i++) mBoats.pop_back(); }
+    void RemoveAllBoatParts() { for(int i = 0; i < mBoatParts.size(); i++) mBoatParts.pop_back(); }
+    void RemoveAllCrystals() { for(int i = 0; i < mCrystals.size(); i++) mCrystals.pop_back(); }
+    void RemoveKey() { mKey = nullptr; }
+    void RemoveStar() { mStar = nullptr; }
 
     void SetCurrentStage(class Stage* currentStage) { mCurrentStage = currentStage; }
     void buildSphereMesh(unsigned int segmentsLat, unsigned int segmentsLong, float radius,
@@ -54,6 +59,7 @@ public:
     const std::vector<class Enemy*>& GetEnemies() const { return mEnemies; }
     const std::vector<class Boat*>& GetBoats() const { return mBoats; }
     const std::vector<class BoatParts*>& GetBoatParts() const { return mBoatParts; }
+    const std::vector<class Crystal*>& GetCrystals() const { return mCrystals; }
     class Key* GetKey() const { return mKey; }
     class Star* GetStar() const { return mStar; }
     const std::unordered_map<std::string, std::vector<LoadedMesh>>& GetEnemyMeshesByPath() const { return mEnemyMeshesByPath; }
@@ -68,6 +74,7 @@ private:
     std::vector<class Enemy*> mEnemies;
     std::vector<class Boat*> mBoats;
     std::vector<class BoatParts*> mBoatParts;
+    std::vector<class Crystal*> mCrystals;
     class Key* mKey;
     class Star* mStar;
 
@@ -75,5 +82,3 @@ private:
 
     std::unordered_map<std::string, std::vector<LoadedMesh>> mEnemyMeshesByPath;
 };
-
-#endif

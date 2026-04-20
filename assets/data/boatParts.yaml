@@ -1,16 +1,20 @@
 boatParts :
   - currentPlanetNum : 0
-    theta : 0.0
-    u : 0.0
+    theta : 2.4
+    u : -0.65
+    height : 4.0
   - currentPlanetNum : 0
-    theta : 20.0
-    u : 0.0
+    theta : 19.45
+    u : 1.05
+    height : 3.3
   - currentPlanetNum : 0
-    theta : 40.0
-    u : 0.0
+    theta : 42.65
+    u : -0.8
+    height : 2.3
   - currentPlanetNum : 0
-    theta : 60.0
+    theta : -0.5
     u : 0.0
+    height : 0.0
   - currentPlanetNum : 0
     theta : 80.0
     u : 0.0

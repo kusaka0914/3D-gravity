@@ -9,7 +9,7 @@ Key::Key(Game* game)
     : Actor(game)
     , mPos({0.0f, 8.0f, 0.0f})
 {
-    std::unique_ptr<CollectableComponent> collectableComponent = std::make_unique<CollectableComponent>(this, 100, true);
+    std::unique_ptr<CollectableComponent> collectableComponent = std::make_unique<CollectableComponent>(this, 100, false);
     mCollectableComponent = collectableComponent.get();
     AddComponent(std::move(collectableComponent));
 }

@@ -1,5 +1,4 @@
-#ifndef COLLECTABLECOMPONENT_H
-#define COLLECTABLECOMPONENT_H
+#pragma once
 
 #include "Component.h"
 #include "Mesh.h"
@@ -22,4 +21,3 @@ private:
     bool mIsActive;
     bool mIsObtained;
 };
-#endif

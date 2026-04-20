@@ -1,5 +1,4 @@
-#ifndef MESH_H
-#define MESH_H
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -25,4 +24,3 @@ public:
 private:
 
 };
-#endif

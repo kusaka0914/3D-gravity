@@ -1,5 +1,4 @@
-#ifndef KEY_H
-#define KEY_H
+#pragma once
 
 #include "Actor.h"
 #include "Mesh.h"
@@ -30,4 +29,3 @@ private:
 
     std::vector<struct LoadedMesh> mMeshes;
 };
-#endif

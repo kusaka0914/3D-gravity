@@ -1,12 +1,14 @@
-# Blender 5.0.1 MTL File: 'origami boat.blend'
+# Blender 5.0.1 MTL File: 'rocket.blend'
 # www.blender.org
 
-newmtl paper
-Ns 195.686783
+newmtl Toy_Ship.001
 Ka 1.000000 1.000000 1.000000
-Kd 0.800000 0.800000 0.800000
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
-Ni 1.450000
+Ni 1.500000
 d 1.000000
 illum 2
+map_Kd ../textures/Toy Rocket_Toy Ship_BaseColor.png
+map_Ns ../../../../../../../Toy Rocket_Toy Ship_Roughness.png
+map_refl ../../../../../../../Toy Rocket_Toy Ship_Metallic.png
+map_Bump -bm 1.000000 ../../../../../../../Toy Rocket_Toy Ship_Normal.png

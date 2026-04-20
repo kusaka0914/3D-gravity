@@ -1,5 +1,4 @@
-#ifndef boatParts_H
-#define boatParts_H
+#pragma once
 
 #include "Actor.h"
 #include "Mesh.h"
@@ -29,4 +28,3 @@ private:
 
     std::vector<struct LoadedMesh> mMeshes;
 };
-#endif

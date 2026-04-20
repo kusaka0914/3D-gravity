@@ -14,6 +14,8 @@ add_executable(engine
     src/BoatParts.cpp
     src/CollectableComponent.cpp
     src/Component.cpp
+    src/Crystal.cpp
+    src/DestructibleComponent.cpp
     src/Enemy.cpp
     src/Game.cpp
     src/Key.cpp

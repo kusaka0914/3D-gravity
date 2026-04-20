@@ -6,6 +6,7 @@
 enemies:
   - theta: 0.0
     u: 0.0
+    height : 0.0
     currentPlanetNum: 1
     hp: 90
     modelPath: enemy.obj
@@ -14,6 +15,7 @@ enemies:
     attack: 10.0
   - theta: 2.056
     u: 1.0
+    height : 0.0
     currentPlanetNum: 1
     hp: 90
     modelPath: enemy.obj
@@ -22,6 +24,7 @@ enemies:
     attack: 10.0
   - theta: 3.513
     u: -0.6
+    height : 0.0
     currentPlanetNum: 1
     hp: 90
     modelPath: enemy.obj
@@ -30,6 +33,7 @@ enemies:
     attack: 10.0
   - theta: 3.969
     u: 0.8
+    height : 0.0
     currentPlanetNum: 1
     hp: 90
     modelPath: enemy.obj
@@ -38,6 +42,7 @@ enemies:
     attack: 10.0
   - theta: 5.026
     u: 1.6
+    height : 0.0
     currentPlanetNum: 1
     hp: 90
     modelPath: enemy.obj
@@ -48,6 +53,7 @@ enemies:
   - isBoss : 1
     theta: 6.083
     u: -0.8
+    height : 0.0
     currentPlanetNum: 2
     hp: 300
     modelPath: enemy.obj

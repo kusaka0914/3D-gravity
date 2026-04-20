@@ -13,9 +13,11 @@
 #include "Key.h"
 #include "Boat.h"
 #include "Star.h"
+#include "Crystal.h"
 #include "UIRenderer.h"
 #include "BoatParts.h"
 #include "PhysicsSystem.h"
+#include "DestructibleComponent.h"
 #include "Game.h"
 #include <GLFW/glfw3.h>
 #include <SDL.h>
@@ -180,13 +182,18 @@ bool Game::Initialize()
     // 鍵をYAMLから読み込み
     if (!mLoader->loadKeysFromYaml("../assets/data/keys.yaml"))
     {
-        std::cerr << "keys YAML load failed" << std::endl;
+        std::cerr << "Keys YAML load failed" << std::endl;
+    }
+    // クリスタルをYAMLから読み込み
+    if (!mLoader->loadCrystalsFromYaml("../assets/data/Crystals.yaml"))
+    {
+        std::cerr << "Crystals YAML load failed" << std::endl;
     }
 
     // Physics（Bullet）初期化：惑星/プレイヤー生成後に行う
     mPhysicsSystem = std::make_unique<PhysicsSystem>(this);
-
     mMesh = std::make_unique<Mesh>();
+
     // プレイヤーモデルをロード
     for (auto player : mPlayers) {
         std::string path = "../assets/models/player.obj";
@@ -217,24 +224,55 @@ bool Game::Initialize()
     }
     Planet* currentPlanet = mPlayers[0]->GetCurrentPlanet();
     // 鍵モデルをロード
-    Key* key = currentPlanet->GetKey();
-    std::vector<LoadedMesh> keyMeshes = mMesh->loadMeshFromFile("../assets/models/key.obj");
-    key->SetMeshes(keyMeshes);
+    for (auto planet : planets)
+    {
+        Key* key = planet->GetKey();
+        if (key) {
+            std::vector<LoadedMesh> keyMeshes = mMesh->loadMeshFromFile("../assets/models/key.obj");
+            key->SetMeshes(keyMeshes);
+        }
+    }
     // スターモデルをロード
-    Star* star = currentPlanet->GetStar();
-    std::vector<LoadedMesh> starMeshes = mMesh->loadMeshFromFile("../assets/models/star.obj");
-    star->SetMeshes(starMeshes);
+    for (auto planet : planets)
+    {
+        Star* star = planet->GetStar();
+        if (star) {
+            std::vector<LoadedMesh> starMeshes = mMesh->loadMeshFromFile("../assets/models/star.obj");
+            star->SetMeshes(starMeshes);
+        }
+    }
     // ボートモデルをロード
-    std::vector<Boat*> boats = currentPlanet->GetBoats();
-    std::vector<LoadedMesh> boatMeshes = mMesh->loadMeshFromFile("../assets/models/boat.obj");
-    for (auto boat : boats) {
-        boat->SetMeshes(boatMeshes);
+    for (auto planet : planets)
+    {
+        std::vector<Boat*> boats = planet->GetBoats();
+        if (!boats.empty()) {
+            std::vector<LoadedMesh> boatMeshes = mMesh->loadMeshFromFile("../assets/models/boat.obj");
+            for (auto boat : boats) {
+                boat->SetMeshes(boatMeshes);
+            }
+        }
     }
     // ボートのかけらモデルをロード
-    std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
-    std::vector<LoadedMesh> boatPartsMeshes = mMesh->loadMeshFromFile("../assets/models/boatParts.obj");
-    for (auto parts : boatParts) {
-        parts->SetMeshes(boatPartsMeshes);
+    for (auto planet : planets)
+    {
+        std::vector<BoatParts*> boatParts = planet->GetBoatParts();
+        if (!boatParts.empty()) {
+            std::vector<LoadedMesh> boatPartsMeshes = mMesh->loadMeshFromFile("../assets/models/boatParts.obj");
+            for (auto parts : boatParts) {
+                parts->SetMeshes(boatPartsMeshes);
+            }
+        }
+    }
+    // クリスタルモデルをロード
+    for (auto planet : planets)
+    {
+        std::vector<Crystal*> crystals = planet->GetCrystals();
+        if (!crystals.empty()) {
+            std::vector<LoadedMesh> crystalsMeshes = mMesh->loadMeshFromFile("../assets/models/crystals.fbx");
+            for (auto parts : crystals) {
+                parts->SetMeshes(crystalsMeshes);
+            }
+        }
     }
 
     // 時間情報
@@ -242,7 +280,6 @@ bool Game::Initialize()
 
     // 深度テストをONにして奥行きに応じて描画できるようにする（描画順ではなく、手前にあるものが上書きされて描画される）
     glEnable(GL_DEPTH_TEST);
-
 
     return true;
 }
@@ -291,6 +328,15 @@ void Game::ProcessInput()
     if (reloadPressed && !mReloadKeyPressedPrev)
     {
         std::cout << "reset" << std::endl;
+        // 惑星をYAMLから読み込み
+        if (!mLoader->loadPlanetsFromYaml("../assets/data/planets.yaml")) {
+            std::cerr << "Planet YAML load failed" << std::endl;
+        }
+        std::vector<Planet*> planets = mCurrentStage->GetPlanets();
+        for (auto planet : planets)
+        {
+            planet->Initialize();
+        }
         // プレイヤーをYAMLから読み込み
         if (!mLoader->loadPlayersFromYaml("../assets/data/players.yaml")) {
             std::cerr << "Player YAML load failed" << std::endl;
@@ -315,15 +361,94 @@ void Game::ProcessInput()
         {
             std::cerr << "keys YAML load failed" << std::endl;
         }
-        std::vector<Enemy*> enemies = GetCurrentStage()->GetPlanets()[0]->GetEnemies();
-        for (auto enemy : enemies)
+        // クリスタルをYAMLから読み込み
+        if (!mLoader->loadCrystalsFromYaml("../assets/data/Crystals.yaml"))
         {
-            std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = mCurrentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
-            if (enemyMeshesByPath.find(enemy->GetModelPath()) == enemyMeshesByPath.end())
+            std::cerr << "Crystals YAML load failed" << std::endl;
+        }
+
+        // Physics（Bullet）初期化：惑星/プレイヤー生成後に行う
+        mPhysicsSystem = std::make_unique<PhysicsSystem>(this);
+        mMesh = std::make_unique<Mesh>();
+
+        // プレイヤーモデルをロード
+        for (auto player : mPlayers) {
+            std::string path = "../assets/models/player.obj";
+            std::vector<LoadedMesh> playerMeshes = mMesh->loadMeshFromFile(path.c_str());
+            player->SetMeshes(playerMeshes);
+        }
+        // 惑星モデルをロード
+        for (auto planet : planets)
+        {
+            std::unordered_map<std::string, std::vector<LoadedMesh>> planetMeshesByPath = mCurrentStage->GetPlanetMeshesByPath();
+            if (planetMeshesByPath.find(planet->GetModelPath()) == planetMeshesByPath.end())
             {
+                std::string path = "../assets/models/" + planet->GetModelPath();
+                auto planetMeshes = mMesh->loadMeshFromFile(path.c_str());
+                mCurrentStage->AddPlanetMesh(planet->GetModelPath(), planetMeshes);
+            }
+        }
+        // 敵モデルをロード
+        for (auto planet : planets) {
+            std::vector<Enemy*> enemies = planet->GetEnemies();
+            for (auto enemy : enemies)
+            {
+                std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = mCurrentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
                 std::string path = "../assets/models/" + enemy->GetModelPath();
                 auto enemyMeshes = mMesh->loadMeshFromFile(path.c_str());
                 mCurrentStage->GetPlanets()[0]->AddEnemyMesh(enemy->GetModelPath(), enemyMeshes);
+            }
+        }
+        // Planet* currentPlanet = mPlayers[0]->GetCurrentPlanet();
+        // 鍵モデルをロード
+        for (auto planet : planets)
+        {
+            Key* key = planet->GetKey();
+            if (key) {
+                std::vector<LoadedMesh> keyMeshes = mMesh->loadMeshFromFile("../assets/models/key.obj");
+                key->SetMeshes(keyMeshes);
+            }
+        }
+        // スターモデルをロード
+        for (auto planet : planets)
+        {
+            Star* star = planet->GetStar();
+            if (star) {
+                std::vector<LoadedMesh> starMeshes = mMesh->loadMeshFromFile("../assets/models/star.obj");
+                star->SetMeshes(starMeshes);
+            }
+        }
+        // ボートモデルをロード
+        for (auto planet : planets)
+        {
+            std::vector<Boat*> boats = planet->GetBoats();
+            if (!boats.empty()) {
+                std::vector<LoadedMesh> boatMeshes = mMesh->loadMeshFromFile("../assets/models/boat.obj");
+                for (auto boat : boats) {
+                    boat->SetMeshes(boatMeshes);
+                }
+            }
+        }
+        // ボートのかけらモデルをロード
+        for (auto planet : planets)
+        {
+            std::vector<BoatParts*> boatParts = planet->GetBoatParts();
+            if (!boatParts.empty()) {
+                std::vector<LoadedMesh> boatPartsMeshes = mMesh->loadMeshFromFile("../assets/models/boatParts.obj");
+                for (auto parts : boatParts) {
+                    parts->SetMeshes(boatPartsMeshes);
+                }
+            }
+        }
+        // クリスタルモデルをロード
+        for (auto planet : planets)
+        {
+            std::vector<Crystal*> crystals = planet->GetCrystals();
+            if (!crystals.empty()) {
+                std::vector<LoadedMesh> crystalsMeshes = mMesh->loadMeshFromFile("../assets/models/crystals.fbx");
+                for (auto parts : crystals) {
+                    parts->SetMeshes(crystalsMeshes);
+                }
             }
         }
     }
@@ -353,7 +478,7 @@ void Game::ProcessInput()
 void Game::UpdateGame()
 {
     double currentTime = glfwGetTime(); 
-    float deltaTime = static_cast<float>(currentTime - mLastTime);
+    float deltaTime = std::min(0.04f, static_cast<float>(currentTime - mLastTime));
     mLastTime = currentTime;
 
     for (const auto& actor_unique : mActors) {
@@ -602,43 +727,63 @@ void Game::GenerateOutput()
         // 鍵描画
         Planet* currentPlanet = mPlayers[0]->GetCurrentPlanet();
         Key* key = currentPlanet->GetKey();
-        if (key->GetCollectableComponent()->GetIsActive())
-        {
-            const float keyScale = 2.0f;
-            const glm::vec3 keyColor(0.85f, 0.65f, 0.13f); // 金色
-            glm::vec3 keyUp = glm::normalize(key->GetPos() - currentPlanet->GetCenter());
-            drawCharacter(key->GetPos(), keyScale, keyColor, keyUp, 0.0f, key->GetMeshes(), &keyColor);
+        if (key) {
+            if (key->GetCollectableComponent()->GetIsActive())
+            {
+                const float keyScale = 2.0f;
+                const glm::vec3 keyColor(0.85f, 0.65f, 0.13f); // 金色
+                glm::vec3 keyUp = glm::normalize(key->GetPos() - currentPlanet->GetCenter());
+                drawCharacter(key->GetPos(), keyScale, keyColor, keyUp, 0.0f, key->GetMeshes(), &keyColor);
+            }
         }
 
         std::vector<Boat*> boats = currentPlanet->GetBoats();
         // ボート描画
-        for (auto boat : boats) {
-            if (boat->GetIsActive())
-            {
-                const float boatScale = 0.8f;
-                glm::vec3 boatUp = glm::normalize(boat->GetPos() - currentPlanet->GetCenter());
-                drawCharacter(boat->GetPos(), boatScale, glm::vec3(0.4f, 0.25f, 0.1f), boatUp, 0.0f, boat->GetMeshes());
+        if (!boats.empty()) {
+            for (auto boat : boats) {
+                if (boat->GetIsActive())
+                {
+                    const float boatScale = 0.8f;
+                    glm::vec3 boatUp = glm::normalize(boat->GetPos() - currentPlanet->GetCenter());
+                    drawCharacter(boat->GetPos(), boatScale, glm::vec3(0.4f, 0.25f, 0.1f), boatUp, 0.0f, boat->GetMeshes());
+                }
             }
         }
 
         // ボートのかけら描画
         std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
-        for (auto parts : boatParts) { 
-            if (parts->GetCollectableComponent()->GetIsActive()) {
-                const float boatPartsScale = 0.5f;
-                glm::vec3 boatPartsUp = glm::normalize(parts->GetPos() - currentPlanet->GetCenter());
-                drawCharacter(parts->GetPos(), boatPartsScale, glm::vec3(0.4f, 0.25f, 0.1f), boatPartsUp, 0.0f, parts->GetMeshes());
+        if (!boatParts.empty()) {
+            for (auto parts : boatParts) { 
+                if (parts->GetCollectableComponent()->GetIsActive()) {
+                    const float boatPartsScale = 0.25f;
+                    glm::vec3 boatPartsUp = glm::normalize(parts->GetPos() - currentPlanet->GetCenter());
+                    drawCharacter(parts->GetPos(), boatPartsScale, glm::vec3(0.4f, 0.25f, 0.1f), boatPartsUp, 0.0f, parts->GetMeshes());
+                }
             }
         }
 
         // スター描画
         Star* star = currentPlanet->GetStar();
+        if (star) {
         if (star->GetIsActive())
-        {
-            glm::vec3 starUp = glm::normalize(star->GetPos() - currentPlanet->GetCenter());
-            glm::vec3 starColor(1.0f, 0.9f, 0.2f);
-            const float starScale = 0.3f;
-            drawCharacter(star->GetPos(), starScale, starColor, starUp, 0.0f, star->GetMeshes());
+            {
+                glm::vec3 starUp = glm::normalize(star->GetPos() - currentPlanet->GetCenter());
+                glm::vec3 starColor(1.0f, 0.9f, 0.2f);
+                const float starScale = 0.3f;
+                drawCharacter(star->GetPos(), starScale, starColor, starUp, 0.0f, star->GetMeshes());
+            }
+        }
+
+        // クリスタル描画
+        std::vector<Crystal*> crystals = currentPlanet->GetCrystals();
+        if (!crystals.empty()) {
+            for (auto crystal : crystals) { 
+                if (crystal->GetDestructibleComponent()->GetIsActive()) {
+                    const float crystalScale = 0.0075f;
+                    glm::vec3 crystalUp = glm::normalize(crystal->GetPos() - currentPlanet->GetCenter());
+                    drawCharacter(crystal->GetPos(), crystalScale, glm::vec3(0.4f, 0.25f, 0.1f), crystalUp, 0.0f, crystal->GetMeshes());
+                }
+            }
         }
 
         mUIRenderer->DrawTextBox(fbWidth, fbHeight, 40, 400, 200, 0, 0, {0.0f, 0.0f, 0.0f}, "こんにちは");
