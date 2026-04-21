@@ -120,6 +120,7 @@ void Enemy::UpdateActor(float deltaTime) {
                     mIsPreparing = false;
                     mBreakCount = mBreakCountMax;
                     GetGame()->GetAudioSystem()->PlaySE("breakSE");
+                    GetGame()->SetHitStopTimer(0.6f);
                 } else {
                     GetGame()->GetAudioSystem()->PlaySE("destroySE");
                 }

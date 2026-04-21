@@ -368,12 +368,15 @@ void Player::UpdateActor(float deltaTime)
                 mAttackIndex = 0;
                 for (Enemy* enemy : hitEnemies)
                 {
-                    if (enemy->GetOnGround())
+                    if (enemy->GetOnGround()) {
                         enemy->SetIsLaunched(true);
+                    }
                 }
+                applyAttackLocksFromCooldown();
+            } else {
+                applyAttackLocksFromCooldown();
+                GetGame()->GetAudioSystem()->PlaySE("attackSE");
             }
-            applyAttackLocksFromCooldown();
-            GetGame()->GetAudioSystem()->PlaySE("attackSE");
         }
         else
         {

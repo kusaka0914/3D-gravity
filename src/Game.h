@@ -23,6 +23,7 @@ public:
     void RemoveAllActor() { for(int i = 0; i < mActors.size(); i++) mActors.pop_back(); }
     void AddPlayer(class Player* player) { mPlayers.emplace_back(player); };
     void RemoveAllPlayer() { for(int i = 0; i < mPlayers.size(); i++) mPlayers.pop_back(); }
+    void SetHitStopTimer(float hitStopTimer) { mHitStopTimer = hitStopTimer; }
 
     GLFWwindow* GetWindow() const { return mWindow; }
     SDL_GameController* GetSdlController() const { return mSdlController;}
@@ -35,6 +36,7 @@ public:
     class Shader* GetShader() const { return mShader.get(); }
     class PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }
     class Mesh* GetMesh() const { return mMesh.get(); }
+    float GetHitStopTimer() const { return mHitStopTimer; }
 
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }
@@ -69,6 +71,7 @@ private:
     Stage* mCurrentStage;
 
     int mCurrentStageNum;
+    float mHitStopTimer;
 
     double mLastTime;
 

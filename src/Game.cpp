@@ -43,6 +43,7 @@ Game::Game()
     :mReloadKeyPressedPrev(false)
     ,mCurrentStageNum(0) 
     ,mIsPlayer2Joined(false)
+    ,mHitStopTimer(-1.0f)
 {
     
 }
@@ -236,6 +237,10 @@ void Game::UpdateGame()
 {
     double currentTime = glfwGetTime(); 
     float deltaTime = std::min(0.04f, static_cast<float>(currentTime - mLastTime));
+    if (mHitStopTimer >= 0.0f) {
+        mHitStopTimer-= deltaTime;
+        deltaTime = 0.0f;
+    }
     mLastTime = currentTime;
 
     for (const auto& actor_unique : mActors) {
