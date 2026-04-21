@@ -8,7 +8,7 @@ Boat::Boat(Game* game)
     , mStartPlanet(0)
     , mDestPlanet(1)
     , mIsMoving(false)
-    , mIsActive(false)
+    , mIsActive(true)
     , mTransitionTimer(0.0f)
     , mProgress(0.0f)
     , mPos({0.0f, 8.0f, 0.0f})
@@ -24,14 +24,13 @@ void Boat::UpdateActor(float deltaTime)
     // 移動中
     if (GetIsMoving())
     {   
-        Planet* from = mPlanets[mStartPlanet];
         Planet* dest = mPlanets[mDestPlanet];
-        glm::vec3 toDest = glm::normalize(dest->GetCenter() - from->GetCenter());
-        mDestPos = dest->GetCenter() - toDest * dest->GetRadius();
-        mTransitionTimer = mTransitionTimer + deltaTime;
+        glm::vec3 toDest = glm::normalize(dest->GetCenter() - mPos);
+        mDestPos = dest->GetCenter() - toDest * (dest->GetRadius() + 3.0f);
+        mTransitionTimer += deltaTime;
 
         // ボード移動がどれくらい進んだかの割合を更新
-        float transitionDuration = 2.0f;
+        float transitionDuration = 3.0f;
         mProgress = glm::min(1.0f, mTransitionTimer / transitionDuration);
         mProgress = mProgress * mProgress * (3.0f - 2.0f * mProgress);
 

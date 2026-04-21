@@ -249,6 +249,7 @@ bool Loader::LoadBoatsFromYaml(const char* path)
 
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             boat->SetPos(pos);
+            boat->SetStartPos(pos);
 
             boat->SetPlanets(GetGame()->GetCurrentStage()->GetPlanets());
 

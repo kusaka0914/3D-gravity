@@ -48,6 +48,7 @@ Player::Player(Game* game)
     , mAttackHeightLockRemaining(-5.0f)
     , mAttackIndex(0)
     , mAirAttackIndex(0)
+    , mIsActive(true)
 {
     Stage* currentStage = GetGame()->GetCurrentStage();
     mCurrentPlanet = currentStage->GetPlanets()[0];
@@ -478,13 +479,14 @@ void Player::UpdateActor(float deltaTime)
     Key* key = mCurrentPlanet->GetKey();
     // ボートに触れたら到着先へ移動開始（ボートが出現した惑星にいる時のみ）
     for (auto boat : boats) {
-        if (!boat->GetIsMoving() && key->GetCollectableComponent()->GetIsObtained() && mCurrentPlanetNum == boat->GetCurrentPlanetNum())
+        if (!boat->GetIsMoving() && boat->GetIsActive() && mCurrentPlanetNum == boat->GetCurrentPlanetNum())
         {
             float distToBoat = glm::length(mPos - boat->GetPos());
             const float boatTouchRadius = 1.8f;
             if (distToBoat < boatTouchRadius)
             {
                 boat->SetIsMoving(true);
+                mIsActive = false;
             }
         }
     }
@@ -494,10 +496,7 @@ void Player::UpdateActor(float deltaTime)
         bool moving = boat->GetIsMoving();
         if (moving) {
             // ボートと一緒にプレイヤーを移動
-            glm::vec3 boatPos = boat->GetPos();
-            glm::vec3 boatUpVec = boat->GetUpVec();
-            const float playerHeightAboveBoat = 0.7f;
-            mPos = boatPos + boatUpVec * playerHeightAboveBoat;
+            mPos = boat->GetPos();
         }
         float progress = boat->GetProgress();
         // 到着処理
@@ -511,13 +510,8 @@ void Player::UpdateActor(float deltaTime)
             mVelocity = glm::vec3(0.0f);
             mRestartPos = boat->GetDestPos();
             mRestartPlanetIndex = boat->GetDestPlanet();
-            // if (bulletGhost)
-            // {
-            //     btTransform t;
-            //     t.setIdentity();
-            //     t.setOrigin(btVector3(players[0].pos.x, players[0].pos.y, players[0].pos.z));
-            //     bulletGhost->setWorldTransform(t);
-            // }
+            mIsActive = true;
+            glm::vec3 boatUpVec = boat->GetUpVec();
         }
     }
 

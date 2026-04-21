@@ -22,6 +22,7 @@ public:
     void SetTransitionTimer(float transitionTimer) { mTransitionTimer = transitionTimer; }
     void SetProgress(float progress) { mProgress = progress; }
     void SetPos(const glm::vec3& pos) { mPos = pos; }
+    void SetStartPos(const glm::vec3& startPos) { mStartPos = startPos; }
     void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
     void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
 

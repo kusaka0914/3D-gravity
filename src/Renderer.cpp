@@ -150,8 +150,10 @@ void Renderer::Draw() {
 
         const float playerScale = 0.25f;
         // 1Pの描画
-        glm::vec3 up0 = glm::normalize(players[0]->GetPos() - planets[players[0]->GetCurrentPlanetNum()]->GetCenter());
-        drawCharacter(players[0]->GetPos(), playerScale, glm::vec3(0.0f, 0.0f, 1.0f), up0, players[0]->GetFacingYaw(), players[0]->GetMeshes());
+        if (players[0]->GetIsActive()) {
+            glm::vec3 up0 = glm::normalize(players[0]->GetPos() - planets[players[0]->GetCurrentPlanetNum()]->GetCenter());
+            drawCharacter(players[0]->GetPos(), playerScale, glm::vec3(0.0f, 0.0f, 1.0f), up0, players[0]->GetFacingYaw(), players[0]->GetMeshes());
+        }
 
         // 2Pの描画
         if (isPlayer2Joined)

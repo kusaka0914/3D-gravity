@@ -34,6 +34,7 @@ public:
     void SetHp(float hp) { mHp = hp; }
     void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
     void SetIsDamagePrev(bool isDamagePrev) { mIsDamagePrev = isDamagePrev; }
+    void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetDamageTimer(float damageTimer) { mDamageTimer = damageTimer; }
     void SetAttackCooldownRemaining(float attackCooldownRemaining) { mAttackCooldownRemaining = attackCooldownRemaining; }
     void SetAttackMoveLockRemaining(float attackMoveLockRemaining) { mAttackMoveLockRemaining = attackMoveLockRemaining; }
@@ -61,6 +62,7 @@ public:
     float GetHp() const { return mHp; }
     bool GetIsDamaged() const { return mIsDamaged; }
     bool GetIsDamagePrev() const { return mIsDamagePrev; }
+    bool GetIsActive() const { return mIsActive; }
     float GetDamageTimer() const { return mDamageTimer; }
     float GetAttackCooldownRemaining() const { return mAttackCooldownRemaining; }
     float GetAttackMoveLockRemaining() const { return mAttackMoveLockRemaining; }
@@ -123,6 +125,7 @@ private:
     bool mAttackPressedPrev; 
     bool mCounterPressed;
     bool mCounterPressedPrev;
+    bool mIsActive;
 
     std::vector<struct LoadedMesh> mMeshes;
 };
