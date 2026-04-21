@@ -10,6 +10,7 @@ public:
     AudioSystem(class Game* game);
     void Initialize();
     void Update();
+    void Shutdown();
     void PlayBGM(const char* name);
     void PlaySE(const char* name);
 

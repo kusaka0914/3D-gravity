@@ -45,6 +45,8 @@ private:
     void ProcessInput();
     void UpdateGame();
     void GenerateOutput();
+    void LoadData();
+    void LoadModel();
 
     GLFWwindow* mWindow;
     SDL_GameController* mSdlController;
@@ -58,6 +60,7 @@ private:
 
     std::unique_ptr<class AudioSystem> mAudioSystem;
     std::unique_ptr<class UIRenderer> mUIRenderer;
+    std::unique_ptr<class Renderer> mRenderer;
     std::unique_ptr<class Shader> mShader;
     std::unique_ptr<class PhysicsSystem> mPhysicsSystem;
     std::unique_ptr<class Loader> mLoader;

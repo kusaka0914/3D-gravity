@@ -22,9 +22,10 @@ add_executable(engine
     src/Loader.cpp
     src/Main.cpp
     src/Mesh.cpp
+    src/PhysicsSystem.cpp
     src/Planet.cpp
     src/Player.cpp
-    src/PhysicsSystem.cpp
+    src/Renderer.cpp
     src/Shader.cpp
     src/Stage.cpp
     src/Star.cpp

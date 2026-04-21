@@ -141,6 +141,12 @@ void AudioSystem::Update()
     }
 }
 
+void AudioSystem::Shutdown() {
+    // 再生中の曲を止める（オーディオは開いたままだから他の曲を流せる）
+    Mix_HaltMusic();
+    Mix_CloseAudio();
+}
+
 void AudioSystem::PlayBGM(const char* name) {
     auto it = mBGMList.find(name);
     Mix_Music* BGM = (it != mBGMList.end()) ? it->second : nullptr;

@@ -17,7 +17,43 @@ Loader::Loader(Game* game)
 
 }
 
-bool Loader::loadPlayersFromYaml(const char* path) {
+bool Loader::LoadDataFromYaml() {
+    // 惑星をYAMLから読み込み
+    if (!LoadPlanetsFromYaml("../assets/data/planets.yaml")) {
+        std::cerr << "Planet YAML Load failed" << std::endl;
+    }
+    // プレイヤーをYAMLから読み込み
+    if (!LoadPlayersFromYaml("../assets/data/players.yaml")) {
+        std::cerr << "Player YAML Load failed" << std::endl;
+    }
+    // 敵をYAMLから読み込み
+    if (!LoadEnemiesFromYaml("../assets/data/enemies.yaml"))
+    {
+        std::cerr << "Enemy YAML Load failed" << std::endl;
+    }
+    // ボートをYAMLから読み込み
+    if (!LoadBoatsFromYaml("../assets/data/boats.yaml"))
+    {
+        std::cerr << "Boats YAML Load failed" << std::endl;
+    }
+    // ボートのかけらをYAMLから読み込み
+    if (!LoadBoatPartsFromYaml("../assets/data/boatParts.yaml"))
+    {
+        std::cerr << "BoatParts YAML Load failed" << std::endl;
+    }
+    // 鍵をYAMLから読み込み
+    if (!LoadKeysFromYaml("../assets/data/keys.yaml"))
+    {
+        std::cerr << "Keys YAML Load failed" << std::endl;
+    }
+    // クリスタルをYAMLから読み込み
+    if (!LoadCrystalsFromYaml("../assets/data/Crystals.yaml"))
+    {
+        std::cerr << "Crystals YAML Load failed" << std::endl;
+    }
+}
+
+bool Loader::LoadPlayersFromYaml(const char* path) {
     try {
         YAML::Node root = YAML::LoadFile(path);
         if (!root["players"] || !root["players"].IsSequence()) {
@@ -59,7 +95,7 @@ bool Loader::loadPlayersFromYaml(const char* path) {
     }
 }
 
-bool Loader::loadEnemiesFromYaml(const char* path) {
+bool Loader::LoadEnemiesFromYaml(const char* path) {
     try {
         int currentPlanetNum = 0;
         YAML::Node root = YAML::LoadFile(path);
@@ -114,7 +150,7 @@ bool Loader::loadEnemiesFromYaml(const char* path) {
     }
 }
 
-bool Loader::loadPlanetsFromYaml(const char* path) {
+bool Loader::LoadPlanetsFromYaml(const char* path) {
     try {
         YAML::Node root = YAML::LoadFile(path);
         // 失敗処理
@@ -170,6 +206,8 @@ bool Loader::loadPlanetsFromYaml(const char* path) {
             Stage* currentStage = GetGame()->GetStages()[stageNum];
             // 惑星配列に追加
             planet->SetCurrentStage(currentStage);
+
+            planet->Initialize();
             Planet* planet_ptr = planet.get();
             GetGame()->AddActor(std::move(planet));
             currentStage->AddPlanet(planet_ptr);
@@ -181,7 +219,7 @@ bool Loader::loadPlanetsFromYaml(const char* path) {
     }
 }
 
-bool Loader::loadBoatsFromYaml(const char* path)
+bool Loader::LoadBoatsFromYaml(const char* path)
 {
     try {
         int currentPlanetNum = 0;
@@ -225,7 +263,7 @@ bool Loader::loadBoatsFromYaml(const char* path)
     }
 }
 
-bool Loader::loadBoatPartsFromYaml(const char* path)
+bool Loader::LoadBoatPartsFromYaml(const char* path)
 {
     try {
         int currentPlanetNum = 0;
@@ -261,7 +299,7 @@ bool Loader::loadBoatPartsFromYaml(const char* path)
     }
 }
 
-bool Loader::loadKeysFromYaml(const char* path)
+bool Loader::LoadKeysFromYaml(const char* path)
 {
     try {
         int currentPlanetNum = 0;
@@ -297,7 +335,7 @@ bool Loader::loadKeysFromYaml(const char* path)
     }
 }
 
-bool Loader::loadCrystalsFromYaml(const char* path)
+bool Loader::LoadCrystalsFromYaml(const char* path)
 {
     try {
         int currentPlanetNum = 0;

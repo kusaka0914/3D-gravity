@@ -7,16 +7,18 @@
 class Loader {
 public:
     Loader(class Game* game);
-    bool loadPlayersFromYaml(const char* path);
-    bool loadEnemiesFromYaml(const char* path);
-    bool loadPlanetsFromYaml(const char* path);
-    bool loadBoatsFromYaml(const char* path);
-    bool loadBoatPartsFromYaml(const char* path);
-    bool loadKeysFromYaml(const char* path);
-    bool loadCrystalsFromYaml(const char* path);
+    bool LoadDataFromYaml();
     
     Game* GetGame() const { return mGame; }
 private:
+    bool LoadPlayersFromYaml(const char* path);
+    bool LoadEnemiesFromYaml(const char* path);
+    bool LoadPlanetsFromYaml(const char* path);
+    bool LoadBoatsFromYaml(const char* path);
+    bool LoadBoatPartsFromYaml(const char* path);
+    bool LoadKeysFromYaml(const char* path);
+    bool LoadCrystalsFromYaml(const char* path);
+
     glm::vec3 CalculatePos(YAML::Node node, Planet* currentPlanet);
     Game* mGame;
 };

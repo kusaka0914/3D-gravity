@@ -15,6 +15,14 @@ UIRenderer::UIRenderer(Game* game)
     , mVertexArrays(game->GetVertexArrays())
 {}
 
+void UIRenderer::Draw() {
+    GLFWwindow* window = mGame->GetWindow();
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+
+    DrawTextBox(fbWidth, fbHeight, 40, 400, 200, 0, 0, {0.0f, 0.0f, 0.0f}, "こんにちは");
+}
+
 void UIRenderer::DrawTextBox(int fbWidth, int fbHeight, float padding, float panelWidth, float panelHeight, float panelX, float panelY, std::vector<GLfloat> panelColor, const char* message)
 {
     DrawPanel(fbWidth, fbHeight, panelWidth, panelHeight, panelX, panelY, panelColor);    
