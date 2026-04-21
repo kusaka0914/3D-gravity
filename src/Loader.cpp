@@ -133,6 +133,10 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
             float attack = node["attack"] ? node["attack"].as<float>() : 20.0f;
             enemy->SetAttack(attack);
 
+            int breakCountMax = node["breakCountMax"] ? node["breakCountMax"].as<int>() : 1;
+            enemy->SetBreakCountMax(breakCountMax);
+            enemy->SetBreakCount(breakCountMax);
+
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
             enemy->SetCurrentPlanet(currentPlanet);
 
@@ -367,7 +371,7 @@ bool Loader::LoadCrystalsFromYaml(const char* path)
             float radius = node["radius"] ? node["radius"].as<float>() : 0.0f;
             crystal->SetRadius(radius);
 
-            int count = node["count"] ? node["count"].as<int>() : 0;
+            int count = node["count"] ? node["count"].as<int>() : 1;
             crystal->GetDestructibleComponent()->SetDestroyCount(count);
 
             Crystal* crystal_ptr = crystal.get();

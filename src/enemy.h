@@ -32,6 +32,8 @@ public:
     void SetStandByAttackTimer(float standByAttackTimer) { mStandByAttackTimer = standByAttackTimer; }
     void SetIsAttack(bool isAttack) { mIsAttack = isAttack; }
     void SetSensing(float sensing) { mSensing = sensing; }
+    void SetBreakCount(int breakCount) { mBreakCount = breakCount; }
+    void SetBreakCountMax(int breakCountMax) { mBreakCountMax = breakCountMax; }
 
     class Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
     const glm::vec3& GetPos() const override { return mPos; }
@@ -78,4 +80,6 @@ private:
     float mAttackMotionTimer;
     bool mIsAttack;
     float mSensing;
+    int mBreakCount;
+    int mBreakCountMax;
 };

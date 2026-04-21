@@ -59,7 +59,9 @@ void Planet::UpdateActor(float deltaTime) {
             }
             if (isAllBoatPartsCollected && !mKey->GetCollectableComponent()->GetIsActive() && !mKey->GetCollectableComponent()->GetIsObtained())
             {
-                mKey->GetCollectableComponent()->SetIsActive(true);
+                for (auto boat : mBoats) {
+                    boat->SetIsActive(true);
+                }
             }
             break;
         }

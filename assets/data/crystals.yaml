@@ -3,8 +3,7 @@ crystals :
     theta : 79.7
     u : 1.2
     height : 0.0
-    scale : 0.0075
-    count : 1
+    scale : 0.0075 
     radius : 1.0
   - currentPlanetNum : 0
     theta : -0.35

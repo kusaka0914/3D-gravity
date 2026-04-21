@@ -120,6 +120,15 @@ void AudioSystem::Initialize()
     {
         std::cerr << "Mix_LoadWAV (destroy SE) error: " << Mix_GetError() << std::endl;
     }
+    Mix_Chunk* breakSE = Mix_LoadWAV("../assets/audio/Break.wav");
+    if (breakSE)
+    {
+        mSEList["breakSE"] = breakSE;
+    }
+    else
+    {
+        std::cerr << "Mix_LoadWAV (break SE) error: " << Mix_GetError() << std::endl;
+    }
 }
 
 void AudioSystem::Update()

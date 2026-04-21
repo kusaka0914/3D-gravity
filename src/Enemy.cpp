@@ -111,11 +111,18 @@ void Enemy::UpdateActor(float deltaTime) {
 
             mUpVec = glm::normalize(mPos - center);
             if (mIsLaunched) {
-                mVelocity += mUpVec * 5.0f;
-                mOnGround = false;
+                mBreakCount--;
                 mIsLaunched = false;
-                mStandByAttackTimer = -1.0f;
-                mIsPreparing = false;
+                if (mBreakCount <= 0) {
+                    mVelocity += mUpVec * 5.0f;
+                    mOnGround = false;
+                    mStandByAttackTimer = -1.0f;
+                    mIsPreparing = false;
+                    mBreakCount = mBreakCountMax;
+                    GetGame()->GetAudioSystem()->PlaySE("breakSE");
+                } else {
+                    GetGame()->GetAudioSystem()->PlaySE("destroySE");
+                }
             }
 
             // 重力処理
@@ -185,9 +192,6 @@ void Enemy::UpdateActor(float deltaTime) {
                 {
                     mHp = 0;
                     mIsAlive = false;
-                    // // 現在の惑星で倒した敵の位置を記録（鍵出現位置に使う）
-                    // if (e.planetIndex == mPlayers[0].planetIndex)
-                    //     lastDefeatedEnemyPos = mPos();
                     // ボス撃破でスター出現（撃破前のボスがいた場所に置く）
                     Star* star = mCurrentPlanet->GetStar();
                     if (mIsBoss)
