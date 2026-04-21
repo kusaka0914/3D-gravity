@@ -114,6 +114,8 @@ private:
     float mAttackHeightLockRemaining;
     float mAttackMotionTimer;
     float mCounterCooldownRemaining;
+    float mAttackPressTimer;
+    float mStrongAttackTimer;
 
     bool mOnGround;
     bool mIsDamaged;

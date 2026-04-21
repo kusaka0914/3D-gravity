@@ -24,7 +24,9 @@ public:
     void SetIsCountered(bool isCountered) { mIsCountered = isCountered; }
     void SetIsBoss(bool isBoss) { mIsBoss = isBoss; }
     void SetIsLaunched(bool isLaunched) { mIsLaunched = isLaunched; }
+    void SetIsStrongAttacked(bool isStrongAttacked) { mIsStrongAttacked = isStrongAttacked; }
     void SetDamageTimer(float damageTimer) { mDamageTimer = damageTimer; }
+    void SetLaunchedTimer(float launchedTimer) { mLaunchedTimer = launchedTimer; }
     void SetModelPath(const std::string& modelPath) { mModelPath = modelPath; }
     void SetScale(float scale) { mScale = scale; }
     void SetSpeed(float speed) { mSpeed = speed; }
@@ -45,6 +47,7 @@ public:
     bool GetIsBoss() const { return mIsBoss; }
     bool GetIsLaunched() const { return mIsLaunched; }
     bool GetOnGround() const { return mOnGround; }
+    bool GetIsStrongAttacked() const { return mIsStrongAttacked; }
     float GetDamageTimer() const { return mDamageTimer; }
     const std::string& GetModelPath() const { return mModelPath; }
     float GetScale() const { return mScale; }
@@ -70,6 +73,7 @@ private:
     bool mOnGround;
     bool mIsPreparing;
     bool mIsHit;
+    bool mIsStrongAttacked;
     float mDamageTimer;
     std::string mModelPath;
     float mScale;

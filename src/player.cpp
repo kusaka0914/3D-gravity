@@ -49,6 +49,8 @@ Player::Player(Game* game)
     , mAttackIndex(0)
     , mAirAttackIndex(0)
     , mIsActive(true)
+    , mAttackPressTimer(-1.0f)
+    , mStrongAttackTimer(-1.0f)
 {
     Stage* currentStage = GetGame()->GetCurrentStage();
     mCurrentPlanet = currentStage->GetPlanets()[0];
@@ -186,7 +188,7 @@ void Player::UpdateActor(float deltaTime)
     mFacingLeftVec = glm::normalize(glm::cross(mUpVec, mFacingForwardVec));
 
     // プレイヤー移動（ダメージ時、空中固定時、回避時以外）
-    if (!mIsDamaged && mAttackMoveLockRemaining <= 0.0f && mDodgeTimer <= 0.0f)
+    if (!mIsDamaged && mAttackMoveLockRemaining <= 0.0f && mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f)
     {
         glm::vec3 moveDelta = mForwardVec * mMoveForward * mMoveSpeed * deltaTime + mLeftVec * mMoveLeft * mMoveSpeed * deltaTime;
         glm::vec3 desiredPos = mPos + moveDelta;
@@ -281,7 +283,7 @@ void Player::UpdateActor(float deltaTime)
     }
 
     // 回避中・空中攻撃中は重力をかけず、終了後に通常通り落下
-    if (mDodgeTimer <= 0.0f && mAttackHeightLockRemaining <= 0.0f) {
+    if (mDodgeTimer <= 0.0f && mAttackHeightLockRemaining <= 0.0f && mAttackPressTimer < 0.0f && mStrongAttackTimer <= 0.0f) {
         glm::vec3 center = mCurrentPlanet->GetCenter();
         float radius = mCurrentPlanet->GetRadius();
         mUpVec = glm::normalize(mPos - center);
@@ -303,7 +305,7 @@ void Player::UpdateActor(float deltaTime)
     }
 
     // スティックを倒した方向を向く。移動ロック中は地上のみ向き固定、空中攻撃中は向き替え可
-    if ((mAttackMoveLockRemaining <= 0.0f) && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
+    if (mAttackMoveLockRemaining <= 0.0f && mAttackPressTimer < 0.0f && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
     {
         glm::vec3 moveDir = mForwardVec * mMoveForward + mLeftVec * mMoveLeft;
         float len = glm::length(moveDir);
@@ -318,26 +320,26 @@ void Player::UpdateActor(float deltaTime)
     // 攻撃
     const float attackRange = 1.8f;
     const float attackAngle = 0.8f;
-    bool canAttack = mAttackPressed && !mAttackPressedPrev && mAttackCooldownRemaining <= 0.0f;
-    if (canAttack || (mAirAttackIndex > 0 && mAttackMotionTimer < 0))
+    bool canAttack = mAttackPressed && !mAttackPressedPrev && mAttackCooldownRemaining <= 0.0f && mOnGround || mStrongAttackTimer >= 0.0f;
+    if (canAttack)
     {
         mAttackStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
         mVelocity = glm::vec3(0.0f);
-        mAttackMotionTimer = 0.3f;
 
         auto applyAttackLocksFromCooldown = [this]() {
             mAttackMoveLockRemaining = std::min(mAttackCooldownRemaining, 0.5f) + 0.2f;
             mAttackDodgeLockRemaining = std::max(0.0f, mAttackMoveLockRemaining - 0.5f);
             if (!mOnGround)
             {
-                mAttackCooldownRemaining = 0.2f;
-                mAirAttackIndex++;
-                if (mAirAttackIndex == 5) {
-                    mAirAttackIndex = 0;
-                }
-                if (mAttackHeightLockRemaining <= -1.0f)
-                    mAttackHeightLockRemaining = 1.5f;
+                // mAttackCooldownRemaining = 0.2f;
+                // mAirAttackIndex++;
+                // if (mAirAttackIndex == 5) {
+                //     mAirAttackIndex = 0;
+                // }
+                // if (mAttackHeightLockRemaining <= -1.0f)
+                //     mAttackHeightLockRemaining = 1.5f;
             } else {
+                mAttackMotionTimer = 0.3f;
                 mAirAttackIndex = 0;
             }
         };
@@ -363,6 +365,13 @@ void Player::UpdateActor(float deltaTime)
 
             mAttackCooldownRemaining = 0.3f;
             mAttackIndex++;
+            float strongAttackTimerNext = mStrongAttackTimer - deltaTime;
+            if (mStrongAttackTimer >= 0.0f && strongAttackTimerNext <= 0.0f) {
+                for (Enemy* enemy : hitEnemies) {
+                    enemy->SetIsStrongAttacked(true);
+                    enemy->SetLaunchedTimer(-1.0f);
+                }
+            }
             if (mAttackIndex == 3)
             {
                 mAttackIndex = 0;
@@ -442,6 +451,33 @@ void Player::UpdateActor(float deltaTime)
             mPos += -mFacingForwardVec * 5.0f * deltaTime;
         }else {
             mPos -= -mFacingForwardVec * 5.0f * deltaTime;
+        }
+    }
+
+    if (!mOnGround && mAttackPressed && !mAttackPressedPrev) {
+        mAttackPressTimer = 1.0f;
+    }
+
+    if (!mOnGround && mAttackPressed && mAttackPressedPrev) {
+        mAttackPressTimer -= deltaTime;
+        if (mAttackPressTimer >= 0.0f) {
+            mPos -= -mFacingForwardVec * 2.0f * deltaTime;
+        } else {
+            mAttackPressTimer = 0.0f;
+        }
+    } else if (!mOnGround && !mAttackPressed && mAttackPressedPrev && mAttackPressTimer <= 0.0f) {
+        mStrongAttackTimer = 0.04f;
+    } else if (!mOnGround && !mAttackPressed && !mAttackPressedPrev && mAttackPressTimer >= 0.0f) {
+        mAttackPressTimer = -1.0f;
+    }
+
+    if (mStrongAttackTimer >= 0.0f)
+    {
+        mStrongAttackTimer -= deltaTime;
+        mPos += -mFacingForwardVec * 100.0f * deltaTime;
+        if (mStrongAttackTimer <= 0.0f) {
+            mStrongAttackTimer = -1.0f;
+            mAttackPressTimer = -1.0f;
         }
     }
 

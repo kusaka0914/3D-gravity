@@ -22,6 +22,7 @@ Enemy::Enemy(Game* game)
     ,mLaunchedTimer(-1.0f)
     ,mIsAttack(false)
     ,mSensing(6.0f)
+    ,mIsStrongAttacked(false)
 {
     
 }
@@ -84,7 +85,13 @@ void Enemy::UpdateActor(float deltaTime) {
             }
 
             if (mIsDamaged) {
-                mHp -= player->GetAttack();
+                if (mIsStrongAttacked) {
+                    mHp -= player->GetAttack() * 5;
+                    GetGame()->SetHitStopTimer(0.6f);
+                    mIsStrongAttacked = false;
+                } else {
+                    mHp -= player->GetAttack();
+                }
                 if (mHp <= 0) {
                     mDamageTimer = 1.0f;
                     mHp = 0;
@@ -99,7 +106,7 @@ void Enemy::UpdateActor(float deltaTime) {
                 mHp -= player->GetAttack() * 2.0f;
                 if (mHp <= 0)
                     mHp = 0;
-                    GetGame()->GetAudioSystem()->PlaySE("DefeatSE");
+                    GetGame()->GetAudioSystem()->PlaySE("defeatSE");
                 mIsCountered = false;
             }
 

@@ -4,6 +4,7 @@
 
 AudioSystem::AudioSystem(Game* game)
     : mGame(game)
+    , mCurrentBgmPlanetIndex(2)
 {
     Initialize();
 }

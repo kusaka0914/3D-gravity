@@ -35,16 +35,20 @@ void Renderer::Draw() {
     Planet* currentPlanet = players[0]->GetCurrentPlanet();
     std::vector<Boat*> boats = currentPlanet->GetBoats();
     glm::mat4 view;
-    for (auto boat : boats) {
-        Key* key = currentPlanet->GetKey();
-        if (boat->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
-            view = boat->GetFocusComponent()->GetFocusView();
-        } else if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
-            view = key->GetFocusComponent()->GetFocusView();
+    if (!boats.empty()) {
+        for (auto boat : boats) {
+            Key* key = currentPlanet->GetKey();
+            if (boat->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
+                view = boat->GetFocusComponent()->GetFocusView();
+            } else if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
+                view = key->GetFocusComponent()->GetFocusView();
+            }
+            else {
+                view = players[0]->getPlayerView();
+            }
         }
-        else {
-            view = players[0]->getPlayerView();
-        }
+    } else {
+        view = players[0]->getPlayerView();
     }
     glm::mat4 view2P = isPlayer2Joined ? players[1]->getPlayerView() : view;
 
