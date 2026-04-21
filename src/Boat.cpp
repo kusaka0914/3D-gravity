@@ -2,6 +2,7 @@
 #include "Planet.h"
 #include "Stage.h"
 #include "Game.h"
+#include "FocusComponent.h"
 
 Boat::Boat(Game* game)
     : Actor(game)
@@ -17,12 +18,15 @@ Boat::Boat(Game* game)
     , mUpVec(0.0f, 1.0f, 0.0f)
 {
     mCurrentPlanetNum = mStartPlanet;
+    std::unique_ptr<FocusComponent> focusComponent = std::make_unique<FocusComponent>(this, 100);
+    mFocusComponent = focusComponent.get();
+    AddComponent(std::move(focusComponent));
 }
 
 void Boat::UpdateActor(float deltaTime)
 {
     // 移動中
-    if (GetIsMoving())
+    if (mIsMoving)
     {   
         Planet* dest = mPlanets[mDestPlanet];
         glm::vec3 toDest = glm::normalize(dest->GetCenter() - mPos);

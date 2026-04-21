@@ -4,23 +4,28 @@
 #include "Game.h"
 #include "Player.h"
 #include "Boat.h"
+#include "FocusComponent.h"
 
 Key::Key(Game* game)
     : Actor(game)
     , mPos({0.0f, 8.0f, 0.0f})
+    , mIsActive(false)
 {
-    std::unique_ptr<CollectableComponent> collectableComponent = std::make_unique<CollectableComponent>(this, 100, false);
+    std::unique_ptr<CollectableComponent> collectableComponent = std::make_unique<CollectableComponent>(this, 100);
     mCollectableComponent = collectableComponent.get();
     AddComponent(std::move(collectableComponent));
+    std::unique_ptr<FocusComponent> focusComponent = std::make_unique<FocusComponent>(this, 100);
+    mFocusComponent = focusComponent.get();
+    AddComponent(std::move(focusComponent));
 }
 
 void Key::UpdateActor(float deltaTime)
 {
-    // mUpVec = glm::normalize(mPos - currentPlanet->GetCenter());
     if (mCollectableComponent->GetIsObtained()) {
+        mCollectableComponent->SetIsObtained(false);
         std::vector<Boat*> boats = mCurrentPlanet->GetBoats();
         for (auto boat : boats) {
-            boat->SetIsActive(true);
+            boat->GetFocusComponent()->SetFocusTimer(3.0f);
         }
     }
 }

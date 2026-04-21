@@ -7,6 +7,7 @@
 #include "Star.h"
 #include "BoatParts.h"
 #include "Crystal.h"
+#include "FocusComponent.h"
 #include <cmath>
 
 Planet::Planet(Game* game)
@@ -16,6 +17,8 @@ Planet::Planet(Game* game)
     , mColor(1.0f)
     , mModelPath("planet.obj")
     , mKey(nullptr)
+    , mIsAllEnemiesDead(false)
+    , mIsAllBoatPartsCollected(false)
 {
     
 }
@@ -34,33 +37,39 @@ void Planet::UpdateActor(float deltaTime) {
     switch(mKeySpawnCondition) {
         case KeySpawnCondition::AllEnemiesDead: {
             // 今いる惑星の敵を全て倒したら鍵を出現させる
-            bool isAllEnemiesDead = true;
-            for (auto enemy : mEnemies) {
-                if (enemy->GetIsAlive())
-                {
-                    isAllEnemiesDead = false;
-                    break;
+            if (!mIsAllEnemiesDead) {
+                mIsAllEnemiesDead = true;
+                for (auto enemy : mEnemies) {
+                    if (enemy->GetIsAlive())
+                    {
+                        mIsAllEnemiesDead = false;
+                        break;
+                    }
                 }
-            }
-            if (isAllEnemiesDead && !mKey->GetCollectableComponent()->GetIsActive() && !mKey->GetCollectableComponent()->GetIsObtained())
-            {
-                mKey->GetCollectableComponent()->SetIsActive(true);
+                if (mIsAllEnemiesDead && !mKey->GetIsActive() && !mKey->GetCollectableComponent()->GetIsObtained())
+                {
+                    mKey->GetFocusComponent()->SetFocusTimer(3.0f);
+                    mIsAllEnemiesDead = true;
+                }
             }
             break;
         }
         case KeySpawnCondition::AllBoatPartsCollected: {
-            bool isAllBoatPartsCollected = true;
-            for (auto parts : mBoatParts) {
-                if (parts->GetCollectableComponent()->GetIsActive())
-                {
-                    isAllBoatPartsCollected = false;
-                    break;
+            if (!mIsAllBoatPartsCollected) {
+                mIsAllBoatPartsCollected = true;
+                for (auto parts : mBoatParts) {
+                    if (parts->GetIsActive())
+                    {
+                        mIsAllBoatPartsCollected = false;
+                        break;
+                    }
                 }
-            }
-            if (isAllBoatPartsCollected && !mKey->GetCollectableComponent()->GetIsActive() && !mKey->GetCollectableComponent()->GetIsObtained())
-            {
-                for (auto boat : mBoats) {
-                    boat->SetIsActive(true);
+                if (mIsAllBoatPartsCollected && !mKey->GetIsActive() && !mKey->GetCollectableComponent()->GetIsObtained())
+                {
+                    for (auto boat : mBoats) {
+                        boat->GetFocusComponent()->SetFocusTimer(3.0f);
+                    }
+                    mIsAllBoatPartsCollected = true;
                 }
             }
             break;

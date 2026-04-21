@@ -13,7 +13,7 @@ public:
     void UpdateActor(float deltaTime) override;
 
     void SetPos(glm::vec3& pos) { mPos = pos; }
-    void SetIsActive(bool isActive) { mIsActive = isActive; }
+    void SetIsActive(bool isActive) override { mIsActive = isActive; }
     void SetIsObtained(bool isObtained) { mIsObtained = isObtained; }
     void SetCurrentPlanet(int currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }

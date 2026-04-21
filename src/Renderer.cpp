@@ -10,6 +10,7 @@
 #include "Star.h"
 #include "VertexArray.h"
 #include "Game.h"
+#include "FocusComponent.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -31,7 +32,20 @@ void Renderer::Draw() {
     std::vector<Player*> players = mGame->GetPlayers();
     bool isPlayer2Joined = mGame->GetIsPlayer2Joined();
 
-    glm::mat4 view = players[0]->getPlayerView();
+    Planet* currentPlanet = players[0]->GetCurrentPlanet();
+    std::vector<Boat*> boats = currentPlanet->GetBoats();
+    glm::mat4 view;
+    for (auto boat : boats) {
+        Key* key = currentPlanet->GetKey();
+        if (boat->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
+            view = boat->GetFocusComponent()->GetFocusView();
+        } else if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
+            view = key->GetFocusComponent()->GetFocusView();
+        }
+        else {
+            view = players[0]->getPlayerView();
+        }
+    }
     glm::mat4 view2P = isPlayer2Joined ? players[1]->getPlayerView() : view;
 
     glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
@@ -251,7 +265,7 @@ void Renderer::Draw() {
         Planet* currentPlanet = players[0]->GetCurrentPlanet();
         Key* key = currentPlanet->GetKey();
         if (key) {
-            if (key->GetCollectableComponent()->GetIsActive())
+            if (key->GetIsActive())
             {
                 const float keyScale = 2.0f;
                 const glm::vec3 keyColor(0.85f, 0.65f, 0.13f); // 金色
@@ -277,7 +291,7 @@ void Renderer::Draw() {
         std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
         if (!boatParts.empty()) {
             for (auto parts : boatParts) { 
-                if (parts->GetCollectableComponent()->GetIsActive()) {
+                if (parts->GetIsActive()) {
                     const float boatPartsScale = 0.25f;
                     glm::vec3 boatPartsUp = glm::normalize(parts->GetPos() - currentPlanet->GetCenter());
                     drawCharacter(parts->GetPos(), boatPartsScale, glm::vec3(0.4f, 0.25f, 0.1f), boatPartsUp, 0.0f, parts->GetMeshes());
@@ -301,7 +315,7 @@ void Renderer::Draw() {
         std::vector<Crystal*> crystals = currentPlanet->GetCrystals();
         if (!crystals.empty()) {
             for (auto crystal : crystals) { 
-                if (crystal->GetDestructibleComponent()->GetIsActive()) {
+                if (crystal->GetIsActive()) {
                     glm::vec3 crystalUp = glm::normalize(crystal->GetPos() - currentPlanet->GetCenter());
                     drawCharacter(crystal->GetPos(), crystal->GetScale(), glm::vec3(0.4f, 0.25f, 0.1f), crystalUp, 0.0f, crystal->GetMeshes());
                 }

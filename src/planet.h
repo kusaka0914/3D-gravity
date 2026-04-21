@@ -77,6 +77,8 @@ private:
     std::vector<class Crystal*> mCrystals;
     class Key* mKey;
     class Star* mStar;
+    bool mIsAllEnemiesDead;
+    bool mIsAllBoatPartsCollected;
 
     KeySpawnCondition mKeySpawnCondition;
 

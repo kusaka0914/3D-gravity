@@ -18,7 +18,7 @@ public:
     void SetStartPlanet(int startPlanetNum) { mStartPlanet = startPlanetNum; }
     void SetDestPlanet(int destPlanetNum) { mDestPlanet = destPlanetNum; }
     void SetIsMoving(bool isMoving) { mIsMoving = isMoving; }
-    void SetIsActive(bool isActive) { mIsActive = isActive; }
+    void SetIsActive(bool isActive) override{ mIsActive = isActive; }
     void SetTransitionTimer(float transitionTimer) { mTransitionTimer = transitionTimer; }
     void SetProgress(float progress) { mProgress = progress; }
     void SetPos(const glm::vec3& pos) { mPos = pos; }
@@ -39,6 +39,7 @@ public:
     const glm::vec3& GetUpVec() const { return mUpVec; }
     const std::vector<class Planet*>& GetPlanets() const { return mPlanets; }
     const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
+    class FocusComponent* GetFocusComponent() const { return mFocusComponent; }
 
 private:
     class Planet* mCurrentPlanet;
@@ -55,4 +56,5 @@ private:
     glm::vec3 mUpVec;
     std::vector<class Planet*> mPlanets;
     std::vector<struct LoadedMesh> mMeshes;
+    class FocusComponent* mFocusComponent;
 };

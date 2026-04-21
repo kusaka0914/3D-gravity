@@ -209,7 +209,7 @@ glm::vec3 PhysicsSystem::CheckCollision(glm::vec3 moveDelta, glm::vec3 desiredPo
     // クリスタルとの当たり判定
     for (auto* crystal : crystals)
     {
-        if (!crystal->GetDestructibleComponent()->GetIsActive())
+        if (!crystal->GetIsActive())
             continue;
         glm::vec3 cPos = crystal->GetPos();
         glm::vec3 toDesired = desiredPos - cPos;

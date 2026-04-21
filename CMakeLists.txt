@@ -17,6 +17,7 @@ add_executable(engine
     src/Crystal.cpp
     src/DestructibleComponent.cpp
     src/Enemy.cpp
+    src/FocusComponent
     src/Game.cpp
     src/Key.cpp
     src/Loader.cpp

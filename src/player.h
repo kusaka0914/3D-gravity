@@ -34,7 +34,7 @@ public:
     void SetHp(float hp) { mHp = hp; }
     void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
     void SetIsDamagePrev(bool isDamagePrev) { mIsDamagePrev = isDamagePrev; }
-    void SetIsActive(bool isActive) { mIsActive = isActive; }
+    void SetIsActive(bool isActive) override { mIsActive = isActive; }
     void SetDamageTimer(float damageTimer) { mDamageTimer = damageTimer; }
     void SetAttackCooldownRemaining(float attackCooldownRemaining) { mAttackCooldownRemaining = attackCooldownRemaining; }
     void SetAttackMoveLockRemaining(float attackMoveLockRemaining) { mAttackMoveLockRemaining = attackMoveLockRemaining; }

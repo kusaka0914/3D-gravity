@@ -2,9 +2,8 @@
 #include "Player.h"
 #include "DestructibleComponent.h"
 
-DestructibleComponent::DestructibleComponent(Actor* owner, int updateOrder, bool isActive)
+DestructibleComponent::DestructibleComponent(Actor* owner, int updateOrder)
     : Component(owner, updateOrder)
-    , mIsActive(isActive)
     , mIsDestroyed(false)
 {
 }
@@ -12,7 +11,7 @@ DestructibleComponent::DestructibleComponent(Actor* owner, int updateOrder, bool
 void DestructibleComponent::Update(float deltaTime)
 {
     std::vector<Player*> players = GetOwner()->GetGame()->GetPlayers();
-    if (mIsActive) {
+    if (!mIsDestroyed) {
         // 攻撃中のプレイヤーが触れたら破壊
         for (auto player : players) {
             float distTo = glm::length(player->GetPos() - GetOwner()->GetPos()); 
@@ -24,8 +23,8 @@ void DestructibleComponent::Update(float deltaTime)
                 mDestroyCount--;
                 if (mDestroyCount <= 0) {
                     mDestroyCount = 0;
-                    mIsActive = false;
                     mIsDestroyed = true;
+                    GetOwner()->SetIsActive(false);
                     GetOwner()->GetGame()->GetAudioSystem()->PlaySE("destroySE");
                 }
                 mIsAttackedPrev = true;

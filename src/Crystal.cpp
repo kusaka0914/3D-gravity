@@ -9,8 +9,9 @@ Crystal::Crystal(Game* game)
     : Actor(game)
     , mPos({0.0f, 8.0f, 0.0f})
     , mRadius(1.0f)
+    , mIsActive(true)
 {
-    std::unique_ptr<DestructibleComponent> destructibleComponent = std::make_unique<DestructibleComponent>(this, 100, true);
+    std::unique_ptr<DestructibleComponent> destructibleComponent = std::make_unique<DestructibleComponent>(this, 100);
     mDestructibleComponent = destructibleComponent.get();
     AddComponent(std::move(destructibleComponent));
 }

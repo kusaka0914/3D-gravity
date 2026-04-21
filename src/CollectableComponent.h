@@ -9,15 +9,12 @@
 
 class CollectableComponent : public Component {
 public:
-    CollectableComponent(class Actor* owner, int updateOrder = 100, bool isActive = false);
+    CollectableComponent(class Actor* owner, int updateOrder = 100);
     void Update(float deltaTime) override;
 
-    void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetIsObtained(bool isObtained) { mIsObtained = isObtained; }
 
-    bool GetIsActive() const { return mIsActive; }
     bool GetIsObtained() const { return mIsObtained; }
 private:
-    bool mIsActive;
     bool mIsObtained;
 };
