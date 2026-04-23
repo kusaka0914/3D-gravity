@@ -13,7 +13,8 @@ Enemy::Enemy(Game* game)
     ,mHp(10.0f)
     ,mIsAlive(true)
     ,mOnGround(true)
-    ,mDamageTimer(-1.0f)
+    ,mDeathTimer(-1.0f)
+    ,mIsDamaged(false)
     ,mModelPath("enemy.obj")
     ,mScale(0.25f)
     ,mSpeed(2.0f)
@@ -23,6 +24,9 @@ Enemy::Enemy(Game* game)
     ,mIsAttack(false)
     ,mSensing(6.0f)
     ,mIsStrongAttacked(false)
+    ,mAttackMotionTimer(-1.0f)
+    ,mIsBroken(false)
+    ,mIsCountered(false)
 {
     
 }
@@ -31,7 +35,7 @@ void Enemy::UpdateActor(float deltaTime) {
     Actor::UpdateActor(deltaTime);
     std::vector<Player*> players = GetGame()->GetPlayers();
     
-    if (mIsAlive) {
+    if (mIsAlive && mDeathTimer <= 0.0f) {
         for(auto player : players) {
             glm::vec3 playerPos = player->GetPos();
             float distToPlayer = glm::length(playerPos - mPos);
@@ -40,9 +44,10 @@ void Enemy::UpdateActor(float deltaTime) {
             const float attackRangeMargin = 0.2f;
             bool inRangeOfPlayer = (distToPlayer <= GetRadius() + attackRangeMargin);
 
-            if(mOnGround && mDamageTimer <= 0.0f) {
+            // 敵AIの実装
+            if(mOnGround) {
                 // 追跡
-                if (distToPlayer <= mSensing && mDamageTimer <= 0.0f && !player->GetIsDamaged() && distToPlayer >= GetRadius() + 0.2f && mStandByAttackTimer <= 0.0f && mAttackMotionTimer <= 0.0f)
+                if (distToPlayer <= mSensing && !player->GetIsDamaged() && distToPlayer >= GetRadius() + 0.2f && mStandByAttackTimer <= 0.0f && mAttackMotionTimer <= 0.0f)
                 {
                     mPos += vecToPlayer * mSpeed * deltaTime;
                     float planetRadius = mCurrentPlanet->GetRadius();
@@ -85,34 +90,32 @@ void Enemy::UpdateActor(float deltaTime) {
                 } else {
                     mHp -= player->GetAttack();
                 }
-                if (mHp <= 0) {
-                    mDamageTimer = 1.0f;
-                    mHp = 0;
-                    GetGame()->GetAudioSystem()->PlaySE("defeatSE");
-                }
                 mIsDamaged = false;
             }
 
             if (mIsCountered) {
-                mStandByAttackTimer = -1.0f;
-                mDamageTimer = 0.3f;
+                mStandByAttackTimer = -1.0f; // 攻撃準備状態を解除
+                mDeathTimer = 0.3f;
                 mHp -= player->GetAttack() * 2.0f;
-                if (mHp <= 0)
-                    mHp = 0;
-                    GetGame()->GetAudioSystem()->PlaySE("defeatSE");
                 mIsCountered = false;
             }
 
-            glm::vec3 center = mCurrentPlanet->GetCenter();
-            float radius = mCurrentPlanet->GetRadius();
-            if (mOnGround) {
-                mPos = center + glm::normalize(mPos - center) * radius;
+            if (mHp <= 0) {
+                mDeathTimer = 1.0f; // 死亡時演出を開始する
+                mHp = 0;
+                GetGame()->GetAudioSystem()->PlaySE("defeatSE");
             }
 
+            // TODO: 敵にもレイキャストでの当たり判定を実装
+            glm::vec3 center = mCurrentPlanet->GetCenter();
+            float radius = mCurrentPlanet->GetRadius();
+            
             mUpVec = glm::normalize(mPos - center);
-            if (mIsLaunched) {
+            if (mIsBroken) {
+                mIsBroken = false;
                 mBreakCount--;
-                mIsLaunched = false;
+
+                // 完全破壊時に空中に打ち上げる
                 if (mBreakCount <= 0) {
                     mVelocity += mUpVec * 5.0f;
                     mOnGround = false;
@@ -128,21 +131,26 @@ void Enemy::UpdateActor(float deltaTime) {
 
             // 重力処理
             glm::vec3 prevVelocity = mVelocity;
-            if (mLaunchedTimer <= 0.0f) {
-                mPos += mVelocity * deltaTime;
+            if (mLaunchedTimer <= 0.0f && !mOnGround) {
                 mVelocity -= mUpVec * 9.8f * deltaTime;
-            } 
+                mPos += mVelocity * deltaTime;
+                if (glm::length(mPos - center) <= radius) {
+                    mOnGround = true;
+                    mVelocity = {0.0f, 0.0f, 0.0f};
+                }
+            } else {
+                mLaunchedTimer -= deltaTime;
+            }
+            
             float vPrev = dot(prevVelocity, mUpVec);
             float vNow  = dot(mVelocity, mUpVec);
 
+            // 頂点で固定開始
             if (vPrev > 0.0f && vNow <= 0.0f) {
                 mLaunchedTimer = 2.0f;
             }
 
-            if (mLaunchedTimer >= 0.0f) {
-                mLaunchedTimer -= deltaTime;
-            }
-
+            // 攻撃モーション中の移動処理
             if (mAttackMotionTimer >= 0.0f)
             {
                 mAttackMotionTimer -= deltaTime;
@@ -152,55 +160,46 @@ void Enemy::UpdateActor(float deltaTime) {
                 }else {
                     mPos -= toPlayer * 2.5f * deltaTime;
                 }
-                if (!player->GetIsDamagePrev() && inRangeOfPlayer && !mIsHit)
+                mPos = center + glm::normalize(mPos - center) * radius;
+                if (inRangeOfPlayer && !mIsHit)
                 {
-                    GetGame()->GetAudioSystem()->PlaySE("damagedSE");
-                    player->SetHp(player->GetHp() - mAttack);
-                    player->SetDamageTimer(1.0f);
                     player->SetIsDamaged(true);
+                    player->SetHp(player->GetHp() - mAttack);
                     player->SetKnockBackFrom(mPos);
                     mIsHit = true;
-                    if (player->GetHp() <= 0)
-                    {
-                        player->SetHp(0);
-                        player->SetPos(player->GetRestartPos());
-                        player->SetCurrentPlanetNum(player->GetRestartPlanetIndex());
-                        player->SetVelocity({0.0f, 0.0f, 0.0f});
-                        player->SetOnGround(true);
-                    }
                 }
             }
-
-            // 落下時に初期位置に移動
-            float dist = glm::length(mPos - center);
-            if (dist <= radius) {
-                mOnGround = true;
-                mVelocity = glm::vec3(0, 0, 0);
-            }
-        
-            if (mDamageTimer > 0.0f)
-            {
-                glm::vec3 toEnemy = glm::normalize(mPos - player->GetPos());
-                mPos += toEnemy * 3.0f * deltaTime;
-                mLaunchedTimer = 0.0f;
+        }
+    }
+    // 死亡時演出処理 
+    else if (mIsAlive && mDeathTimer > 0.0f) {
+        for(auto player : players) {
+            glm::vec3 toEnemy = glm::normalize(mPos - player->GetPos());
+            mPos += toEnemy * 3.0f * deltaTime;
+            glm::vec3 center = mCurrentPlanet->GetCenter();
+            float radius = mCurrentPlanet->GetRadius();
+            if (!mOnGround) {
+                mVelocity -= mUpVec * 9.8f * deltaTime;
                 mPos += mVelocity * deltaTime;
-                mVelocity -= mUpVec * 28.4f * deltaTime;
-                mDamageTimer -= deltaTime;
+                if (glm::length(mPos - center) <= radius) {
+                    mOnGround = true;
+                    mVelocity = {0.0f, 0.0f, 0.0f};
+                }
+            } else {
+                mPos = mCurrentPlanet->GetCenter() + glm::normalize(mPos - mCurrentPlanet->GetCenter()) * mCurrentPlanet->GetRadius();
             }
-            else
-            {
-                if (mHp <= 0)
+            mDeathTimer -= deltaTime;
+            
+            // 演出終了処理
+            if (mDeathTimer <= 0.0f) {
+                mIsAlive = false;
+                // ボス撃破でスター出現（撃破前のボスがいた場所に置く）
+                Star* star = mCurrentPlanet->GetStar();
+                if (mIsBoss)
                 {
-                    mHp = 0;
-                    mIsAlive = false;
-                    // ボス撃破でスター出現（撃破前のボスがいた場所に置く）
-                    Star* star = mCurrentPlanet->GetStar();
-                    if (mIsBoss)
-                    {
-                        star->SetIsActive(true);
-                        star->SetCurrentPlanet(mCurrentPlanetNum);
-                        star->SetPos(mPos);
-                    }
+                    star->SetIsActive(true);
+                    star->SetCurrentPlanet(mCurrentPlanetNum);
+                    star->SetPos(mPos);
                 }
             }
         }

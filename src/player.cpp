@@ -379,7 +379,7 @@ void Player::UpdateActor(float deltaTime)
                 for (Enemy* enemy : hitEnemies)
                 {
                     if (enemy->GetOnGround()) {
-                        enemy->SetIsLaunched(true);
+                        enemy->SetIsBroken(true);
                     }
                 }
                 applyAttackLocksFromCooldown();
@@ -507,6 +507,12 @@ void Player::UpdateActor(float deltaTime)
     // 空中浮遊クールダウンタイム減少
     mAttackHeightLockRemaining -= deltaTime;
 
+
+    if (mIsDamaged) {
+        mIsDamaged = false;
+        mDamageTimer = 1.0f;
+        GetGame()->GetAudioSystem()->PlaySE("damagedSE");
+    }
     // ダメージを受けた際のノックバック
     if (mDamageTimer > 0.0f)
     {
@@ -517,6 +523,15 @@ void Player::UpdateActor(float deltaTime)
     else
     {
         mIsDamaged = false;
+    }
+
+    if (mHp <= 0)
+    {
+        mHp = 80;
+        mPos = mRestartPos;
+        mCurrentPlanetNum = mRestartPlanetIndex;
+        mVelocity = {0.0f, 0.0f, 0.0f};
+        mOnGround = true;
     }
 
     std::vector<Boat*> boats = mCurrentPlanet->GetBoats();

@@ -4,16 +4,16 @@
 # speed: 移動速度（省略時 2.0）, attack: 接触時のダメージ（省略時 20.0）
 # type: boss にするとボス（撃破でスター出現）
 enemies:
-  # - theta: 0.0
-  #   u: 0.0
-  #   height : 0.0
-  #   currentPlanetNum: 0
-  #   hp: 90
-  #   modelPath: enemy.obj
-  #   scale: 0.25
-  #   speed: 1.5
-  #   attack: 10.0
-  #   breakCountMax : 1
+  - theta: 0.0
+    u: 0.0
+    height : 0.0
+    currentPlanetNum: 0
+    hp: 90
+    modelPath: enemy.obj
+    scale: 0.25
+    speed: 1.5
+    attack: 10.0
+    breakCountMax : 1
   - theta: 0.0
     u: 0.0
     height : 0.0

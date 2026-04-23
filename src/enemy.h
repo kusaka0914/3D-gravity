@@ -22,9 +22,9 @@ public:
     void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
     void SetIsCountered(bool isCountered) { mIsCountered = isCountered; }
     void SetIsBoss(bool isBoss) { mIsBoss = isBoss; }
-    void SetIsLaunched(bool isLaunched) { mIsLaunched = isLaunched; }
+    void SetIsBroken(bool isLaunched) { mIsBroken = isLaunched; }
     void SetIsStrongAttacked(bool isStrongAttacked) { mIsStrongAttacked = isStrongAttacked; }
-    void SetDamageTimer(float damageTimer) { mDamageTimer = damageTimer; }
+    void SetDeathTimer(float damageTimer) { mDeathTimer = damageTimer; }
     void SetLaunchedTimer(float launchedTimer) { mLaunchedTimer = launchedTimer; }
     void SetModelPath(const std::string& modelPath) { mModelPath = modelPath; }
     void SetScale(float scale) { mScale = scale; }
@@ -44,10 +44,10 @@ public:
     bool GetIsDamaged() const { return mIsDamaged; }
     bool GetIsCountered() const { return mIsCountered; }
     bool GetIsBoss() const { return mIsBoss; }
-    bool GetIsLaunched() const { return mIsLaunched; }
+    bool GetIsBroken() const { return mIsBroken; }
     bool GetOnGround() const { return mOnGround; }
     bool GetIsStrongAttacked() const { return mIsStrongAttacked; }
-    float GetDamageTimer() const { return mDamageTimer; }
+    float GetDeathTimer() const { return mDeathTimer; }
     const std::string& GetModelPath() const { return mModelPath; }
     float GetScale() const { return mScale; }
     float GetSpeed() const { return mSpeed; }
@@ -62,7 +62,7 @@ private:
     bool mIsDamaged;
     bool mIsCountered;
     bool mIsBoss;
-    bool mIsLaunched;
+    bool mIsBroken;
     bool mOnGround;
     bool mIsPreparing;
     bool mIsHit;
@@ -81,7 +81,7 @@ private:
     float mStandByAttackTimer;
     float mLaunchedTimer;
     float mAttackMotionTimer;
-    float mDamageTimer;
+    float mDeathTimer;
 
     glm::vec3 mPos;
     glm::vec3 mVelocity;
