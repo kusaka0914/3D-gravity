@@ -58,6 +58,22 @@ public:
     float GetSensing() const { return mSensing; }
 
 private:
+    void UpdateAlive(float deltaTime);
+    void UpdateDying(float deltaTime);
+
+    void UpdateUpVec();
+    void UpdateBehavior(float deltaTime, class Player* player);
+    void ApplyDamage(Player* player);
+    void ApplyCounter(Player* player);
+    void StartDying();
+    void ApplyBreak(float deltaTime);
+    void LaunchCharacter(float deltaTime);
+    void UpdateMotionTimer(float deltaTime, Player* player);
+    void ApplyGravity(float deltaTime);
+    void FixPlanetSurface();
+    void FinishDying();
+
+private:
     bool mIsAlive;
     bool mIsDamaged;
     bool mIsCountered;
