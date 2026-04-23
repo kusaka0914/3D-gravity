@@ -27,11 +27,6 @@ Enemy::Enemy(Game* game)
     
 }
 
-void Enemy::Initialize()
-{
-    
-}
-
 void Enemy::UpdateActor(float deltaTime) {
     Actor::UpdateActor(deltaTime);
     std::vector<Player*> players = GetGame()->GetPlayers();
@@ -42,9 +37,6 @@ void Enemy::UpdateActor(float deltaTime) {
             float distToPlayer = glm::length(playerPos - mPos);
             glm::vec3 vecToPlayer = glm::normalize(playerPos - mPos);
 
-            Stage* currentStage = GetGame()->GetCurrentStage();
-            Planet* currentPlanet = currentStage->GetPlanets()[mCurrentPlanetNum];
-
             const float attackRangeMargin = 0.2f;
             bool inRangeOfPlayer = (distToPlayer <= GetRadius() + attackRangeMargin);
 
@@ -53,8 +45,8 @@ void Enemy::UpdateActor(float deltaTime) {
                 if (distToPlayer <= mSensing && mDamageTimer <= 0.0f && !player->GetIsDamaged() && distToPlayer >= GetRadius() + 0.2f && mStandByAttackTimer <= 0.0f && mAttackMotionTimer <= 0.0f)
                 {
                     mPos += vecToPlayer * mSpeed * deltaTime;
-                    float planetRadius = currentPlanet->GetRadius();
-                    glm::vec3 planetCenter = currentPlanet->GetCenter();
+                    float planetRadius = mCurrentPlanet->GetRadius();
+                    glm::vec3 planetCenter = mCurrentPlanet->GetCenter();
                     mPos = planetCenter + glm::normalize(mPos - planetCenter) * planetRadius;
                 }
 
@@ -88,6 +80,7 @@ void Enemy::UpdateActor(float deltaTime) {
                 if (mIsStrongAttacked) {
                     mHp -= player->GetAttack() * 5;
                     GetGame()->SetHitStopTimer(0.6f);
+                    GetGame()->GetAudioSystem()->PlaySE("attackAirSE");
                     mIsStrongAttacked = false;
                 } else {
                     mHp -= player->GetAttack();

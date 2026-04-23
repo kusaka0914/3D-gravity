@@ -36,6 +36,7 @@ public:
     class Shader* GetShader() const { return mShader.get(); }
     class PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }
     class Mesh* GetMesh() const { return mMesh.get(); }
+    class UIState* GetUIState() const { return mUIState.get(); }
     float GetHitStopTimer() const { return mHitStopTimer; }
 
     Stage* GetCurrentStage() const { return mCurrentStage; }
@@ -67,6 +68,7 @@ private:
     std::unique_ptr<class PhysicsSystem> mPhysicsSystem;
     std::unique_ptr<class Loader> mLoader;
     std::unique_ptr<class Mesh> mMesh;
+    std::unique_ptr<class UIState> mUIState;
 
     Stage* mCurrentStage;
 
@@ -76,6 +78,7 @@ private:
     double mLastTime;
 
     bool mReloadKeyPressedPrev;
+    bool mAPressedPrev;
     bool mIsStageClear;
     bool mIsPlayer2Joined;
 };

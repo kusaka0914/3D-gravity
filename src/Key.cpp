@@ -21,11 +21,11 @@ Key::Key(Game* game)
 
 void Key::UpdateActor(float deltaTime)
 {
-    if (mCollectableComponent->GetIsObtained()) {
-        mCollectableComponent->SetIsObtained(false);
+    if (mCollectableComponent->GetIsObtained() && mIsActive) {
         std::vector<Boat*> boats = mCurrentPlanet->GetBoats();
         for (auto boat : boats) {
             boat->GetFocusComponent()->SetFocusTimer(3.0f);
+            mIsActive = false;
         }
     }
 }

@@ -3,6 +3,7 @@ boatParts :
     theta : 1.0
     u : 0.0
     height : 0.0
+    modelPath : rocketParts1.obj
   # - currentPlanetNum : 0
   #   theta : 2.4
   #   u : -0.65

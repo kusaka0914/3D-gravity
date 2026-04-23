@@ -130,6 +130,15 @@ void AudioSystem::Initialize()
     {
         std::cerr << "Mix_LoadWAV (break SE) error: " << Mix_GetError() << std::endl;
     }
+    Mix_Chunk* chargedSE = Mix_LoadWAV("../assets/audio/Charged.wav");
+    if (chargedSE)
+    {
+        mSEList["chargedSE"] = chargedSE;
+    }
+    else
+    {
+        std::cerr << "Mix_LoadWAV (charged SE) error: " << Mix_GetError() << std::endl;
+    }
 }
 
 void AudioSystem::Update()

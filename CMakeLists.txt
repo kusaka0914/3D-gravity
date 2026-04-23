@@ -31,6 +31,7 @@ add_executable(engine
     src/Stage.cpp
     src/Star.cpp
     src/UIRenderer.cpp
+    src/UIState.cpp
     src/VertexArray.cpp
 )
 

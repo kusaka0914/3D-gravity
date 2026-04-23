@@ -17,17 +17,20 @@ public:
     void SetPos(glm::vec3& pos) { mPos = pos; }
     void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
     void SetIsActive(bool isActive) override { mIsActive = isActive; }
+    void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
 
     const glm::vec3& GetPos() const override { return mPos; }
     class CollectableComponent* GetCollectableComponent() const { return mCollectableComponent; }
     const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
     bool GetIsActive() const { return mIsActive; }
+    std::string GetModelPath() const { return mModelPath; }
 
 private:
     class Planet* mCurrentPlanet;
     CollectableComponent* mCollectableComponent;
     glm::vec3 mPos;
     bool mIsActive;
+    std::string mModelPath;
 
     std::vector<struct LoadedMesh> mMeshes;
 };

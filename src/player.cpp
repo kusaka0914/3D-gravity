@@ -6,6 +6,7 @@
 #include "Star.h"
 #include "Game.h"
 #include "PhysicsSystem.h"
+#include "UIState.h"
 #include <btBulletDynamicsCommon.h>
 #include <cmath>
 
@@ -76,7 +77,7 @@ void Player::ProcessActor()
     // コントローラーの状態更新
     SDL_GameControllerUpdate();
     SDL_GameController* sdlController = GetGame()->GetSdlController();
-    if (sdlController && SDL_GameControllerGetAttached(sdlController) && mPlayerNum == 1 && mDamageTimer <= 0.0f)
+    if (sdlController && SDL_GameControllerGetAttached(sdlController) && mPlayerNum == 1 && mDamageTimer <= 0.0f && mCanMove)
     {
         const float deadZone = 0.25f;
         const float scale = 1.0f / 32767.0f; // SDL_GameControllerGetAxisの範囲が32767までで、scaleをかけて1.0f以内に抑えるため
@@ -188,7 +189,7 @@ void Player::UpdateActor(float deltaTime)
     mFacingLeftVec = glm::normalize(glm::cross(mUpVec, mFacingForwardVec));
 
     // プレイヤー移動（ダメージ時、空中固定時、回避時以外）
-    if (!mIsDamaged && mAttackMoveLockRemaining <= 0.0f && mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f)
+    if (!mIsDamaged && mAttackMoveLockRemaining <= 0.0f && mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f && mCanMove)
     {
         glm::vec3 moveDelta = mForwardVec * mMoveForward * mMoveSpeed * deltaTime + mLeftVec * mMoveLeft * mMoveSpeed * deltaTime;
         glm::vec3 desiredPos = mPos + moveDelta;
@@ -305,7 +306,7 @@ void Player::UpdateActor(float deltaTime)
     }
 
     // スティックを倒した方向を向く。移動ロック中は地上のみ向き固定、空中攻撃中は向き替え可
-    if (mAttackMoveLockRemaining <= 0.0f && mAttackPressTimer < 0.0f && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
+    if (mDodgeTimer <= 0.0f && mAttackMoveLockRemaining <= 0.0f && mAttackPressTimer < 0.0f && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
     {
         glm::vec3 moveDir = mForwardVec * mMoveForward + mLeftVec * mMoveLeft;
         float len = glm::length(moveDir);
@@ -459,14 +460,18 @@ void Player::UpdateActor(float deltaTime)
     }
 
     if (!mOnGround && mAttackPressed && mAttackPressedPrev) {
+        float attackPressTimerPrev = mAttackPressTimer;
         mAttackPressTimer -= deltaTime;
         if (mAttackPressTimer >= 0.0f) {
-            mPos -= -mFacingForwardVec * 2.0f * deltaTime;
+            mPos -= -mFacingForwardVec * 3.0f * deltaTime;
         } else {
             mAttackPressTimer = 0.0f;
         }
+        if (attackPressTimerPrev > 0.0f && mAttackPressTimer <= 0.0f) {
+            GetGame()->GetAudioSystem()->PlaySE("chargedSE");
+        }
     } else if (!mOnGround && !mAttackPressed && mAttackPressedPrev && mAttackPressTimer <= 0.0f) {
-        mStrongAttackTimer = 0.04f;
+        mStrongAttackTimer = 0.03f;
     } else if (!mOnGround && !mAttackPressed && !mAttackPressedPrev && mAttackPressTimer >= 0.0f) {
         mAttackPressTimer = -1.0f;
     }

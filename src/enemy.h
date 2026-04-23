@@ -9,7 +9,6 @@
 class Enemy : public Actor {
 public:
     Enemy(class Game* game);
-    void Initialize() override;
     void UpdateActor(float deltaTime) override;
 
     virtual bool IsBoss() const { return false; }
@@ -59,12 +58,6 @@ public:
     float GetSensing() const { return mSensing; }
 
 private:
-    class Planet* mCurrentPlanet;
-    glm::vec3 mPos;
-    glm::vec3 mVelocity;
-    glm::vec3 mUpVec;
-    int mCurrentPlanetNum;
-    float mHp;
     bool mIsAlive;
     bool mIsDamaged;
     bool mIsCountered;
@@ -74,16 +67,27 @@ private:
     bool mIsPreparing;
     bool mIsHit;
     bool mIsStrongAttacked;
-    float mDamageTimer;
-    std::string mModelPath;
+    bool mIsAttack;
+
+    int mCurrentPlanetNum;
+    int mBreakCount;
+    int mBreakCountMax;
+
     float mScale;
     float mSpeed;
     float mAttack;
+    float mHp;
+    float mSensing;
     float mStandByAttackTimer;
     float mLaunchedTimer;
     float mAttackMotionTimer;
-    bool mIsAttack;
-    float mSensing;
-    int mBreakCount;
-    int mBreakCountMax;
+    float mDamageTimer;
+
+    glm::vec3 mPos;
+    glm::vec3 mVelocity;
+    glm::vec3 mUpVec;
+
+    std::string mModelPath;
+
+    class Planet* mCurrentPlanet;
 };

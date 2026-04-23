@@ -35,6 +35,7 @@ public:
     void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
     void SetIsDamagePrev(bool isDamagePrev) { mIsDamagePrev = isDamagePrev; }
     void SetIsActive(bool isActive) override { mIsActive = isActive; }
+    void SetCanMove(bool canMove) { mCanMove = canMove; }
     void SetDamageTimer(float damageTimer) { mDamageTimer = damageTimer; }
     void SetAttackCooldownRemaining(float attackCooldownRemaining) { mAttackCooldownRemaining = attackCooldownRemaining; }
     void SetAttackMoveLockRemaining(float attackMoveLockRemaining) { mAttackMoveLockRemaining = attackMoveLockRemaining; }
@@ -128,6 +129,7 @@ private:
     bool mCounterPressed;
     bool mCounterPressedPrev;
     bool mIsActive;
+    bool mCanMove;
 
     std::vector<struct LoadedMesh> mMeshes;
 };

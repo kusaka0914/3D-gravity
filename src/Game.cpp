@@ -15,6 +15,7 @@
 #include "Star.h"
 #include "Crystal.h"
 #include "UIRenderer.h"
+#include "UIState.h"
 #include "Renderer.h"
 #include "BoatParts.h"
 #include "PhysicsSystem.h"
@@ -126,6 +127,7 @@ bool Game::Initialize()
     mShader = std::make_unique<Shader>();
     mUIRenderer = std::make_unique<UIRenderer>(this);
     mRenderer = std::make_unique<Renderer>(this);
+    mUIState = std::make_unique<UIState>(this);
     if (!mShader->GetShaderProgram())
     {
         glfwTerminate();
@@ -228,9 +230,22 @@ void Game::ProcessInput()
         mPlayers[1]->SetMeshes(playerMeshes);
     } 
 
+    bool aPressed = SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_A);
+    if (aPressed && !mAPressedPrev) {
+        if (mUIState->GetIsTutorialActive()) {
+            mUIState->SetIsTutorialActive(false);
+            mUIState->SetIsCrystalTutorialActive(true);
+        } else if (mUIState->GetIsCrystalTutorialActive()) {
+            mUIState->SetIsCrystalTutorialActive(false);
+            mUIState->SetIsUIActive(false);
+            mPlayers[0]->SetCanMove(true);
+        }
+    }
+
     // ゲーム終了
     if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS || (mSdlController && SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_BACK)))
         glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
+    mAPressedPrev = aPressed;
 }
 
 void Game::UpdateGame()
@@ -346,8 +361,9 @@ void Game::LoadModel() {
         // ボートのかけらモデルをロード
         std::vector<BoatParts*> boatParts = planet->GetBoatParts();
         if (!boatParts.empty()) {
-            std::vector<LoadedMesh> boatPartsMeshes = mMesh->loadMeshFromFile("../assets/models/boatParts.obj");
             for (auto parts : boatParts) {
+                std::string path = "../assets/models/" + parts->GetModelPath();
+                std::vector<LoadedMesh> boatPartsMeshes = mMesh->loadMeshFromFile(path.c_str());
                 parts->SetMeshes(boatPartsMeshes);
             }
         }

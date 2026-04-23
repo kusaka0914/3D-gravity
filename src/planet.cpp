@@ -46,7 +46,7 @@ void Planet::UpdateActor(float deltaTime) {
                         break;
                     }
                 }
-                if (mIsAllEnemiesDead && !mKey->GetIsActive() && !mKey->GetCollectableComponent()->GetIsObtained())
+                if (mIsAllEnemiesDead)
                 {
                     mKey->GetFocusComponent()->SetFocusTimer(3.0f);
                     mIsAllEnemiesDead = true;
@@ -64,7 +64,7 @@ void Planet::UpdateActor(float deltaTime) {
                         break;
                     }
                 }
-                if (mIsAllBoatPartsCollected && !mKey->GetIsActive() && !mKey->GetCollectableComponent()->GetIsObtained())
+                if (mIsAllBoatPartsCollected)
                 {
                     for (auto boat : mBoats) {
                         boat->GetFocusComponent()->SetFocusTimer(3.0f);

@@ -137,6 +137,7 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
             enemy->SetBreakCountMax(breakCountMax);
             enemy->SetBreakCount(breakCountMax);
 
+
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
             enemy->SetCurrentPlanet(currentPlanet);
 
@@ -292,6 +293,9 @@ bool Loader::LoadBoatPartsFromYaml(const char* path)
 
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             boatParts->SetPos(pos);
+
+            std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "";
+            boatParts->SetModelPath(modelPath);
 
             BoatParts* boatParts_ptr = boatParts.get();
             GetGame()->AddActor(std::move(boatParts));

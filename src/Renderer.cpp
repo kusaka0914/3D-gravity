@@ -40,11 +40,14 @@ void Renderer::Draw() {
             Key* key = currentPlanet->GetKey();
             if (boat->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
                 view = boat->GetFocusComponent()->GetFocusView();
+                players[0]->SetCanMove(false);
             } else if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
                 view = key->GetFocusComponent()->GetFocusView();
+                players[0]->SetCanMove(false);
             }
             else {
                 view = players[0]->getPlayerView();
+                players[0]->SetCanMove(true);
             }
         }
     } else {
@@ -296,7 +299,7 @@ void Renderer::Draw() {
         if (!boatParts.empty()) {
             for (auto parts : boatParts) { 
                 if (parts->GetIsActive()) {
-                    const float boatPartsScale = 0.25f;
+                    const float boatPartsScale = 1.0f;
                     glm::vec3 boatPartsUp = glm::normalize(parts->GetPos() - currentPlanet->GetCenter());
                     drawCharacter(parts->GetPos(), boatPartsScale, glm::vec3(0.4f, 0.25f, 0.1f), boatPartsUp, 0.0f, parts->GetMeshes());
                 }
