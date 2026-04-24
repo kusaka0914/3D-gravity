@@ -37,6 +37,7 @@ public:
     class PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }
     class Mesh* GetMesh() const { return mMesh.get(); }
     class UIState* GetUIState() const { return mUIState.get(); }
+    class GameProgressState* GetGameProgressState() const { return mGameProgressState.get(); }
     float GetHitStopTimer() const { return mHitStopTimer; }
 
     Stage* GetCurrentStage() const { return mCurrentStage; }
@@ -69,6 +70,7 @@ private:
     std::unique_ptr<class Loader> mLoader;
     std::unique_ptr<class Mesh> mMesh;
     std::unique_ptr<class UIState> mUIState;
+    std::unique_ptr<class GameProgressState> mGameProgressState;
 
     Stage* mCurrentStage;
 

@@ -11,13 +11,19 @@ public:
     Game* GetGame() const { return mGame; }
 private:
     // void DrawTextBox(float padding, float panelWidth, float panelHeight, float panelX, float panelY, float textScale, std::vector<GLfloat> panelColor, const char* message);
+    bool DrawStateUI();
+    void DrawDefaultUI();
+    void DrawOperationSupportUI();
+    void DrawHpUI();
     void DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color);
     void DrawText(float x, float y, float scale, const char* message, bool isCenterBase);
     void DrawTexture(float x, float y, float scale, const char* path);
     
     void DrawTutorial();
     void DrawCrystalTutorial();
-    void DrawRemainParts();
+    void DrawBattleTutorial();
+    void DrawBreakTutorial();
+    void DrawRemainPartsUI();
 
     Game* mGame;
     class Shader* mShader;

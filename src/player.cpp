@@ -77,6 +77,9 @@ void Player::ProcessActor()
     // コントローラーの状態更新
     SDL_GameControllerUpdate();
     SDL_GameController* sdlController = GetGame()->GetSdlController();
+    if(GetGame()->GetUIState()->GetIsUIActive()) {
+        mCanMove = false;
+    }
     if (sdlController && SDL_GameControllerGetAttached(sdlController) && mPlayerNum == 1 && mDamageTimer <= 0.0f && mCanMove)
     {
         const float deadZone = 0.25f;

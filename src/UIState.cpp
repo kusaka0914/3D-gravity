@@ -6,6 +6,9 @@ UIState::UIState(Game* game)
     ,mIsUIActive(false)
     ,mIsTutorialActive(true)
     ,mIsCrystalTutorialActive(false)
+    ,mIsBattleTutorialActive(false)
+    ,mIsBattleTutorialShown(false)
+    ,mIsBreakTutorialActive(false)
 {
 
 }

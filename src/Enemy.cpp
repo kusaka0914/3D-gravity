@@ -4,6 +4,8 @@
 #include "Planet.h"
 #include "Player.h"
 #include "Stage.h"
+#include "GameProgressState.h"
+#include "UIState.h"
 
 Enemy::Enemy(Game* game)
     :Actor(game)
@@ -191,6 +193,10 @@ void Enemy::ApplyBreak(float deltaTime) {
 }
 
 void Enemy::LaunchCharacter(float deltaTime) {
+    if (!GetGame()->GetGameProgressState()->GetIsFirstBreak()) {
+        GetGame()->GetGameProgressState()->SetIsFirstBreak(true);
+        GetGame()->GetUIState()->SetIsBreakTutorialActive(true);
+    }
     float launchSpeed = 5.0f;
     mVelocity += mUpVec * launchSpeed;
     mPos += mVelocity * deltaTime;

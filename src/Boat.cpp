@@ -2,6 +2,7 @@
 #include "Planet.h"
 #include "Stage.h"
 #include "Game.h"
+#include "UIState.h"
 #include "FocusComponent.h"
 
 Boat::Boat(Game* game)
@@ -52,6 +53,10 @@ void Boat::UpdateActor(float deltaTime)
         {
             mPos = mDestPos;
             mIsMoving = false;
+            if (!GetGame()->GetUIState()->GetIsBattleTutorialActive() && !GetGame()->GetUIState()->GetIsBattleTutorialShown()) {
+                GetGame()->GetUIState()->SetIsBattleTutorialActive(true);
+                GetGame()->GetUIState()->SetIsBattleTutorialShown(true);
+            }
         }
     }
 }

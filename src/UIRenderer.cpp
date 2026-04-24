@@ -27,45 +27,69 @@ void UIRenderer::Draw() {
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
 
-    bool isUIActive = false;
+    DrawDefaultUI();
 
-    if (mGame->GetUIState()->GetIsTutorialActive()) {
-        DrawTutorial();
-        isUIActive = true;
-    }
-
-    if (mGame->GetUIState()->GetIsCrystalTutorialActive()) {
-        DrawCrystalTutorial();
-        isUIActive = true;
-    }
-
-    DrawText(20, mFbHeight - 60, 1.5f, "A:ジャンプ B:回避 X:攻撃 R:ダッシュ L:カウンター 空中でX長押し→離す:溜め攻撃", false);
-    
-    std::vector<Player*> players = mGame->GetPlayers();
-    Planet* currentPlanet = players[0]->GetCurrentPlanet();
-    std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
-    if (!boatParts.empty()){
-        DrawRemainParts();
-    }
-
-    int Hp = players[0]->GetHp();
-    std::string HpText = "体力: " + std::to_string(Hp);
-    DrawText(mFbWidth - 200, 40, 1.5f, HpText.c_str(), false);
-    
-    if (isUIActive) {
+    bool isStateUIActive = DrawStateUI();
+    if (isStateUIActive) {
         GetGame()->GetUIState()->SetIsUIActive(true);
-        players[0]->SetCanMove(false);
     }
 
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
 }
 
-// void UIRenderer::DrawTextBox(float padding, float BGWidth, float BGHeight, float BGX, float BGY, float textScale, std::vector<GLfloat> BGColor, const char* message, bool isCenterBase)
-// {
-//     DrawBG(BGWidth, BGHeight, BGX, BGY, BGColor);    
-//     DrawText(BGX + padding, BGY + padding, textScale, message);
-// }
+bool UIRenderer::DrawStateUI() {
+    bool isTutorialActive = mGame->GetUIState()->GetIsTutorialActive();
+    if (isTutorialActive) {
+        DrawTutorial();
+        return true;
+    }
+
+    bool isCrystalTutorialActive = mGame->GetUIState()->GetIsCrystalTutorialActive();
+    if (isCrystalTutorialActive) {
+        DrawCrystalTutorial();
+        return true;
+    }
+
+    bool isBattleTutorialActive = mGame->GetUIState()->GetIsBattleTutorialActive();
+    if (isBattleTutorialActive) {
+        DrawBattleTutorial();
+        return true;
+    }
+
+    bool isBreakTutorialActive = mGame->GetUIState()->GetIsBreakTutorialActive();
+    if (isBreakTutorialActive) {
+        DrawBreakTutorial();
+        return true;
+    }
+
+    return false;
+}
+
+void UIRenderer::DrawDefaultUI() {
+    DrawOperationSupportUI();
+
+    DrawHpUI();
+    
+    std::vector<Player*> players = mGame->GetPlayers();
+    Planet* currentPlanet = players[0]->GetCurrentPlanet();
+    std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
+
+    if (!boatParts.empty()){
+        DrawRemainPartsUI();
+    }
+}
+
+void UIRenderer::DrawOperationSupportUI() {
+    DrawText(20, mFbHeight - 60, 1.5f, "A:ジャンプ B:回避 X:攻撃 R:ダッシュ L:カウンター 空中でX長押し→離す:溜め攻撃", false);
+}
+
+void UIRenderer::DrawHpUI() {
+    std::vector<Player*> players = mGame->GetPlayers();
+    int Hp = players[0]->GetHp();
+    std::string HpText = "体力: " + std::to_string(Hp);
+    DrawText(mFbWidth - 200, 40, 1.5f, HpText.c_str(), false);
+}
 
 void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color)
 {
@@ -200,7 +224,43 @@ void UIRenderer::DrawCrystalTutorial() {
     DrawText(textX, bgY + bgHeight - 80, 1.5f, "溜め攻撃を当てれば一発で壊れますよ！", true);
 }
 
-void UIRenderer::DrawRemainParts() {
+void UIRenderer::DrawBattleTutorial() {
+    float bgWidth = mFbWidth * 0.7f;
+    float bgHeight = mFbHeight * 0.7f;
+    float fbWidthHalf = mFbWidth * 0.5f;
+    float fbHeightHalf = mFbHeight * 0.5f;
+    float bgX = fbWidthHalf - bgWidth / 2;
+    float bgY = fbHeightHalf - bgHeight / 2;
+    float textX = bgX + bgWidth /2;
+    DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
+    DrawText(textX, bgY + 100, 1.5f, "攻撃して敵を倒そう！", true);
+    // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
+    DrawText(textX, bgY + bgHeight - 380, 1.5f, "Xボタンを押すことで攻撃することができます。", true);
+    DrawText(textX, bgY + bgHeight - 320, 1.5f, "敵はガードを所持していて、連続して3回攻撃を当てることでガードを一つ破壊することができます。", true);
+    DrawText(textX, bgY + bgHeight - 260, 1.5f, "全てのガードを破壊することでブレイク状態になります。", true);
+    DrawText(textX, bgY + bgHeight - 260, 1.5f, "まずは一度ブレイクしてみましょう。", true);
+}
+
+void UIRenderer::DrawBreakTutorial() {
+    float bgWidth = mFbWidth * 0.7f;
+    float bgHeight = mFbHeight * 0.7f;
+    float fbWidthHalf = mFbWidth * 0.5f;
+    float fbHeightHalf = mFbHeight * 0.5f;
+    float bgX = fbWidthHalf - bgWidth / 2;
+    float bgY = fbHeightHalf - bgHeight / 2;
+    float textX = bgX + bgWidth /2;
+    DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
+    DrawText(textX, bgY + 100, 1.5f, "ブレイクアタックを繰り出そう！", true);
+    // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
+    DrawText(textX, bgY + bgHeight - 380, 1.5f, "ナイスブレイク！", true);
+    DrawText(textX, bgY + bgHeight - 320, 1.5f, "ブレイクすると敵が空中に打ち上げられます。", true);
+    DrawText(textX, bgY + bgHeight - 260, 1.5f, "なのでAボタンでジャンプして敵を攻撃する必要があります。", true);
+    DrawText(textX, bgY + bgHeight - 200, 1.5f, "空中での攻撃はブレイクアタックといいます。", true);
+    DrawText(textX, bgY + bgHeight - 140, 1.5f, "ブレイクアタックはXボタンを長押しして、最大まで溜めた状態で離すことで繰り出せます。", true);
+    DrawText(textX, bgY + bgHeight - 80, 1.5f, "大ダメージを与えることができるので一度やってみましょう！", true);
+}
+
+void UIRenderer::DrawRemainPartsUI() {
     std::vector<Player*> players = mGame->GetPlayers();
     Planet* currentPlanet = players[0]->GetCurrentPlanet();
     std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();

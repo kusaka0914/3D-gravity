@@ -16,6 +16,7 @@
 #include "Crystal.h"
 #include "UIRenderer.h"
 #include "UIState.h"
+#include "GameProgressState.h"
 #include "Renderer.h"
 #include "BoatParts.h"
 #include "PhysicsSystem.h"
@@ -128,6 +129,7 @@ bool Game::Initialize()
     mUIRenderer = std::make_unique<UIRenderer>(this);
     mRenderer = std::make_unique<Renderer>(this);
     mUIState = std::make_unique<UIState>(this);
+    mGameProgressState = std::make_unique<GameProgressState>(this);
     if (!mShader->GetShaderProgram())
     {
         glfwTerminate();
@@ -240,6 +242,16 @@ void Game::ProcessInput()
             mUIState->SetIsUIActive(false);
             mPlayers[0]->SetCanMove(true);
         }
+        if (mUIState->GetIsBattleTutorialActive()) {
+            mUIState->SetIsBattleTutorialActive(false);
+            mUIState->SetIsUIActive(false);
+            mPlayers[0]->SetCanMove(true);
+        }
+        if (mUIState->GetIsBreakTutorialActive()) {
+            mUIState->SetIsBreakTutorialActive(false);
+            mUIState->SetIsUIActive(false);
+            mPlayers[0]->SetCanMove(true);
+        }
     }
 
     // ゲーム終了
@@ -256,6 +268,10 @@ void Game::UpdateGame()
         mHitStopTimer-= deltaTime;
         deltaTime = 0.0f;
     }
+    if (mUIState->GetIsUIActive()) {
+        deltaTime = 0.0f;
+    }
+
     mLastTime = currentTime;
 
     for (const auto& actor_unique : mActors) {
