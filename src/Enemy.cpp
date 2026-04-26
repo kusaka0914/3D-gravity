@@ -27,6 +27,7 @@ Enemy::Enemy(Game* game)
     ,mSensing(6.0f)
     ,mIsStrongAttacked(false)
     ,mAttackMotionTimer(-1.0f)
+    ,mKnockBackTimer(-1.0f)
     ,mIsBroken(false)
     ,mIsCountered(false)
 {
@@ -82,16 +83,17 @@ void Enemy::UpdateAlive(float deltaTime) {
         {
             UpdateMotionTimer(deltaTime, player);
         }
+
+        if (mKnockBackTimer >= 0.0f) {
+            UpdateKnockBack(deltaTime, player);
+        }
     }
 }
 
 void Enemy::UpdateDying(float deltaTime) {
     std::vector<Player*> players = GetGame()->GetPlayers();
     for(auto player : players) {
-        glm::vec3 playerPos = player->GetPos();
-        glm::vec3 toEnemy = glm::normalize(mPos - playerPos);
-        float moveSpeed = 3.0f;
-        mPos += toEnemy * moveSpeed * deltaTime;
+        UpdateKnockBack(deltaTime, player);
         
         if (mOnGround) {
             FixPlanetSurface();
@@ -113,6 +115,16 @@ void Enemy::UpdateUpVec() {
     mUpVec = glm::normalize(mPos - center);
 }
 
+void Enemy::UpdateKnockBack(float deltaTime, Player* player) {
+    glm::vec3 playerPos = player->GetPos();
+    glm::vec3 toEnemy = glm::normalize(mPos - playerPos);
+    float moveSpeed = 5.0f;
+    mPos += toEnemy * moveSpeed * deltaTime;
+    if (mKnockBackTimer >= 0.0f) {
+        mKnockBackTimer -= deltaTime;
+    }
+}
+
 void Enemy::UpdateBehavior(float deltaTime, Player* player) {
     glm::vec3 playerPos = player->GetPos();
     float distToPlayer = glm::length(playerPos - mPos);
@@ -121,7 +133,7 @@ void Enemy::UpdateBehavior(float deltaTime, Player* player) {
     const float attackRangeMargin = 0.2f;
     bool inRangeOfPlayer = (distToPlayer <= GetRadius() + attackRangeMargin);
     // 追跡
-    if (distToPlayer <= mSensing && !player->GetIsDamaged() && distToPlayer >= GetRadius() + 0.2f && mStandByAttackTimer <= 0.0f && mAttackMotionTimer <= 0.0f)
+    if (distToPlayer <= mSensing && !player->GetIsDamaged() && distToPlayer >= GetRadius() + 0.2f && mStandByAttackTimer <= 0.0f && mAttackMotionTimer <= 0.0f && mKnockBackTimer <= 0.0f)
     {
         mPos += vecToPlayer * mSpeed * deltaTime;
         float planetRadius = mCurrentPlanet->GetRadius();
@@ -130,11 +142,11 @@ void Enemy::UpdateBehavior(float deltaTime, Player* player) {
     }
 
     // 攻撃タイマー開始
-    if (inRangeOfPlayer && mStandByAttackTimer <= 0.0f)
+    if (inRangeOfPlayer && mStandByAttackTimer <= 0.0f && mAttackMotionTimer <= 0.0f)
     {
         if (!player->GetIsDamagePrev()) {
             mIsPreparing = true;
-            mStandByAttackTimer = 1.0f;
+            mStandByAttackTimer = 1.2f;
         }
     }
     // 攻撃準備
@@ -159,9 +171,12 @@ void Enemy::ApplyDamage(Player* player) {
     mIsDamaged = false;
     if (mIsStrongAttacked) {
         mHp -= player->GetAttack() * 5;
+        mLaunchedTimer = -1.0f;
+        mBreakCount = mBreakCountMax;
         GetGame()->SetHitStopTimer(0.6f);
         GetGame()->GetAudioSystem()->PlaySE("attackAirSE");
         mIsStrongAttacked = false;
+        mKnockBackTimer = 1.0f;
     } else {
         mHp -= player->GetAttack();
     }
@@ -170,8 +185,8 @@ void Enemy::ApplyDamage(Player* player) {
 void Enemy::ApplyCounter(Player* player) {
     mIsCountered = false;
     mHp -= player->GetAttack() * 2.0f;
-    mStandByAttackTimer = -1.0f; // 攻撃準備状態を解除
-    mDeathTimer = 0.3f;        
+    mStandByAttackTimer = -1.0f; // 攻撃準備状態を解除  
+    mKnockBackTimer = 0.6f;      
 }
 
 void Enemy::StartDying() {
@@ -204,7 +219,6 @@ void Enemy::LaunchCharacter(float deltaTime) {
     mStandByAttackTimer = -1.0f;
     mAttackMotionTimer = -1.0f;
     mIsPreparing = false;
-    mBreakCount = mBreakCountMax;
     GetGame()->GetAudioSystem()->PlaySE("breakSE");
     GetGame()->SetHitStopTimer(0.6f);
 }
@@ -251,6 +265,9 @@ void Enemy::ApplyGravity(float deltaTime) {
         }
     } else {
         mLaunchedTimer -= deltaTime;
+        if (mLaunchedTimer <= 0.0f) {
+            mBreakCount = mBreakCountMax;
+        }
         return;
     }
     

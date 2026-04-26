@@ -11,6 +11,7 @@
 #include "VertexArray.h"
 #include "Game.h"
 #include "FocusComponent.h"
+#include "GameProgressState.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -44,16 +45,24 @@ void Renderer::Draw() {
             } else if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
                 view = key->GetFocusComponent()->GetFocusView();
                 players[0]->SetCanMove(false);
+            } else if (GetGame()->GetGameProgressState()->GetIsStageClear()) {
+                view = players[0]->getPlayerView(4.0f, true);
             }
             else {
-                view = players[0]->getPlayerView();
+                view = players[0]->getPlayerView(12.0f);
                 players[0]->SetCanMove(true);
             }
         }
     } else {
-        view = players[0]->getPlayerView();
+        if (GetGame()->GetGameProgressState()->GetIsStageClear()) {
+            view = players[0]->getPlayerView(4.0f, true);
+        }
+        else {
+            view = players[0]->getPlayerView(12.0f);
+            players[0]->SetCanMove(true);
+        }
     }
-    glm::mat4 view2P = isPlayer2Joined ? players[1]->getPlayerView() : view;
+    glm::mat4 view2P = isPlayer2Joined ? players[1]->getPlayerView(12.0f) : view;
 
     glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -233,7 +242,7 @@ void Renderer::Draw() {
                     textTextureCache[s] = {tex, {tw, th}};
                     return {tex, {tw, th}};
                 };
-                auto [texId, texSize] = getTextTexture(std::to_string(ei + 1));
+                auto [texId, texSize] = getTextTexture(std::to_string(enemies[ei]->GetBreakCount()));
                 if (texId != 0 && texSize.x > 0 && texSize.y > 0)
                 {
                     glm::vec3 camPos(glm::inverse(viewMat)[3]);

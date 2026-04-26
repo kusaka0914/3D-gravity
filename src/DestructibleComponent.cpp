@@ -14,20 +14,25 @@ void DestructibleComponent::Update(float deltaTime)
     if (!mIsDestroyed) {
         // 攻撃中のプレイヤーが触れたら破壊
         for (auto player : players) {
-            float distTo = glm::length(player->GetPos() - GetOwner()->GetPos()); 
             if (player->GetAttackMotionTimer() < 0.0f) {
                 mIsAttackedPrev = false;
             }
-            if (distTo < GetOwner()->GetRadius() && player->GetAttackMotionTimer() > 0.0f && !mIsAttackedPrev)
+            float distTo = glm::length(player->GetPos() - GetOwner()->GetPos()); 
+            if (distTo < GetOwner()->GetRadius() + 2.0f && player->GetStrongAttackTimer() >= 0.0f)
             {
-                mDestroyCount--;
-                if (mDestroyCount <= 0) {
-                    mDestroyCount = 0;
-                    mIsDestroyed = true;
-                    GetOwner()->SetIsActive(false);
-                    GetOwner()->GetGame()->GetAudioSystem()->PlaySE("destroySE");
-                }
+                mDestroyHp -= player->GetAttack() * 5;
                 mIsAttackedPrev = true;
+            }
+            if (distTo < GetOwner()->GetRadius() && player->GetAttackMotionTimer() >= 0.0f && !mIsAttackedPrev)
+            {
+                mDestroyHp -= player->GetAttack();
+                mIsAttackedPrev = true;
+            }
+            if (mDestroyHp <= 0) {
+                mDestroyHp = 0;
+                mIsDestroyed = true;
+                GetOwner()->SetIsActive(false);
+                GetOwner()->GetGame()->GetAudioSystem()->PlaySE("destroySE");
             }
         }
     }

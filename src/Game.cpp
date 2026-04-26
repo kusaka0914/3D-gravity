@@ -117,9 +117,8 @@ bool Game::Initialize()
     // 最初に見つかったフォントを用いる
     for (const char *path : fontPaths)
     {
-        mFont = TTF_OpenFont(path, 24);
+        mFont = TTF_OpenFont(path, 72);
         if (mFont){
-            std::cout << path << std::endl;
             break;
         }
     }
@@ -155,7 +154,7 @@ bool Game::Initialize()
 
     mLoader = std::make_unique<Loader>(this); 
 
-    LoadData();
+    LoadData(true);
 
     // 惑星/プレイヤー生成後に行う
     mPhysicsSystem = std::make_unique<PhysicsSystem>(this);
@@ -211,7 +210,7 @@ void Game::ProcessInput()
     bool reloadPressed = (glfwGetKey(mWindow, GLFW_KEY_R) == GLFW_PRESS);
     if (reloadPressed && !mReloadKeyPressedPrev)
     {
-        LoadData();
+        LoadData(false);
     }
     mReloadKeyPressedPrev = reloadPressed;
 
@@ -315,8 +314,8 @@ void Game::RemoveActor(std::unique_ptr<Actor> actor)
     }
 }
 
-void Game::LoadData() {
-    mLoader->LoadDataFromYaml();
+void Game::LoadData(bool isLoadPlayer) {
+    mLoader->LoadDataFromYaml(isLoadPlayer);
     LoadModel();
 }
 

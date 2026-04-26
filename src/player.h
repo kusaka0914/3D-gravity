@@ -16,7 +16,7 @@ public:
     void UpdateActor(float deltaTime) override;
     
     float getYawFromDirection(const glm::vec3& up, const glm::vec3& dir);
-    glm::mat4 getPlayerView();
+    glm::mat4 getPlayerView(float cameraDistance, bool isFixed = false);
 
     void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(const glm::vec3& pos) { mPos = pos; }
@@ -69,6 +69,7 @@ public:
     float GetAttackMoveLockRemaining() const { return mAttackMoveLockRemaining; }
     float GetAttackDodgeLockRemaining() const { return mAttackDodgeLockRemaining; }
     float GetAttackMotionTimer() const { return mAttackMotionTimer; }
+    float GetStrongAttackTimer() const { return mStrongAttackTimer; }
     int GetAttackIndex() const { return mAttackIndex; }
     int GetRestartPlanetIndex() const { return mRestartPlanetIndex; }
 

@@ -10,6 +10,7 @@ Boat::Boat(Game* game)
     , mStartPlanet(0)
     , mDestPlanet(1)
     , mIsMoving(false)
+    , mIsActivePrev(false)
     , mIsActive(false)
     , mTransitionTimer(0.0f)
     , mProgress(0.0f)
@@ -26,6 +27,10 @@ Boat::Boat(Game* game)
 
 void Boat::UpdateActor(float deltaTime)
 {
+    if (!mIsActivePrev && mIsActive) {
+        GetGame()->GetAudioSystem()->PlaySE("showBoatSE");
+        mIsActivePrev = true;
+    }
     // 移動中
     if (mIsMoving)
     {   

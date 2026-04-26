@@ -23,6 +23,7 @@ private:
     void DrawCrystalTutorial();
     void DrawBattleTutorial();
     void DrawBreakTutorial();
+    void DrawStageClear();
     void DrawRemainPartsUI();
 
     Game* mGame;

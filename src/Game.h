@@ -49,7 +49,7 @@ private:
     void ProcessInput();
     void UpdateGame();
     void GenerateOutput();
-    void LoadData();
+    void LoadData(bool isLoadPlayer);
     void LoadModel();
 
     GLFWwindow* mWindow;

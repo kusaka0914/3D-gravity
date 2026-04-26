@@ -17,40 +17,49 @@ Loader::Loader(Game* game)
 
 }
 
-bool Loader::LoadDataFromYaml() {
+bool Loader::LoadDataFromYaml(bool isLoadPlayer) {
     // 惑星をYAMLから読み込み
     if (!LoadPlanetsFromYaml("../assets/data/planets.yaml")) {
         std::cerr << "Planet YAML Load failed" << std::endl;
-    }
-    // プレイヤーをYAMLから読み込み
-    if (!LoadPlayersFromYaml("../assets/data/players.yaml")) {
-        std::cerr << "Player YAML Load failed" << std::endl;
+        return false;
     }
     // 敵をYAMLから読み込み
     if (!LoadEnemiesFromYaml("../assets/data/enemies.yaml"))
     {
         std::cerr << "Enemy YAML Load failed" << std::endl;
+        return false;
     }
     // ボートをYAMLから読み込み
     if (!LoadBoatsFromYaml("../assets/data/boats.yaml"))
     {
         std::cerr << "Boats YAML Load failed" << std::endl;
+        return false;
     }
     // ボートのかけらをYAMLから読み込み
     if (!LoadBoatPartsFromYaml("../assets/data/boatParts.yaml"))
     {
         std::cerr << "BoatParts YAML Load failed" << std::endl;
+        return false;
     }
     // 鍵をYAMLから読み込み
     if (!LoadKeysFromYaml("../assets/data/keys.yaml"))
     {
         std::cerr << "Keys YAML Load failed" << std::endl;
+        return false;
     }
     // クリスタルをYAMLから読み込み
     if (!LoadCrystalsFromYaml("../assets/data/Crystals.yaml"))
     {
         std::cerr << "Crystals YAML Load failed" << std::endl;
+        return false;
     }
+    if (!isLoadPlayer) return false;
+    // プレイヤーをYAMLから読み込み
+    if (!LoadPlayersFromYaml("../assets/data/players.yaml")) {
+        std::cerr << "Player YAML Load failed" << std::endl;
+        return false;
+    }
+    return true;
 }
 
 bool Loader::LoadPlayersFromYaml(const char* path) {
@@ -132,6 +141,9 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
 
             float attack = node["attack"] ? node["attack"].as<float>() : 20.0f;
             enemy->SetAttack(attack);
+
+            float radius = node["radius"] ? node["radius"].as<float>() : 1.0f;
+            enemy->SetRadius(radius);
 
             int breakCountMax = node["breakCountMax"] ? node["breakCountMax"].as<int>() : 1;
             enemy->SetBreakCountMax(breakCountMax);
@@ -375,8 +387,8 @@ bool Loader::LoadCrystalsFromYaml(const char* path)
             float radius = node["radius"] ? node["radius"].as<float>() : 0.0f;
             crystal->SetRadius(radius);
 
-            int count = node["count"] ? node["count"].as<int>() : 1;
-            crystal->GetDestructibleComponent()->SetDestroyCount(count);
+            float hp = node["hp"] ? node["hp"].as<float>() : 10.0;
+            crystal->GetDestructibleComponent()->SetDestroyHp(hp);
 
             Crystal* crystal_ptr = crystal.get();
             GetGame()->AddActor(std::move(crystal));

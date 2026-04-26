@@ -7,6 +7,7 @@
 #include "Game.h"
 #include "PhysicsSystem.h"
 #include "UIState.h"
+#include "GameProgressState.h"
 #include <btBulletDynamicsCommon.h>
 #include <cmath>
 
@@ -77,7 +78,7 @@ void Player::ProcessActor()
     // コントローラーの状態更新
     SDL_GameControllerUpdate();
     SDL_GameController* sdlController = GetGame()->GetSdlController();
-    if(GetGame()->GetUIState()->GetIsUIActive()) {
+    if(GetGame()->GetUIState()->GetIsUIActive() || GetGame()->GetGameProgressState()->GetIsStageClear()) {
         mCanMove = false;
     }
     if (sdlController && SDL_GameControllerGetAttached(sdlController) && mPlayerNum == 1 && mDamageTimer <= 0.0f && mCanMove)
@@ -124,7 +125,7 @@ void Player::ProcessActor()
         // ダッシュ判定（Rボタン）
         mMoveSpeed = 2.0f;
         if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
-            mMoveSpeed = 3.0f;
+            mMoveSpeed = 3.2f;
     }
 
     if (GetGame()->GetIsPlayer2Joined() && mPlayerNum != 1)
@@ -208,10 +209,11 @@ void Player::UpdateActor(float deltaTime)
         {
             mVelocity += mUpVec * 5.0f;
             mOnGround = false;
+            GetGame()->GetAudioSystem()->PlaySE("jumpSE");
         }
     }
 
-    const float dodgeDuration = 0.2f;
+    const float dodgeDuration = 0.05f;
     const float dodgeCooldownTime = 1.0f;
     // 向いている方向へ回避開始
     if (mDodgePressed && !mDodgePressedPrev && mDodgeCooldown <= 0.0f && mDodgeTimer <= 0.0f && mAttackDodgeLockRemaining <= 0.0f)
@@ -221,11 +223,12 @@ void Player::UpdateActor(float deltaTime)
         mDodgeCooldown = dodgeCooldownTime;
         mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
         mVelocity = glm::vec3(0.0f);
+        GetGame()->GetAudioSystem()->PlaySE("dodgeSE");
     }
     // 回避中移動
     if (mDodgeTimer > 0.0f)
     {
-        const float dodgeDistance = 1.5f;
+        const float dodgeDistance = 2.0f;
         float dodgeSpeed = dodgeDistance / dodgeDuration;
         glm::vec3 moveDelta = mDodgeDir * dodgeSpeed * deltaTime;
         glm::vec3 desiredPos = mPos + moveDelta;
@@ -373,11 +376,11 @@ void Player::UpdateActor(float deltaTime)
             if (mStrongAttackTimer >= 0.0f && strongAttackTimerNext <= 0.0f) {
                 for (Enemy* enemy : hitEnemies) {
                     enemy->SetIsStrongAttacked(true);
-                    enemy->SetLaunchedTimer(-1.0f);
                 }
             }
             if (mAttackIndex == 3)
             {
+                mAttackCooldownRemaining = 1.0f;
                 mAttackIndex = 0;
                 for (Enemy* enemy : hitEnemies)
                 {
@@ -459,14 +462,16 @@ void Player::UpdateActor(float deltaTime)
     }
 
     if (!mOnGround && mAttackPressed && !mAttackPressedPrev) {
-        mAttackPressTimer = 1.0f;
+        mAttackPressTimer = 0.5f;
+        GetGame()->GetAudioSystem()->PlaySE("chargingSE");
     }
 
     if (!mOnGround && mAttackPressed && mAttackPressedPrev) {
         float attackPressTimerPrev = mAttackPressTimer;
         mAttackPressTimer -= deltaTime;
         if (mAttackPressTimer >= 0.0f) {
-            mPos -= -mFacingForwardVec * 3.0f * deltaTime;
+            mPos -= -mFacingForwardVec * 6.0f * deltaTime;
+            mPos -= -mUpVec * 6.0f * deltaTime;
         } else {
             mAttackPressTimer = 0.0f;
         }
@@ -483,6 +488,7 @@ void Player::UpdateActor(float deltaTime)
     {
         mStrongAttackTimer -= deltaTime;
         mPos += -mFacingForwardVec * 100.0f * deltaTime;
+        mPos += -mUpVec * 100.0f * deltaTime;
         if (mStrongAttackTimer <= 0.0f) {
             mStrongAttackTimer = -1.0f;
             mAttackPressTimer = -1.0f;
@@ -577,21 +583,6 @@ void Player::UpdateActor(float deltaTime)
         }
     }
 
-    // スターに触れたらゲームクリア
-    Star* star = mCurrentPlanet->GetStar();
-    if (star->GetIsActive())
-    {
-        float distToStar = glm::length(mPos - star->GetPos());
-        const float starTouchRadius = 1.5f;
-        if (distToStar < starTouchRadius)
-        {
-            star->SetIsActive(false);
-            Mix_HaltMusic();
-            GetGame()->GetAudioSystem()->PlaySE("clearSE");
-            std::cout << "Game Clear!" << std::endl;
-        }
-    }
-
     mAttackPressedPrev = mAttackPressed;
     mDodgePressedPrev = mDodgePressed;
     mCounterPressedPrev = mCounterPressed;
@@ -606,10 +597,20 @@ float Player::getYawFromDirection(const glm::vec3& mUpVec, const glm::vec3& dir)
     return std::atan2(-glm::dot(dir, worldLeft), glm::dot(dir, right));
 }
 
-glm::mat4 Player::getPlayerView() {
-    const float cameraDistance = 12.0f;
-    glm::vec3 back = glm::normalize(-mForwardVec);
-    glm::vec3 cameraDir = glm::normalize(std::cos(mCameraPitch) * back + std::sin(mCameraPitch) * mUpVec);
-    glm::vec3 cameraPos = mPos - cameraDir * cameraDistance;
+glm::mat4 Player::getPlayerView(float cameraDistance, bool isFixed) {
+    glm::vec3 toPosX;
+    glm::vec3 cameraDir;
+    glm::vec3 cameraPos;
+    if (isFixed) {
+        toPosX = glm::normalize(mFacingForwardVec);
+        cameraDir = glm::normalize(std::cos(-0.2f) * toPosX + std::sin(-0.2f) * mUpVec);  
+        cameraPos = mPos - cameraDir * cameraDistance;
+        glm::vec3 offset = glm::normalize(mUpVec) * 1.0f;
+        return glm::lookAt(cameraPos, mPos + offset, mUpVec);  
+    }
+
+    toPosX = glm::normalize(-mForwardVec);
+    cameraDir = glm::normalize(std::cos(mCameraPitch) * toPosX + std::sin(mCameraPitch) * mUpVec);
+    cameraPos = mPos - cameraDir * cameraDistance;
     return glm::lookAt(cameraPos, mPos, mUpVec);
 }

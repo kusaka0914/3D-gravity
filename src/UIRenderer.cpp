@@ -6,6 +6,7 @@
 #include "Planet.h"
 #include "BoatParts.h"
 #include "UIState.h"
+#include "GameProgressState.h"
 #include "stb_image.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -27,7 +28,10 @@ void UIRenderer::Draw() {
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
 
-    DrawDefaultUI();
+    bool isStageClear = mGame->GetGameProgressState()->GetIsStageClear();
+    if (!isStageClear){
+        DrawDefaultUI();
+    }
 
     bool isStateUIActive = DrawStateUI();
     if (isStateUIActive) {
@@ -63,6 +67,12 @@ bool UIRenderer::DrawStateUI() {
         return true;
     }
 
+    bool isStageClear = mGame->GetGameProgressState()->GetIsStageClear();
+    if (isStageClear) {
+        DrawStageClear();
+        return true;
+    }
+
     return false;
 }
 
@@ -81,14 +91,14 @@ void UIRenderer::DrawDefaultUI() {
 }
 
 void UIRenderer::DrawOperationSupportUI() {
-    DrawText(20, mFbHeight - 60, 1.5f, "A:ジャンプ B:回避 X:攻撃 R:ダッシュ L:カウンター 空中でX長押し→離す:溜め攻撃", false);
+    DrawText(20, mFbHeight - 60, 0.5f, "A:ジャンプ B:回避 X:攻撃 R:ダッシュ L:カウンター 空中でX長押し→離す:溜め攻撃", false);
 }
 
 void UIRenderer::DrawHpUI() {
     std::vector<Player*> players = mGame->GetPlayers();
     int Hp = players[0]->GetHp();
     std::string HpText = "体力: " + std::to_string(Hp);
-    DrawText(mFbWidth - 200, 40, 1.5f, HpText.c_str(), false);
+    DrawText(mFbWidth - 200, 40, 0.5f, HpText.c_str(), false);
 }
 
 void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color)
@@ -125,16 +135,16 @@ void UIRenderer::DrawText(float x, float y, float scale, const char* message, bo
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    float textWidth = (float)rgba->w, textHeight = (float)rgba->h;
+    float textWidth = (float)rgba->w * scale, textHeight = (float)rgba->h * scale;
     SDL_FreeSurface(rgba);
 
     glm::mat4 model;
     if (isCenterBase) {
         model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f))
-                    * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth * scale, textHeight * scale, 1.0f));
+                    * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
     }else{
-        model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * scale * 0.5f, y + textHeight * scale * 0.5f, 0.0f))
-                    * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth * scale, textHeight * scale, 1.0f));
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f, 0.0f))
+                    * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
     }
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 proj = glm::ortho(0.0f, (float)mFbWidth, (float)mFbHeight, 0.0f, -1.0f, 1.0f);
@@ -198,11 +208,11 @@ void UIRenderer::DrawTutorial() {
     float bgY = fbHeightHalf - bgHeight / 2;
     float textX = bgX + bgWidth /2;
     DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
-    DrawText(textX, bgY + 100, 1.5f, "ロケットのかけらを5個集めよう！", true);
+    DrawText(textX, bgY + 100, 0.5f, "ロケットのかけらを5個集めよう！", true);
     // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
-    DrawText(textX, bgY + bgHeight - 380, 1.5f, "この惑星には5個のロケットのかけらが散らばっています。", true);
-    DrawText(textX, bgY + bgHeight - 320, 1.5f, "ジャンプや回避、攻撃を駆使して5個のかけらを集めてください。", true);
-    DrawText(textX, bgY + bgHeight - 260, 1.5f, "5個のかけらを集めることで次の惑星に行くためのロケットが完成します。", true);
+    DrawText(textX, bgY + bgHeight - 380, 0.5f, "この惑星にはロケットのかけらが5個散らばっています。", true);
+    DrawText(textX, bgY + bgHeight - 320, 0.5f, "ジャンプや回避、攻撃を駆使して全てのかけらを集めてください。", true);
+    DrawText(textX, bgY + bgHeight - 260, 0.5f, "全てのかけらを集めることで次の惑星に行くためのロケットが完成します。", true);
 }
 
 void UIRenderer::DrawCrystalTutorial() {
@@ -214,14 +224,14 @@ void UIRenderer::DrawCrystalTutorial() {
     float bgY = fbHeightHalf - bgHeight / 2;
     float textX = bgX + bgWidth /2;
     DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
-    DrawText(textX, bgY + 100, 1.5f, "クリスタルを攻撃して破壊しよう！", true);
+    DrawText(textX, bgY + 100, 0.5f, "クリスタルを攻撃して破壊しよう！", true);
     // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
-    DrawText(textX, bgY + bgHeight - 380, 1.5f, "惑星にあるクリスタルはXボタンで攻撃することで破壊できます。", true);
-    DrawText(textX, bgY + bgHeight - 320, 1.5f, "クリスタルの中にはアイテムが隠れている可能性があるので", true);
-    DrawText(textX, bgY + bgHeight - 260, 1.5f, "見つけたら積極的に破壊してみてください。", true);
-    DrawText(textX, bgY + bgHeight - 200, 1.5f, "大きいクリスタルは何回も攻撃しないと破壊できませんが、", true);
-    DrawText(textX, bgY + bgHeight - 140, 1.5f, "空中でAボタンを長押しし、移動が止まった状態（チャージ完了状態）で離すことで出せる", true);
-    DrawText(textX, bgY + bgHeight - 80, 1.5f, "溜め攻撃を当てれば一発で壊れますよ！", true);
+    DrawText(textX, bgY + bgHeight - 380, 0.5f, "クリスタルはXボタンで攻撃することで破壊できます。", true);
+    DrawText(textX, bgY + bgHeight - 320, 0.5f, "クリスタルの中にはアイテムが隠れていることがあるので", true);
+    DrawText(textX, bgY + bgHeight - 260, 0.5f, "見つけたら積極的に破壊してみてください。", true);
+    DrawText(textX, bgY + bgHeight - 200, 0.5f, "大きいクリスタルは空中溜め攻撃で破壊できますよ。", true);
+    // DrawText(textX, bgY + bgHeight - 140, 0.5f, "空中でAボタンを長押しし、移動が止まった状態（チャージ完了状態）で離すことで出せる", true);
+    // DrawText(textX, bgY + bgHeight - 80, 0.5f, "溜め攻撃を当てれば一発で壊れますよ！", true);
 }
 
 void UIRenderer::DrawBattleTutorial() {
@@ -233,12 +243,12 @@ void UIRenderer::DrawBattleTutorial() {
     float bgY = fbHeightHalf - bgHeight / 2;
     float textX = bgX + bgWidth /2;
     DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
-    DrawText(textX, bgY + 100, 1.5f, "攻撃して敵を倒そう！", true);
+    DrawText(textX, bgY + 100, 0.5f, "攻撃してガードを壊そう！", true);
     // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
-    DrawText(textX, bgY + bgHeight - 380, 1.5f, "Xボタンを押すことで攻撃することができます。", true);
-    DrawText(textX, bgY + bgHeight - 320, 1.5f, "敵はガードを所持していて、連続して3回攻撃を当てることでガードを一つ破壊することができます。", true);
-    DrawText(textX, bgY + bgHeight - 260, 1.5f, "全てのガードを破壊することでブレイク状態になります。", true);
-    DrawText(textX, bgY + bgHeight - 260, 1.5f, "まずは一度ブレイクしてみましょう。", true);
+    DrawText(textX, bgY + bgHeight - 380, 0.5f, "攻撃: Xボタン", true);
+    DrawText(textX, bgY + bgHeight - 320, 0.5f, "敵はガードを所持していて、連続して3回攻撃を当てると1つ壊れます。", true);
+    DrawText(textX, bgY + bgHeight - 260, 0.5f, "全てのガードを破壊するとブレイク状態になります。", true);
+    DrawText(textX, bgY + bgHeight - 200, 0.5f, "まずは一度ブレイクしてみましょう。", true);
 }
 
 void UIRenderer::DrawBreakTutorial() {
@@ -250,14 +260,17 @@ void UIRenderer::DrawBreakTutorial() {
     float bgY = fbHeightHalf - bgHeight / 2;
     float textX = bgX + bgWidth /2;
     DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
-    DrawText(textX, bgY + 100, 1.5f, "ブレイクアタックを繰り出そう！", true);
+    DrawText(textX, bgY + 100, 0.5f, "ブレイクアタックを繰り出そう！", true);
     // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
-    DrawText(textX, bgY + bgHeight - 380, 1.5f, "ナイスブレイク！", true);
-    DrawText(textX, bgY + bgHeight - 320, 1.5f, "ブレイクすると敵が空中に打ち上げられます。", true);
-    DrawText(textX, bgY + bgHeight - 260, 1.5f, "なのでAボタンでジャンプして敵を攻撃する必要があります。", true);
-    DrawText(textX, bgY + bgHeight - 200, 1.5f, "空中での攻撃はブレイクアタックといいます。", true);
-    DrawText(textX, bgY + bgHeight - 140, 1.5f, "ブレイクアタックはXボタンを長押しして、最大まで溜めた状態で離すことで繰り出せます。", true);
-    DrawText(textX, bgY + bgHeight - 80, 1.5f, "大ダメージを与えることができるので一度やってみましょう！", true);
+    DrawText(textX, bgY + bgHeight - 380, 0.5f, "ナイスブレイク！", true);
+    DrawText(textX, bgY + bgHeight - 320, 0.5f, "ブレイクすると敵が空中に打ち上げられます。", true);
+    DrawText(textX, bgY + bgHeight - 260, 0.5f, "空中の敵を攻撃するにはジャンプしてXボタンを長押しします。", true);
+    DrawText(textX, bgY + bgHeight - 200, 0.5f, "最大まで溜めた状態で離すことで高火力な溜め攻撃が繰り出せます。", true);
+}
+
+void UIRenderer::DrawStageClear() {
+    float textX = mFbWidth * 0.5f;
+    DrawText(textX, 300, 1.0f, "ステージクリア！", true);
 }
 
 void UIRenderer::DrawRemainPartsUI() {
@@ -273,6 +286,6 @@ void UIRenderer::DrawRemainPartsUI() {
     }
     std::string remainText = "残りのかけら数: " + std::to_string(remainBoatParts);
     if (remainBoatParts != 0){
-        DrawText(40, 40, 1.5f, remainText.c_str(), false);
+        DrawText(40, 40, 0.5f, remainText.c_str(), false);
     }
 }

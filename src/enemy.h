@@ -12,7 +12,6 @@ public:
     void UpdateActor(float deltaTime) override;
 
     virtual bool IsBoss() const { return false; }
-    float GetRadius() const override { return mScale * 3.0f; }
 
     void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(const glm::vec3& pos) { mPos = pos; }
@@ -28,6 +27,7 @@ public:
     void SetLaunchedTimer(float launchedTimer) { mLaunchedTimer = launchedTimer; }
     void SetModelPath(const std::string& modelPath) { mModelPath = modelPath; }
     void SetScale(float scale) { mScale = scale; }
+    void SetRadius(float radius) { mRadius = radius; }
     void SetSpeed(float speed) { mSpeed = speed; }
     void SetAttack(float attack) { mAttack = attack; }
     void SetStandByAttackTimer(float standByAttackTimer) { mStandByAttackTimer = standByAttackTimer; }
@@ -39,6 +39,7 @@ public:
     class Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
     const glm::vec3& GetPos() const override { return mPos; }
     int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
+    int GetBreakCount() const { return mBreakCount; }
     float GetHp() const { return mHp; }
     bool GetIsAlive() const { return mIsAlive; }
     bool GetIsDamaged() const { return mIsDamaged; }
@@ -50,6 +51,7 @@ public:
     float GetDeathTimer() const { return mDeathTimer; }
     const std::string& GetModelPath() const { return mModelPath; }
     float GetScale() const { return mScale; }
+    float GetRadius() const override { return mRadius; }
     float GetSpeed() const { return mSpeed; }
     float GetAttack() const { return mAttack; }
     float GetStandByAttackTimer() const { return mStandByAttackTimer; }
@@ -62,7 +64,8 @@ private:
     void UpdateDying(float deltaTime);
 
     void UpdateUpVec();
-    void UpdateBehavior(float deltaTime, class Player* player);
+    void UpdateKnockBack(float deltaTime, class Player* player);
+    void UpdateBehavior(float deltaTime, Player* player);
     void ApplyDamage(Player* player);
     void ApplyCounter(Player* player);
     void StartDying();
@@ -90,6 +93,7 @@ private:
     int mBreakCountMax;
 
     float mScale;
+    float mRadius;
     float mSpeed;
     float mAttack;
     float mHp;
@@ -98,6 +102,7 @@ private:
     float mLaunchedTimer;
     float mAttackMotionTimer;
     float mDeathTimer;
+    float mKnockBackTimer;
 
     glm::vec3 mPos;
     glm::vec3 mVelocity;
