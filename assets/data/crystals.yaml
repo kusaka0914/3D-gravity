@@ -10,5 +10,5 @@ crystals :
     u : 0.3
     height : 0.5
     scale : 0.02
-    count : 5
+    hp : 50.0
     radius : 2.3

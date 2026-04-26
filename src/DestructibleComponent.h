@@ -13,12 +13,12 @@ public:
     void Update(float deltaTime) override;
 
     void SetIsDestroyed(bool isDestroyed) { mIsDestroyed = isDestroyed; }
-    void SetDestroyCount(int destroyCount) { mDestroyCount = destroyCount; }
+    void SetDestroyHp(int destroyHp) { mDestroyHp = destroyHp; }
 
     bool GetIsDestroyed() const { return mIsDestroyed; }
-    int GetDestroyCount() const { return mDestroyCount; }
+    // int GetDestroyCount() const { return mDestroyCount; }
 private:
     bool mIsDestroyed;
     bool mIsAttackedPrev;
-    int mDestroyCount;
+    float mDestroyHp;
 };

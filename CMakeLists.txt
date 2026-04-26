@@ -19,6 +19,7 @@ add_executable(engine
     src/Enemy.cpp
     src/FocusComponent
     src/Game.cpp
+    src/GameProgressState.cpp
     src/Key.cpp
     src/Loader.cpp
     src/Main.cpp
@@ -31,6 +32,7 @@ add_executable(engine
     src/Stage.cpp
     src/Star.cpp
     src/UIRenderer.cpp
+    src/UIState.cpp
     src/VertexArray.cpp
 )
 

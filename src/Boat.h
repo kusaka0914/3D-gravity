@@ -47,6 +47,7 @@ private:
     int mStartPlanet;
     int mDestPlanet;
     bool mIsMoving;
+    bool mIsActivePrev;
     bool mIsActive;
     float mTransitionTimer;
     float mProgress;

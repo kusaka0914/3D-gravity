@@ -15,6 +15,8 @@
 #include "Star.h"
 #include "Crystal.h"
 #include "UIRenderer.h"
+#include "UIState.h"
+#include "GameProgressState.h"
 #include "Renderer.h"
 #include "BoatParts.h"
 #include "PhysicsSystem.h"
@@ -115,9 +117,8 @@ bool Game::Initialize()
     // 最初に見つかったフォントを用いる
     for (const char *path : fontPaths)
     {
-        mFont = TTF_OpenFont(path, 24);
+        mFont = TTF_OpenFont(path, 72);
         if (mFont){
-            std::cout << path << std::endl;
             break;
         }
     }
@@ -126,6 +127,8 @@ bool Game::Initialize()
     mShader = std::make_unique<Shader>();
     mUIRenderer = std::make_unique<UIRenderer>(this);
     mRenderer = std::make_unique<Renderer>(this);
+    mUIState = std::make_unique<UIState>(this);
+    mGameProgressState = std::make_unique<GameProgressState>(this);
     if (!mShader->GetShaderProgram())
     {
         glfwTerminate();
@@ -151,7 +154,7 @@ bool Game::Initialize()
 
     mLoader = std::make_unique<Loader>(this); 
 
-    LoadData();
+    LoadData(true);
 
     // 惑星/プレイヤー生成後に行う
     mPhysicsSystem = std::make_unique<PhysicsSystem>(this);
@@ -207,7 +210,7 @@ void Game::ProcessInput()
     bool reloadPressed = (glfwGetKey(mWindow, GLFW_KEY_R) == GLFW_PRESS);
     if (reloadPressed && !mReloadKeyPressedPrev)
     {
-        LoadData();
+        LoadData(false);
     }
     mReloadKeyPressedPrev = reloadPressed;
 
@@ -228,9 +231,32 @@ void Game::ProcessInput()
         mPlayers[1]->SetMeshes(playerMeshes);
     } 
 
+    bool aPressed = SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_A);
+    if (aPressed && !mAPressedPrev) {
+        if (mUIState->GetIsTutorialActive()) {
+            mUIState->SetIsTutorialActive(false);
+            mUIState->SetIsCrystalTutorialActive(true);
+        } else if (mUIState->GetIsCrystalTutorialActive()) {
+            mUIState->SetIsCrystalTutorialActive(false);
+            mUIState->SetIsUIActive(false);
+            mPlayers[0]->SetCanMove(true);
+        }
+        if (mUIState->GetIsBattleTutorialActive()) {
+            mUIState->SetIsBattleTutorialActive(false);
+            mUIState->SetIsUIActive(false);
+            mPlayers[0]->SetCanMove(true);
+        }
+        if (mUIState->GetIsBreakTutorialActive()) {
+            mUIState->SetIsBreakTutorialActive(false);
+            mUIState->SetIsUIActive(false);
+            mPlayers[0]->SetCanMove(true);
+        }
+    }
+
     // ゲーム終了
     if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS || (mSdlController && SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_BACK)))
         glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
+    mAPressedPrev = aPressed;
 }
 
 void Game::UpdateGame()
@@ -241,6 +267,10 @@ void Game::UpdateGame()
         mHitStopTimer-= deltaTime;
         deltaTime = 0.0f;
     }
+    if (mUIState->GetIsUIActive()) {
+        deltaTime = 0.0f;
+    }
+
     mLastTime = currentTime;
 
     for (const auto& actor_unique : mActors) {
@@ -284,8 +314,8 @@ void Game::RemoveActor(std::unique_ptr<Actor> actor)
     }
 }
 
-void Game::LoadData() {
-    mLoader->LoadDataFromYaml();
+void Game::LoadData(bool isLoadPlayer) {
+    mLoader->LoadDataFromYaml(isLoadPlayer);
     LoadModel();
 }
 
@@ -346,8 +376,9 @@ void Game::LoadModel() {
         // ボートのかけらモデルをロード
         std::vector<BoatParts*> boatParts = planet->GetBoatParts();
         if (!boatParts.empty()) {
-            std::vector<LoadedMesh> boatPartsMeshes = mMesh->loadMeshFromFile("../assets/models/boatParts.obj");
             for (auto parts : boatParts) {
+                std::string path = "../assets/models/" + parts->GetModelPath();
+                std::vector<LoadedMesh> boatPartsMeshes = mMesh->loadMeshFromFile(path.c_str());
                 parts->SetMeshes(boatPartsMeshes);
             }
         }

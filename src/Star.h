@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "CollectableComponent.h"
 
 class Star : public Actor {
 public:
@@ -14,21 +15,20 @@ public:
 
     void SetPos(glm::vec3& pos) { mPos = pos; }
     void SetIsActive(bool isActive) override { mIsActive = isActive; }
-    void SetIsObtained(bool isObtained) { mIsObtained = isObtained; }
     void SetCurrentPlanet(int currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
 
     const glm::vec3& GetPos() const override{ return mPos; }
     bool GetIsActive() const { return mIsActive; }
-    bool GetIsObtained() const { return mIsObtained; }
     int GetCurrentPlanet() const { return mCurrentPlanet; }
+    class CollectableComponent* GetCollectableComponent() const { return mCollectableComponent; }
     const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
 
 private:
     glm::vec3 mPos;
     bool mIsActive;
-    bool mIsObtained;
     int mCurrentPlanet;
+    CollectableComponent* mCollectableComponent;
 
     std::vector<struct LoadedMesh> mMeshes;
 };

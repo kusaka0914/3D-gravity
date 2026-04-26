@@ -16,7 +16,7 @@ public:
     void UpdateActor(float deltaTime) override;
     
     float getYawFromDirection(const glm::vec3& up, const glm::vec3& dir);
-    glm::mat4 getPlayerView();
+    glm::mat4 getPlayerView(float cameraDistance, bool isFixed = false);
 
     void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(const glm::vec3& pos) { mPos = pos; }
@@ -35,6 +35,7 @@ public:
     void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
     void SetIsDamagePrev(bool isDamagePrev) { mIsDamagePrev = isDamagePrev; }
     void SetIsActive(bool isActive) override { mIsActive = isActive; }
+    void SetCanMove(bool canMove) { mCanMove = canMove; }
     void SetDamageTimer(float damageTimer) { mDamageTimer = damageTimer; }
     void SetAttackCooldownRemaining(float attackCooldownRemaining) { mAttackCooldownRemaining = attackCooldownRemaining; }
     void SetAttackMoveLockRemaining(float attackMoveLockRemaining) { mAttackMoveLockRemaining = attackMoveLockRemaining; }
@@ -68,6 +69,7 @@ public:
     float GetAttackMoveLockRemaining() const { return mAttackMoveLockRemaining; }
     float GetAttackDodgeLockRemaining() const { return mAttackDodgeLockRemaining; }
     float GetAttackMotionTimer() const { return mAttackMotionTimer; }
+    float GetStrongAttackTimer() const { return mStrongAttackTimer; }
     int GetAttackIndex() const { return mAttackIndex; }
     int GetRestartPlanetIndex() const { return mRestartPlanetIndex; }
 
@@ -114,6 +116,8 @@ private:
     float mAttackHeightLockRemaining;
     float mAttackMotionTimer;
     float mCounterCooldownRemaining;
+    float mAttackPressTimer;
+    float mStrongAttackTimer;
 
     bool mOnGround;
     bool mIsDamaged;
@@ -126,6 +130,7 @@ private:
     bool mCounterPressed;
     bool mCounterPressedPrev;
     bool mIsActive;
+    bool mCanMove;
 
     std::vector<struct LoadedMesh> mMeshes;
 };

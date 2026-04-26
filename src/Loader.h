@@ -7,7 +7,7 @@
 class Loader {
 public:
     Loader(class Game* game);
-    bool LoadDataFromYaml();
+    bool LoadDataFromYaml(bool isLoadPlayer);
     
     Game* GetGame() const { return mGame; }
 private:

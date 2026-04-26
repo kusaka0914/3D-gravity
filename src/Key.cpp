@@ -9,6 +9,7 @@
 Key::Key(Game* game)
     : Actor(game)
     , mPos({0.0f, 8.0f, 0.0f})
+    , mIsActivePrev(false)
     , mIsActive(false)
 {
     std::unique_ptr<CollectableComponent> collectableComponent = std::make_unique<CollectableComponent>(this, 100);
@@ -21,11 +22,15 @@ Key::Key(Game* game)
 
 void Key::UpdateActor(float deltaTime)
 {
-    if (mCollectableComponent->GetIsObtained()) {
-        mCollectableComponent->SetIsObtained(false);
+    if (!mIsActivePrev && mIsActive) {
+        GetGame()->GetAudioSystem()->PlaySE("showKeySE");
+        mIsActivePrev = true;
+    }
+    if (mCollectableComponent->GetIsObtained() && mIsActive) {
         std::vector<Boat*> boats = mCurrentPlanet->GetBoats();
         for (auto boat : boats) {
             boat->GetFocusComponent()->SetFocusTimer(3.0f);
+            mIsActive = false;
         }
     }
 }

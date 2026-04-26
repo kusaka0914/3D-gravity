@@ -11,6 +11,7 @@
 #include "VertexArray.h"
 #include "Game.h"
 #include "FocusComponent.h"
+#include "GameProgressState.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -35,18 +36,33 @@ void Renderer::Draw() {
     Planet* currentPlanet = players[0]->GetCurrentPlanet();
     std::vector<Boat*> boats = currentPlanet->GetBoats();
     glm::mat4 view;
-    for (auto boat : boats) {
-        Key* key = currentPlanet->GetKey();
-        if (boat->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
-            view = boat->GetFocusComponent()->GetFocusView();
-        } else if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
-            view = key->GetFocusComponent()->GetFocusView();
+    if (!boats.empty()) {
+        for (auto boat : boats) {
+            Key* key = currentPlanet->GetKey();
+            if (boat->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
+                view = boat->GetFocusComponent()->GetFocusView();
+                players[0]->SetCanMove(false);
+            } else if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
+                view = key->GetFocusComponent()->GetFocusView();
+                players[0]->SetCanMove(false);
+            } else if (GetGame()->GetGameProgressState()->GetIsStageClear()) {
+                view = players[0]->getPlayerView(4.0f, true);
+            }
+            else {
+                view = players[0]->getPlayerView(12.0f);
+                players[0]->SetCanMove(true);
+            }
+        }
+    } else {
+        if (GetGame()->GetGameProgressState()->GetIsStageClear()) {
+            view = players[0]->getPlayerView(4.0f, true);
         }
         else {
-            view = players[0]->getPlayerView();
+            view = players[0]->getPlayerView(12.0f);
+            players[0]->SetCanMove(true);
         }
     }
-    glm::mat4 view2P = isPlayer2Joined ? players[1]->getPlayerView() : view;
+    glm::mat4 view2P = isPlayer2Joined ? players[1]->getPlayerView(12.0f) : view;
 
     glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -226,7 +242,7 @@ void Renderer::Draw() {
                     textTextureCache[s] = {tex, {tw, th}};
                     return {tex, {tw, th}};
                 };
-                auto [texId, texSize] = getTextTexture(std::to_string(ei + 1));
+                auto [texId, texSize] = getTextTexture(std::to_string(enemies[ei]->GetBreakCount()));
                 if (texId != 0 && texSize.x > 0 && texSize.y > 0)
                 {
                     glm::vec3 camPos(glm::inverse(viewMat)[3]);
@@ -292,7 +308,7 @@ void Renderer::Draw() {
         if (!boatParts.empty()) {
             for (auto parts : boatParts) { 
                 if (parts->GetIsActive()) {
-                    const float boatPartsScale = 0.25f;
+                    const float boatPartsScale = 1.0f;
                     glm::vec3 boatPartsUp = glm::normalize(parts->GetPos() - currentPlanet->GetCenter());
                     drawCharacter(parts->GetPos(), boatPartsScale, glm::vec3(0.4f, 0.25f, 0.1f), boatPartsUp, 0.0f, parts->GetMeshes());
                 }
