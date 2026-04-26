@@ -49,7 +49,7 @@ void Renderer::Draw() {
                 view = players[0]->getPlayerView(4.0f, true);
             }
             else {
-                view = players[0]->getPlayerView(12.0f);
+                view = players[0]->getPlayerView(10.0f);
                 players[0]->SetCanMove(true);
             }
         }
@@ -58,7 +58,7 @@ void Renderer::Draw() {
             view = players[0]->getPlayerView(4.0f, true);
         }
         else {
-            view = players[0]->getPlayerView(12.0f);
+            view = players[0]->getPlayerView(10.0f);
             players[0]->SetCanMove(true);
         }
     }

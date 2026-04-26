@@ -70,6 +70,7 @@ public:
     float GetAttackDodgeLockRemaining() const { return mAttackDodgeLockRemaining; }
     float GetAttackMotionTimer() const { return mAttackMotionTimer; }
     float GetStrongAttackTimer() const { return mStrongAttackTimer; }
+    float GetInvincibleTimer() const { return mInvincibleTimer; }
     int GetAttackIndex() const { return mAttackIndex; }
     int GetRestartPlanetIndex() const { return mRestartPlanetIndex; }
 
@@ -115,9 +116,11 @@ private:
     float mAttackDodgeLockRemaining;
     float mAttackHeightLockRemaining;
     float mAttackMotionTimer;
-    float mCounterCooldownRemaining;
+    float mSpecialAttackCooldownRemaining;
     float mAttackPressTimer;
     float mStrongAttackTimer;
+    float mComboTimer;
+    float mInvincibleTimer;
 
     bool mOnGround;
     bool mIsDamaged;
@@ -127,8 +130,10 @@ private:
     bool mJumpPressed;
     bool mAttackPressed; 
     bool mAttackPressedPrev; 
-    bool mCounterPressed;
-    bool mCounterPressedPrev;
+    bool mWideAttackPressed;
+    bool mWideAttackPressedPrev;
+    bool mSpecialAttackPressed;
+    bool mSpecialAttackPressedPrev;
     bool mIsActive;
     bool mCanMove;
 

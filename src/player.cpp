@@ -27,7 +27,7 @@ Player::Player(Game* game)
     , mAttackStartHeight(0.0f)
     , mDodgeTimer(0.0f)
     , mDodgeCooldown(0.0f)
-    , mMoveSpeed(1.0f)
+    , mMoveSpeed(3.2f)
     , mCameraStickX(0.0f)
     , mCameraStickY(0.0f)
     , mVelocity(0.0f, 0.0f, 0.0f)
@@ -41,8 +41,8 @@ Player::Player(Game* game)
     , mJumpPressed(false)
     , mAttackPressed(false)
     , mAttackPressedPrev(false)
-    , mCounterPressed(false)
-    , mCounterPressedPrev(false)
+    , mSpecialAttackPressed(false)
+    , mSpecialAttackPressedPrev(false)
     , mDamageTimer(0.0f)
     , mAttackCooldownRemaining(0.0f)
     , mAttackMoveLockRemaining(0.0f)
@@ -53,6 +53,8 @@ Player::Player(Game* game)
     , mIsActive(true)
     , mAttackPressTimer(-1.0f)
     , mStrongAttackTimer(-1.0f)
+    , mInvincibleTimer(-1.0f)
+    , mComboTimer(-1.0f)
 {
     Stage* currentStage = GetGame()->GetCurrentStage();
     mCurrentPlanet = currentStage->GetPlanets()[0];
@@ -109,23 +111,23 @@ void Player::ProcessActor()
 
         // 攻撃判定（Xボタン）
         mAttackPressed = false;
-        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_X) && mAirAttackIndex == 0)
+        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_X))
             mAttackPressed = true;
+        
+        // 攻撃判定（Xボタン）
+        mWideAttackPressed = false;
+        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_Y))
+            mWideAttackPressed = true;
 
         // 回避（Bボタン）
         mDodgePressed = false;
         if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_B))
             mDodgePressed = true;
 
-        // カウンター（Lボタン）
-        mCounterPressed = false;
+        // スペシャルアタック（Lボタン）
+        mSpecialAttackPressed = false;
         if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_LEFTSHOULDER))
-            mCounterPressed = true;
-
-        // ダッシュ判定（Rボタン）
-        mMoveSpeed = 2.0f;
-        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
-            mMoveSpeed = 3.2f;
+            mSpecialAttackPressed = true;
     }
 
     if (GetGame()->GetIsPlayer2Joined() && mPlayerNum != 1)
@@ -144,7 +146,7 @@ void Player::ProcessActor()
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             mMoveLeft += 1.0f;
         if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-            mCounterPressed = true;
+            mSpecialAttackPressed = true;
         // if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         //     mCameraYaw -= cameraSensitivity * deltaTime;
         // if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
@@ -325,9 +327,9 @@ void Player::UpdateActor(float deltaTime)
     }
 
     // 攻撃
-    const float attackRange = 1.8f;
-    const float attackAngle = 0.8f;
-    bool canAttack = mAttackPressed && !mAttackPressedPrev && mAttackCooldownRemaining <= 0.0f && mOnGround || mStrongAttackTimer >= 0.0f;
+    float attackRange;
+    float attackAngle;
+    bool canAttack = ((mAttackPressed && !mAttackPressedPrev) || (mWideAttackPressed && !mWideAttackPressedPrev)) && mAttackCooldownRemaining <= 0.0f && mOnGround || mStrongAttackTimer >= 0.0f;
     if (canAttack)
     {
         mAttackStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
@@ -336,6 +338,7 @@ void Player::UpdateActor(float deltaTime)
         auto applyAttackLocksFromCooldown = [this]() {
             mAttackMoveLockRemaining = std::min(mAttackCooldownRemaining, 0.5f) + 0.2f;
             mAttackDodgeLockRemaining = std::max(0.0f, mAttackMoveLockRemaining - 0.5f);
+            mComboTimer = mAttackMoveLockRemaining + 1.0f;
             if (!mOnGround)
             {
                 // mAttackCooldownRemaining = 0.2f;
@@ -351,16 +354,34 @@ void Player::UpdateActor(float deltaTime)
             }
         };
 
+        if (mAttackPressed) {
+            attackRange = 1.0f;
+            attackAngle = 0.8f;
+            mAttack = 10;
+        } else if (mWideAttackPressed) {
+            attackRange = 2.8f;
+            attackAngle = 0.4f;
+            mAttack = 5;
+        } else if (mStrongAttackTimer >= 0.0f) {
+            attackRange = 6.0f;
+            mAttack = 50;
+        }
+
         std::vector<Enemy*> hitEnemies;
         for (auto& enemy : enemies)
         {
             if (!enemy->GetIsAlive())
+                continue;
+            if (mStrongAttackTimer >= 0.0f && enemy->GetOnGround())
                 continue;
             glm::vec3 enemyPos = enemy->GetPos();
             glm::vec3 toEnemy = glm::normalize(enemyPos - mPos);
             float dist = glm::length(enemyPos - mPos);
             float dot = glm::dot(-mFacingForwardVec, toEnemy);
             float effectiveRange = attackRange + enemy->GetRadius();
+            if (mStrongAttackTimer >= 0.0f && dist <= effectiveRange) {
+                hitEnemies.push_back(enemy);
+            }
             if (dist <= effectiveRange && dot >= attackAngle)
                 hitEnemies.push_back(enemy);
         }
@@ -409,39 +430,26 @@ void Player::UpdateActor(float deltaTime)
     }
 
     // カウンター
-    if (mCounterPressed && !mCounterPressedPrev)
+    if (mSpecialAttackPressed && !mSpecialAttackPressedPrev && mSpecialAttackCooldownRemaining <= 0.0f)
     {
         for (auto& enemy : enemies)
         {
-            if (mCounterCooldownRemaining > 0.0f)
-                continue;
-            glm::vec3 enemyPos = enemy->GetPos();
-            float enemyStandByAttackTimer = enemy->GetStandByAttackTimer() ;
             if (!enemy->GetIsAlive())
                 continue;
-            if (enemyStandByAttackTimer > 0.5f){
-                mCounterCooldownRemaining = 0.5f;
-            }
-            if (enemyStandByAttackTimer <= 0.3f || enemyStandByAttackTimer > 0.5f)
+            if (mCounterCooldownRemaining > 0.0f)
                 continue;
-                
-            glm::vec3 toEnemy = glm::normalize(enemyPos - mPos);
-            float dist = glm::length(enemyPos - mPos);
-            float dot = glm::dot(-mFacingForwardVec, toEnemy);
-            float effectiveRange = attackRange + enemy->GetRadius();
-            bool isHit = dist <= effectiveRange && dot >= attackAngle;
-            if (isHit)
-            {
-                enemy->SetIsCountered(true);
-                GetGame()->GetAudioSystem()->PlaySE("counterSE");
-                mAttackMotionTimer = 0.3f;
+            mAttack = 10;
+            enemy->SetIsDamaged(true);
+            if (enemy->GetOnGround()) {
+                enemy->SetIsBroken(true);
             }
+            mSpecialAttackCooldownRemaining = 30.0f
         }
     }
 
-    if (mCounterCooldownRemaining >= 0.0f)
+    if (mSpecialAttackCooldownRemaining >= 0.0f)
     {
-        mCounterCooldownRemaining -= deltaTime;
+        mSpecialAttackCooldownRemaining -= deltaTime;
     }
 
     // 攻撃クールダウンタイム減少
@@ -501,8 +509,12 @@ void Player::UpdateActor(float deltaTime)
         mAttackMoveLockRemaining -= deltaTime;
         if (mAttackMoveLockRemaining < 0.0f)
             mAttackMoveLockRemaining = 0.0f;
-        if (mAttackMoveLockRemaining <= 0.0f)
-            mAttackIndex = 0; // 歩けるようになったらコンボリセット
+    }
+
+    if (mComboTimer > 0.0f) {
+        mComboTimer -= deltaTime;
+        if (mComboTimer <= 0.0f)
+            mAttackIndex = 0; // コンボリセット
     }
 
     // 回避クールダウンタイム減少
@@ -518,8 +530,9 @@ void Player::UpdateActor(float deltaTime)
 
 
     if (mIsDamaged) {
-        mIsDamaged = false;
         mDamageTimer = 1.0f;
+        mInvincibleTimer = 2.0f;
+        mIsDamaged = false;
         GetGame()->GetAudioSystem()->PlaySE("damagedSE");
     }
     // ダメージを受けた際のノックバック
@@ -534,9 +547,13 @@ void Player::UpdateActor(float deltaTime)
         mIsDamaged = false;
     }
 
+    if (mInvincibleTimer >= 0.0f) {
+        mInvincibleTimer -= deltaTime;
+    }
+
     if (mHp <= 0)
     {
-        mHp = 80;
+        mHp = 100;
         mPos = mRestartPos;
         mCurrentPlanetNum = mRestartPlanetIndex;
         mVelocity = {0.0f, 0.0f, 0.0f};
@@ -584,8 +601,9 @@ void Player::UpdateActor(float deltaTime)
     }
 
     mAttackPressedPrev = mAttackPressed;
+    mWideAttackPressedPrev = mWideAttackPressed;
     mDodgePressedPrev = mDodgePressed;
-    mCounterPressedPrev = mCounterPressed;
+    mSpecialAttackPressedPrev = mSpecialAttackPressed;
     mIsDamagePrev = mIsDamaged;
 }
 

@@ -4,119 +4,119 @@
 # speed: 移動速度（省略時 2.0）, attack: 接触時のダメージ（省略時 20.0）
 # type: boss にするとボス（撃破でスター出現）
 enemies:
-  - theta: 0.0
-    u: 0.0
-    height : 0.0
-    currentPlanetNum: 0
-    hp: 150
-    modelPath: enemy.obj
-    scale: 0.25
-    speed: 1.5
-    attack: 10.0
-    radius : 0.75
+#   - theta: 0.0
+#     u: 0.0
+#     height : 0.0
+#     currentPlanetNum: 0
+#     hp: 150
+#     modelPath: enemy.obj
+#     scale: 0.25
+#     speed: 1.5
+#     attack: 10.0
+#     radius : 0.75
   - theta: 0.0
     u: 0.0
     height : 0.0
     currentPlanetNum: 1
-    hp: 150
+    hp: 80
     modelPath: enemy.obj
     scale: 0.25
-    speed: 1.5
-    attack: 10.0
+    speed: 1.0
+    attack: 5.0
     breakCountMax : 2
     radius : 0.75
   - theta: 2.056
     u: 1.0
     height : 0.0
     currentPlanetNum: 1
-    hp: 150
+    hp: 80
     modelPath: enemy.obj
     scale: 0.25
-    speed: 2.0
-    attack: 10.0
+    speed: 1.0
+    attack: 5.0
     radius : 0.75
   - theta: 3.513
     u: -0.6
     height : 0.0
     currentPlanetNum: 1
-    hp: 150
+    hp: 80
     modelPath: enemy.obj
     scale: 0.25
-    speed: 2.0
-    attack: 10.0
+    speed: 1.0
+    attack: 5.0
   - theta: 3.969
     u: 0.8
     height : 0.0
     currentPlanetNum: 1
-    hp: 150
+    hp: 80
     modelPath: enemy.obj
     scale: 0.25
-    speed: 2.0
-    attack: 10.0
+    speed: 1.0
+    attack: 5.0
   - theta: 5.026
     u: 1.6
     height : 0.0
     currentPlanetNum: 1
-    hp: 150
+    hp: 80
     modelPath: enemy.obj
     scale: 0.25
-    speed: 1.5
-    attack: 10.0
+    speed: 1.0
+    attack: 5.0
   - theta: 1.0
     u: 0.0
     height : 0.0
     currentPlanetNum: 1
-    hp: 150
+    hp: 80
     modelPath: enemy.obj
     scale: 0.25
-    speed: 1.5
-    attack: 10.0
+    speed: 1.0
+    attack: 5.0
     breakCountMax : 2
     radius : 0.75
   - theta: 3.056
     u: 1.0
     height : 0.0
     currentPlanetNum: 1
-    hp: 150
+    hp: 80
     modelPath: enemy.obj
     scale: 0.25
-    speed: 2.0
-    attack: 10.0
+    speed: 1.0
+    attack: 5.0
     radius : 0.75
   - theta: 4.513
     u: -0.6
     height : 0.0
     currentPlanetNum: 1
-    hp: 150
+    hp: 80
     modelPath: enemy.obj
     scale: 0.25
-    speed: 2.0
-    attack: 10.0
+    speed: 1.0
+    attack: 5.0
   - theta: 4.969
     u: 0.8
     height : 0.0
     currentPlanetNum: 1
-    hp: 150
+    hp: 80
     modelPath: enemy.obj
     scale: 0.25
-    speed: 2.0
-    attack: 10.0
+    speed: 1.0
+    attack: 5.0
   - theta: 6.026
     u: 1.6
     height : 0.0
     currentPlanetNum: 1
-    hp: 150
+    hp: 80
     modelPath: enemy.obj
     scale: 0.25
-    speed: 1.5
-    attack: 10.0
+    speed: 1.0
+    attack: 5.0
   # ボス（撃破でスター出現）
   - isBoss : 1
     theta: 6.083
     u: -0.8
     height : 0.0
     currentPlanetNum: 2
-    hp: 300
+    hp: 200
     modelPath: enemy.obj
     scale: 1.0
     speed: 3.0

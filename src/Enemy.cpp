@@ -130,7 +130,7 @@ void Enemy::UpdateBehavior(float deltaTime, Player* player) {
     float distToPlayer = glm::length(playerPos - mPos);
     glm::vec3 vecToPlayer = glm::normalize(playerPos - mPos);
 
-    const float attackRangeMargin = 0.2f;
+    const float attackRangeMargin = 1.5f;
     bool inRangeOfPlayer = (distToPlayer <= GetRadius() + attackRangeMargin);
     // 追跡
     if (distToPlayer <= mSensing && !player->GetIsDamaged() && distToPlayer >= GetRadius() + 0.2f && mStandByAttackTimer <= 0.0f && mAttackMotionTimer <= 0.0f && mKnockBackTimer <= 0.0f)
@@ -146,7 +146,7 @@ void Enemy::UpdateBehavior(float deltaTime, Player* player) {
     {
         if (!player->GetIsDamagePrev()) {
             mIsPreparing = true;
-            mStandByAttackTimer = 1.2f;
+            mStandByAttackTimer = 2.0f;
         }
     }
     // 攻撃準備
@@ -161,7 +161,7 @@ void Enemy::UpdateBehavior(float deltaTime, Player* player) {
     if (mStandByAttackTimer <= 0.0f && mIsPreparing)
     {
         mStandByAttackTimer = -1.0f;
-        mAttackMotionTimer = 1.0f;
+        mAttackMotionTimer = 1.5f;
         mIsPreparing = false;
         mIsHit = false;
     }
@@ -169,16 +169,14 @@ void Enemy::UpdateBehavior(float deltaTime, Player* player) {
 
 void Enemy::ApplyDamage(Player* player) {
     mIsDamaged = false;
+    mHp -= player->GetAttack();
     if (mIsStrongAttacked) {
-        mHp -= player->GetAttack() * 5;
         mLaunchedTimer = -1.0f;
         mBreakCount = mBreakCountMax;
         GetGame()->SetHitStopTimer(0.6f);
         GetGame()->GetAudioSystem()->PlaySE("attackAirSE");
         mIsStrongAttacked = false;
         mKnockBackTimer = 1.0f;
-    } else {
-        mHp -= player->GetAttack();
     }
 }
 
@@ -229,7 +227,7 @@ void Enemy::UpdateMotionTimer(float deltaTime, Player* player) {
     glm::vec3 playerPos = player->GetPos();
     glm::vec3 toPlayer = glm::normalize(playerPos - mPos);
     float attackSpeed = 2.5f;
-    float halfAttackMotionTimer = 0.3f;
+    float halfAttackMotionTimer = 0.7f;
     if (mAttackMotionTimer >= halfAttackMotionTimer) {
         mPos += toPlayer * attackSpeed * deltaTime;
     }else {
@@ -241,7 +239,7 @@ void Enemy::UpdateMotionTimer(float deltaTime, Player* player) {
 
     const float attackRangeMargin = 0.2f;
     bool inRangeOfPlayer = (distToPlayer <= GetRadius() + attackRangeMargin);
-    if (inRangeOfPlayer && !mIsHit)
+    if (inRangeOfPlayer && !mIsHit && player->GetInvincibleTimer() <= 0.0f)
     {
         player->SetIsDamaged(true);
         player->SetHp(player->GetHp() - mAttack);
@@ -276,7 +274,7 @@ void Enemy::ApplyGravity(float deltaTime) {
 
     // 頂点で固定開始
     if (vPrev > 0.0f && vNow <= 0.0f) {
-        mLaunchedTimer = 2.0f;
+        mLaunchedTimer = 3.0f;
     }
 }
 

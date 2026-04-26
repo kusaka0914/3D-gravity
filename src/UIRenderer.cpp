@@ -91,7 +91,7 @@ void UIRenderer::DrawDefaultUI() {
 }
 
 void UIRenderer::DrawOperationSupportUI() {
-    DrawText(20, mFbHeight - 60, 0.5f, "A:ジャンプ B:回避 X:攻撃 R:ダッシュ L:カウンター 空中でX長押し→離す:溜め攻撃", false);
+    DrawText(20, mFbHeight - 60, 0.5f, "A:ジャンプ B:回避 X:攻撃 Y:広範囲攻撃 L:カウンター 空中でX長押し→離す:溜め攻撃", false);
 }
 
 void UIRenderer::DrawHpUI() {
@@ -226,7 +226,7 @@ void UIRenderer::DrawCrystalTutorial() {
     DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
     DrawText(textX, bgY + 100, 0.5f, "クリスタルを攻撃して破壊しよう！", true);
     // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
-    DrawText(textX, bgY + bgHeight - 380, 0.5f, "クリスタルはXボタンで攻撃することで破壊できます。", true);
+    DrawText(textX, bgY + bgHeight - 380, 0.5f, "クリスタルは攻撃することで破壊できます。", true);
     DrawText(textX, bgY + bgHeight - 320, 0.5f, "クリスタルの中にはアイテムが隠れていることがあるので", true);
     DrawText(textX, bgY + bgHeight - 260, 0.5f, "見つけたら積極的に破壊してみてください。", true);
     DrawText(textX, bgY + bgHeight - 200, 0.5f, "大きいクリスタルは空中溜め攻撃で破壊できますよ。", true);
@@ -245,7 +245,7 @@ void UIRenderer::DrawBattleTutorial() {
     DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
     DrawText(textX, bgY + 100, 0.5f, "攻撃してガードを壊そう！", true);
     // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
-    DrawText(textX, bgY + bgHeight - 380, 0.5f, "攻撃: Xボタン", true);
+    DrawText(textX, bgY + bgHeight - 380, 0.5f, "攻撃: X 広範囲攻撃: Y", true);
     DrawText(textX, bgY + bgHeight - 320, 0.5f, "敵はガードを所持していて、連続して3回攻撃を当てると1つ壊れます。", true);
     DrawText(textX, bgY + bgHeight - 260, 0.5f, "全てのガードを破壊するとブレイク状態になります。", true);
     DrawText(textX, bgY + bgHeight - 200, 0.5f, "まずは一度ブレイクしてみましょう。", true);
@@ -260,7 +260,7 @@ void UIRenderer::DrawBreakTutorial() {
     float bgY = fbHeightHalf - bgHeight / 2;
     float textX = bgX + bgWidth /2;
     DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
-    DrawText(textX, bgY + 100, 0.5f, "ブレイクアタックを繰り出そう！", true);
+    DrawText(textX, bgY + 100, 0.5f, "溜め攻撃を繰り出そう！", true);
     // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
     DrawText(textX, bgY + bgHeight - 380, 0.5f, "ナイスブレイク！", true);
     DrawText(textX, bgY + bgHeight - 320, 0.5f, "ブレイクすると敵が空中に打ち上げられます。", true);
