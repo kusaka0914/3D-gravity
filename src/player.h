@@ -71,6 +71,7 @@ public:
     float GetAttackMotionTimer() const { return mAttackMotionTimer; }
     float GetStrongAttackTimer() const { return mStrongAttackTimer; }
     float GetInvincibleTimer() const { return mInvincibleTimer; }
+    float GetSpecialAttackCooldownRemaining() const { return mSpecialAttackCooldownRemaining; }
     int GetAttackIndex() const { return mAttackIndex; }
     int GetRestartPlanetIndex() const { return mRestartPlanetIndex; }
 

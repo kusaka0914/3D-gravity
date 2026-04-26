@@ -174,7 +174,6 @@ void Enemy::ApplyDamage(Player* player) {
         mLaunchedTimer = -1.0f;
         mBreakCount = mBreakCountMax;
         GetGame()->SetHitStopTimer(0.6f);
-        GetGame()->GetAudioSystem()->PlaySE("attackAirSE");
         mIsStrongAttacked = false;
         mKnockBackTimer = 1.0f;
     }

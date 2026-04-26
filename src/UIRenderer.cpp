@@ -80,8 +80,13 @@ void UIRenderer::DrawDefaultUI() {
     DrawOperationSupportUI();
 
     DrawHpUI();
-    
+
+
     std::vector<Player*> players = mGame->GetPlayers();
+    if (players[0]->GetSpecialAttackCooldownRemaining() <= 0.0f) {
+        DrawSpecialAttackUI();
+    }
+    
     Planet* currentPlanet = players[0]->GetCurrentPlanet();
     std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
 
@@ -91,7 +96,7 @@ void UIRenderer::DrawDefaultUI() {
 }
 
 void UIRenderer::DrawOperationSupportUI() {
-    DrawText(20, mFbHeight - 60, 0.5f, "A:ジャンプ B:回避 X:攻撃 Y:広範囲攻撃 L:カウンター 空中でX長押し→離す:溜め攻撃", false);
+    DrawText(20, mFbHeight - 60, 0.5f, "A:ジャンプ B:回避 X:攻撃 Y:広範囲攻撃 L:スペシャル攻撃 空中でX長押し→離す:溜め攻撃", false);
 }
 
 void UIRenderer::DrawHpUI() {
@@ -99,6 +104,11 @@ void UIRenderer::DrawHpUI() {
     int Hp = players[0]->GetHp();
     std::string HpText = "体力: " + std::to_string(Hp);
     DrawText(mFbWidth - 200, 40, 0.5f, HpText.c_str(), false);
+}
+
+void UIRenderer::DrawSpecialAttackUI() {
+    std::string text = "スペシャル攻撃OK!";
+    DrawText(mFbWidth / 2, 40, 0.5f, text.c_str(), true);
 }
 
 void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color)

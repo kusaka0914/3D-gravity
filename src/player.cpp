@@ -55,6 +55,7 @@ Player::Player(Game* game)
     , mStrongAttackTimer(-1.0f)
     , mInvincibleTimer(-1.0f)
     , mComboTimer(-1.0f)
+    , mSpecialAttackCooldownRemaining(-1.0f)
 {
     Stage* currentStage = GetGame()->GetCurrentStage();
     mCurrentPlanet = currentStage->GetPlanets()[0];
@@ -394,10 +395,11 @@ void Player::UpdateActor(float deltaTime)
             mAttackCooldownRemaining = 0.3f;
             mAttackIndex++;
             float strongAttackTimerNext = mStrongAttackTimer - deltaTime;
-            if (mStrongAttackTimer >= 0.0f && strongAttackTimerNext <= 0.0f) {
+            if (mStrongAttackTimer >= 0.0f) {
                 for (Enemy* enemy : hitEnemies) {
                     enemy->SetIsStrongAttacked(true);
                 }
+                GetGame()->GetAudioSystem()->PlaySE("attackAirSE");
             }
             if (mAttackIndex == 3)
             {
@@ -436,14 +438,12 @@ void Player::UpdateActor(float deltaTime)
         {
             if (!enemy->GetIsAlive())
                 continue;
-            if (mCounterCooldownRemaining > 0.0f)
-                continue;
             mAttack = 10;
             enemy->SetIsDamaged(true);
             if (enemy->GetOnGround()) {
                 enemy->SetIsBroken(true);
             }
-            mSpecialAttackCooldownRemaining = 30.0f
+            mSpecialAttackCooldownRemaining = 30.0f;
         }
     }
 

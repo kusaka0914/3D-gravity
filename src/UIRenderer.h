@@ -15,6 +15,7 @@ private:
     void DrawDefaultUI();
     void DrawOperationSupportUI();
     void DrawHpUI();
+    void DrawSpecialAttackUI();
     void DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color);
     void DrawText(float x, float y, float scale, const char* message, bool isCenterBase);
     void DrawTexture(float x, float y, float scale, const char* path);
