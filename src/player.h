@@ -80,10 +80,24 @@ public:
 private:
     void ProcessGameController();
     void ProcessKeyboard();
+
+    void UpdateCamera(float deltaTime);
+    void UpdateWorldVec();
     void UpdateWalk(float deltaTime);
     void UpdateDodge(float deltaTime);
     void StartDodge(float dodgeDuration, float dodgeCooldownTime);
     void Dodge(float deltaTime, float dodgeDuration);
+    void DetermineLanding();
+    void ApplyGravity(float deltaTime);
+    void ChangeFaceDir();
+    void Attack(float deltaTime);
+    void SpecialAttack();
+    void ChargeAttack(float deltaTime);
+    void TakeDamage();
+    void Die();
+    void RideBoat();
+    void UpdateTimer(float deltaTime);
+    void UpdatePrev();
 
 private:
     bool mOnGround;
