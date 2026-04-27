@@ -78,18 +78,28 @@ public:
     const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
 
 private:
-    class Planet* mCurrentPlanet;
+    void ProcessGameController();
+    void ProcessKeyboard();
+    void UpdateWalk(float deltaTime);
+    void UpdateDodge(float deltaTime);
+    void StartDodge(float dodgeDuration, float dodgeCooldownTime);
+    void Dodge(float deltaTime, float dodgeDuration);
 
-    glm::vec3 mPos;
-    glm::vec3 mUpVec;
-    glm::vec3 mForwardVec;
-    glm::vec3 mLeftVec;
-    glm::vec3 mFacingForwardVec;
-    glm::vec3 mFacingLeftVec;
-    glm::vec3 mKnockBackFrom;
-    glm::vec3 mRestartPos;
-    glm::vec3 mVelocity;
-    glm::vec3 mDodgeDir;
+private:
+    bool mOnGround;
+    bool mIsDamaged;
+    bool mIsDamagePrev;
+    bool mDodgePressed;
+    bool mDodgePressedPrev;
+    bool mJumpPressed;
+    bool mAttackPressed; 
+    bool mAttackPressedPrev; 
+    bool mWideAttackPressed;
+    bool mWideAttackPressedPrev;
+    bool mSpecialAttackPressed;
+    bool mSpecialAttackPressedPrev;
+    bool mIsActive;
+    bool mCanMove;
 
     int mCurrentPlanetNum;
     int mAttackIndex;
@@ -115,7 +125,6 @@ private:
     float mAttackCooldownRemaining;
     float mAttackMoveLockRemaining;
     float mAttackDodgeLockRemaining;
-    float mAttackHeightLockRemaining;
     float mAttackMotionTimer;
     float mSpecialAttackCooldownRemaining;
     float mAttackPressTimer;
@@ -123,20 +132,18 @@ private:
     float mComboTimer;
     float mInvincibleTimer;
 
-    bool mOnGround;
-    bool mIsDamaged;
-    bool mIsDamagePrev;
-    bool mDodgePressed;
-    bool mDodgePressedPrev;
-    bool mJumpPressed;
-    bool mAttackPressed; 
-    bool mAttackPressedPrev; 
-    bool mWideAttackPressed;
-    bool mWideAttackPressedPrev;
-    bool mSpecialAttackPressed;
-    bool mSpecialAttackPressedPrev;
-    bool mIsActive;
-    bool mCanMove;
+    glm::vec3 mPos;
+    glm::vec3 mUpVec;
+    glm::vec3 mForwardVec;
+    glm::vec3 mLeftVec;
+    glm::vec3 mFacingForwardVec;
+    glm::vec3 mFacingLeftVec;
+    glm::vec3 mKnockBackFrom;
+    glm::vec3 mRestartPos;
+    glm::vec3 mVelocity;
+    glm::vec3 mDodgeDir;
+
+    class Planet* mCurrentPlanet;
 
     std::vector<struct LoadedMesh> mMeshes;
 };

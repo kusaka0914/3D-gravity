@@ -47,7 +47,6 @@ Player::Player(Game* game)
     , mAttackCooldownRemaining(0.0f)
     , mAttackMoveLockRemaining(0.0f)
     , mAttackDodgeLockRemaining(0.0f)
-    , mAttackHeightLockRemaining(-5.0f)
     , mAttackIndex(0)
     , mAirAttackIndex(0)
     , mIsActive(true)
@@ -75,97 +74,12 @@ Player::~Player()
 
 void Player::ProcessActor()
 {
-    // ゲームパッド対応（1P）
-    // 入力をSDLに取り込む
-    SDL_PumpEvents();
-    // コントローラーの状態更新
-    SDL_GameControllerUpdate();
-    SDL_GameController* sdlController = GetGame()->GetSdlController();
     if(GetGame()->GetUIState()->GetIsUIActive() || GetGame()->GetGameProgressState()->GetIsStageClear()) {
         mCanMove = false;
     }
-    if (sdlController && SDL_GameControllerGetAttached(sdlController) && mPlayerNum == 1 && mDamageTimer <= 0.0f && mCanMove)
-    {
-        const float deadZone = 0.25f;
-        const float scale = 1.0f / 32767.0f; // SDL_GameControllerGetAxisの範囲が32767までで、scaleをかけて1.0f以内に抑えるため
-        // 左スティックの操作をプレイヤー移動量に
-        mMoveForward = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_LEFTY) * scale;
-        mMoveLeft = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_LEFTX) * scale;
-        // 触っていない時に動くのを防ぐ
-        if (std::abs(mMoveForward) < deadZone)
-            mMoveForward = 0.0f;
-        if (std::abs(mMoveLeft) < deadZone)
-            mMoveLeft = 0.0f;
-
-        // 右スティックの操作をカメラ移動量に
-        mCameraStickY = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_RIGHTY) * scale;
-        mCameraStickX = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_RIGHTX) * scale;
-        if (std::abs(mCameraStickY) < deadZone)
-            mCameraStickY = 0.0f;
-        if (std::abs(mCameraStickX) < deadZone)
-            mCameraStickX = 0.0f;
-
-        // ジャンプ判定（Aボタン）
-        mJumpPressed = false;
-        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_A))
-            mJumpPressed = true;
-
-        // 攻撃判定（Xボタン）
-        mAttackPressed = false;
-        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_X))
-            mAttackPressed = true;
-        
-        // 攻撃判定（Xボタン）
-        mWideAttackPressed = false;
-        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_Y))
-            mWideAttackPressed = true;
-
-        // 回避（Bボタン）
-        mDodgePressed = false;
-        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_B))
-            mDodgePressed = true;
-
-        // スペシャルアタック（Lボタン）
-        mSpecialAttackPressed = false;
-        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_LEFTSHOULDER))
-            mSpecialAttackPressed = true;
-    }
-
-    if (GetGame()->GetIsPlayer2Joined() && mPlayerNum != 1)
-    {
-        GLFWwindow* window = GetGame()->GetWindow();
-        mJumpPressed = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
-        mMoveSpeed = (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) ? 2.0f : 3.0f;
-        mMoveForward = 0.0f;
-        mMoveLeft = 0.0f;
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            mMoveForward -= 1.0f;
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            mMoveForward += 1.0f;
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            mMoveLeft -= 1.0f;
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            mMoveLeft += 1.0f;
-        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-            mSpecialAttackPressed = true;
-        // if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        //     mCameraYaw -= cameraSensitivity * deltaTime;
-        // if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-        //     mCameraYaw += cameraSensitivity * deltaTime;
-
-        // if (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f)
-        // {
-        //     glm::vec3 moveDir = mForwardVec * mMoveForward + mLeftVec * mMoveLeft;
-        //     float len = glm::length(moveDir);
-        //     if (len > 0.001f)
-        //     {
-        //         moveDir /= len;
-        //         mFacingYaw = getYawFromDirection(up, moveDir) + 3.14159265f;
-        //     }
-        // }
-        // mPos += mForwardVec * mMoveForward * dashSpeed * deltaTime;
-        // mPos += mLeftVec * mMoveLeft * dashSpeed * deltaTime;
-    }
+    
+    ProcessGameController();
+    ProcessKeyboard();
 }
 
 void Player::UpdateActor(float deltaTime)
@@ -183,7 +97,11 @@ void Player::UpdateActor(float deltaTime)
     btDiscreteDynamicsWorld* bulletWorld = physics ? physics->GetBulletWorld() : nullptr;
     btSphereShape* bulletWallSphere = physics ? physics->GetBulletWallSphere() : nullptr;
 
-    mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
+    if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal) {
+        mUpVec = {0.0f, 1.0f, 0.0f};
+    } else {
+        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
+    }
     glm::vec3 worldLeft = glm::cross(mUpVec, glm::vec3(0, 0, 1));
     if (glm::length(worldLeft) < 0.01f)
         worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 1, 0)));
@@ -197,73 +115,14 @@ void Player::UpdateActor(float deltaTime)
 
     // プレイヤー移動（ダメージ時、空中固定時、回避時以外）
     if (!mIsDamaged && mAttackMoveLockRemaining <= 0.0f && mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f && mCanMove)
-    {
-        glm::vec3 moveDelta = mForwardVec * mMoveForward * mMoveSpeed * deltaTime + mLeftVec * mMoveLeft * mMoveSpeed * deltaTime;
-        glm::vec3 desiredPos = mPos + moveDelta;
+        UpdateWalk(deltaTime);
 
-        glm::vec3 center = mCurrentPlanet->GetCenter();
-        float planetRadius = mCurrentPlanet->GetRadius();
-
-        desiredPos = GetGame()->GetPhysicsSystem()->CheckCollision(moveDelta, desiredPos);
-
-        mPos = desiredPos;
-        // ジャンプ処理
-        if (mOnGround && mJumpPressed)
-        {
-            mVelocity += mUpVec * 5.0f;
-            mOnGround = false;
-            GetGame()->GetAudioSystem()->PlaySE("jumpSE");
-        }
-    }
-
-    const float dodgeDuration = 0.05f;
-    const float dodgeCooldownTime = 1.0f;
-    // 向いている方向へ回避開始
-    if (mDodgePressed && !mDodgePressedPrev && mDodgeCooldown <= 0.0f && mDodgeTimer <= 0.0f && mAttackDodgeLockRemaining <= 0.0f)
-    {
-        mDodgeDir = -mFacingForwardVec;
-        mDodgeTimer = dodgeDuration;
-        mDodgeCooldown = dodgeCooldownTime;
-        mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
-        mVelocity = glm::vec3(0.0f);
-        GetGame()->GetAudioSystem()->PlaySE("dodgeSE");
-    }
-    // 回避中移動
-    if (mDodgeTimer > 0.0f)
-    {
-        const float dodgeDistance = 2.0f;
-        float dodgeSpeed = dodgeDistance / dodgeDuration;
-        glm::vec3 moveDelta = mDodgeDir * dodgeSpeed * deltaTime;
-        glm::vec3 desiredPos = mPos + moveDelta;
-        
-        desiredPos = GetGame()->GetPhysicsSystem()->CheckCollision(moveDelta, desiredPos);
-        
-        mPos = desiredPos;
-        glm::vec3 center = mCurrentPlanet->GetCenter();
-        // 空中回避：直前の高さを維持して浮遊
-        float dist = glm::length(mPos - center);
-        if (dist > 1e-6f)
-            mPos = center + (mPos - center) / dist * mDodgeStartHeight;
-        mDodgeTimer -= deltaTime;
-    }
-    // 回避クールダウン消費
-    if (mDodgeCooldown > 0.0f && mAttackHeightLockRemaining <= 0.0f) {
-        mDodgeCooldown -= deltaTime;
-    }
-
-    // 攻撃時の高さを維持して浮遊
-    if (mAttackHeightLockRemaining > 0.0f)
-    {
-        glm::vec3 center = mCurrentPlanet->GetCenter();
-        float dist = glm::length(mPos - center);
-        if (dist > 1e-6f)
-            mPos = center + (mPos - center) / dist * mAttackStartHeight;
-    }
+    UpdateDodge(deltaTime);
 
     // レイキャストによる着地判定
     bool isRising = glm::dot(mVelocity, mUpVec) > 0.2f;
     bool meshGround = false;
-    if (mDodgeTimer <= 0.0f && mAttackHeightLockRemaining <= 0.0f && bulletOk && bulletWorld && !isRising)
+    if (mDodgeTimer <= 0.0f && bulletOk && bulletWorld && !isRising)
     {
         glm::vec3 center = mCurrentPlanet->GetCenter();
 
@@ -293,7 +152,7 @@ void Player::UpdateActor(float deltaTime)
     }
 
     // 回避中・空中攻撃中は重力をかけず、終了後に通常通り落下
-    if (mDodgeTimer <= 0.0f && mAttackHeightLockRemaining <= 0.0f && mAttackPressTimer < 0.0f && mStrongAttackTimer <= 0.0f) {
+    if (mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f && mStrongAttackTimer <= 0.0f) {
         glm::vec3 center = mCurrentPlanet->GetCenter();
         float radius = mCurrentPlanet->GetRadius();
         mUpVec = glm::normalize(mPos - center);
@@ -347,8 +206,6 @@ void Player::UpdateActor(float deltaTime)
                 // if (mAirAttackIndex == 5) {
                 //     mAirAttackIndex = 0;
                 // }
-                // if (mAttackHeightLockRemaining <= -1.0f)
-                //     mAttackHeightLockRemaining = 1.5f;
             } else {
                 mAttackMotionTimer = 0.3f;
                 mAirAttackIndex = 0;
@@ -525,10 +382,6 @@ void Player::UpdateActor(float deltaTime)
             mAttackDodgeLockRemaining = 0.0f;
     }
 
-    // 空中浮遊クールダウンタイム減少
-    mAttackHeightLockRemaining -= deltaTime;
-
-
     if (mIsDamaged) {
         mDamageTimer = 1.0f;
         mInvincibleTimer = 2.0f;
@@ -607,6 +460,157 @@ void Player::UpdateActor(float deltaTime)
     mIsDamagePrev = mIsDamaged;
 }
 
+void Player::ProcessGameController() {
+    SDL_GameController* sdlController = GetGame()->GetSdlController();
+    if (sdlController && SDL_GameControllerGetAttached(sdlController) && mPlayerNum == 1 && mDamageTimer <= 0.0f && mCanMove)
+    {
+        const float deadZone = 0.25f;
+        const float scale = 1.0f / 32767.0f; // SDL_GameControllerGetAxisの範囲が32767までで、scaleをかけて1.0f以内に抑えるため
+        // 左スティックの操作をプレイヤー移動量に
+        mMoveForward = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_LEFTY) * scale;
+        mMoveLeft = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_LEFTX) * scale;
+
+        // 触っていない時に動くのを防ぐ
+        if (std::abs(mMoveForward) < deadZone)
+            mMoveForward = 0.0f;
+        if (std::abs(mMoveLeft) < deadZone)
+            mMoveLeft = 0.0f;
+
+        // 右スティックの操作をカメラ移動量に
+        mCameraStickY = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_RIGHTY) * scale;
+        mCameraStickX = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_RIGHTX) * scale;
+
+        if (std::abs(mCameraStickY) < deadZone)
+            mCameraStickY = 0.0f;
+        if (std::abs(mCameraStickX) < deadZone)
+            mCameraStickX = 0.0f;
+
+        // ジャンプ判定（Aボタン）
+        mJumpPressed = false;
+        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_A))
+            mJumpPressed = true;
+
+        // 攻撃判定（Xボタン）
+        mAttackPressed = false;
+        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_X))
+            mAttackPressed = true;
+        
+        // 攻撃判定（Xボタン）
+        mWideAttackPressed = false;
+        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_Y))
+            mWideAttackPressed = true;
+
+        // 回避（Bボタン）
+        mDodgePressed = false;
+        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_B))
+            mDodgePressed = true;
+
+        // スペシャルアタック（Lボタン）
+        mSpecialAttackPressed = false;
+        if (SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_LEFTSHOULDER))
+            mSpecialAttackPressed = true;
+    }
+}
+
+void Player::ProcessKeyboard() {
+    if (GetGame()->GetIsPlayer2Joined() && mPlayerNum != 1)
+    {
+        GLFWwindow* window = GetGame()->GetWindow();
+        mJumpPressed = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
+        mMoveSpeed = (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) ? 2.0f : 3.0f;
+        mMoveForward = 0.0f;
+        mMoveLeft = 0.0f;
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            mMoveForward -= 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            mMoveForward += 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            mMoveLeft -= 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            mMoveLeft += 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+            mSpecialAttackPressed = true;
+        // if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        //     mCameraYaw -= cameraSensitivity * deltaTime;
+        // if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        //     mCameraYaw += cameraSensitivity * deltaTime;
+
+        // if (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f)
+        // {
+        //     glm::vec3 moveDir = mForwardVec * mMoveForward + mLeftVec * mMoveLeft;
+        //     float len = glm::length(moveDir);
+        //     if (len > 0.001f)
+        //     {
+        //         moveDir /= len;
+        //         mFacingYaw = getYawFromDirection(up, moveDir) + 3.14159265f;
+        //     }
+        // }
+        // mPos += mForwardVec * mMoveForward * dashSpeed * deltaTime;
+        // mPos += mLeftVec * mMoveLeft * dashSpeed * deltaTime;
+    }
+}
+
+void Player::UpdateWalk(float deltaTime) {
+    // プレイヤー移動（ダメージ時、空中固定時、回避時以外）
+    glm::vec3 moveDelta = mForwardVec * mMoveForward * mMoveSpeed * deltaTime + mLeftVec * mMoveLeft * mMoveSpeed * deltaTime;
+    glm::vec3 desiredPos = mPos + moveDelta;
+
+    desiredPos = GetGame()->GetPhysicsSystem()->CheckCollision(moveDelta, desiredPos);
+
+    mPos = desiredPos;
+    // ジャンプ処理
+    if (mOnGround && mJumpPressed)
+    {
+        mVelocity += mUpVec * 5.0f;
+        mOnGround = false;
+        GetGame()->GetAudioSystem()->PlaySE("jumpSE");
+    }
+}
+
+void Player::UpdateDodge(float deltaTime) {
+    const float dodgeDuration = 0.05f;
+    const float dodgeCooldownTime = 1.0f;
+    // 向いている方向へ回避開始
+    if (mDodgePressed && !mDodgePressedPrev && mDodgeCooldown <= 0.0f && mAttackDodgeLockRemaining <= 0.0f)
+        StartDodge(dodgeDuration, dodgeCooldownTime);
+    
+    // 回避中移動
+    if (mDodgeTimer > 0.0f)
+        Dodge(deltaTime, dodgeDuration);
+    
+    // 回避クールダウン消費
+    if (mDodgeCooldown > 0.0f) {
+        mDodgeCooldown -= deltaTime;
+    }
+}
+
+void Player::StartDodge(float dodgeDuration, float dodgeCooldownTime) {
+    mDodgeDir = -mFacingForwardVec;
+    mDodgeTimer = dodgeDuration;
+    mDodgeCooldown = dodgeCooldownTime;
+    mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
+    mVelocity = glm::vec3(0.0f);
+    GetGame()->GetAudioSystem()->PlaySE("dodgeSE");
+}
+
+void Player::Dodge(float deltaTime, float dodgeDuration) {
+    mDodgeTimer -= deltaTime;
+
+    const float dodgeDistance = 2.0f;
+    float dodgeSpeed = dodgeDistance / dodgeDuration;
+    glm::vec3 moveDelta = mDodgeDir * dodgeSpeed * deltaTime;
+    glm::vec3 desiredPos = mPos + moveDelta;
+    
+    desiredPos = GetGame()->GetPhysicsSystem()->CheckCollision(moveDelta, desiredPos);
+    mPos = desiredPos;
+
+    glm::vec3 center = mCurrentPlanet->GetCenter();
+    // 空中回避：直前の高さを維持して浮遊
+    float dist = glm::length(mPos - center);
+    if (dist > 1e-6f)
+        mPos = center + (mPos - center) / dist * mDodgeStartHeight;
+}
+
 float Player::getYawFromDirection(const glm::vec3& mUpVec, const glm::vec3& dir) {
     glm::vec3 worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 0, 1)));
     if (glm::length(worldLeft) < 0.01f)
@@ -632,3 +636,4 @@ glm::mat4 Player::getPlayerView(float cameraDistance, bool isFixed) {
     cameraPos = mPos - cameraDir * cameraDistance;
     return glm::lookAt(cameraPos, mPos, mUpVec);
 }
+
