@@ -192,7 +192,7 @@ void Renderer::Draw() {
             drawCharacter(players[1]->GetPos(), playerScale, glm::vec3(1.0f, 0.5f, 0.0f), up1, players[1]->GetFacingYaw(),  players[1]->GetMeshes());
         }
 
-        std::vector<Enemy*> enemies = currentStage->GetPlanets()[players[0]->GetCurrentPlanetNum()]->GetEnemies();
+        std::vector<Enemy*> enemies = planets[players[0]->GetCurrentPlanetNum()]->GetEnemies();
         // 敵描画
         for (size_t ei = 0; ei < enemies.size(); ei++)
         {

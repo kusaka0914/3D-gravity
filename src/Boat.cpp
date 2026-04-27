@@ -2,6 +2,8 @@
 #include "Planet.h"
 #include "Stage.h"
 #include "Game.h"
+#include "Player.h"
+#include "Loader.h"
 #include "UIState.h"
 #include "FocusComponent.h"
 
@@ -34,6 +36,15 @@ void Boat::UpdateActor(float deltaTime)
     // 移動中
     if (mIsMoving)
     {   
+        int currentStageNum = GetGame()->GetCurrentStageNum();
+        if (currentStageNum == 0) {
+            Stage* nextStage = GetGame()->GetStages()[1];
+            GetGame()->SetCurrentStage(nextStage);
+            // GetGame()->LoadData(true);
+            // GetGame()->GetPlayers()[0]->SetCurrentPlanet(nextStage->GetPlanets()[0]);
+            mIsMoving = false;
+            return;
+        }
         Planet* dest = mPlanets[mDestPlanet];
         glm::vec3 toDest = glm::normalize(dest->GetCenter() - mPos);
         mDestPos = dest->GetCenter() - toDest * (dest->GetRadius() + 3.0f);

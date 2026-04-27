@@ -142,6 +142,11 @@ bool Game::Initialize()
     mStages.emplace_back(stage);
     mCurrentStage = mStages[0];
 
+    auto stageUnique2 = std::make_unique<Stage>(this);
+    Stage* stage2 = stageUnique2.get();
+    mActors.emplace_back(std::move(stageUnique2));
+    mStages.emplace_back(stage2);
+
     std::vector<float> textLabel = {
         -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
         0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
@@ -201,6 +206,10 @@ void Game::Shutdown()
 
 void Game::ProcessInput()
 {
+    // 入力をSDLに取り込む
+    SDL_PumpEvents();
+    // ゲームパッド対応
+    SDL_GameControllerUpdate();
     for (const auto& actor_unique : mActors) {
         Actor* actor = actor_unique.get();
         actor->ProcessInput();
@@ -330,12 +339,12 @@ void Game::LoadModel() {
     // 惑星モデルをロード
     for (auto planet : planets)
     {
-        std::unordered_map<std::string, std::vector<LoadedMesh>> planetMeshesByPath = mCurrentStage->GetPlanetMeshesByPath();
+        std::unordered_map<std::string, std::vector<LoadedMesh>> planetMeshesByPath = planet->GetCurrentStage()->GetPlanetMeshesByPath();
         if (planetMeshesByPath.find(planet->GetModelPath()) == planetMeshesByPath.end())
         {
             std::string path = "../assets/models/" + planet->GetModelPath();
             auto planetMeshes = mMesh->loadMeshFromFile(path.c_str());
-            mCurrentStage->AddPlanetMesh(planet->GetModelPath(), planetMeshes);
+            planet->GetCurrentStage()->AddPlanetMesh(planet->GetModelPath(), planetMeshes);
         }
     }
     // 各惑星のオブジェクトのモデルをロード

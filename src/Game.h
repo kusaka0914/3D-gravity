@@ -17,6 +17,7 @@ public:
     bool Initialize();
     void RunLoop();
     void Shutdown();
+    void LoadData(bool isLoadPlayer);
 
     void AddActor(std::unique_ptr<class Actor> actor) { mActors.emplace_back(std::move(actor)); };
 	void RemoveActor(std::unique_ptr<class Actor> actor);
@@ -24,6 +25,7 @@ public:
     void AddPlayer(class Player* player) { mPlayers.emplace_back(player); };
     void RemoveAllPlayer() { for(int i = 0; i < mPlayers.size(); i++) mPlayers.pop_back(); }
     void SetHitStopTimer(float hitStopTimer) { mHitStopTimer = hitStopTimer; }
+    void SetCurrentStage(class Stage* currentStage) { mCurrentStage = currentStage; }
 
     GLFWwindow* GetWindow() const { return mWindow; }
     SDL_GameController* GetSdlController() const { return mSdlController;}
@@ -37,6 +39,7 @@ public:
     class PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }
     class Mesh* GetMesh() const { return mMesh.get(); }
     class UIState* GetUIState() const { return mUIState.get(); }
+    class Loader* GetLoader() const { return mLoader.get(); }
     class GameProgressState* GetGameProgressState() const { return mGameProgressState.get(); }
     float GetHitStopTimer() const { return mHitStopTimer; }
 
@@ -49,7 +52,6 @@ private:
     void ProcessInput();
     void UpdateGame();
     void GenerateOutput();
-    void LoadData(bool isLoadPlayer);
     void LoadModel();
 
     GLFWwindow* mWindow;

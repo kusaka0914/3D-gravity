@@ -77,6 +77,7 @@ bool Loader::LoadPlayersFromYaml(const char* path) {
 
             int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
             player->SetCurrentPlanetNum(currentPlanetNum);
+            player->SetRestartPlanetIndex(currentPlanetNum);
 
             float hp = node["hp"] ? node["hp"].as<float>() : 100.0f;
             player->SetHp(hp);
@@ -90,8 +91,10 @@ bool Loader::LoadPlayersFromYaml(const char* path) {
             player->SetPlayerNum(playerNum);
 
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            player->SetCurrentPlanet(currentPlanet);
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             player->SetPos(pos);
+            player->SetRestartPos(pos);
 
             Player* player_ptr = player.get();
             GetGame()->AddActor(std::move(player));
@@ -212,6 +215,9 @@ bool Loader::LoadPlanetsFromYaml(const char* path) {
             // モデルファイル名を設定
             std::string modelPath = node["model"] ? node["model"].as<std::string>() : "";
             planet->SetModelPath(modelPath);
+
+            std::string type = node["type"] ? node["type"].as<std::string>() : "Normal";
+            planet->SetPlanetType(type);
 
             // ステージ番号を設定
             int stageNum = node["stageNum"] ? node["stageNum"].as<int>() : 0;
@@ -401,7 +407,15 @@ bool Loader::LoadCrystalsFromYaml(const char* path)
     }
 }
 
-glm::vec3 Loader::CalculatePos(YAML::Node node, Planet* currentPlanet) {
+glm::vec3 Loader::CalculatePos(YAML::Node node, Planet* currentPlanet) 
+{   
+    if (node["pos"]) {
+        float posX = node["pos"][0].as<float>();
+        float posY = node["pos"][1].as<float>();
+        float posZ = node["pos"][2].as<float>();
+        std::cout << posY << std::endl;
+        return glm::vec3(posX, posY, posZ);
+    }
     float theta = node["theta"] ? node["theta"].as<float>() : 0.0f;
     float u = node["u"] ? node["u"].as<float>() : 0.0f;
     float height = node["height"] ? node["height"].as<float>() : 0.0f;

@@ -15,6 +15,11 @@ public:
         None
     };
 
+    enum class PlanetType {
+        Normal,
+        Sphere
+    };
+
     Planet(class Game* game);
     void Initialize() override;
     void UpdateActor(float deltaTime) override;
@@ -24,10 +29,10 @@ public:
     void AddCrystals(class Crystal* crystal) { mCrystals.emplace_back(crystal); }
     void AddEnemyMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mEnemyMeshesByPath[modelPath] = meshes; }
 
-    void RemoveAllEnemy() { for(int i = 0; i < mEnemies.size(); i++) mEnemies.pop_back(); }
-    void RemoveAllBoat() { for(int i = 0; i < mBoats.size(); i++) mBoats.pop_back(); }
-    void RemoveAllBoatParts() { for(int i = 0; i < mBoatParts.size(); i++) mBoatParts.pop_back(); }
-    void RemoveAllCrystals() { for(int i = 0; i < mCrystals.size(); i++) mCrystals.pop_back(); }
+    void RemoveAllEnemy() { if (!mEnemies.empty()) for(int i = 0; i < mEnemies.size(); i++) mEnemies.pop_back(); }
+    void RemoveAllBoat() { if (!mBoats.empty())  for(int i = 0; i < mBoats.size(); i++) mBoats.pop_back(); }
+    void RemoveAllBoatParts() { if (!mBoatParts.empty())  for(int i = 0; i < mBoatParts.size(); i++) mBoatParts.pop_back(); }
+    void RemoveAllCrystals() { if (!mCrystals.empty())  for(int i = 0; i < mCrystals.size(); i++) mCrystals.pop_back(); }
     void RemoveKey() { mKey = nullptr; }
     void RemoveStar() { mStar = nullptr; }
 
@@ -49,6 +54,13 @@ public:
             mKeySpawnCondition = KeySpawnCondition::None;
         }
     }
+    void SetPlanetType(std::string planetType) { 
+        if(planetType == "Normal") {
+            mPlanetType = PlanetType::Normal;
+        }else if (planetType == "Sphere") {
+            mPlanetType = PlanetType::Sphere;
+        }
+    }
 
     class Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetStageNum() const { return mStageNum; }
@@ -62,6 +74,7 @@ public:
     const std::vector<class Crystal*>& GetCrystals() const { return mCrystals; }
     class Key* GetKey() const { return mKey; }
     class Star* GetStar() const { return mStar; }
+    PlanetType GetPlanetType() const { return mPlanetType; }
     const std::unordered_map<std::string, std::vector<LoadedMesh>>& GetEnemyMeshesByPath() const { return mEnemyMeshesByPath; }
 
 private:
@@ -81,6 +94,7 @@ private:
     bool mIsAllBoatPartsCollected;
 
     KeySpawnCondition mKeySpawnCondition;
+    PlanetType mPlanetType;
 
     std::unordered_map<std::string, std::vector<LoadedMesh>> mEnemyMeshesByPath;
 };
