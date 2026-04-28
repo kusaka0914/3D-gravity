@@ -65,8 +65,9 @@ Player::~Player()
 }
 
 void Player::ProcessActor()
-{
-    if(GetGame()->GetUIState()->GetIsUIActive() || GetGame()->GetGameProgressState()->GetIsStageClear()) {
+{   
+    bool isPlaying = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Playing;
+    if(GetGame()->GetUIState()->GetIsUIActive() || !isPlaying) {
         mCanMove = false;
     }
     

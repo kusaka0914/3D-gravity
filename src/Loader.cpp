@@ -9,6 +9,7 @@
 #include "BoatParts.h"
 #include "Crystal.h"
 #include "Star.h"
+#include "NPC.h"
 #include <glm/glm.hpp>
 #include <iostream>
 
@@ -54,6 +55,10 @@ bool Loader::LoadDataFromYaml(bool isLoadPlayer) {
         std::cerr << "Star YAML Load failed" << std::endl;
         // return false;
     }
+    if (!LoadNPCsFromYaml(path.c_str())) {
+        std::cerr << "NPC YAML Load failed" << std::endl;
+        // return false;
+    }
     if (!isLoadPlayer) return false;
     if (!LoadPlayersFromYaml(path.c_str())) {
         std::cerr << "Player YAML Load failed" << std::endl;
@@ -73,6 +78,9 @@ bool Loader::LoadPlayersFromYaml(const char* path) {
         for (const YAML::Node& node : root["players"]) {
             std::unique_ptr<Player> player = std::make_unique<Player>(mGame);
             playerNum++;
+
+            std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "player.obj";
+            player->SetModelPath(modelPath);
 
             int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
             player->SetCurrentPlanetNum(currentPlanetNum);
@@ -102,6 +110,38 @@ bool Loader::LoadPlayersFromYaml(const char* path) {
         return true;
     } catch (const YAML::Exception& ex) {
         std::cerr << "Player Load error: " << ex.what() << std::endl;
+        return false;
+    }
+}
+
+bool Loader::LoadNPCsFromYaml(const char* path) {
+    try {
+        YAML::Node root = YAML::LoadFile(path);
+        if (!root["NPCs"] || !root["NPCs"].IsSequence()) {
+            std::cerr << "Loader: missing or invalid 'NPCs' sequence" << std::endl;
+        }
+        // GetGame()->RemoveAllPlayer();
+        for (const YAML::Node& node : root["NPCs"]) {
+            std::unique_ptr<NPC> npc = std::make_unique<NPC>(mGame);
+
+            std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "player.obj";
+            npc->SetModelPath(modelPath);
+
+            int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            npc->SetCurrentPlanetNum(currentPlanetNum);
+
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            npc->SetCurrentPlanet(currentPlanet);
+            glm::vec3 pos = CalculatePos(node, currentPlanet);
+            npc->SetPos(pos);
+
+            NPC* npc_ptr = npc.get();
+            GetGame()->AddActor(std::move(npc));
+            currentPlanet->AddNPC(npc_ptr);
+        }
+        return true;
+    } catch (const YAML::Exception& ex) {
+        std::cerr << "NPC Load error: " << ex.what() << std::endl;
         return false;
     }
 }
@@ -394,7 +434,7 @@ bool Loader::LoadCrystalsFromYaml(const char* path)
 
             Crystal* crystal_ptr = crystal.get();
             GetGame()->AddActor(std::move(crystal));
-            currentPlanet->AddCrystals(crystal_ptr);
+            currentPlanet->AddCrystal(crystal_ptr);
         }
         return true;
     } catch (const YAML::Exception& ex) {
@@ -422,7 +462,7 @@ bool Loader::LoadStarFromYaml(const char* path) {
             int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
             star->SetCurrentPlanet(currentPlanet);
-            
+
             Star* starPtr = star.get();
             GetGame()->AddActor(std::move(star));
             currentPlanet->SetStar(starPtr);

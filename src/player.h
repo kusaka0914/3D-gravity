@@ -42,6 +42,7 @@ public:
     void SetAttackDodgeLockRemaining(float attackDodgeLockRemaining) { mAttackDodgeLockRemaining = attackDodgeLockRemaining; }
     void SetAttackIndex(int attackIndex) { mAttackIndex = attackIndex; }
     void SetRestartPlanetIndex(int restartPlanetIndex) { mRestartPlanetIndex = restartPlanetIndex; }
+    void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
     void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
 
     Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
@@ -74,6 +75,7 @@ public:
     float GetSpecialAttackCooldownRemaining() const { return mSpecialAttackCooldownRemaining; }
     int GetAttackIndex() const { return mAttackIndex; }
     int GetRestartPlanetIndex() const { return mRestartPlanetIndex; }
+    std::string GetModelPath() const { return mModelPath; }
 
     const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
 
@@ -156,6 +158,8 @@ private:
     glm::vec3 mRestartPos;
     glm::vec3 mVelocity;
     glm::vec3 mDodgeDir;
+
+    std::string mModelPath;
 
     class Planet* mCurrentPlanet;
 

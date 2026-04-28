@@ -25,7 +25,7 @@ UIRenderer::UIRenderer(Game* game)
 
 void UIRenderer::Initialize() {
     AddImgInfo("../assets/textures/titleBg.png", "titleBg");
-    // AddImgInfo("../assets/textures/titleBg.png", "titleBg");
+    AddImgInfo("../assets/textures/opening.png", "opening");
 }
 
 void UIRenderer::AddImgInfo(std::string path, std::string name) {
@@ -48,18 +48,28 @@ void UIRenderer::Draw() {
     GLFWwindow* window = mGame->GetWindow();
     glfwGetFramebufferSize(window, &mFbWidth, &mFbHeight);
 
+    glUseProgram(mShader->GetShaderProgram());
+
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
 
-    bool isTitleActive = GetGame()->GetUIState()->GetIsTitleActive();
-    if (isTitleActive) {
+    bool isTitle = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Title;
+    if (isTitle) {
         DrawTitle();
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
         return;
     }
 
-    bool isStageClear = mGame->GetGameProgressState()->GetIsStageClear();
+    bool isOpening = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
+    if (isOpening) {
+        DrawOpening();
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+        return;
+    }
+
+    bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
     if (!isStageClear){
         DrawDefaultUI();
     } else {
@@ -79,6 +89,34 @@ void UIRenderer::DrawTitle() {
     DrawTexture(0.0f, 0.0f, mFbWidth, mFbHeight, "titleBg");
     std::string text = "START: A";
     DrawText(mFbWidth / 2, 3 * mFbHeight / 4, 1.0f, text.c_str(), true);
+}
+
+void UIRenderer::DrawOpening() {
+    std::vector<std::string> openingTexts = {
+        "ある草原のど真ん中",
+        "スライムはママと仲良く暮らしていました。",
+        "ママスライムはいつもお仕事で忙しかったのですが",
+        "それでもスライムを愛しているため",
+        "一生懸命働いていました。"
+    };
+    int openingUIIndex = GetGame()->GetUIState()->GetOpeningUIIndex();
+    if (openingUIIndex < openingTexts.size()) {
+        DrawTexture(0.0f, 0.0f, mFbWidth, mFbHeight, "opening");
+        DrawText(mFbWidth / 2, mFbHeight /2, 1.0f, openingTexts[openingUIIndex].c_str(), true);
+        return;
+    }
+    GetGame()->GetUIState()->SetIsOpeningUIActive(false);
+    std::vector<std::string> talkTexts = {
+        "スライム: ママ、いってらっしゃい！",
+        "ママ: いい子にしてるんだよ。",
+        "いつも通りママスライムをお見送りしようとすると、",
+        "ママ: ううっ、",
+        "ママスライムが突然倒れこんでしまいました。"
+    };
+    int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+    if (talkUIIndex < talkTexts.size()) {
+        DrawText(mFbWidth / 2, 200, 1.0f, talkTexts[talkUIIndex].c_str(), true);
+    }
 }
 
 bool UIRenderer::DrawStateUI() {

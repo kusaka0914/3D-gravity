@@ -2,15 +2,19 @@ class UIState {
 public:
     UIState(class Game* game);
     void SetIsUIActive(bool isUIActive) { mIsUIActive = isUIActive; }
-    void SetIsTitleActive(bool isTitleActive) { mIsTitleActive = isTitleActive; }
+    void SetIsOpeningUIActive(bool isOpeningUIActive) { mIsOpeningUIActive = isOpeningUIActive; }
     void SetIsTutorialActive(bool isTutorialActive) { mIsTutorialActive = isTutorialActive; }
     void SetIsCrystalTutorialActive(bool isCrystalTutorialActive) { mIsCrystalTutorialActive = isCrystalTutorialActive; }
     void SetIsBattleTutorialActive(bool isBattleTutorialActive) { mIsBattleTutorialActive = isBattleTutorialActive; }
     void SetIsBattleTutorialShown(bool isBattleTutorialShown) { mIsBattleTutorialShown = isBattleTutorialShown; }
     void SetIsBreakTutorialActive(bool isBreakTutorialActive) { mIsBreakTutorialActive = isBreakTutorialActive; }
+    void IncOpeningUIIndex() { mOpeningUIIndex++; }
+    void IncTalkUIIndex() { mTalkUIIndex++; }
 
     bool GetIsUIActive() const { return mIsUIActive; }
-    bool GetIsTitleActive() const { return mIsTitleActive; }
+    bool GetIsOpeningUIActive() const { return mIsOpeningUIActive; }
+    int GetOpeningUIIndex() const { return mOpeningUIIndex; }
+    int GetTalkUIIndex() const { return mTalkUIIndex; }
     bool GetIsTutorialActive() const { return mIsTutorialActive; }
     bool GetIsCrystalTutorialActive() const { return mIsCrystalTutorialActive; }
     bool GetIsBattleTutorialActive() const { return mIsBattleTutorialActive; }
@@ -19,7 +23,9 @@ public:
 private:
     Game* mGame;
     bool mIsUIActive;
-    bool mIsTitleActive;
+    bool mIsOpeningUIActive;
+    int mOpeningUIIndex;
+    int mTalkUIIndex;
     bool mIsTutorialActive;
     bool mIsCrystalTutorialActive;
     bool mIsBattleTutorialActive;

@@ -26,13 +26,15 @@ public:
     void AddEnemy(class Enemy* enemy) { mEnemies.emplace_back(enemy); }
     void AddBoat(class Boat* boat) { mBoats.emplace_back(boat); }
     void AddBoatParts(class BoatParts* boatParts) { mBoatParts.emplace_back(boatParts); }
-    void AddCrystals(class Crystal* crystal) { mCrystals.emplace_back(crystal); }
+    void AddCrystal(class Crystal* crystal) { mCrystals.emplace_back(crystal); }
+    void AddNPC(class NPC* NPC) { mNPCs.emplace_back(NPC); }
     void AddEnemyMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mEnemyMeshesByPath[modelPath] = meshes; }
 
     void RemoveAllEnemy() { mEnemies.clear(); }
     void RemoveAllBoat() { mBoats.clear(); }
     void RemoveAllBoatParts() { mBoatParts.clear(); }
     void RemoveAllCrystals() { mCrystals.clear(); }
+    void RemoveAllNPCs() { mNPCs.clear(); }
     void RemoveKey() { mKey = nullptr; }
     void RemoveStar() { mStar = nullptr; }
 
@@ -73,6 +75,7 @@ public:
     const std::vector<class Boat*>& GetBoats() const { return mBoats; }
     const std::vector<class BoatParts*>& GetBoatParts() const { return mBoatParts; }
     const std::vector<class Crystal*>& GetCrystals() const { return mCrystals; }
+    const std::vector<class NPC*>& GetNPCs() const { return mNPCs; }
     class Key* GetKey() const { return mKey; }
     class Star* GetStar() const { return mStar; }
     PlanetType GetPlanetType() const { return mPlanetType; }
@@ -89,6 +92,7 @@ private:
     std::vector<class Boat*> mBoats;
     std::vector<class BoatParts*> mBoatParts;
     std::vector<class Crystal*> mCrystals;
+    std::vector<class NPC*> mNPCs;
     class Key* mKey;
     class Star* mStar;
     bool mIsAllEnemiesDead;

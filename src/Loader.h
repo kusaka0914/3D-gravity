@@ -12,6 +12,7 @@ public:
     Game* GetGame() const { return mGame; }
 private:
     bool LoadPlayersFromYaml(const char* path);
+    bool LoadNPCsFromYaml(const char* path);
     bool LoadEnemiesFromYaml(const char* path);
     bool LoadPlanetsFromYaml(const char* path);
     bool LoadBoatsFromYaml(const char* path);

@@ -22,6 +22,7 @@
 #include "PhysicsSystem.h"
 #include "DestructibleComponent.h"
 #include "Game.h"
+#include "NPC.h"
 #include <GLFW/glfw3.h>
 #include <SDL.h>
 #include <glm/glm.hpp>
@@ -47,7 +48,7 @@ Game::Game()
     ,mIsPlayer2Joined(false)
     ,mHitStopTimer(-1.0f)
     ,mIsChangeStage(false)
-    ,mCurrentStagePath("../assets/data/stage0.yaml")
+    ,mCurrentStagePath("../assets/data/house.yaml")
 {
     
 }
@@ -242,6 +243,16 @@ void Game::ProcessInput()
 
     bool aPressed = SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_A);
     if (aPressed && !mAPressedPrev) {
+        bool isTitle = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Title;
+        bool isOpening = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Opening;
+        if (isTitle) {
+            mGameProgressState->SetSceneState("Opening");
+            mUIState->SetIsOpeningUIActive(true);
+        } else if (isOpening && mUIState->GetIsOpeningUIActive()) {
+            mUIState->IncOpeningUIIndex();
+        } else if (isOpening && !mUIState->GetIsOpeningUIActive()) {
+            mUIState->IncTalkUIIndex();
+        }
         if (mUIState->GetIsTutorialActive()) {
             mUIState->SetIsTutorialActive(false);
             mUIState->SetIsCrystalTutorialActive(true);
@@ -270,6 +281,15 @@ void Game::ProcessInput()
 
 void Game::UpdateGame()
 {
+    for (int i = 0; i < SDL_NumJoysticks(); ++i)
+    {
+        
+        if (SDL_IsGameController(i))
+        {
+            mSdlController = SDL_GameControllerOpen(i);
+        }
+    }
+
     double currentTime = glfwGetTime(); 
     float deltaTime = std::min(0.04f, static_cast<float>(currentTime - mLastTime));
     if (mHitStopTimer >= 0.0f) {
@@ -281,6 +301,11 @@ void Game::UpdateGame()
     }
 
     mLastTime = currentTime;
+
+    bool isTitle = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Title;
+    if (isTitle)
+        return;
+    
 
     for (const auto& actor_unique : mActors) {
         Actor* actor = actor_unique.get();
@@ -299,15 +324,6 @@ void Game::UpdateGame()
     if (mPhysicsSystem)
     {
         mPhysicsSystem->Update();
-    }
-
-    for (int i = 0; i < SDL_NumJoysticks(); ++i)
-    {
-        
-        if (SDL_IsGameController(i))
-        {
-            mSdlController = SDL_GameControllerOpen(i);
-        }
     }
 }
 
@@ -333,13 +349,12 @@ void Game::LoadData(bool isLoadPlayer) {
     RemoveAllActor();
     mLoader->LoadDataFromYaml(isLoadPlayer);
     LoadModel();
-    std::cout << "LoadData" << std::endl;
 }
 
 void Game::LoadModel() {
     // プレイヤーモデルをロード
     for (auto player : mPlayers) {
-        std::string path = "../assets/models/player.obj";
+        std::string path = "../assets/models/" + player->GetModelPath();
         std::vector<LoadedMesh> playerMeshes = mMesh->loadMeshFromFile(path.c_str());
         player->SetMeshes(playerMeshes);
     }
@@ -357,6 +372,15 @@ void Game::LoadModel() {
     }
     // 各惑星のオブジェクトのモデルをロード
     for (auto planet : planets) {
+        // NPCモデルをロード
+        std::vector<NPC*> NPCs = planet->GetNPCs();
+        for (auto NPC : NPCs)
+        {
+            std::string path = "../assets/models/" + NPC->GetModelPath();
+            std::vector<LoadedMesh> NPCMeshes = mMesh->loadMeshFromFile(path.c_str());
+            NPC->SetMeshes(NPCMeshes);
+        }
+
         // 敵モデルをロード
         std::vector<Enemy*> enemies = planet->GetEnemies();
         for (auto enemy : enemies)

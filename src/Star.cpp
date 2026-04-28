@@ -22,7 +22,7 @@ void Star::UpdateActor(float deltaTime)
 {
     if (mCollectableComponent->GetIsObtained() && mIsActive) {
         mIsActive = false;
-        GetGame()->GetGameProgressState()->SetIsStageClear(true);
+        GetGame()->GetGameProgressState()->SetSceneState("StageClear");
         Mix_HaltMusic();
         GetGame()->GetAudioSystem()->PlaySE("clearSE");
         mClearTimer = 12.0f;
@@ -36,7 +36,7 @@ void Star::UpdateActor(float deltaTime)
             GetGame()->SetIsChangeStage(true);
             std::string stagePath = "../assets/data/stage0.yaml";
             GetGame()->SetCurrentStagePath(stagePath);
-            GetGame()->GetGameProgressState()->SetIsStageClear(false);
+            GetGame()->GetGameProgressState()->SetSceneState("Playing");
         }
     }
     if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal) {

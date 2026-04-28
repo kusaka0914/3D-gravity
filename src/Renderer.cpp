@@ -10,6 +10,7 @@
 #include "Star.h"
 #include "VertexArray.h"
 #include "Game.h"
+#include "NPC.h"
 #include "FocusComponent.h"
 #include "GameProgressState.h"
 #include <glm/glm.hpp>
@@ -26,6 +27,10 @@ Renderer::Renderer(Game* game)
 {}
 
 void Renderer::Draw() {
+    bool isTitle = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Title;
+    if (isTitle) 
+        return;
+
     GLFWwindow* window = mGame->GetWindow();
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
@@ -37,12 +42,13 @@ void Renderer::Draw() {
     std::vector<Boat*> boats = currentPlanet->GetBoats();
     Key* key = currentPlanet->GetKey();
     glm::mat4 view;
+    bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
     if (!boats.empty()) {
         for (auto boat : boats) {
             if (boat->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
                 view = boat->GetFocusComponent()->GetFocusView();
                 players[0]->SetCanMove(false);
-            } else if (GetGame()->GetGameProgressState()->GetIsStageClear()) {
+            } else if (isStageClear) {
                 view = players[0]->getPlayerView(4.0f, true);
             }
             else {
@@ -55,7 +61,7 @@ void Renderer::Draw() {
         if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
             view = key->GetFocusComponent()->GetFocusView();
             players[0]->SetCanMove(false);
-        } else if (GetGame()->GetGameProgressState()->GetIsStageClear()) {
+        } else if (isStageClear) {
             view = players[0]->getPlayerView(4.0f, true);
         }
         else {
@@ -64,13 +70,17 @@ void Renderer::Draw() {
         }
     }
     if (boats.empty() && !key) {
-        if (GetGame()->GetGameProgressState()->GetIsStageClear()) {
+        if (isStageClear) {
             view = players[0]->getPlayerView(4.0f, true);
         }
         else {
             view = players[0]->getPlayerView(10.0f);
             players[0]->SetCanMove(true);
         }
+    }
+    bool isOpening = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
+    if (isOpening) {
+        view = glm::lookAt(glm::vec3(-2.0f, 4.0f, -2.0f), glm::vec3(4.0f, 2.0f, 4.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     }
     glm::mat4 view2P = isPlayer2Joined ? players[1]->getPlayerView(12.0f) : view;
 
@@ -182,11 +192,12 @@ void Renderer::Draw() {
             }
             else
             {
-                // glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
+                glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
                 // glBindVertexArray(VAO);
-                // glm::vec3 c = colorOverride ? *colorOverride : fallbackColor;
-                // glUniform3f(locObjectColor, c.x, c.y, c.z);
-                // glDrawArrays(GL_TRIANGLES, 0, 3);
+                glm::vec3 c = colorOverride ? *colorOverride : fallbackColor;
+                glUniform3f(locObjectColor, c.x, c.y, c.z);
+                glDrawArrays(GL_TRIANGLES, 0, 3);
+                std::cout << "not Mesh" << std::endl;
             }
         };
 
@@ -298,6 +309,18 @@ void Renderer::Draw() {
                 const float keyScale = 2.0f;
                 const glm::vec3 keyColor(0.85f, 0.65f, 0.13f); // 金色
                 drawCharacter(key->GetPos(), keyScale, keyColor, key->GetUpVec(), 0.0f, key->GetMeshes(), &keyColor);
+            }
+        }
+
+        std::vector<NPC*> NPCs = currentPlanet->GetNPCs();
+        // NPC描画
+        if (!NPCs.empty()) {
+            for (auto NPC : NPCs) {
+                if (NPC->GetIsActive())
+                {
+                    const float NPCScale = 0.25f;
+                    drawCharacter(NPC->GetPos(), NPCScale, glm::vec3(0.4f, 0.25f, 0.1f), NPC->GetUpVec(), NPC->GetFacingYaw(), NPC->GetMeshes());
+                }
             }
         }
 

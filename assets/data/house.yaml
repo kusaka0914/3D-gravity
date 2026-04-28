@@ -1,0 +1,14 @@
+planets:
+  - center: [0.0, 0.0, 0.0]
+    radius: 1.0
+    color: [1.0, 1.0, 1.0]
+    model: house.obj
+
+players:
+  - pos: [100.0, 100.0, 100.0]
+
+NPCs:
+  - pos : [4.0, 0.0, 4.0]
+    modelPath: player.obj
+  - pos : [4.0, 0.0, 5.5]
+    modelPath: motherSlime.obj

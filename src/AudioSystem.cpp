@@ -41,7 +41,7 @@ void AudioSystem::Initialize()
 void AudioSystem::Update()
 {
     std::vector<class Player*> players = GetGame()->GetPlayers();
-    bool isStageClear = GetGame()->GetGameProgressState()->GetIsStageClear();
+    bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
     // 惑星2にいるときはBGMをboss.wavに切り替え（ゲームクリア後はBGMを流さない）
     if (players.empty()) return;
     if (!isStageClear && players[0]->GetCurrentPlanetNum() != mCurrentBgmPlanetIndex || GetGame()->GetIsChangeStage())

@@ -14,6 +14,7 @@ private:
     void AddImgInfo(std::string path, std::string name);
 
     void DrawTitle();
+    void DrawOpening();
     bool DrawStateUI();
     void DrawDefaultUI();
     void DrawOperationSupportUI();
