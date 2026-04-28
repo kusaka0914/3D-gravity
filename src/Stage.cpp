@@ -3,8 +3,7 @@
 #include "Game.h"
 #include <cmath>
 
-Stage::Stage(Game* game)
-    :Actor(game)
+Stage::Stage()
 {
     
 }

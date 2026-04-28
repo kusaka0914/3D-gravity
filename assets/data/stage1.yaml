@@ -1,0 +1,114 @@
+planets:
+  - center: [0.0, 0.0, 0.0]
+    radius: 8.0
+    color: [1.0, 0.0, 0.0]
+    model: planet_3.obj
+    type : Sphere
+    keySpawnCondition: AllBoatPartsCollected
+  - center: [32.0, 0.0, 0.0]
+    radius: 5.0
+    color: [0.0, 1.0, 0.0]
+    model: planet.obj
+    type : Sphere
+    keySpawnCondition: AllEnemiesDead
+  - center: [64.0, 0.0, 0.0]
+    radius: 5.0
+    color: [0.0, 1.0, 0.0]
+    model: planet_2.obj
+    type : Sphere
+
+enemies:
+  - theta: 0.0
+    u: 0.0
+    height : 0.0
+    currentPlanetNum: 0
+  - theta: 2.056
+    u: 1.0
+    height : 0.0
+    currentPlanetNum: 1
+  - theta: 3.513
+    u: -0.6
+    height : 0.0
+    currentPlanetNum: 1
+  - theta: 3.969
+    u: 0.8
+    height : 0.0
+    currentPlanetNum: 1
+  - theta: 5.026
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  - theta: 1.0
+    u: 0.0
+    height : 0.0
+    currentPlanetNum: 1
+  - theta: 3.056
+    u: 1.0
+    height : 0.0
+    currentPlanetNum: 1
+  - theta: 4.513
+    u: -0.6
+    height : 0.0
+    currentPlanetNum: 1
+  - theta: 4.969
+    u: 0.8
+    height : 0.0
+    currentPlanetNum: 1
+  - theta: 6.026
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  # ボス（撃破でスター出現）
+  - isBoss: 1
+    theta: 6.083
+    u: -0.8
+    height : 0.0
+    currentPlanetNum: 2
+
+keys:
+  - currentPlanetNum : 1
+    theta : 100.0
+    u : 0.0
+    height : 0.0
+  
+crystals:
+  - currentPlanetNum : 0
+    theta : 79.7
+    u : 1.2
+    height : 0.0
+    scale : 0.0075 
+    radius : 1.0
+  - currentPlanetNum : 0
+    theta : -0.35
+    u : 0.3
+    height : 0.5
+    scale : 0.02
+    hp : 50.0
+    radius : 2.3
+
+boats:
+  - theta : 0.0
+    u : 0.0
+    height : 0.0
+    startPlanet : 0
+    destPlanet : 1
+  - theta : 0.0
+    u : 0.0
+    height : 0.0
+    startPlanet : 1
+    destPlanet : 2
+
+boatParts:
+  - currentPlanetNum : 0
+    theta : 1.0
+    u : 0.0
+    height : 0.0
+    modelPath : rocketParts1.obj
+
+players:
+  - theta : 2.5
+    u : -0.35
+    currentPlanetNum: 0
+  
+star:
+  - currentPlanetNum : 2

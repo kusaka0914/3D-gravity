@@ -21,11 +21,15 @@ public:
 
     void AddActor(std::unique_ptr<class Actor> actor) { mActors.emplace_back(std::move(actor)); };
 	void RemoveActor(std::unique_ptr<class Actor> actor);
-    void RemoveAllActor() { for(int i = 0; i < mActors.size(); i++) mActors.pop_back(); }
+    void RemoveAllActor() { mPlayers.clear();
+        mActors.clear(); }
     void AddPlayer(class Player* player) { mPlayers.emplace_back(player); };
-    void RemoveAllPlayer() { for(int i = 0; i < mPlayers.size(); i++) mPlayers.pop_back(); }
+    void RemoveAllPlayer() { mPlayers.clear(); }
     void SetHitStopTimer(float hitStopTimer) { mHitStopTimer = hitStopTimer; }
     void SetCurrentStage(class Stage* currentStage) { mCurrentStage = currentStage; }
+    void SetCurrentStageNum(int currentStageNum) { mCurrentStageNum = currentStageNum; }
+    void SetIsChangeStage(bool isChangeStage) { mIsChangeStage = isChangeStage; }
+    void SetCurrentStagePath(std::string currentStagePath) { mCurrentStagePath = currentStagePath; }
 
     GLFWwindow* GetWindow() const { return mWindow; }
     SDL_GameController* GetSdlController() const { return mSdlController;}
@@ -46,7 +50,9 @@ public:
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }
     bool GetIsStageClear() const { return mIsStageClear; }
+    bool GetIsChangeStage() const { return mIsChangeStage; }
     bool GetIsPlayer2Joined() const { return mIsPlayer2Joined; }
+    std::string GetCurrentStagePath() const { return mCurrentStagePath; }
 
 private:
     void ProcessInput();
@@ -63,6 +69,7 @@ private:
     std::vector<class Player*> mPlayers;
     std::vector<std::unique_ptr<class Actor>> mActors;
     std::vector<class Stage*> mStages;
+    std::vector<std::unique_ptr<class Stage>> mStagesUnique;
 
     std::unique_ptr<class AudioSystem> mAudioSystem;
     std::unique_ptr<class UIRenderer> mUIRenderer;
@@ -85,4 +92,6 @@ private:
     bool mAPressedPrev;
     bool mIsStageClear;
     bool mIsPlayer2Joined;
+    bool mIsChangeStage;
+    std::string mCurrentStagePath;
 };

@@ -35,15 +35,12 @@ void Renderer::Draw() {
 
     Planet* currentPlanet = players[0]->GetCurrentPlanet();
     std::vector<Boat*> boats = currentPlanet->GetBoats();
+    Key* key = currentPlanet->GetKey();
     glm::mat4 view;
     if (!boats.empty()) {
         for (auto boat : boats) {
-            Key* key = currentPlanet->GetKey();
             if (boat->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
                 view = boat->GetFocusComponent()->GetFocusView();
-                players[0]->SetCanMove(false);
-            } else if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
-                view = key->GetFocusComponent()->GetFocusView();
                 players[0]->SetCanMove(false);
             } else if (GetGame()->GetGameProgressState()->GetIsStageClear()) {
                 view = players[0]->getPlayerView(4.0f, true);
@@ -53,7 +50,20 @@ void Renderer::Draw() {
                 players[0]->SetCanMove(true);
             }
         }
-    } else {
+    }
+    if (key) {
+        if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
+            view = key->GetFocusComponent()->GetFocusView();
+            players[0]->SetCanMove(false);
+        } else if (GetGame()->GetGameProgressState()->GetIsStageClear()) {
+            view = players[0]->getPlayerView(4.0f, true);
+        }
+        else {
+            view = players[0]->getPlayerView(10.0f);
+            players[0]->SetCanMove(true);
+        }
+    }
+    if (boats.empty() && !key) {
         if (GetGame()->GetGameProgressState()->GetIsStageClear()) {
             view = players[0]->getPlayerView(4.0f, true);
         }
@@ -116,6 +126,8 @@ void Renderer::Draw() {
             }
             else
             {
+                std::cout << planets[i]->GetModelPath() << std::endl;
+                std::cout << "Planet Draw Error" << std::endl;
                 // glBindVertexArray(sphereVAO);
                 // glUniform1i(locUseTexture, 0);
                 // glDrawElements(GL_TRIANGLES, sphereIndexCount, GL_UNSIGNED_INT, 0);
@@ -181,112 +193,111 @@ void Renderer::Draw() {
         const float playerScale = 0.25f;
         // 1Pの描画
         if (players[0]->GetIsActive()) {
-            glm::vec3 up0 = glm::normalize(players[0]->GetPos() - planets[players[0]->GetCurrentPlanetNum()]->GetCenter());
-            drawCharacter(players[0]->GetPos(), playerScale, glm::vec3(0.0f, 0.0f, 1.0f), up0, players[0]->GetFacingYaw(), players[0]->GetMeshes());
+            drawCharacter(players[0]->GetPos(), playerScale, glm::vec3(0.0f, 0.0f, 1.0f), players[0]->GetUpVec(), players[0]->GetFacingYaw(), players[0]->GetMeshes());
         }
 
         // 2Pの描画
         if (isPlayer2Joined)
         {
-            glm::vec3 up1 = glm::normalize(players[1]->GetPos() - planets[players[1]->GetCurrentPlanetNum()]->GetCenter());
-            drawCharacter(players[1]->GetPos(), playerScale, glm::vec3(1.0f, 0.5f, 0.0f), up1, players[1]->GetFacingYaw(),  players[1]->GetMeshes());
+            drawCharacter(players[1]->GetPos(), playerScale, glm::vec3(1.0f, 0.5f, 0.0f), players[1]->GetUpVec(), players[1]->GetFacingYaw(),  players[1]->GetMeshes());
         }
 
-        std::vector<Enemy*> enemies = planets[players[0]->GetCurrentPlanetNum()]->GetEnemies();
-        // 敵描画
-        for (size_t ei = 0; ei < enemies.size(); ei++)
-        {
-            Enemy*& enemy = enemies[ei];
-            if (!enemy->GetIsAlive())
-                continue;
-            std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = currentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
-            auto eit = enemyMeshesByPath.find(enemy->GetModelPath());
-            if (eit == enemyMeshesByPath.end() || eit->second.empty())
-                eit = enemyMeshesByPath.find("enemy.obj");
-            if (eit == enemyMeshesByPath.end() || eit->second.empty())
-                continue;
-            glm::vec3 enemyUp = glm::normalize(enemy->GetPos() - enemy->GetCurrentPlanet()->GetCenter());
-            glm::vec3 toPlayer = glm::normalize(players[0]->GetPos() - enemy->GetPos());
-            float enemyFacingYaw = players[0]->getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
-            drawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec3(0.0f, 1.0f, 0.0f), enemyUp, enemyFacingYaw, eit->second);
-            // 敵の頭上にID（1始まり）をビルボード表示
-            if (mFont)
+        Planet* currentPlanet = players[0]->GetCurrentPlanet();
+        if (currentPlanet){
+            std::vector<Enemy*> enemies = currentPlanet->GetEnemies();
+            // 敵描画
+            for (size_t ei = 0; ei < enemies.size(); ei++)
             {
-                std::unordered_map<std::string, std::pair<GLuint, glm::ivec2>> textTextureCache;
-                // 文字列→テクスチャ（敵ID表示用、キャッシュ付き）
-                auto getTextTexture = [&](const std::string &s) -> std::pair<GLuint, glm::ivec2>
+                Enemy*& enemy = enemies[ei];
+                if (!enemy->GetIsAlive())
+                    continue;
+                std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = currentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
+                auto eit = enemyMeshesByPath.find(enemy->GetModelPath());
+                if (eit == enemyMeshesByPath.end() || eit->second.empty())
+                    eit = enemyMeshesByPath.find("enemy.obj");
+                if (eit == enemyMeshesByPath.end() || eit->second.empty())
+                    continue;
+                glm::vec3 enemyUp = enemy->GetUpVec();
+                glm::vec3 toPlayer = glm::normalize(players[0]->GetPos() - enemy->GetPos());
+                float enemyFacingYaw = players[0]->getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
+                drawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec3(0.0f, 1.0f, 0.0f), enemyUp, enemyFacingYaw, eit->second);
+                // 敵の頭上にID（1始まり）をビルボード表示
+                if (mFont)
                 {
-                    if (!mFont || s.empty())
-                        return {0, {0, 0}};
-                    auto it = textTextureCache.find(s);
-                    if (it != textTextureCache.end())
-                        return it->second;
-                    SDL_Color white = {255, 255, 255, 255};
-                    SDL_Surface *surf = TTF_RenderText_Blended(mFont, s.c_str(), white);
-                    if (!surf)
-                        return {0, {0, 0}};
-                    SDL_Surface *rgba = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
-                    SDL_FreeSurface(surf);
-                    if (!rgba)
-                        return {0, {0, 0}};
-                    int tw = rgba->w, th = rgba->h;
-                    GLuint tex;
-                    glGenTextures(1, &tex);
-                    glBindTexture(GL_TEXTURE_2D, tex);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tw, th, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                    SDL_FreeSurface(rgba);
-                    textTextureCache[s] = {tex, {tw, th}};
-                    return {tex, {tw, th}};
-                };
-                auto [texId, texSize] = getTextTexture(std::to_string(enemies[ei]->GetBreakCount()));
-                if (texId != 0 && texSize.x > 0 && texSize.y > 0)
-                {
-                    glm::vec3 camPos(glm::inverse(viewMat)[3]);
-                    glm::vec3 quadCenter = enemy->GetPos() + enemyUp * 0.8f;
-                    glm::vec3 forward = glm::normalize(camPos - quadCenter);
-                    glm::vec3 right = glm::normalize(glm::cross(enemyUp, forward));
-                    if (glm::length(right) < 0.01f)
-                        right = glm::normalize(glm::cross(enemyUp, glm::vec3(0, 0, 1)));
-                    glm::vec3 upQuad = glm::cross(forward, right);
-                    // 敵のどれくらい上にラベルを描画するのか
-                    const float enemyLabelHeight = 0.5f;
-                    float w = enemyLabelHeight * static_cast<float>(texSize.x) / static_cast<float>(texSize.y);
-                    glm::mat4 billboard(1.0f);
-                    billboard[0] = glm::vec4(right * w, 0.0f);
-                    billboard[1] = glm::vec4(upQuad * enemyLabelHeight, 0.0f);
-                    billboard[2] = glm::vec4(forward, 0.0f);
-                    billboard[3] = glm::vec4(quadCenter, 1.0f);
-                    glEnable(GL_BLEND);
-                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                    glDepthMask(GL_FALSE);
-                    glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, texId);
-                    glUniform1i(locUseTexture, 1);
-                    glUniform3f(locObjectColor, 1.0f, 1.0f, 1.0f);
-                    mVertexArrays.at("text")->SetActive();
-                    glDrawArrays(GL_TRIANGLES, 0, 6);
-                    glUniform1i(locUseTexture, 0);
-                    glDepthMask(GL_TRUE);
-                    glDisable(GL_BLEND);
+                    std::unordered_map<std::string, std::pair<GLuint, glm::ivec2>> textTextureCache;
+                    // 文字列→テクスチャ（敵ID表示用、キャッシュ付き）
+                    auto getTextTexture = [&](const std::string &s) -> std::pair<GLuint, glm::ivec2>
+                    {
+                        if (!mFont || s.empty())
+                            return {0, {0, 0}};
+                        auto it = textTextureCache.find(s);
+                        if (it != textTextureCache.end())
+                            return it->second;
+                        SDL_Color white = {255, 255, 255, 255};
+                        SDL_Surface *surf = TTF_RenderText_Blended(mFont, s.c_str(), white);
+                        if (!surf)
+                            return {0, {0, 0}};
+                        SDL_Surface *rgba = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
+                        SDL_FreeSurface(surf);
+                        if (!rgba)
+                            return {0, {0, 0}};
+                        int tw = rgba->w, th = rgba->h;
+                        GLuint tex;
+                        glGenTextures(1, &tex);
+                        glBindTexture(GL_TEXTURE_2D, tex);
+                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tw, th, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                        SDL_FreeSurface(rgba);
+                        textTextureCache[s] = {tex, {tw, th}};
+                        return {tex, {tw, th}};
+                    };
+                    auto [texId, texSize] = getTextTexture(std::to_string(enemies[ei]->GetBreakCount()));
+                    if (texId != 0 && texSize.x > 0 && texSize.y > 0)
+                    {
+                        glm::vec3 camPos(glm::inverse(viewMat)[3]);
+                        glm::vec3 quadCenter = enemy->GetPos() + enemyUp * 0.8f;
+                        glm::vec3 forward = glm::normalize(camPos - quadCenter);
+                        glm::vec3 right = glm::normalize(glm::cross(enemyUp, forward));
+                        if (glm::length(right) < 0.01f)
+                            right = glm::normalize(glm::cross(enemyUp, glm::vec3(0, 0, 1)));
+                        glm::vec3 upQuad = glm::cross(forward, right);
+                        // 敵のどれくらい上にラベルを描画するのか
+                        const float enemyLabelHeight = 0.5f;
+                        float w = enemyLabelHeight * static_cast<float>(texSize.x) / static_cast<float>(texSize.y);
+                        glm::mat4 billboard(1.0f);
+                        billboard[0] = glm::vec4(right * w, 0.0f);
+                        billboard[1] = glm::vec4(upQuad * enemyLabelHeight, 0.0f);
+                        billboard[2] = glm::vec4(forward, 0.0f);
+                        billboard[3] = glm::vec4(quadCenter, 1.0f);
+                        glEnable(GL_BLEND);
+                        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                        glDepthMask(GL_FALSE);
+                        glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
+                        glActiveTexture(GL_TEXTURE0);
+                        glBindTexture(GL_TEXTURE_2D, texId);
+                        glUniform1i(locUseTexture, 1);
+                        glUniform3f(locObjectColor, 1.0f, 1.0f, 1.0f);
+                        mVertexArrays.at("text")->SetActive();
+                        glDrawArrays(GL_TRIANGLES, 0, 6);
+                        glUniform1i(locUseTexture, 0);
+                        glDepthMask(GL_TRUE);
+                        glDisable(GL_BLEND);
+                    }
                 }
             }
         }
 
         // 鍵描画
-        Planet* currentPlanet = players[0]->GetCurrentPlanet();
         Key* key = currentPlanet->GetKey();
         if (key) {
             if (key->GetIsActive())
             {
                 const float keyScale = 2.0f;
                 const glm::vec3 keyColor(0.85f, 0.65f, 0.13f); // 金色
-                glm::vec3 keyUp = glm::normalize(key->GetPos() - currentPlanet->GetCenter());
-                drawCharacter(key->GetPos(), keyScale, keyColor, keyUp, 0.0f, key->GetMeshes(), &keyColor);
+                drawCharacter(key->GetPos(), keyScale, keyColor, key->GetUpVec(), 0.0f, key->GetMeshes(), &keyColor);
             }
         }
 
@@ -297,8 +308,7 @@ void Renderer::Draw() {
                 if (boat->GetIsActive())
                 {
                     const float boatScale = 0.8f;
-                    glm::vec3 boatUp = glm::normalize(boat->GetPos() - currentPlanet->GetCenter());
-                    drawCharacter(boat->GetPos(), boatScale, glm::vec3(0.4f, 0.25f, 0.1f), boatUp, 0.0f, boat->GetMeshes());
+                    drawCharacter(boat->GetPos(), boatScale, glm::vec3(0.4f, 0.25f, 0.1f), boat->GetUpVec(), 0.0f, boat->GetMeshes());
                 }
             }
         }
@@ -309,8 +319,7 @@ void Renderer::Draw() {
             for (auto parts : boatParts) { 
                 if (parts->GetIsActive()) {
                     const float boatPartsScale = 1.0f;
-                    glm::vec3 boatPartsUp = glm::normalize(parts->GetPos() - currentPlanet->GetCenter());
-                    drawCharacter(parts->GetPos(), boatPartsScale, glm::vec3(0.4f, 0.25f, 0.1f), boatPartsUp, 0.0f, parts->GetMeshes());
+                    drawCharacter(parts->GetPos(), boatPartsScale, glm::vec3(0.4f, 0.25f, 0.1f), parts->GetUpVec(), 0.0f, parts->GetMeshes());
                 }
             }
         }
@@ -320,10 +329,9 @@ void Renderer::Draw() {
         if (star) {
         if (star->GetIsActive())
             {
-                glm::vec3 starUp = glm::normalize(star->GetPos() - currentPlanet->GetCenter());
                 glm::vec3 starColor(1.0f, 0.9f, 0.2f);
                 const float starScale = 0.3f;
-                drawCharacter(star->GetPos(), starScale, starColor, starUp, 0.0f, star->GetMeshes());
+                drawCharacter(star->GetPos(), starScale, starColor, star->GetUpVec(), 0.0f, star->GetMeshes());
             }
         }
 
@@ -332,8 +340,7 @@ void Renderer::Draw() {
         if (!crystals.empty()) {
             for (auto crystal : crystals) { 
                 if (crystal->GetIsActive()) {
-                    glm::vec3 crystalUp = glm::normalize(crystal->GetPos() - currentPlanet->GetCenter());
-                    drawCharacter(crystal->GetPos(), crystal->GetScale(), glm::vec3(0.4f, 0.25f, 0.1f), crystalUp, 0.0f, crystal->GetMeshes());
+                    drawCharacter(crystal->GetPos(), crystal->GetScale(), glm::vec3(0.4f, 0.25f, 0.1f), crystal->GetUpVec(), 0.0f, crystal->GetMeshes());
                 }
             }
         }

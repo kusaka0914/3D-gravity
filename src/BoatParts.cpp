@@ -20,4 +20,9 @@ void BoatParts::UpdateActor(float deltaTime)
         mIsActive = false;
         GetGame()->GetAudioSystem()->PlaySE("pickUpSE");
     }
+    if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal) {
+        mUpVec = {0.0f, 1.0f, 0.0f};
+    } else {
+        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
+    }
 }

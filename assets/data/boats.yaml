@@ -1,14 +1,14 @@
 boats :
-  # - pos : [0.0, 1.0, 0.0]
-  #   startPlanet : 0
-  #   destPlanet : 1
-  - theta : 0.0
-    u : 0.0
-    height : 0.0
+  - pos : [0.0, 1.0, 0.0]
     startPlanet : 0
     destPlanet : 1
-  - theta : 0.0
-    u : 0.0
-    height : 0.0
-    startPlanet : 1
-    destPlanet : 2
+  # - theta : 0.0
+  #   u : 0.0
+  #   height : 0.0
+  #   startPlanet : 0
+  #   destPlanet : 1
+  # - theta : 0.0
+  #   u : 0.0
+  #   height : 0.0
+  #   startPlanet : 1
+  #   destPlanet : 2

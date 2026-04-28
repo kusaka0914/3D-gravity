@@ -235,7 +235,7 @@ void Player::UpdateWorldVec() {
         worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 1, 0)));
     else 
         worldLeft = glm::normalize(worldLeft);
-        
+
     mForwardVec = glm::normalize(glm::cross(worldLeft, mUpVec) * std::cos(mCameraYaw) - std::sin(mCameraYaw) * worldLeft);
     mLeftVec = glm::normalize(glm::cross(mUpVec, mForwardVec));
 
@@ -329,15 +329,14 @@ void Player::DetermineLanding() {
 }
 
 void Player::ApplyGravity(float deltaTime) {
-    // 回避中・空中攻撃中は重力をかけず、終了後に通常通り落下
-    glm::vec3 center = mCurrentPlanet->GetCenter();
-    float radius = mCurrentPlanet->GetRadius();
-    mUpVec = glm::normalize(mPos - center);
-
-    // 重力処理
     mVelocity -= mUpVec * 9.8f * deltaTime;
     mPos += mVelocity * deltaTime;
 
+    if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal)
+        return;
+    
+    glm::vec3 center = mCurrentPlanet->GetCenter();
+    float radius = mCurrentPlanet->GetRadius();
     float dist = glm::length(mPos - center);
     // 落下して惑星内部にめり込んだらリスタート地点へ
     if (dist < radius * 0.5f)

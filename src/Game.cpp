@@ -46,6 +46,8 @@ Game::Game()
     ,mCurrentStageNum(0) 
     ,mIsPlayer2Joined(false)
     ,mHitStopTimer(-1.0f)
+    ,mIsChangeStage(false)
+    ,mCurrentStagePath("../assets/data/stage0.yaml")
 {
     
 }
@@ -135,17 +137,15 @@ bool Game::Initialize()
         return false;
     }
 
-    // ステージ作成
-    auto stageUnique = std::make_unique<Stage>(this);
-    Stage* stage = stageUnique.get();
-    mActors.emplace_back(std::move(stageUnique));
-    mStages.emplace_back(stage);
-    mCurrentStage = mStages[0];
+    for (int i = 0; i< 5; i++) {
+        // ステージ作成
+        auto stageUnique = std::make_unique<Stage>();
+        Stage* stage = stageUnique.get();
+        mStagesUnique.emplace_back(std::move(stageUnique));
+        mStages.emplace_back(stage);
+    }
 
-    auto stageUnique2 = std::make_unique<Stage>(this);
-    Stage* stage2 = stageUnique2.get();
-    mActors.emplace_back(std::move(stageUnique2));
-    mStages.emplace_back(stage2);
+    mCurrentStage = mStages[0];
 
     std::vector<float> textLabel = {
         -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
@@ -290,6 +290,12 @@ void Game::UpdateGame()
     AudioSystem* audioSystem = mAudioSystem.get();
     audioSystem->Update();
 
+    if (mIsChangeStage) {
+        LoadData(true);
+        mPhysicsSystem->Initialize();
+        mIsChangeStage = false;
+    }
+
     if (mPhysicsSystem)
     {
         mPhysicsSystem->Update();
@@ -324,8 +330,10 @@ void Game::RemoveActor(std::unique_ptr<Actor> actor)
 }
 
 void Game::LoadData(bool isLoadPlayer) {
+    RemoveAllActor();
     mLoader->LoadDataFromYaml(isLoadPlayer);
     LoadModel();
+    std::cout << "LoadData" << std::endl;
 }
 
 void Game::LoadModel() {

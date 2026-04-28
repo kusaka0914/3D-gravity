@@ -8,6 +8,7 @@
 #include "Boat.h"
 #include "BoatParts.h"
 #include "Crystal.h"
+#include "Star.h"
 #include <glm/glm.hpp>
 #include <iostream>
 
@@ -18,46 +19,45 @@ Loader::Loader(Game* game)
 }
 
 bool Loader::LoadDataFromYaml(bool isLoadPlayer) {
-    // 惑星をYAMLから読み込み
-    if (!LoadPlanetsFromYaml("../assets/data/planets.yaml")) {
+    std::string path = GetGame()->GetCurrentStagePath();
+    if (!LoadPlanetsFromYaml(path.c_str())) {
         std::cerr << "Planet YAML Load failed" << std::endl;
-        return false;
+        // return false;
     }
-    // 敵をYAMLから読み込み
-    if (!LoadEnemiesFromYaml("../assets/data/enemies.yaml"))
+    if (!LoadEnemiesFromYaml(path.c_str()))
     {
         std::cerr << "Enemy YAML Load failed" << std::endl;
-        return false;
+        // return false;
     }
-    // ボートをYAMLから読み込み
-    if (!LoadBoatsFromYaml("../assets/data/boats.yaml"))
+    if (!LoadBoatsFromYaml(path.c_str()))
     {
         std::cerr << "Boats YAML Load failed" << std::endl;
-        return false;
+        // return false;
     }
-    // ボートのかけらをYAMLから読み込み
-    if (!LoadBoatPartsFromYaml("../assets/data/boatParts.yaml"))
+    if (!LoadBoatPartsFromYaml(path.c_str()))
     {
         std::cerr << "BoatParts YAML Load failed" << std::endl;
-        return false;
+        // return false;
     }
-    // 鍵をYAMLから読み込み
-    if (!LoadKeysFromYaml("../assets/data/keys.yaml"))
+    if (!LoadKeysFromYaml(path.c_str()))
     {
         std::cerr << "Keys YAML Load failed" << std::endl;
-        return false;
+        // return false;
     }
-    // クリスタルをYAMLから読み込み
-    if (!LoadCrystalsFromYaml("../assets/data/Crystals.yaml"))
+    if (!LoadCrystalsFromYaml(path.c_str()))
     {
         std::cerr << "Crystals YAML Load failed" << std::endl;
-        return false;
+        // return false;
+    }
+    if (!LoadStarFromYaml(path.c_str()))
+    {
+        std::cerr << "Star YAML Load failed" << std::endl;
+        // return false;
     }
     if (!isLoadPlayer) return false;
-    // プレイヤーをYAMLから読み込み
-    if (!LoadPlayersFromYaml("../assets/data/players.yaml")) {
+    if (!LoadPlayersFromYaml(path.c_str())) {
         std::cerr << "Player YAML Load failed" << std::endl;
-        return false;
+        // return false;
     }
     return true;
 }
@@ -67,7 +67,6 @@ bool Loader::LoadPlayersFromYaml(const char* path) {
         YAML::Node root = YAML::LoadFile(path);
         if (!root["players"] || !root["players"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'players' sequence" << std::endl;
-            return false;
         }
         GetGame()->RemoveAllPlayer();
         int playerNum = 0;
@@ -113,7 +112,6 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
         YAML::Node root = YAML::LoadFile(path);
         if (!root["enemies"] || !root["enemies"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'enemies' sequence" << std::endl;
-            return false;
         }
         for (const YAML::Node& node : root["enemies"]) {
             currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
@@ -127,25 +125,25 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
             bool isBoss = node["isBoss"] ? node["isBoss"].as<int>() : false;
             enemy->SetIsBoss(isBoss);
 
-            float hp = node["hp"] ? node["hp"].as<float>() : 10.0f;
+            float hp = node["hp"] ? node["hp"].as<float>() : 80.0f;
             enemy->SetHp(hp);
 
             currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
             enemy->SetCurrentPlanetNum(currentPlanetNum);
             
-            std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "";
+            std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "enemy.obj";
             enemy->SetModelPath(modelPath);
 
             float scale = node["scale"] ? node["scale"].as<float>() : 0.25f;
             enemy->SetScale(scale);
 
-            float speed = node["speed"] ? node["speed"].as<float>() : 2.0f;
+            float speed = node["speed"] ? node["speed"].as<float>() : 1.0f;
             enemy->SetSpeed(speed);
 
-            float attack = node["attack"] ? node["attack"].as<float>() : 20.0f;
+            float attack = node["attack"] ? node["attack"].as<float>() : 5.0f;
             enemy->SetAttack(attack);
 
-            float radius = node["radius"] ? node["radius"].as<float>() : 1.0f;
+            float radius = node["radius"] ? node["radius"].as<float>() : 0.75f;
             enemy->SetRadius(radius);
 
             int breakCountMax = node["breakCountMax"] ? node["breakCountMax"].as<int>() : 1;
@@ -176,7 +174,6 @@ bool Loader::LoadPlanetsFromYaml(const char* path) {
         // 失敗処理
         if (!root["planets"] || !root["planets"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'planets' sequence" << std::endl;
-            return false;
         }
         for (const YAML::Node& node : root["planets"]) {
             int stageNum = node["stageNum"] ? node["stageNum"].as<int>() : 0;
@@ -226,7 +223,7 @@ bool Loader::LoadPlanetsFromYaml(const char* path) {
             std::string keySpawnCondition = node["keySpawnCondition"] ? node["keySpawnCondition"].as<std::string>() : "";
             planet->SetKeySpawnCondition(keySpawnCondition);
 
-            Stage* currentStage = GetGame()->GetStages()[stageNum];
+            Stage* currentStage = GetGame()->GetCurrentStage();
             // 惑星配列に追加
             planet->SetCurrentStage(currentStage);
 
@@ -249,7 +246,6 @@ bool Loader::LoadBoatsFromYaml(const char* path)
         YAML::Node root = YAML::LoadFile(path);
         if (!root["boats"] || !root["boats"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'boats' sequence" << std::endl;
-            return false;
         }
         for (const YAML::Node& node : root["boats"]) {
             currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
@@ -266,6 +262,9 @@ bool Loader::LoadBoatsFromYaml(const char* path)
 
             int destPlanet = node["destPlanet"] ? node["destPlanet"].as<int>() : 0;
             boat->SetDestPlanet(destPlanet);
+
+            int destStage = node["destStage"] ? node["destStage"].as<int>() : 0;
+            boat->SetDestStage(destStage);
 
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[startPlanet];
             boat->SetCurrentPlanet(currentPlanet);
@@ -294,7 +293,6 @@ bool Loader::LoadBoatPartsFromYaml(const char* path)
         YAML::Node root = YAML::LoadFile(path);
         if (!root["boatParts"] || !root["boatParts"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'boatParts' sequence" << std::endl;
-            return false;
         }
         for (const YAML::Node& node : root["boatParts"]) {
             currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
@@ -333,7 +331,6 @@ bool Loader::LoadKeysFromYaml(const char* path)
         YAML::Node root = YAML::LoadFile(path);
         if (!root["keys"] || !root["keys"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'keys' sequence" << std::endl;
-            return false;
         }
         for (const YAML::Node& node : root["keys"]) {
             currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
@@ -369,7 +366,6 @@ bool Loader::LoadCrystalsFromYaml(const char* path)
         YAML::Node root = YAML::LoadFile(path);
         if (!root["crystals"] || !root["crystals"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'crystals' sequence" << std::endl;
-            return false;
         }
         for (const YAML::Node& node : root["crystals"]) {
             currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
@@ -403,6 +399,37 @@ bool Loader::LoadCrystalsFromYaml(const char* path)
         return true;
     } catch (const YAML::Exception& ex) {
         std::cerr << "Crystals Load error: " << ex.what() << std::endl;
+        return false;
+    }
+}
+
+bool Loader::LoadStarFromYaml(const char* path) {
+    try {
+        int currentPlanetNum = 0;
+        YAML::Node root = YAML::LoadFile(path);
+        if (!root["star"] || !root["star"].IsSequence()) {
+            std::cerr << "Loader: missing or invalid 'star' sequence" << std::endl;
+        }
+        // for (const YAML::Node& node : root["star"]) {
+        //     currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+        //     Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+        //     currentPlanet->RemoveAllCrystals();
+        // }
+
+        for (auto node : root["star"]){
+            std::unique_ptr<Star> star = std::make_unique<Star>(GetGame());
+
+            int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            star->SetCurrentPlanet(currentPlanet);
+            
+            Star* starPtr = star.get();
+            GetGame()->AddActor(std::move(star));
+            currentPlanet->SetStar(starPtr);
+        }
+        return true;
+    } catch (const YAML::Exception& ex) {
+        std::cerr << "Star Load error: " << ex.what() << std::endl;
         return false;
     }
 }

@@ -29,10 +29,10 @@ public:
     void AddCrystals(class Crystal* crystal) { mCrystals.emplace_back(crystal); }
     void AddEnemyMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mEnemyMeshesByPath[modelPath] = meshes; }
 
-    void RemoveAllEnemy() { if (!mEnemies.empty()) for(int i = 0; i < mEnemies.size(); i++) mEnemies.pop_back(); }
-    void RemoveAllBoat() { if (!mBoats.empty())  for(int i = 0; i < mBoats.size(); i++) mBoats.pop_back(); }
-    void RemoveAllBoatParts() { if (!mBoatParts.empty())  for(int i = 0; i < mBoatParts.size(); i++) mBoatParts.pop_back(); }
-    void RemoveAllCrystals() { if (!mCrystals.empty())  for(int i = 0; i < mCrystals.size(); i++) mCrystals.pop_back(); }
+    void RemoveAllEnemy() { mEnemies.clear(); }
+    void RemoveAllBoat() { mBoats.clear(); }
+    void RemoveAllBoatParts() { mBoatParts.clear(); }
+    void RemoveAllCrystals() { mCrystals.clear(); }
     void RemoveKey() { mKey = nullptr; }
     void RemoveStar() { mStar = nullptr; }
 
@@ -45,6 +45,7 @@ public:
     void SetColor(glm::vec3 color) { mColor = color; }
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
     void SetKey(class Key* key) { mKey = key; }
+    void SetStar(class Star* star) { mStar = star; }
     void SetKeySpawnCondition(std::string keySpawnCondition) { 
         if(keySpawnCondition == "AllEnemiesDead") {
             mKeySpawnCondition = KeySpawnCondition::AllEnemiesDead;

@@ -31,6 +31,8 @@ void UIRenderer::Draw() {
     bool isStageClear = mGame->GetGameProgressState()->GetIsStageClear();
     if (!isStageClear){
         DrawDefaultUI();
+    } else {
+        DrawStageClear();
     }
 
     bool isStateUIActive = DrawStateUI();
@@ -64,12 +66,6 @@ bool UIRenderer::DrawStateUI() {
     bool isBreakTutorialActive = mGame->GetUIState()->GetIsBreakTutorialActive();
     if (isBreakTutorialActive) {
         DrawBreakTutorial();
-        return true;
-    }
-
-    bool isStageClear = mGame->GetGameProgressState()->GetIsStageClear();
-    if (isStageClear) {
-        DrawStageClear();
         return true;
     }
 

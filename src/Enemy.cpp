@@ -112,7 +112,11 @@ void Enemy::UpdateDying(float deltaTime) {
 void Enemy::UpdateUpVec() {
     glm::vec3 center = mCurrentPlanet->GetCenter();
     float radius = mCurrentPlanet->GetRadius();
-    mUpVec = glm::normalize(mPos - center);
+    if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal) {
+        mUpVec = {0.0f, 1.0f, 0.0f};
+    } else {
+        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
+    }
 }
 
 void Enemy::UpdateKnockBack(float deltaTime, Player* player) {
@@ -289,8 +293,7 @@ void Enemy::FinishDying() {
     Star* star = mCurrentPlanet->GetStar();
     if (mIsBoss)
     {
-        star->SetIsActive(true);
-        star->SetCurrentPlanet(mCurrentPlanetNum);
+        star->SetIsActive(true); 
         star->SetPos(mPos);
     }
 }

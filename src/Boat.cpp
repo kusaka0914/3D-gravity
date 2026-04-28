@@ -11,6 +11,7 @@ Boat::Boat(Game* game)
     : Actor(game)
     , mStartPlanet(0)
     , mDestPlanet(1)
+    , mDestStage(0)
     , mIsMoving(false)
     , mIsActivePrev(false)
     , mIsActive(false)
@@ -29,6 +30,11 @@ Boat::Boat(Game* game)
 
 void Boat::UpdateActor(float deltaTime)
 {
+    if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal) {
+        mUpVec = {0.0f, 1.0f, 0.0f};
+    } else {
+        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
+    }
     if (!mIsActivePrev && mIsActive) {
         GetGame()->GetAudioSystem()->PlaySE("showBoatSE");
         mIsActivePrev = true;
@@ -38,11 +44,7 @@ void Boat::UpdateActor(float deltaTime)
     {   
         int currentStageNum = GetGame()->GetCurrentStageNum();
         if (currentStageNum == 0) {
-            Stage* nextStage = GetGame()->GetStages()[1];
-            GetGame()->SetCurrentStage(nextStage);
-            // GetGame()->LoadData(true);
-            // GetGame()->GetPlayers()[0]->SetCurrentPlanet(nextStage->GetPlanets()[0]);
-            mIsMoving = false;
+            ChangeStage();
             return;
         }
         Planet* dest = mPlanets[mDestPlanet];
@@ -63,8 +65,6 @@ void Boat::UpdateActor(float deltaTime)
         float destDist = glm::length(mPos - mPlanets[mDestPlanet]->GetCenter());
         mCurrentPlanetNum = (startDist < destDist) ? mStartPlanet : mDestPlanet;
 
-        // 上ベクトルを更新
-        mUpVec = glm::normalize(mPos - mPlanets[mCurrentPlanetNum]->GetCenter());
         if (mProgress >= 1.0f)
         {
             mPos = mDestPos;
@@ -75,4 +75,14 @@ void Boat::UpdateActor(float deltaTime)
             }
         }
     }
+}
+
+void Boat::ChangeStage() {
+    Stage* nextStage = GetGame()->GetStages()[mDestStage];
+    GetGame()->SetCurrentStage(nextStage);
+    GetGame()->SetCurrentStageNum(mDestStage);
+    GetGame()->SetIsChangeStage(true);
+    std::string stagePath = "../assets/data/stage" + std::to_string(mDestStage) + ".yaml";
+    GetGame()->SetCurrentStagePath(stagePath);
+    mIsMoving = false;
 }
