@@ -19,7 +19,30 @@ UIRenderer::UIRenderer(Game* game)
     , mShader(game->GetShader())
     , mFont(game->GetFont())
     , mVertexArrays(game->GetVertexArrays())
-{}
+{
+    Initialize();
+}
+
+void UIRenderer::Initialize() {
+    AddImgInfo("../assets/textures/titleBg.png", "titleBg");
+    // AddImgInfo("../assets/textures/titleBg.png", "titleBg");
+}
+
+void UIRenderer::AddImgInfo(std::string path, std::string name) {
+    int imgWidth, imgHeight, imgChannels;
+    unsigned char* imageData = stbi_load(path.c_str(), &imgWidth, &imgHeight, &imgChannels, STBI_rgb_alpha);
+
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imgWidth, imgHeight, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+    stbi_image_free(imageData);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    mTextures[name] = tex;
+}
 
 void UIRenderer::Draw() {
     GLFWwindow* window = mGame->GetWindow();
@@ -27,6 +50,14 @@ void UIRenderer::Draw() {
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
+
+    bool isTitleActive = GetGame()->GetUIState()->GetIsTitleActive();
+    if (isTitleActive) {
+        DrawTitle();
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+        return;
+    }
 
     bool isStageClear = mGame->GetGameProgressState()->GetIsStageClear();
     if (!isStageClear){
@@ -42,6 +73,12 @@ void UIRenderer::Draw() {
 
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
+}
+
+void UIRenderer::DrawTitle() {
+    DrawTexture(0.0f, 0.0f, mFbWidth, mFbHeight, "titleBg");
+    std::string text = "START: A";
+    DrawText(mFbWidth / 2, 3 * mFbHeight / 4, 1.0f, text.c_str(), true);
 }
 
 bool UIRenderer::DrawStateUI() {
@@ -76,7 +113,6 @@ void UIRenderer::DrawDefaultUI() {
     DrawOperationSupportUI();
 
     DrawHpUI();
-
 
     std::vector<Player*> players = mGame->GetPlayers();
     if (players[0]->GetSpecialAttackCooldownRemaining() <= 0.0f) {
@@ -170,23 +206,9 @@ void UIRenderer::DrawText(float x, float y, float scale, const char* message, bo
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void UIRenderer::DrawTexture(float x, float y, float scale, const char* path) {
-    int imgWidth, imgHeight, imgChannels;
-    unsigned char* imageData = stbi_load(path, &imgWidth, &imgHeight, &imgChannels, STBI_rgb_alpha);
-
-    GLuint tex;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imgWidth, imgHeight, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-    stbi_image_free(imageData);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x + imgWidth * scale * 0.5f, y + imgHeight * scale * 0.5f, 0.0f))
-                    * glm::scale(glm::mat4(1.0f), glm::vec3(imgWidth * scale, imgHeight * scale, 1.0f));
+void UIRenderer::DrawTexture(float x, float y, float width, float height, std::string textureName) {
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x + width * 0.5f, y + height * 0.5f, 0.0f))
+                    * glm::scale(glm::mat4(1.0f), glm::vec3(width, height, 1.0f));
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 proj = glm::ortho(0.0f, (float)mFbWidth, (float)mFbHeight, 0.0f, -1.0f, 1.0f);
     glUniformMatrix4fv(mShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
@@ -199,6 +221,7 @@ void UIRenderer::DrawTexture(float x, float y, float scale, const char* path) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glActiveTexture(GL_TEXTURE0);
+    GLuint tex = mTextures.at(textureName);
     glBindTexture(GL_TEXTURE_2D, tex);
 
     mVertexArrays.at("text")->SetActive();
@@ -215,7 +238,6 @@ void UIRenderer::DrawTutorial() {
     float textX = bgX + bgWidth /2;
     DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
     DrawText(textX, bgY + 100, 0.5f, "ロケットのかけらを5個集めよう！", true);
-    // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
     DrawText(textX, bgY + bgHeight - 380, 0.5f, "この惑星にはロケットのかけらが5個散らばっています。", true);
     DrawText(textX, bgY + bgHeight - 320, 0.5f, "ジャンプや回避、攻撃を駆使して全てのかけらを集めてください。", true);
     DrawText(textX, bgY + bgHeight - 260, 0.5f, "全てのかけらを集めることで次の惑星に行くためのロケットが完成します。", true);

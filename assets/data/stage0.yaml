@@ -1,15 +1,17 @@
 planets:
   - center: [0.0, 0.0, 0.0]
-    radius: 8.0
+    radius: 1.0
     color: [1.0, 1.0, 1.0]
-    model: selectField.obj
+    model: house.obj
   
 boats:
-  - pos : [-10.0, 1.0, 0.0]
-    destStage : 1
-  - pos : [-5.0, 1.0, -5.0]
-    destStage : 2
+  # - pos : [-10.0, 1.0, 0.0]
+  #   destStage : 1
+  # - pos : [-5.0, 1.0, -5.0]
+  #   destStage : 2
 
 players:
-  - pos : [0.0, 1.0, 10.0]
+  # - pos : [0.0, 1.0, 10.0]
+  #   currentPlanetNum: 0
+  - pos : [0.0, 0.0, 0.0]
     currentPlanetNum: 0

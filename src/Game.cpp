@@ -76,7 +76,7 @@ bool Game::Initialize()
 
     // ゲーム用のウィンドウを作成する
     // mWindow = glfwCreateWindow(mode->width, mode->height, "Engine", monitor, nullptr);
-    mWindow = glfwCreateWindow(800, 600, "Engine", nullptr, nullptr);
+    mWindow = glfwCreateWindow(800, 450, "Engine", nullptr, nullptr);
     if (!mWindow)
     {
         std::cerr << "Failed to create mWindow" << std::endl;
