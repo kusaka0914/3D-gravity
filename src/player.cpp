@@ -521,7 +521,7 @@ void Player::RideBoat() {
         if (!boat->GetIsMoving() && boat->GetIsActive() && mCurrentPlanetNum == boat->GetCurrentPlanetNum())
         {
             float distToBoat = glm::length(mPos - boat->GetPos());
-            const float boatTouchRadius = 1.8f;
+            const float boatTouchRadius = 0.9f;
             if (distToBoat < boatTouchRadius)
             {
                 boat->SetIsMoving(true);

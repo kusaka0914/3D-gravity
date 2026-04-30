@@ -138,6 +138,9 @@ bool Loader::LoadNPCsFromYaml(const char* path) {
             npc->SetName(name);
 
             if (node["talkTexts"]) {
+                std::unique_ptr<TalkableComponent> talkableComponent = std::make_unique<TalkableComponent>(npc.get(), 100);
+                npc->SetTalkableComponent(talkableComponent.get());
+                npc->AddComponent(std::move(talkableComponent));
                 for (auto talkTextNode : node["talkTexts"]) {
                     std::string talkText = talkTextNode.as<std::string>();
                     npc->GetTalkableComponent()->AddTalkTexts(talkText);

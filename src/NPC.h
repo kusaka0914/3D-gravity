@@ -27,6 +27,7 @@ public:
     void SetRadius(float radius) { mRadius = radius; }
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
     void SetName(std::string name) { mName = name; }
+    void SetTalkableComponent(class TalkableComponent* talkableComponent) { mTalkableComponent = talkableComponent; }
     void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
 
     bool GetIsActive() const { return mIsActive; }

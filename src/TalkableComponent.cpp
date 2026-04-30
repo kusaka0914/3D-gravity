@@ -14,16 +14,19 @@ void TalkableComponent::Update(float deltaTime)
 {
     std::vector<Player*> players = GetOwner()->GetGame()->GetPlayers();
     for (auto player : players) {
-        float talkableDist = 1.0f;
+        NPC* npc = dynamic_cast<NPC*>(GetOwner());
+        if (npc == nullptr) return;
+
         glm::vec3 playerPos = player->GetPos();
+        glm::vec3 toNPC = glm::normalize(GetOwner()->GetPos() - playerPos);
+        float npcYaw = player->getYawFromDirection(npc->GetUpVec(), toNPC);
+        npc->SetFacingYaw(npcYaw);
+        float talkableDist = 1.0f;
         float toPlayerDist = glm::length(playerPos - GetOwner()->GetPos());
         
         if (toPlayerDist <= talkableDist) {
             mIsTalkable = true;
-            NPC* npc = dynamic_cast<NPC*>(GetOwner());
-            if (npc != nullptr) {
-                player->SetTalkingNPC(npc);
-            }
+            player->SetTalkingNPC(npc);
         } else {
             mIsTalkable = false;
             player->SetTalkingNPC(nullptr);

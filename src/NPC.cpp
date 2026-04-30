@@ -21,9 +21,7 @@ NPC::NPC(Game* game)
     , mCurrentPlanetNum(0)
     , mFacingYaw(0.0f)
 {
-    std::unique_ptr<TalkableComponent> talkableComponent = std::make_unique<TalkableComponent>(this, 100);
-    mTalkableComponent = talkableComponent.get();
-    AddComponent(std::move(talkableComponent));
+    
 }
 
 NPC::~NPC()

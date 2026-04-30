@@ -13,3 +13,13 @@ boats:
 players:
   - pos : [0.0, 1.0, 10.0]
     currentPlanetNum: 0
+  
+NPCs:
+  - pos : [-8.5, 1.0, 0.0]
+    modelPath: spaceSlime.obj
+    name: BoatPartsNPC
+    talkTexts: [こちらステージ1行きロケット〜まもなく発射します〜。\nお乗りの方はお急ぎください〜。]
+  - pos : [-3.5, 1.0, -5.0]
+    modelPath: spaceSlime.obj
+    name: CrystalNPC
+    talkTexts: [こちらステージ2行きロケット〜まもなく発射します〜。\nお乗りの方はお急ぎください〜。]

@@ -263,6 +263,7 @@ void Game::ProcessInput()
         }
         std::vector<NPC*> NPCs = mPlayers[0]->GetCurrentPlanet()->GetNPCs();
         for (auto NPC : NPCs) {
+            if (!NPC->GetTalkableComponent()) continue;
             bool isTalkable = NPC->GetTalkableComponent()->GetIsTalkable();
             if (isTalkable) {
                 mUIState->SetTalkWith("NPC");

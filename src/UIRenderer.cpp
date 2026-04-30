@@ -249,6 +249,7 @@ void UIRenderer::DrawDefaultUI() {
     std::vector<NPC*> NPCs = currentPlanet->GetNPCs();
     if (!NPCs.empty()) {
         for (auto NPC : NPCs) {
+            if (!NPC->GetTalkableComponent()) continue;
             if (NPC->GetTalkableComponent()->GetIsTalkable()) {
                 DrawTalkableUI();
             }
