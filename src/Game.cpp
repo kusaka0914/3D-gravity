@@ -21,7 +21,9 @@
 #include "BoatParts.h"
 #include "PhysicsSystem.h"
 #include "DestructibleComponent.h"
+#include "TalkableComponent.h"
 #include "Game.h"
+#include "NPC.h"
 #include <GLFW/glfw3.h>
 #include <SDL.h>
 #include <glm/glm.hpp>
@@ -46,6 +48,9 @@ Game::Game()
     ,mCurrentStageNum(0) 
     ,mIsPlayer2Joined(false)
     ,mHitStopTimer(-1.0f)
+    ,mFadeInTimer(-1.0f)
+    ,mIsChangeStage(false)
+    ,mCurrentStagePath("../assets/data/house.yaml")
 {
     
 }
@@ -74,7 +79,7 @@ bool Game::Initialize()
 
     // ゲーム用のウィンドウを作成する
     // mWindow = glfwCreateWindow(mode->width, mode->height, "Engine", monitor, nullptr);
-    mWindow = glfwCreateWindow(800, 600, "Engine", nullptr, nullptr);
+    mWindow = glfwCreateWindow(800, 450, "Engine", nullptr, nullptr);
     if (!mWindow)
     {
         std::cerr << "Failed to create mWindow" << std::endl;
@@ -135,11 +140,14 @@ bool Game::Initialize()
         return false;
     }
 
-    // ステージ作成
-    auto stageUnique = std::make_unique<Stage>(this);
-    Stage* stage = stageUnique.get();
-    mActors.emplace_back(std::move(stageUnique));
-    mStages.emplace_back(stage);
+    for (int i = 0; i< 5; i++) {
+        // ステージ作成
+        auto stageUnique = std::make_unique<Stage>();
+        Stage* stage = stageUnique.get();
+        mStagesUnique.emplace_back(std::move(stageUnique));
+        mStages.emplace_back(stage);
+    }
+
     mCurrentStage = mStages[0];
 
     std::vector<float> textLabel = {
@@ -201,6 +209,10 @@ void Game::Shutdown()
 
 void Game::ProcessInput()
 {
+    // 入力をSDLに取り込む
+    SDL_PumpEvents();
+    // ゲームパッド対応
+    SDL_GameControllerUpdate();
     for (const auto& actor_unique : mActors) {
         Actor* actor = actor_unique.get();
         actor->ProcessInput();
@@ -233,23 +245,25 @@ void Game::ProcessInput()
 
     bool aPressed = SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_A);
     if (aPressed && !mAPressedPrev) {
-        if (mUIState->GetIsTutorialActive()) {
-            mUIState->SetIsTutorialActive(false);
-            mUIState->SetIsCrystalTutorialActive(true);
-        } else if (mUIState->GetIsCrystalTutorialActive()) {
-            mUIState->SetIsCrystalTutorialActive(false);
-            mUIState->SetIsUIActive(false);
-            mPlayers[0]->SetCanMove(true);
+        bool isTitle = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Title;
+        bool isOpening = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Opening;
+        bool isTalking = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Talking;
+        if (isTitle && mFadeInTimer <= -1.0f) {
+            mFadeInTimer = 1.0f;
+            mGameProgressState->SetNextSceneState("Opening");
+        } 
+        if (isTalking || isOpening) {
+            mUIState->IncTalkUIIndex();
         }
-        if (mUIState->GetIsBattleTutorialActive()) {
-            mUIState->SetIsBattleTutorialActive(false);
-            mUIState->SetIsUIActive(false);
-            mPlayers[0]->SetCanMove(true);
-        }
-        if (mUIState->GetIsBreakTutorialActive()) {
-            mUIState->SetIsBreakTutorialActive(false);
-            mUIState->SetIsUIActive(false);
-            mPlayers[0]->SetCanMove(true);
+        std::vector<NPC*> NPCs = mPlayers[0]->GetCurrentPlanet()->GetNPCs();
+        for (auto NPC : NPCs) {
+            if (!NPC->GetTalkableComponent()) continue;
+            bool isTalkable = NPC->GetTalkableComponent()->GetIsTalkable();
+            if (isTalkable) {
+                mUIState->SetTalkWith("NPC");
+                mPlayers[0]->SetTalkingNPC(NPC);
+                mGameProgressState->SetSceneState("Talking");
+            }
         }
     }
 
@@ -261,31 +275,6 @@ void Game::ProcessInput()
 
 void Game::UpdateGame()
 {
-    double currentTime = glfwGetTime(); 
-    float deltaTime = std::min(0.04f, static_cast<float>(currentTime - mLastTime));
-    if (mHitStopTimer >= 0.0f) {
-        mHitStopTimer-= deltaTime;
-        deltaTime = 0.0f;
-    }
-    if (mUIState->GetIsUIActive()) {
-        deltaTime = 0.0f;
-    }
-
-    mLastTime = currentTime;
-
-    for (const auto& actor_unique : mActors) {
-        Actor* actor = actor_unique.get();
-        actor->Update(deltaTime);
-    }
-
-    AudioSystem* audioSystem = mAudioSystem.get();
-    audioSystem->Update();
-
-    if (mPhysicsSystem)
-    {
-        mPhysicsSystem->Update();
-    }
-
     for (int i = 0; i < SDL_NumJoysticks(); ++i)
     {
         
@@ -293,6 +282,71 @@ void Game::UpdateGame()
         {
             mSdlController = SDL_GameControllerOpen(i);
         }
+    }
+
+    double currentTime = glfwGetTime(); 
+    float deltaTime = std::min(0.04f, static_cast<float>(currentTime - mLastTime));
+    mLastTime = currentTime;
+    if (mFadeInTimer > -1.0f) {
+        float prevFadeInTimer = mFadeInTimer;
+        mFadeInTimer -= deltaTime;
+        GameProgressState::SceneState nextSceneState = mGameProgressState->GetNextSceneState();
+        std::cout << static_cast<int>(nextSceneState) << std::endl;
+        if (prevFadeInTimer >= 0.0f && mFadeInTimer <= 0.0f) {
+            switch (nextSceneState)
+            {
+            case GameProgressState::SceneState::Opening:
+                mGameProgressState->SetSceneState("Opening");
+                mGameProgressState->SetNextSceneState("None");
+                break;
+
+            case GameProgressState::SceneState::Playing:
+                mGameProgressState->SetSceneState("Playing");
+                mGameProgressState->SetNextSceneState("None");
+                ChangeStage(0);
+                mUIState->SetTalkWith("None");
+                break;
+            
+            default:
+                break;
+            }
+        }
+    }
+    if (mHitStopTimer >= 0.0f) {
+        mHitStopTimer -= deltaTime;
+        deltaTime = 0.0f;
+    }
+    if (mGameProgressState->GetSceneState() == GameProgressState::SceneState::ShowUI) {
+        deltaTime = 0.0f;
+    }
+
+    bool isTitle = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Title;
+    bool isTalking = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Talking;
+    bool isShowUI = mGameProgressState->GetSceneState() == GameProgressState::SceneState::ShowUI;
+    if (isTitle || isTalking || isShowUI)
+        return;
+
+    for (const auto& actor_unique : mActors) {
+        Actor* actor = actor_unique.get();
+        actor->Update(deltaTime);
+    }
+
+    if (mFadeInTimer >= 0.0f) return;
+
+    if (mIsChangeStage) {
+        Mix_HaltMusic();
+        LoadData(true);
+        mPhysicsSystem->Initialize();
+    }
+
+    AudioSystem* audioSystem = mAudioSystem.get();
+    audioSystem->Update();
+
+    mIsChangeStage = false;
+
+    if (mPhysicsSystem)
+    {
+        mPhysicsSystem->Update();
     }
 }
 
@@ -315,6 +369,7 @@ void Game::RemoveActor(std::unique_ptr<Actor> actor)
 }
 
 void Game::LoadData(bool isLoadPlayer) {
+    RemoveAllActor();
     mLoader->LoadDataFromYaml(isLoadPlayer);
     LoadModel();
 }
@@ -322,7 +377,7 @@ void Game::LoadData(bool isLoadPlayer) {
 void Game::LoadModel() {
     // プレイヤーモデルをロード
     for (auto player : mPlayers) {
-        std::string path = "../assets/models/player.obj";
+        std::string path = "../assets/models/" + player->GetModelPath();
         std::vector<LoadedMesh> playerMeshes = mMesh->loadMeshFromFile(path.c_str());
         player->SetMeshes(playerMeshes);
     }
@@ -330,16 +385,25 @@ void Game::LoadModel() {
     // 惑星モデルをロード
     for (auto planet : planets)
     {
-        std::unordered_map<std::string, std::vector<LoadedMesh>> planetMeshesByPath = mCurrentStage->GetPlanetMeshesByPath();
+        std::unordered_map<std::string, std::vector<LoadedMesh>> planetMeshesByPath = planet->GetCurrentStage()->GetPlanetMeshesByPath();
         if (planetMeshesByPath.find(planet->GetModelPath()) == planetMeshesByPath.end())
         {
             std::string path = "../assets/models/" + planet->GetModelPath();
             auto planetMeshes = mMesh->loadMeshFromFile(path.c_str());
-            mCurrentStage->AddPlanetMesh(planet->GetModelPath(), planetMeshes);
+            planet->GetCurrentStage()->AddPlanetMesh(planet->GetModelPath(), planetMeshes);
         }
     }
     // 各惑星のオブジェクトのモデルをロード
     for (auto planet : planets) {
+        // NPCモデルをロード
+        std::vector<NPC*> NPCs = planet->GetNPCs();
+        for (auto NPC : NPCs)
+        {
+            std::string path = "../assets/models/" + NPC->GetModelPath();
+            std::vector<LoadedMesh> NPCMeshes = mMesh->loadMeshFromFile(path.c_str());
+            NPC->SetMeshes(NPCMeshes);
+        }
+
         // 敵モデルをロード
         std::vector<Enemy*> enemies = planet->GetEnemies();
         for (auto enemy : enemies)
@@ -392,4 +456,12 @@ void Game::LoadModel() {
             }
         }
     }
+}
+
+void Game::ChangeStage(int stageNum) {
+    mCurrentStage = mStages[stageNum];
+    mCurrentStageNum = stageNum;
+    mIsChangeStage = true;
+    std::string stagePath = "../assets/data/stage" + std::to_string(stageNum) + ".yaml";
+    mCurrentStagePath = stagePath;
 }

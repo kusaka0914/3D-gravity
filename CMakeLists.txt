@@ -24,6 +24,7 @@ add_executable(engine
     src/Loader.cpp
     src/Main.cpp
     src/Mesh.cpp
+    src/NPC.cpp
     src/PhysicsSystem.cpp
     src/Planet.cpp
     src/Player.cpp
@@ -31,6 +32,7 @@ add_executable(engine
     src/Shader.cpp
     src/Stage.cpp
     src/Star.cpp
+    src/TalkableComponent.cpp
     src/UIRenderer.cpp
     src/UIState.cpp
     src/VertexArray.cpp
@@ -73,3 +75,6 @@ target_link_libraries(engine
 set_target_properties(engine PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_C_FLAGS_DEBUG "-g -O0")

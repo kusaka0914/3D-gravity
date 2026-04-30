@@ -17,13 +17,21 @@ public:
     bool Initialize();
     void RunLoop();
     void Shutdown();
+    void LoadData(bool isLoadPlayer);
+    void ChangeStage(int stageNum);
 
     void AddActor(std::unique_ptr<class Actor> actor) { mActors.emplace_back(std::move(actor)); };
 	void RemoveActor(std::unique_ptr<class Actor> actor);
-    void RemoveAllActor() { for(int i = 0; i < mActors.size(); i++) mActors.pop_back(); }
+    void RemoveAllActor() { mPlayers.clear();
+        mActors.clear(); }
     void AddPlayer(class Player* player) { mPlayers.emplace_back(player); };
-    void RemoveAllPlayer() { for(int i = 0; i < mPlayers.size(); i++) mPlayers.pop_back(); }
+    void RemoveAllPlayer() { mPlayers.clear(); }
     void SetHitStopTimer(float hitStopTimer) { mHitStopTimer = hitStopTimer; }
+    void SetFadeInTimer(float fadeInTimer) { mFadeInTimer = fadeInTimer; }
+    void SetCurrentStage(class Stage* currentStage) { mCurrentStage = currentStage; }
+    void SetCurrentStageNum(int currentStageNum) { mCurrentStageNum = currentStageNum; }
+    void SetIsChangeStage(bool isChangeStage) { mIsChangeStage = isChangeStage; }
+    void SetCurrentStagePath(std::string currentStagePath) { mCurrentStagePath = currentStagePath; }
 
     GLFWwindow* GetWindow() const { return mWindow; }
     SDL_GameController* GetSdlController() const { return mSdlController;}
@@ -37,19 +45,22 @@ public:
     class PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }
     class Mesh* GetMesh() const { return mMesh.get(); }
     class UIState* GetUIState() const { return mUIState.get(); }
+    class Loader* GetLoader() const { return mLoader.get(); }
     class GameProgressState* GetGameProgressState() const { return mGameProgressState.get(); }
     float GetHitStopTimer() const { return mHitStopTimer; }
+    float GetFadeInTimer() const { return mFadeInTimer; }
 
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }
     bool GetIsStageClear() const { return mIsStageClear; }
+    bool GetIsChangeStage() const { return mIsChangeStage; }
     bool GetIsPlayer2Joined() const { return mIsPlayer2Joined; }
+    std::string GetCurrentStagePath() const { return mCurrentStagePath; }
 
 private:
     void ProcessInput();
     void UpdateGame();
     void GenerateOutput();
-    void LoadData(bool isLoadPlayer);
     void LoadModel();
 
     GLFWwindow* mWindow;
@@ -61,6 +72,7 @@ private:
     std::vector<class Player*> mPlayers;
     std::vector<std::unique_ptr<class Actor>> mActors;
     std::vector<class Stage*> mStages;
+    std::vector<std::unique_ptr<class Stage>> mStagesUnique;
 
     std::unique_ptr<class AudioSystem> mAudioSystem;
     std::unique_ptr<class UIRenderer> mUIRenderer;
@@ -76,6 +88,7 @@ private:
 
     int mCurrentStageNum;
     float mHitStopTimer;
+    float mFadeInTimer;
 
     double mLastTime;
 
@@ -83,4 +96,6 @@ private:
     bool mAPressedPrev;
     bool mIsStageClear;
     bool mIsPlayer2Joined;
+    bool mIsChangeStage;
+    std::string mCurrentStagePath;
 };

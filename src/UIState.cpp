@@ -3,12 +3,10 @@
 
 UIState::UIState(Game* game)
     :mGame(game)
-    ,mIsUIActive(false)
-    ,mIsTutorialActive(true)
-    ,mIsCrystalTutorialActive(false)
-    ,mIsBattleTutorialActive(false)
+    ,mTalkUIIndex(0)
     ,mIsBattleTutorialShown(false)
-    ,mIsBreakTutorialActive(false)
+    ,mTalkWith(TalkWith::Opening)
+    ,mCurrentTutorialKind(TutorialKind::None)
 {
 
 }

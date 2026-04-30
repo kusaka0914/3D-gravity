@@ -5,10 +5,10 @@
 #include <vector>
 #include <unordered_map>
 
-class Stage : public Actor {
+class Stage {
 public:
-    Stage(class Game* game);
-    void Initialize() override;
+    Stage();
+    void Initialize();
     void AddPlanet(class Planet* planet) { mPlanets.emplace_back(planet); }
     void AddPlanetMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mPlanetMeshesByPath[modelPath] = meshes; }
     void RemoveAllPlanet() { for(int i = 0; i < mPlanets.size(); i++) mPlanets.pop_back(); }

@@ -112,7 +112,11 @@ void Enemy::UpdateDying(float deltaTime) {
 void Enemy::UpdateUpVec() {
     glm::vec3 center = mCurrentPlanet->GetCenter();
     float radius = mCurrentPlanet->GetRadius();
-    mUpVec = glm::normalize(mPos - center);
+    if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal) {
+        mUpVec = {0.0f, 1.0f, 0.0f};
+    } else {
+        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
+    }
 }
 
 void Enemy::UpdateKnockBack(float deltaTime, Player* player) {
@@ -174,7 +178,6 @@ void Enemy::ApplyDamage(Player* player) {
         mLaunchedTimer = -1.0f;
         mBreakCount = mBreakCountMax;
         GetGame()->SetHitStopTimer(0.6f);
-        GetGame()->GetAudioSystem()->PlaySE("attackAirSE");
         mIsStrongAttacked = false;
         mKnockBackTimer = 1.0f;
     }
@@ -208,7 +211,8 @@ void Enemy::ApplyBreak(float deltaTime) {
 void Enemy::LaunchCharacter(float deltaTime) {
     if (!GetGame()->GetGameProgressState()->GetIsFirstBreak()) {
         GetGame()->GetGameProgressState()->SetIsFirstBreak(true);
-        GetGame()->GetUIState()->SetIsBreakTutorialActive(true);
+        GetGame()->GetUIState()->SetCurrentTutorialKind("Break");
+        GetGame()->GetGameProgressState()->SetSceneState("Talking");
     }
     float launchSpeed = 5.0f;
     mVelocity += mUpVec * launchSpeed;
@@ -290,8 +294,7 @@ void Enemy::FinishDying() {
     Star* star = mCurrentPlanet->GetStar();
     if (mIsBoss)
     {
-        star->SetIsActive(true);
-        star->SetCurrentPlanet(mCurrentPlanetNum);
+        star->SetIsActive(true); 
         star->SetPos(mPos);
     }
 }

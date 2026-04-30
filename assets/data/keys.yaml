@@ -3,7 +3,7 @@ keys :
     theta : 0.0
     u : 0.0
     height : 0.0
-  - currentPlanetNum : 1
-    theta : 100.0
-    u : 0.0
-    height : 0.0
+  # - currentPlanetNum : 1
+  #   theta : 100.0
+  #   u : 0.0
+  #   height : 0.0

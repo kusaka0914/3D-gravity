@@ -2,13 +2,17 @@
 #include "Planet.h"
 #include "Stage.h"
 #include "Game.h"
+#include "Player.h"
+#include "Loader.h"
 #include "UIState.h"
 #include "FocusComponent.h"
+#include "GameProgressState.h"
 
 Boat::Boat(Game* game)
     : Actor(game)
     , mStartPlanet(0)
     , mDestPlanet(1)
+    , mDestStage(0)
     , mIsMoving(false)
     , mIsActivePrev(false)
     , mIsActive(false)
@@ -27,13 +31,28 @@ Boat::Boat(Game* game)
 
 void Boat::UpdateActor(float deltaTime)
 {
+    if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal) {
+        mUpVec = {0.0f, 1.0f, 0.0f};
+    } else {
+        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
+    }
     if (!mIsActivePrev && mIsActive) {
-        GetGame()->GetAudioSystem()->PlaySE("showBoatSE");
+        int currentStageNum = GetGame()->GetCurrentStageNum();
+        if (currentStageNum != 0) {
+            GetGame()->GetAudioSystem()->PlaySE("showBoatSE");
+        }
         mIsActivePrev = true;
     }
     // 移動中
     if (mIsMoving)
     {   
+        int currentStageNum = GetGame()->GetCurrentStageNum();
+        if (currentStageNum == 0) {
+            GetGame()->ChangeStage(mDestStage);
+            GetGame()->SetFadeInTimer(1.0f);
+            mIsMoving = false;
+            return;
+        }
         Planet* dest = mPlanets[mDestPlanet];
         glm::vec3 toDest = glm::normalize(dest->GetCenter() - mPos);
         mDestPos = dest->GetCenter() - toDest * (dest->GetRadius() + 3.0f);
@@ -52,14 +71,13 @@ void Boat::UpdateActor(float deltaTime)
         float destDist = glm::length(mPos - mPlanets[mDestPlanet]->GetCenter());
         mCurrentPlanetNum = (startDist < destDist) ? mStartPlanet : mDestPlanet;
 
-        // 上ベクトルを更新
-        mUpVec = glm::normalize(mPos - mPlanets[mCurrentPlanetNum]->GetCenter());
         if (mProgress >= 1.0f)
         {
             mPos = mDestPos;
             mIsMoving = false;
-            if (!GetGame()->GetUIState()->GetIsBattleTutorialActive() && !GetGame()->GetUIState()->GetIsBattleTutorialShown()) {
-                GetGame()->GetUIState()->SetIsBattleTutorialActive(true);
+            if (!GetGame()->GetUIState()->GetIsBattleTutorialShown()) {
+                GetGame()->GetUIState()->SetCurrentTutorialKind("Battle");
+                GetGame()->GetGameProgressState()->SetSceneState("Talking");
                 GetGame()->GetUIState()->SetIsBattleTutorialShown(true);
             }
         }

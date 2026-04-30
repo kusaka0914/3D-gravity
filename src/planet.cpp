@@ -19,16 +19,14 @@ Planet::Planet(Game* game)
     , mKey(nullptr)
     , mIsAllEnemiesDead(false)
     , mIsAllBoatPartsCollected(false)
+    , mStar(nullptr)
 {
     
 }
 
 void Planet::Initialize()
 {
-    auto starUnique = std::make_unique<Star>(GetGame());
-    Star* star = starUnique.get();
-    GetGame()->AddActor(std::move(starUnique));
-    mStar = star;
+    
 }
 
 void Planet::UpdateActor(float deltaTime) {
@@ -75,6 +73,9 @@ void Planet::UpdateActor(float deltaTime) {
             break;
         }
         default:
+            for (auto boat : mBoats) {
+                boat->SetIsActive(true);
+            }
             break;
     }
 }

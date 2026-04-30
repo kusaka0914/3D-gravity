@@ -6,6 +6,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Crystal.h"
+#include "NPC.h"
 
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
@@ -215,6 +216,18 @@ glm::vec3 PhysicsSystem::CheckCollision(glm::vec3 moveDelta, glm::vec3 desiredPo
         glm::vec3 toDesired = desiredPos - cPos;
         float d = glm::length(toDesired);
         float minDist = crystal->GetRadius();
+        if (d < minDist && d > 1e-5f)
+            return cPos + (toDesired / d) * minDist;
+    }
+
+    std::vector<NPC*> NPCs = players[0]->GetCurrentPlanet()->GetNPCs();
+    // クリスタルとの当たり判定
+    for (auto* NPC : NPCs)
+    {
+        glm::vec3 cPos = NPC->GetPos();
+        glm::vec3 toDesired = desiredPos - cPos;
+        float d = glm::length(toDesired);
+        float minDist = NPC->GetRadius();
         if (d < minDist && d > 1e-5f)
             return cPos + (toDesired / d) * minDist;
     }

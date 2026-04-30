@@ -42,7 +42,9 @@ public:
     void SetAttackDodgeLockRemaining(float attackDodgeLockRemaining) { mAttackDodgeLockRemaining = attackDodgeLockRemaining; }
     void SetAttackIndex(int attackIndex) { mAttackIndex = attackIndex; }
     void SetRestartPlanetIndex(int restartPlanetIndex) { mRestartPlanetIndex = restartPlanetIndex; }
+    void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
     void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
+    void SetTalkingNPC(class NPC* talkingNPC) { mTalkingNPC = talkingNPC; }
 
     Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
     const glm::vec3& GetPos() const override { return mPos; }
@@ -71,24 +73,51 @@ public:
     float GetAttackMotionTimer() const { return mAttackMotionTimer; }
     float GetStrongAttackTimer() const { return mStrongAttackTimer; }
     float GetInvincibleTimer() const { return mInvincibleTimer; }
+    float GetSpecialAttackCooldownRemaining() const { return mSpecialAttackCooldownRemaining; }
     int GetAttackIndex() const { return mAttackIndex; }
     int GetRestartPlanetIndex() const { return mRestartPlanetIndex; }
+    std::string GetModelPath() const { return mModelPath; }
+    NPC* GetTalkingNPC() const { return mTalkingNPC; }
 
     const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
 
 private:
-    class Planet* mCurrentPlanet;
+    void ProcessGameController();
+    void ProcessKeyboard();
 
-    glm::vec3 mPos;
-    glm::vec3 mUpVec;
-    glm::vec3 mForwardVec;
-    glm::vec3 mLeftVec;
-    glm::vec3 mFacingForwardVec;
-    glm::vec3 mFacingLeftVec;
-    glm::vec3 mKnockBackFrom;
-    glm::vec3 mRestartPos;
-    glm::vec3 mVelocity;
-    glm::vec3 mDodgeDir;
+    void UpdateCamera(float deltaTime);
+    void UpdateWorldVec();
+    void UpdateWalk(float deltaTime);
+    void UpdateDodge(float deltaTime);
+    void StartDodge(float dodgeDuration, float dodgeCooldownTime);
+    void Dodge(float deltaTime, float dodgeDuration);
+    void DetermineLanding();
+    void ApplyGravity(float deltaTime);
+    void ChangeFaceDir();
+    void Attack(float deltaTime);
+    void SpecialAttack();
+    void ChargeAttack(float deltaTime);
+    void TakeDamage();
+    void Die();
+    void RideBoat();
+    void UpdateTimer(float deltaTime);
+    void UpdatePrev();
+
+private:
+    bool mOnGround;
+    bool mIsDamaged;
+    bool mIsDamagePrev;
+    bool mDodgePressed;
+    bool mDodgePressedPrev;
+    bool mJumpPressed;
+    bool mAttackPressed; 
+    bool mAttackPressedPrev; 
+    bool mWideAttackPressed;
+    bool mWideAttackPressedPrev;
+    bool mSpecialAttackPressed;
+    bool mSpecialAttackPressedPrev;
+    bool mIsActive;
+    bool mCanMove;
 
     int mCurrentPlanetNum;
     int mAttackIndex;
@@ -114,7 +143,6 @@ private:
     float mAttackCooldownRemaining;
     float mAttackMoveLockRemaining;
     float mAttackDodgeLockRemaining;
-    float mAttackHeightLockRemaining;
     float mAttackMotionTimer;
     float mSpecialAttackCooldownRemaining;
     float mAttackPressTimer;
@@ -122,20 +150,21 @@ private:
     float mComboTimer;
     float mInvincibleTimer;
 
-    bool mOnGround;
-    bool mIsDamaged;
-    bool mIsDamagePrev;
-    bool mDodgePressed;
-    bool mDodgePressedPrev;
-    bool mJumpPressed;
-    bool mAttackPressed; 
-    bool mAttackPressedPrev; 
-    bool mWideAttackPressed;
-    bool mWideAttackPressedPrev;
-    bool mSpecialAttackPressed;
-    bool mSpecialAttackPressedPrev;
-    bool mIsActive;
-    bool mCanMove;
+    glm::vec3 mPos;
+    glm::vec3 mUpVec;
+    glm::vec3 mForwardVec;
+    glm::vec3 mLeftVec;
+    glm::vec3 mFacingForwardVec;
+    glm::vec3 mFacingLeftVec;
+    glm::vec3 mKnockBackFrom;
+    glm::vec3 mRestartPos;
+    glm::vec3 mVelocity;
+    glm::vec3 mDodgeDir;
+
+    std::string mModelPath;
+
+    class Planet* mCurrentPlanet;
+    class NPC* mTalkingNPC;
 
     std::vector<struct LoadedMesh> mMeshes;
 };

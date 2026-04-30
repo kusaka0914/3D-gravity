@@ -17,6 +17,7 @@ public:
     void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
     void SetStartPlanet(int startPlanetNum) { mStartPlanet = startPlanetNum; }
     void SetDestPlanet(int destPlanetNum) { mDestPlanet = destPlanetNum; }
+    void SetDestStage(int destStage) { mDestStage = destStage; }
     void SetIsMoving(bool isMoving) { mIsMoving = isMoving; }
     void SetIsActive(bool isActive) override{ mIsActive = isActive; }
     void SetTransitionTimer(float transitionTimer) { mTransitionTimer = transitionTimer; }
@@ -42,10 +43,14 @@ public:
     class FocusComponent* GetFocusComponent() const { return mFocusComponent; }
 
 private:
+    void ChangeStage();
+
+private:
     class Planet* mCurrentPlanet;
     int mCurrentPlanetNum;
     int mStartPlanet;
     int mDestPlanet;
+    int mDestStage;
     bool mIsMoving;
     bool mIsActivePrev;
     bool mIsActive;

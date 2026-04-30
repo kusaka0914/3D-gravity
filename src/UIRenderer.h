@@ -1,35 +1,43 @@
 #include <GL/glew.h>
 #include <vector>
 #include <unordered_map>
+#include <glm/glm.hpp>
 #include <SDL_ttf.h>
 
 class UIRenderer {
 public:
     UIRenderer(class Game* game);
+    void Initialize();
     void Draw();
 
     Game* GetGame() const { return mGame; }
 private:
-    // void DrawTextBox(float padding, float panelWidth, float panelHeight, float panelX, float panelY, float textScale, std::vector<GLfloat> panelColor, const char* message);
+    void AddImgInfo(std::string path, std::string name);
+
+    void DrawTitle();
+    void DrawOpening();
+    void DrawTalkUI(const std::vector<std::string>& texts, int index);
     bool DrawStateUI();
     void DrawDefaultUI();
     void DrawOperationSupportUI();
     void DrawHpUI();
+    void DrawSpecialAttackUI();
+    void DrawTalkableUI();
     void DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color);
-    void DrawText(float x, float y, float scale, const char* message, bool isCenterBase);
-    void DrawTexture(float x, float y, float scale, const char* path);
-    
-    void DrawTutorial();
-    void DrawCrystalTutorial();
+    void DrawText(float x, float y, float scale, std::string message, bool isCenterBase, glm::vec4 color =  {255, 255, 255, 255});
+    void DrawTexture(float x, float y, float width, float height, std::string textureName);
+
     void DrawBattleTutorial();
     void DrawBreakTutorial();
     void DrawStageClear();
     void DrawRemainPartsUI();
 
+private:
     Game* mGame;
     class Shader* mShader;
     TTF_Font* mFont;
     const std::unordered_map<const char*, std::unique_ptr<class VertexArray>>& mVertexArrays;
+    std::unordered_map<std::string, GLuint> mTextures;
 
     int mFbWidth;
     int mFbHeight;
