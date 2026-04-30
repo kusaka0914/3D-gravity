@@ -26,9 +26,7 @@ private:
     void DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color);
     void DrawText(float x, float y, float scale, std::string message, bool isCenterBase, glm::vec4 color =  {255, 255, 255, 255});
     void DrawTexture(float x, float y, float width, float height, std::string textureName);
-    
-    void DrawTutorial();
-    void DrawCrystalTutorial();
+
     void DrawBattleTutorial();
     void DrawBreakTutorial();
     void DrawStageClear();

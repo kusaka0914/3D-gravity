@@ -30,7 +30,8 @@ void Star::UpdateActor(float deltaTime)
     if (mClearTimer >= 0.0f) {
         mClearTimer -= deltaTime;
         if (mClearTimer < 0.0f) {
-            GetGame()->ChangeStage(0);
+            GetGame()->SetFadeInTimer(1.0f);
+            GetGame()->GetGameProgressState()->SetNextSceneState("Playing");
         }
     }
     if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal) {

@@ -27,6 +27,7 @@ public:
     void AddPlayer(class Player* player) { mPlayers.emplace_back(player); };
     void RemoveAllPlayer() { mPlayers.clear(); }
     void SetHitStopTimer(float hitStopTimer) { mHitStopTimer = hitStopTimer; }
+    void SetFadeInTimer(float fadeInTimer) { mFadeInTimer = fadeInTimer; }
     void SetCurrentStage(class Stage* currentStage) { mCurrentStage = currentStage; }
     void SetCurrentStageNum(int currentStageNum) { mCurrentStageNum = currentStageNum; }
     void SetIsChangeStage(bool isChangeStage) { mIsChangeStage = isChangeStage; }
@@ -47,6 +48,7 @@ public:
     class Loader* GetLoader() const { return mLoader.get(); }
     class GameProgressState* GetGameProgressState() const { return mGameProgressState.get(); }
     float GetHitStopTimer() const { return mHitStopTimer; }
+    float GetFadeInTimer() const { return mFadeInTimer; }
 
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }
@@ -86,6 +88,7 @@ private:
 
     int mCurrentStageNum;
     float mHitStopTimer;
+    float mFadeInTimer;
 
     double mLastTime;
 

@@ -3,6 +3,7 @@
 class UIState {
 public:
     enum class TalkWith {
+        None,
         Opening,
         Mother,
         Doctor,
@@ -27,8 +28,10 @@ public:
             mTalkWith = TalkWith::Doctor;
         } else if (talkWith == "NPC") {
             mTalkWith = TalkWith::NPC;
-        } else {
+        } else if (talkWith == "Opening") {
             mTalkWith = TalkWith::Opening;
+        } else {
+            mTalkWith = TalkWith::None;
         }
     }
     void SetCurrentTutorialKind(std::string currentTutorialKind) {

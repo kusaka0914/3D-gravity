@@ -116,7 +116,7 @@ void Renderer::Draw() {
         {
             glm::mat4 planetModel = glm::translate(glm::mat4(1.0f), planets[i]->GetCenter()) * glm::scale(glm::mat4(1.0f), glm::vec3(planets[i]->GetRadius()));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(planetModel));
-            glUniform3f(locObjectColor, planets[i]->GetColor().x, planets[i]->GetColor().y, planets[i]->GetColor().z);
+            glUniform4f(locObjectColor, planets[i]->GetColor().x, planets[i]->GetColor().y, planets[i]->GetColor().z, planets[i]->GetColor().w);
             auto it = planetMeshesByPath.find(planets[i]->GetModelPath());
             if (it != planetMeshesByPath.end() && !it->second.empty())
             {
@@ -148,9 +148,9 @@ void Renderer::Draw() {
             }
         }
 
-        auto drawCharacter = [&](const glm::vec3 &pos, float scale, const glm::vec3 &fallbackColor,
+        auto drawCharacter = [&](const glm::vec3 &pos, float scale, const glm::vec4 &fallbackColor,
                                  const glm::vec3 &up, float yaw, const std::vector<LoadedMesh> &meshes,
-                                 const glm::vec3 *colorOverride = nullptr)
+                                 const glm::vec4 *colorOverride = nullptr)
         {
             glm::vec3 upN = glm::normalize(up);
             glm::vec3 worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 0, 1)));
@@ -184,11 +184,11 @@ void Renderer::Draw() {
                     }
                     if (colorOverride)
                     {
-                        glUniform3f(locObjectColor, colorOverride->x, colorOverride->y, colorOverride->z);
+                        glUniform4f(locObjectColor, colorOverride->x, colorOverride->y, colorOverride->z, colorOverride->w);
                     }
                     else
                     {
-                        glUniform3f(locObjectColor, m.diffuseColor[0], m.diffuseColor[1], m.diffuseColor[2]);
+                        glUniform4f(locObjectColor, m.diffuseColor[0], m.diffuseColor[1], m.diffuseColor[2], 1.0f);
                     }
                     glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, 0);
                 }
@@ -198,8 +198,8 @@ void Renderer::Draw() {
             {
                 glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
                 // glBindVertexArray(VAO);
-                glm::vec3 c = colorOverride ? *colorOverride : fallbackColor;
-                glUniform3f(locObjectColor, c.x, c.y, c.z);
+                glm::vec4 c = colorOverride ? *colorOverride : fallbackColor;
+                glUniform4f(locObjectColor, c.x, c.y, c.z, c.w);
                 glDrawArrays(GL_TRIANGLES, 0, 3);
                 std::cout << "not Mesh" << std::endl;
             }
@@ -208,13 +208,13 @@ void Renderer::Draw() {
         const float playerScale = 0.25f;
         // 1Pの描画
         if (players[0]->GetIsActive()) {
-            drawCharacter(players[0]->GetPos(), playerScale, glm::vec3(0.0f, 0.0f, 1.0f), players[0]->GetUpVec(), players[0]->GetFacingYaw(), players[0]->GetMeshes());
+            drawCharacter(players[0]->GetPos(), playerScale, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), players[0]->GetUpVec(), players[0]->GetFacingYaw(), players[0]->GetMeshes());
         }
 
         // 2Pの描画
         if (isPlayer2Joined)
         {
-            drawCharacter(players[1]->GetPos(), playerScale, glm::vec3(1.0f, 0.5f, 0.0f), players[1]->GetUpVec(), players[1]->GetFacingYaw(),  players[1]->GetMeshes());
+            drawCharacter(players[1]->GetPos(), playerScale, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), players[1]->GetUpVec(), players[1]->GetFacingYaw(),  players[1]->GetMeshes());
         }
 
         Planet* currentPlanet = players[0]->GetCurrentPlanet();
@@ -235,7 +235,7 @@ void Renderer::Draw() {
                 glm::vec3 enemyUp = enemy->GetUpVec();
                 glm::vec3 toPlayer = glm::normalize(players[0]->GetPos() - enemy->GetPos());
                 float enemyFacingYaw = players[0]->getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
-                drawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec3(0.0f, 1.0f, 0.0f), enemyUp, enemyFacingYaw, eit->second);
+                drawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), enemyUp, enemyFacingYaw, eit->second);
                 // 敵の頭上にID（1始まり）をビルボード表示
                 if (mFont)
                 {
@@ -294,7 +294,6 @@ void Renderer::Draw() {
                         glActiveTexture(GL_TEXTURE0);
                         glBindTexture(GL_TEXTURE_2D, texId);
                         glUniform1i(locUseTexture, 1);
-                        glUniform3f(locObjectColor, 1.0f, 1.0f, 1.0f);
                         mVertexArrays.at("text")->SetActive();
                         glDrawArrays(GL_TRIANGLES, 0, 6);
                         glUniform1i(locUseTexture, 0);
@@ -311,7 +310,7 @@ void Renderer::Draw() {
             if (key->GetIsActive())
             {
                 const float keyScale = 2.0f;
-                const glm::vec3 keyColor(0.85f, 0.65f, 0.13f); // 金色
+                const glm::vec4 keyColor(0.85f, 0.65f, 0.13f, 1.0f); // 金色
                 drawCharacter(key->GetPos(), keyScale, keyColor, key->GetUpVec(), 0.0f, key->GetMeshes(), &keyColor);
             }
         }
@@ -323,7 +322,7 @@ void Renderer::Draw() {
                 if (NPC->GetIsActive())
                 {
                     const float NPCScale = 0.25f;
-                    drawCharacter(NPC->GetPos(), NPCScale, glm::vec3(0.4f, 0.25f, 0.1f), NPC->GetUpVec(), NPC->GetFacingYaw(), NPC->GetMeshes());
+                    drawCharacter(NPC->GetPos(), NPCScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), NPC->GetUpVec(), NPC->GetFacingYaw(), NPC->GetMeshes());
                 }
             }
         }
@@ -335,7 +334,7 @@ void Renderer::Draw() {
                 if (boat->GetIsActive())
                 {
                     const float boatScale = 0.8f;
-                    drawCharacter(boat->GetPos(), boatScale, glm::vec3(0.4f, 0.25f, 0.1f), boat->GetUpVec(), 0.0f, boat->GetMeshes());
+                    drawCharacter(boat->GetPos(), boatScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), boat->GetUpVec(), 0.0f, boat->GetMeshes());
                 }
             }
         }
@@ -346,7 +345,7 @@ void Renderer::Draw() {
             for (auto parts : boatParts) { 
                 if (parts->GetIsActive()) {
                     const float boatPartsScale = 1.0f;
-                    drawCharacter(parts->GetPos(), boatPartsScale, glm::vec3(0.4f, 0.25f, 0.1f), parts->GetUpVec(), 0.0f, parts->GetMeshes());
+                    drawCharacter(parts->GetPos(), boatPartsScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), parts->GetUpVec(), 0.0f, parts->GetMeshes());
                 }
             }
         }
@@ -356,7 +355,7 @@ void Renderer::Draw() {
         if (star) {
         if (star->GetIsActive())
             {
-                glm::vec3 starColor(1.0f, 0.9f, 0.2f);
+                glm::vec4 starColor(1.0f, 0.9f, 0.2f, 1.0f);
                 const float starScale = 0.3f;
                 drawCharacter(star->GetPos(), starScale, starColor, star->GetUpVec(), 0.0f, star->GetMeshes());
             }
@@ -367,7 +366,7 @@ void Renderer::Draw() {
         if (!crystals.empty()) {
             for (auto crystal : crystals) { 
                 if (crystal->GetIsActive()) {
-                    drawCharacter(crystal->GetPos(), crystal->GetScale(), glm::vec3(0.4f, 0.25f, 0.1f), crystal->GetUpVec(), 0.0f, crystal->GetMeshes());
+                    drawCharacter(crystal->GetPos(), crystal->GetScale(), glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), crystal->GetUpVec(), 0.0f, crystal->GetMeshes());
                 }
             }
         }

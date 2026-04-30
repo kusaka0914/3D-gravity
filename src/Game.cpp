@@ -48,6 +48,7 @@ Game::Game()
     ,mCurrentStageNum(0) 
     ,mIsPlayer2Joined(false)
     ,mHitStopTimer(-1.0f)
+    ,mFadeInTimer(-1.0f)
     ,mIsChangeStage(false)
     ,mCurrentStagePath("../assets/data/house.yaml")
 {
@@ -247,8 +248,9 @@ void Game::ProcessInput()
         bool isTitle = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Title;
         bool isOpening = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Opening;
         bool isTalking = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Talking;
-        if (isTitle) {
-            mGameProgressState->SetSceneState("Opening");
+        if (isTitle && mFadeInTimer <= -1.0f) {
+            mFadeInTimer = 1.0f;
+            mGameProgressState->SetNextSceneState("Opening");
         } 
         if (isTalking || isOpening) {
             mUIState->IncTalkUIIndex();
@@ -292,15 +294,39 @@ void Game::UpdateGame()
 
     double currentTime = glfwGetTime(); 
     float deltaTime = std::min(0.04f, static_cast<float>(currentTime - mLastTime));
+    mLastTime = currentTime;
+    if (mFadeInTimer > -1.0f) {
+        float prevFadeInTimer = mFadeInTimer;
+        mFadeInTimer -= deltaTime;
+        GameProgressState::SceneState nextSceneState = mGameProgressState->GetNextSceneState();
+        std::cout << static_cast<int>(nextSceneState) << std::endl;
+        if (prevFadeInTimer >= 0.0f && mFadeInTimer <= 0.0f) {
+            switch (nextSceneState)
+            {
+            case GameProgressState::SceneState::Opening:
+                mGameProgressState->SetSceneState("Opening");
+                mGameProgressState->SetNextSceneState("None");
+                break;
+
+            case GameProgressState::SceneState::Playing:
+                mGameProgressState->SetSceneState("Playing");
+                mGameProgressState->SetNextSceneState("None");
+                ChangeStage(0);
+                mUIState->SetTalkWith("None");
+                break;
+            
+            default:
+                break;
+            }
+        }
+    }
     if (mHitStopTimer >= 0.0f) {
-        mHitStopTimer-= deltaTime;
+        mHitStopTimer -= deltaTime;
         deltaTime = 0.0f;
     }
     if (mGameProgressState->GetSceneState() == GameProgressState::SceneState::ShowUI) {
         deltaTime = 0.0f;
     }
-
-    mLastTime = currentTime;
 
     bool isTitle = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Title;
     bool isTalking = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Talking;
@@ -313,14 +339,18 @@ void Game::UpdateGame()
         actor->Update(deltaTime);
     }
 
+    if (mFadeInTimer >= 0.0f) return;
+
+    if (mIsChangeStage) {
+        Mix_HaltMusic();
+        LoadData(true);
+        mPhysicsSystem->Initialize();
+    }
+
     AudioSystem* audioSystem = mAudioSystem.get();
     audioSystem->Update();
 
-    if (mIsChangeStage) {
-        LoadData(true);
-        mPhysicsSystem->Initialize();
-        mIsChangeStage = false;
-    }
+    mIsChangeStage = false;
 
     if (mPhysicsSystem)
     {
@@ -442,5 +472,4 @@ void Game::ChangeStage(int stageNum) {
     mIsChangeStage = true;
     std::string stagePath = "../assets/data/stage" + std::to_string(stageNum) + ".yaml";
     mCurrentStagePath = stagePath;
-    mGameProgressState->SetSceneState("Playing");
 }

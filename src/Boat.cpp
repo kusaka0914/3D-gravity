@@ -49,6 +49,7 @@ void Boat::UpdateActor(float deltaTime)
         int currentStageNum = GetGame()->GetCurrentStageNum();
         if (currentStageNum == 0) {
             GetGame()->ChangeStage(mDestStage);
+            GetGame()->SetFadeInTimer(1.0f);
             mIsMoving = false;
             return;
         }

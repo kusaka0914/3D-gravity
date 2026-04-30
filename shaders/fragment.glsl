@@ -8,7 +8,7 @@ in vec3 Normal;
 in vec2 TexCoord;
 
 // デフォルトの色
-uniform vec3 objectColor;
+uniform vec4 objectColor;
 // テクスチャを使うのか
 uniform int useTexture;
 // 実際のテクスチャ
@@ -21,6 +21,6 @@ void main()
         FragColor = texture(diffuseTexture, TexCoord);
     } else {
         // デフォルトの色にする
-        FragColor = vec4(objectColor, 1.0);
+        FragColor = vec4(objectColor);
     }
 }

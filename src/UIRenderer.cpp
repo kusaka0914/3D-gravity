@@ -28,6 +28,7 @@ void UIRenderer::Initialize() {
     AddImgInfo("../assets/textures/titleBg.png", "titleBg");
     AddImgInfo("../assets/textures/Opening.png", "Opening");
     AddImgInfo("../assets/textures/textBg.png", "textBg");
+    AddImgInfo("../assets/textures/slime.png", "slime");
 }
 
 void UIRenderer::AddImgInfo(std::string path, std::string name) {
@@ -58,17 +59,11 @@ void UIRenderer::Draw() {
     bool isTitle = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Title;
     if (isTitle) {
         DrawTitle();
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
-        return;
     }
 
     bool isOpening = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
     if (isOpening) {
         DrawOpening();
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
-        return;
     }
 
     bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
@@ -81,6 +76,24 @@ void UIRenderer::Draw() {
 
     DrawStateUI();
 
+    float fadeInTimer = GetGame()->GetFadeInTimer();
+    float alpha;
+    if (fadeInTimer >= 0.0f) {
+        alpha = 1.0f - fadeInTimer;
+    } else {
+        alpha = 1.0f + fadeInTimer;
+    }
+    if (alpha <= 0.0f) alpha = 0.0f; 
+    if (alpha > 0.0f) {
+        DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {0.0f, 0.0f, 0.0f, alpha});
+    }
+
+    if (GetGame()->GetIsChangeStage() && GetGame()->GetFadeInTimer() <= 0.1f) {
+        std::string text = "Loading...";
+        DrawText(30, mFbHeight -70, 0.5f, text.c_str(), false);
+        DrawTexture(30, mFbHeight - 130, 100, 68, "slime");
+    }
+
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
 }
@@ -92,6 +105,7 @@ void UIRenderer::DrawTitle() {
 }
 
 void UIRenderer::DrawOpening() {
+    int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
     switch (GetGame()->GetUIState()->GetTalkWith())
     {
     case UIState::TalkWith::Opening: {
@@ -119,7 +133,6 @@ void UIRenderer::DrawOpening() {
             "ママが突然倒れこんでしまいました。",
             "スライム: どうしたの！？ママ！"
         };
-        int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
         if (talkUIIndex < talkTexts.size()) {
             DrawTalkUI(talkTexts, talkUIIndex);
             return;
@@ -150,14 +163,12 @@ void UIRenderer::DrawOpening() {
             "スライム: ママを助けられるのは僕しかいない！",
             "そういうとスライムはすぐに家を飛び出し、\nロケットに乗り込んで宇宙へと旅立ちました。"
         };
-        int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
-        if (talkUIIndex < talkTexts.size()) {
+        if (talkUIIndex < talkTexts.size() && talkUIIndex >= 0) {
             DrawTalkUI(talkTexts, talkUIIndex);
-            return;
-        } else {
-            GetGame()->ChangeStage(0);
-            GetGame()->GetUIState()->SetTalkWith("None");
-            GetGame()->GetUIState()->SetTalkUIIndex(0);
+        } else if (talkUIIndex >= static_cast<int>(talkTexts.size())) {
+            GetGame()->GetUIState()->SetTalkUIIndex(-1);
+            GetGame()->SetFadeInTimer(1.0f);
+            GetGame()->GetGameProgressState()->SetNextSceneState("Playing");
         }
         break;
     }
@@ -182,15 +193,6 @@ bool UIRenderer::DrawStateUI() {
     UIState::TutorialKind currentTutorialKind = GetGame()->GetUIState()->GetCurrentTutorialKind();
     switch (currentTutorialKind)
     {
-    case UIState::TutorialKind::BoatParts:
-        // DrawTutorial();
-        return true;
-        break;
-
-    case UIState::TutorialKind::Crystal: 
-        // DrawCrystalTutorial();
-        return true;
-    
     case UIState::TutorialKind::Battle:
         DrawBattleTutorial();
         return true;
@@ -289,7 +291,7 @@ void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector
     glUniformMatrix4fv(mShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(mShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
     glUniform1i(mShader->GetLocUseTexture(), 0);
-    glUniform3fv(mShader->GetLocObjectColor(), 1, color.data());
+    glUniform4fv(mShader->GetLocObjectColor(), 1, color.data());
     mVertexArrays.at("text")->SetActive();
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
@@ -353,7 +355,6 @@ void UIRenderer::DrawText(float x, float y, float scale, std::string message, bo
     glUniformMatrix4fv(mShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
     glUniform1i(mShader->GetLocDiffuseTexture(), 0);
     glUniform1i(mShader->GetLocUseTexture(), 1);
-    glUniform3f(mShader->GetLocObjectColor(), color.x, color.y, color.z);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -395,7 +396,6 @@ void UIRenderer::DrawText(float x, float y, float scale, std::string message, bo
         glUniformMatrix4fv(mShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
         glUniform1i(mShader->GetLocDiffuseTexture(), 0);
         glUniform1i(mShader->GetLocUseTexture(), 1);
-        glUniform3f(mShader->GetLocObjectColor(), color.x, color.y, color.z);
 
         glBindTexture(GL_TEXTURE_2D, tex);
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -412,7 +412,6 @@ void UIRenderer::DrawTexture(float x, float y, float width, float height, std::s
     glUniformMatrix4fv(mShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
     glUniform1i(mShader->GetLocDiffuseTexture(), 0);
     glUniform1i(mShader->GetLocUseTexture(), 1);
-    glUniform3f(mShader->GetLocObjectColor(), 1.0f, 1.0f, 1.0f);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -422,40 +421,6 @@ void UIRenderer::DrawTexture(float x, float y, float width, float height, std::s
 
     mVertexArrays.at("text")->SetActive();
     glDrawArrays(GL_TRIANGLES, 0, 6);
-}
-
-void UIRenderer::DrawTutorial() {
-    float bgWidth = mFbWidth * 0.7f;
-    float bgHeight = mFbHeight * 0.7f;
-    float fbWidthHalf = mFbWidth * 0.5f;
-    float fbHeightHalf = mFbHeight * 0.5f;
-    float bgX = fbWidthHalf - bgWidth / 2;
-    float bgY = fbHeightHalf - bgHeight / 2;
-    float textX = bgX + bgWidth /2;
-    DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
-    DrawText(textX, bgY + 100, 0.5f, "ロケットのかけらを5個集めよう！", true);
-    DrawText(textX, bgY + bgHeight - 380, 0.5f, "この惑星にはロケットのかけらが5個散らばっています。", true);
-    DrawText(textX, bgY + bgHeight - 320, 0.5f, "ジャンプや回避、攻撃を駆使して全てのかけらを集めてください。", true);
-    DrawText(textX, bgY + bgHeight - 260, 0.5f, "全てのかけらを集めることで次の惑星に行くためのロケットが完成します。", true);
-}
-
-void UIRenderer::DrawCrystalTutorial() {
-    float bgWidth = mFbWidth * 0.7f;
-    float bgHeight = mFbHeight * 0.7f;
-    float fbWidthHalf = mFbWidth * 0.5f;
-    float fbHeightHalf = mFbHeight * 0.5f;
-    float bgX = fbWidthHalf - bgWidth / 2;
-    float bgY = fbHeightHalf - bgHeight / 2;
-    float textX = bgX + bgWidth /2;
-    DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
-    DrawText(textX, bgY + 100, 0.5f, "クリスタルを攻撃して破壊しよう！", true);
-    // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
-    DrawText(textX, bgY + bgHeight - 380, 0.5f, "クリスタルは攻撃することで破壊できます。", true);
-    DrawText(textX, bgY + bgHeight - 320, 0.5f, "クリスタルの中にはアイテムが隠れていることがあるので", true);
-    DrawText(textX, bgY + bgHeight - 260, 0.5f, "見つけたら積極的に破壊してみてください。", true);
-    DrawText(textX, bgY + bgHeight - 200, 0.5f, "大きいクリスタルは空中溜め攻撃で破壊できますよ。", true);
-    // DrawText(textX, bgY + bgHeight - 140, 0.5f, "空中でAボタンを長押しし、移動が止まった状態（チャージ完了状態）で離すことで出せる", true);
-    // DrawText(textX, bgY + bgHeight - 80, 0.5f, "溜め攻撃を当てれば一発で壊れますよ！", true);
 }
 
 void UIRenderer::DrawBattleTutorial() {

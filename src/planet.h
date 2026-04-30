@@ -44,7 +44,7 @@ public:
     void SetStageNum(int stageNum) { mStageNum = stageNum; }
     void SetCenter(glm::vec3 center) { mCenter = center; }
     void SetRadius(float radius) { mRadius = radius; }
-    void SetColor(glm::vec3 color) { mColor = color; }
+    void SetColor(glm::vec4 color) { mColor = color; }
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
     void SetKey(class Key* key) { mKey = key; }
     void SetStar(class Star* star) { mStar = star; }
@@ -69,7 +69,7 @@ public:
     int GetStageNum() const { return mStageNum; }
     const glm::vec3& GetCenter() const { return mCenter; }
     float GetRadius() const override { return mRadius; }
-    const glm::vec3& GetColor() const { return mColor; }
+    const glm::vec4& GetColor() const { return mColor; }
     const std::string& GetModelPath() const { return mModelPath; }
     const std::vector<class Enemy*>& GetEnemies() const { return mEnemies; }
     const std::vector<class Boat*>& GetBoats() const { return mBoats; }
@@ -86,7 +86,7 @@ private:
     int mStageNum;
     glm::vec3 mCenter;
     float mRadius;
-    glm::vec3 mColor;
+    glm::vec4 mColor;
     std::string mModelPath;
     std::vector<class Enemy*> mEnemies;
     std::vector<class Boat*> mBoats;

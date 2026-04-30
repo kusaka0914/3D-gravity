@@ -264,9 +264,10 @@ bool Loader::LoadPlanetsFromYaml(const char* path) {
                 float r = node["color"][0] ? node["color"][0].as<float>() : 1.0f;
                 float g = node["color"][1] ? node["color"][1].as<float>() : 1.0f;
                 float b = node["color"][2] ? node["color"][2].as<float>() : 1.0f;
-                planet->SetColor(glm::vec3(r,g,b));
+                float a = node["color"][3] ? node["color"][3].as<float>() : 1.0f;
+                planet->SetColor(glm::vec4(r, g, b, a));
             } else {
-                planet->SetColor(glm::vec3(1.0f));
+                planet->SetColor(glm::vec4(1.0f));
             }
 
             // モデルファイル名を設定
