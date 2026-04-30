@@ -44,6 +44,7 @@ public:
     void SetRestartPlanetIndex(int restartPlanetIndex) { mRestartPlanetIndex = restartPlanetIndex; }
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
     void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
+    void SetTalkingNPC(class NPC* talkingNPC) { mTalkingNPC = talkingNPC; }
 
     Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
     const glm::vec3& GetPos() const override { return mPos; }
@@ -76,6 +77,7 @@ public:
     int GetAttackIndex() const { return mAttackIndex; }
     int GetRestartPlanetIndex() const { return mRestartPlanetIndex; }
     std::string GetModelPath() const { return mModelPath; }
+    NPC* GetTalkingNPC() const { return mTalkingNPC; }
 
     const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
 
@@ -162,6 +164,7 @@ private:
     std::string mModelPath;
 
     class Planet* mCurrentPlanet;
+    class NPC* mTalkingNPC;
 
     std::vector<struct LoadedMesh> mMeshes;
 };

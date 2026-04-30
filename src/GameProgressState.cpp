@@ -5,11 +5,7 @@ GameProgressState::GameProgressState(Game* game)
     :mGame(game)
     ,mIsFirstBreak(false)
     ,mIsStageClear(false)
-    ,mSceneState(SceneState::Title)
-//     ,mIsTutorialActive(true)
-//     ,mIsCrystalTutorialActive(false)
-//     ,mIsBattleTutorialActive(false)
-//     ,mIsBattleTutorialShown(false)
+    ,mSceneState(SceneState::Opening)
 {
 
 }

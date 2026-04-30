@@ -2,7 +2,7 @@ planets:
   - center: [0.0, 0.0, 0.0]
     radius: 8.0
     color: [1.0, 0.0, 0.0]
-    model: planet_3.fbx
+    model: planet_3.obj
     type : Sphere
     keySpawnCondition: AllBoatPartsCollected
   - center: [32.0, 0.0, 0.0]
@@ -112,3 +112,26 @@ players:
   
 star:
   - currentPlanetNum : 2
+
+NPCs:
+  - theta : 2.7
+    u : -0.35
+    height : 0.0
+    facingYaw: 3.0
+    modelPath: spaceSlime.obj
+    name: BoatPartsNPC
+    talkTexts: [星を探している？残念だがこの惑星にはそんなものないぞ。,あー、確か近くの惑星にいいものを持っている\nでっかいやつがいるって噂を聞いたことあるな。,そこに行ってみたらどうだ？,隣の惑星に行くならそこらへんに落ちている\nロケットのパーツを拾ってロケットで行くんだな！]
+  - theta : 79.9
+    u : 1.2
+    height : 0.0
+    facingYaw: 3.0
+    modelPath: spaceSlime.obj
+    name: CrystalNPC
+    talkTexts: [これはクリスタル！\nXで攻撃して壊せるよ！,中にアイテムが隠れてるかもしれないから\n見つけたらどんどん壊してね！]
+  - theta : -0.55
+    u : 0.3
+    height : 0.0
+    facingYaw: 3.0
+    modelPath: spaceSlime.obj
+    name: BigCrystalNPC
+    talkTexts: [大きなクリスタルは空中溜め攻撃で壊せるよ！,空中溜め攻撃はジャンプしてX長押し！\n溜まったらXを離して！]

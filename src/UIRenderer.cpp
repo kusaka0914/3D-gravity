@@ -6,9 +6,10 @@
 #include "Planet.h"
 #include "BoatParts.h"
 #include "UIState.h"
+#include "NPC.h"
+#include "TalkableComponent.h"
 #include "GameProgressState.h"
 #include "stb_image.h"
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <unordered_map>
@@ -25,7 +26,8 @@ UIRenderer::UIRenderer(Game* game)
 
 void UIRenderer::Initialize() {
     AddImgInfo("../assets/textures/titleBg.png", "titleBg");
-    AddImgInfo("../assets/textures/opening.png", "opening");
+    AddImgInfo("../assets/textures/Opening.png", "Opening");
+    AddImgInfo("../assets/textures/textBg.png", "textBg");
 }
 
 void UIRenderer::AddImgInfo(std::string path, std::string name) {
@@ -70,16 +72,14 @@ void UIRenderer::Draw() {
     }
 
     bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
-    if (!isStageClear){
+    bool isPlaying = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Playing;
+    if (!isStageClear && isPlaying){
         DrawDefaultUI();
-    } else {
+    } else if (isStageClear) {
         DrawStageClear();
     }
 
-    bool isStateUIActive = DrawStateUI();
-    if (isStateUIActive) {
-        GetGame()->GetUIState()->SetIsUIActive(true);
-    }
+    DrawStateUI();
 
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
@@ -92,59 +92,141 @@ void UIRenderer::DrawTitle() {
 }
 
 void UIRenderer::DrawOpening() {
-    std::vector<std::string> openingTexts = {
-        "ある草原のど真ん中",
-        "スライムはママと仲良く暮らしていました。",
-        "ママスライムはいつもお仕事で忙しかったのですが",
-        "それでもスライムを愛しているため",
-        "一生懸命働いていました。"
-    };
-    int openingUIIndex = GetGame()->GetUIState()->GetOpeningUIIndex();
-    if (openingUIIndex < openingTexts.size()) {
-        DrawTexture(0.0f, 0.0f, mFbWidth, mFbHeight, "opening");
-        DrawText(mFbWidth / 2, mFbHeight /2, 1.0f, openingTexts[openingUIIndex].c_str(), true);
-        return;
+    switch (GetGame()->GetUIState()->GetTalkWith())
+    {
+    case UIState::TalkWith::Opening: {
+        std::vector<std::string> openingTexts = {
+            "ある草原のど真ん中\nスライムはママと仲良く暮らしていました。",
+            "ママはいつもお仕事で大忙し\nそれでもスライムを愛しているため一生懸命働いていました。",
+            "ある日、スライムはいつものように\nママのお見送りをしていました。"
+        };
+        int openingUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+        if (openingUIIndex < openingTexts.size()) {
+            DrawTexture(0.0f, 0.0f, mFbWidth, mFbHeight, "Opening");
+            DrawTalkUI(openingTexts, openingUIIndex);
+            return;
+        } else {
+            GetGame()->GetUIState()->SetTalkWith("Mother");
+            GetGame()->GetUIState()->SetTalkUIIndex(0);
+        }
     }
-    GetGame()->GetUIState()->SetIsOpeningUIActive(false);
-    std::vector<std::string> talkTexts = {
-        "スライム: ママ、いってらっしゃい！",
-        "ママ: いい子にしてるんだよ。",
-        "いつも通りママスライムをお見送りしようとすると、",
-        "ママ: ううっ、",
-        "ママスライムが突然倒れこんでしまいました。"
-    };
-    int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
-    if (talkUIIndex < talkTexts.size()) {
-        DrawText(mFbWidth / 2, 200, 1.0f, talkTexts[talkUIIndex].c_str(), true);
+    case UIState::TalkWith::Mother: {
+        std::vector<std::string> talkTexts = {
+            "スライム: ママ、いってらっしゃい！",
+            "ママ: いってきます。\nスライム、いい子にしてるんだよ。",
+            "ママ: !?",
+            "ママ: ううっ...",
+            "ママが突然倒れこんでしまいました。",
+            "スライム: どうしたの！？ママ！"
+        };
+        int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+        if (talkUIIndex < talkTexts.size()) {
+            DrawTalkUI(talkTexts, talkUIIndex);
+            return;
+        } else {
+            GetGame()->GetUIState()->SetTalkUIIndex(0);
+            GetGame()->GetUIState()->SetTalkWith("Doctor");
+        }
+        break;
+    }
+    case UIState::TalkWith::Doctor: {
+        std::vector<std::string> talkTexts = {
+            "スライムは急いでドクターを呼びました。",
+            "ドクター: これは、私にはどうしても治せない\nとてもとても複雑な病気だよ。",
+            "ドクター: きっともう目覚めることはないだろう。",
+            "スライム: ほ、ほんとなの、？",
+            "スライムは泣き出してしまいました。",
+            "スライム: どうにか治す方法はないの？",
+            "ドクター: ごめんな、普通の方法じゃ治らないんだ。\nただ...",
+            "スライム: ただ...？",
+            "ドクター: 一つだけ方法はあるんだが、\nこれはとても難しい方法なんだ。",
+            "ドクター: この世界の宇宙になんでも願いを叶えてくれる\n星が存在するという話は聞いたことあるかな？",
+            "スライム: 聞いたことないや、、",
+            "ドクター: そうか、もしその星を全て集めて、\nお母さんの病気が治ることを願うことができれば...",
+            "スライム: じゃあ僕が集めてくるよ！",
+            "ドクター: ダメだダメだ！\nおまえさん、宇宙がどれだけ危険なのか分かっているのか！",
+            "スライム: じゃあドクターはママを助けてくれるの？",
+            "ドクター: ...",
+            "スライム: ママを助けられるのは僕しかいない！",
+            "そういうとスライムはすぐに家を飛び出し、\nロケットに乗り込んで宇宙へと旅立ちました。"
+        };
+        int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+        if (talkUIIndex < talkTexts.size()) {
+            DrawTalkUI(talkTexts, talkUIIndex);
+            return;
+        } else {
+            GetGame()->ChangeStage(0);
+            GetGame()->GetUIState()->SetTalkWith("None");
+            GetGame()->GetUIState()->SetTalkUIIndex(0);
+        }
+        break;
+    }
     }
 }
 
+void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
+    float bgWidth = 3 * mFbWidth / 4;
+    float bgHeight = mFbHeight / 4;
+    float bgX = 60.0f;
+    float bgY = 50.0f;
+    DrawTexture(bgX, bgY, bgWidth, bgHeight, "textBg");
+
+    float textX = bgX + mFbWidth / 1600.0f * 40.0f;
+    float textY = bgY + bgHeight / 2 - mFbWidth / 1600.0f * 30.0f;
+    float textScale = mFbWidth / 3000.0f;
+    glm::vec4 textColor{0.0f, 0.0f, 0.0f, 0.0f};
+    DrawText(textX, textY, textScale, texts[index], false, textColor);
+}
+
 bool UIRenderer::DrawStateUI() {
-    bool isTutorialActive = mGame->GetUIState()->GetIsTutorialActive();
-    if (isTutorialActive) {
-        DrawTutorial();
+    UIState::TutorialKind currentTutorialKind = GetGame()->GetUIState()->GetCurrentTutorialKind();
+    switch (currentTutorialKind)
+    {
+    case UIState::TutorialKind::BoatParts:
+        // DrawTutorial();
         return true;
-    }
+        break;
 
-    bool isCrystalTutorialActive = mGame->GetUIState()->GetIsCrystalTutorialActive();
-    if (isCrystalTutorialActive) {
-        DrawCrystalTutorial();
+    case UIState::TutorialKind::Crystal: 
+        // DrawCrystalTutorial();
         return true;
-    }
-
-    bool isBattleTutorialActive = mGame->GetUIState()->GetIsBattleTutorialActive();
-    if (isBattleTutorialActive) {
+    
+    case UIState::TutorialKind::Battle:
         DrawBattleTutorial();
         return true;
+    
+    case UIState::TutorialKind::Break:
+        DrawBreakTutorial();
+        return true; 
+
+    default:
+        break;
     }
 
-    bool isBreakTutorialActive = mGame->GetUIState()->GetIsBreakTutorialActive();
-    if (isBreakTutorialActive) {
-        DrawBreakTutorial();
+    UIState::TalkWith currentTalkWith = GetGame()->GetUIState()->GetTalkWith();
+    switch (currentTalkWith)
+    {
+    case UIState::TalkWith::NPC: {
+        NPC* talkingNPC = GetGame()->GetPlayers()[0]->GetTalkingNPC();
+        std::vector<std::string> talkTexts = talkingNPC->GetTalkableComponent()->GetTalkTexts();
+        int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+        if (talkUIIndex < talkTexts.size()) {
+            DrawTalkUI(talkTexts, talkUIIndex);
+            return true;
+        } else {
+            GetGame()->GetUIState()->SetTalkWith("None");
+            GetGame()->GetUIState()->SetTalkUIIndex(0);
+            GetGame()->GetGameProgressState()->SetSceneState("Playing");
+        }
         return true;
+        break;
+        }
+    default:
+        break;
     }
 
     return false;
+
 }
 
 void UIRenderer::DrawDefaultUI() {
@@ -162,6 +244,15 @@ void UIRenderer::DrawDefaultUI() {
 
     if (!boatParts.empty()){
         DrawRemainPartsUI();
+    }
+
+    std::vector<NPC*> NPCs = currentPlanet->GetNPCs();
+    if (!NPCs.empty()) {
+        for (auto NPC : NPCs) {
+            if (NPC->GetTalkableComponent()->GetIsTalkable()) {
+                DrawTalkableUI();
+            }
+        }
     }
 }
 
@@ -181,6 +272,11 @@ void UIRenderer::DrawSpecialAttackUI() {
     DrawText(mFbWidth / 2, 40, 0.5f, text.c_str(), true);
 }
 
+void UIRenderer::DrawTalkableUI() {
+    std::string text = "会話: A";
+    DrawText(mFbWidth / 2, mFbHeight / 2, 0.5f, text.c_str(), true);
+}
+
 void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color)
 {
     // 背景の描画
@@ -197,10 +293,27 @@ void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void UIRenderer::DrawText(float x, float y, float scale, const char* message, bool isCenterBase)
+void UIRenderer::DrawText(float x, float y, float scale, std::string message, bool isCenterBase, glm::vec4 color)
 {
-    SDL_Color white{255, 255, 255, 255};
-    SDL_Surface* surf = TTF_RenderUTF8_Blended(mFont, message, white);
+    std::string message1 = message;
+    std::string message2 = "";
+    int newline = message.find("\n");
+    bool isNewLine = newline != std::string::npos;
+    if (isNewLine) {
+        message1 = message.substr(0, newline);
+        message2 = message.substr(newline + 1);
+    } else {
+        newline = message.find("\\n");
+        isNewLine = newline != std::string::npos;
+        if (isNewLine) {
+            message1 = message.substr(0, newline);
+            message2 = message.substr(newline + 2);
+        }
+    }
+    
+    SDL_Color textColor{static_cast<Uint8>(color.x), static_cast<Uint8>(color.y), static_cast<Uint8>(color.z), static_cast<Uint8>(color.w)};
+    SDL_Surface* surf = TTF_RenderUTF8_Blended(mFont, message1.c_str(), textColor);
+
     if (!surf) return;
     SDL_Surface* rgba = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
     SDL_FreeSurface(surf);
@@ -222,7 +335,13 @@ void UIRenderer::DrawText(float x, float y, float scale, const char* message, bo
     if (isCenterBase) {
         model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f))
                     * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
-    }else{
+    } else if (isNewLine && isCenterBase) {
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y - 20, 0.0f))
+                    * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
+    } else if (isNewLine) {
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f - 20.0f, 0.0f))
+                    * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
+    } else {
         model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f, 0.0f))
                     * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
     }
@@ -233,7 +352,7 @@ void UIRenderer::DrawText(float x, float y, float scale, const char* message, bo
     glUniformMatrix4fv(mShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
     glUniform1i(mShader->GetLocDiffuseTexture(), 0);
     glUniform1i(mShader->GetLocUseTexture(), 1);
-    glUniform3f(mShader->GetLocObjectColor(), 1.0f, 1.0f, 1.0f);
+    glUniform3f(mShader->GetLocObjectColor(), color.x, color.y, color.z);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -242,6 +361,44 @@ void UIRenderer::DrawText(float x, float y, float scale, const char* message, bo
 
     mVertexArrays.at("text")->SetActive();
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    if (isNewLine) {
+        surf = TTF_RenderUTF8_Blended(mFont, message2.c_str(), textColor);
+            if (!surf) return;
+        rgba = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
+        SDL_FreeSurface(surf);
+        if (!rgba) return;
+
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgba->w, rgba->h, 0,
+                    GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        textWidth = (float)rgba->w * scale, textHeight = (float)rgba->h * scale;
+        SDL_FreeSurface(rgba);
+
+        if (isCenterBase) {
+            model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y + 40.0f, 0.0f))
+                        * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
+        }else{
+            model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f + 40.0f, 0.0f))
+                        * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
+        }
+        view = glm::mat4(1.0f);
+        proj = glm::ortho(0.0f, (float)mFbWidth, (float)mFbHeight, 0.0f, -1.0f, 1.0f);
+        glUniformMatrix4fv(mShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(mShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(mShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
+        glUniform1i(mShader->GetLocDiffuseTexture(), 0);
+        glUniform1i(mShader->GetLocUseTexture(), 1);
+        glUniform3f(mShader->GetLocObjectColor(), color.x, color.y, color.z);
+
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
 }
 
 void UIRenderer::DrawTexture(float x, float y, float width, float height, std::string textureName) {

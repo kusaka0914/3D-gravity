@@ -10,6 +10,7 @@
 #include "Crystal.h"
 #include "Star.h"
 #include "NPC.h"
+#include "TalkableComponent.h"
 #include <glm/glm.hpp>
 #include <iostream>
 
@@ -124,8 +125,24 @@ bool Loader::LoadNPCsFromYaml(const char* path) {
         for (const YAML::Node& node : root["NPCs"]) {
             std::unique_ptr<NPC> npc = std::make_unique<NPC>(mGame);
 
+            float facingYaw = node["facingYaw"] ? node["facingYaw"].as<float>() : 0.0f;
+            npc->SetFacingYaw(facingYaw);
+
+            float radius = node["radius"] ? node["radius"].as<float>() : 0.75f;
+            npc->SetRadius(radius);
+
             std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "player.obj";
             npc->SetModelPath(modelPath);
+
+            std::string name = node["name"] ? node["name"].as<std::string>() : "";
+            npc->SetName(name);
+
+            if (node["talkTexts"]) {
+                for (auto talkTextNode : node["talkTexts"]) {
+                    std::string talkText = talkTextNode.as<std::string>();
+                    npc->GetTalkableComponent()->AddTalkTexts(talkText);
+                }
+            }
 
             int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
             npc->SetCurrentPlanetNum(currentPlanetNum);

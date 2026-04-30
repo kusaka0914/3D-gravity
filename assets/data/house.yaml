@@ -8,7 +8,17 @@ players:
   - pos: [100.0, 100.0, 100.0]
 
 NPCs:
-  - pos : [4.0, 0.0, 4.0]
+  - pos: [4.0, 0.3, 4.0]
+    facingYaw: 3.0
     modelPath: player.obj
-  - pos : [4.0, 0.0, 5.5]
+  - pos: [4.0, 0.3, 5.5]
     modelPath: motherSlime.obj
+  - pos: [-3.0, 0.3, -2.7]
+    facingYaw: 6.0
+    modelPath: player.obj
+  - pos: [-4.0, 1.0, -3.0]
+    facingYaw: 3.0
+    modelPath: badMotherSlime.obj
+  - pos: [-3.0, 0.3, -3.7]
+    facingYaw: 3.0
+    modelPath: doctorSlime.obj

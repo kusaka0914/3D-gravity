@@ -6,6 +6,7 @@
 #include "Loader.h"
 #include "UIState.h"
 #include "FocusComponent.h"
+#include "GameProgressState.h"
 
 Boat::Boat(Game* game)
     : Actor(game)
@@ -36,7 +37,10 @@ void Boat::UpdateActor(float deltaTime)
         mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
     }
     if (!mIsActivePrev && mIsActive) {
-        GetGame()->GetAudioSystem()->PlaySE("showBoatSE");
+        int currentStageNum = GetGame()->GetCurrentStageNum();
+        if (currentStageNum != 0) {
+            GetGame()->GetAudioSystem()->PlaySE("showBoatSE");
+        }
         mIsActivePrev = true;
     }
     // 移動中
@@ -44,7 +48,8 @@ void Boat::UpdateActor(float deltaTime)
     {   
         int currentStageNum = GetGame()->GetCurrentStageNum();
         if (currentStageNum == 0) {
-            ChangeStage();
+            GetGame()->ChangeStage(mDestStage);
+            mIsMoving = false;
             return;
         }
         Planet* dest = mPlanets[mDestPlanet];
@@ -69,20 +74,11 @@ void Boat::UpdateActor(float deltaTime)
         {
             mPos = mDestPos;
             mIsMoving = false;
-            if (!GetGame()->GetUIState()->GetIsBattleTutorialActive() && !GetGame()->GetUIState()->GetIsBattleTutorialShown()) {
-                GetGame()->GetUIState()->SetIsBattleTutorialActive(true);
+            if (!GetGame()->GetUIState()->GetIsBattleTutorialShown()) {
+                GetGame()->GetUIState()->SetCurrentTutorialKind("Battle");
+                GetGame()->GetGameProgressState()->SetSceneState("ShowUI");
                 GetGame()->GetUIState()->SetIsBattleTutorialShown(true);
             }
         }
     }
-}
-
-void Boat::ChangeStage() {
-    Stage* nextStage = GetGame()->GetStages()[mDestStage];
-    GetGame()->SetCurrentStage(nextStage);
-    GetGame()->SetCurrentStageNum(mDestStage);
-    GetGame()->SetIsChangeStage(true);
-    std::string stagePath = "../assets/data/stage" + std::to_string(mDestStage) + ".yaml";
-    GetGame()->SetCurrentStagePath(stagePath);
-    mIsMoving = false;
 }

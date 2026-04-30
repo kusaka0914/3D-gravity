@@ -32,6 +32,7 @@ add_executable(engine
     src/Shader.cpp
     src/Stage.cpp
     src/Star.cpp
+    src/TalkableComponent.cpp
     src/UIRenderer.cpp
     src/UIState.cpp
     src/VertexArray.cpp

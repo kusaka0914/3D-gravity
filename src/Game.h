@@ -18,6 +18,7 @@ public:
     void RunLoop();
     void Shutdown();
     void LoadData(bool isLoadPlayer);
+    void ChangeStage(int stageNum);
 
     void AddActor(std::unique_ptr<class Actor> actor) { mActors.emplace_back(std::move(actor)); };
 	void RemoveActor(std::unique_ptr<class Actor> actor);

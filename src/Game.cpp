@@ -21,6 +21,7 @@
 #include "BoatParts.h"
 #include "PhysicsSystem.h"
 #include "DestructibleComponent.h"
+#include "TalkableComponent.h"
 #include "Game.h"
 #include "NPC.h"
 #include <GLFW/glfw3.h>
@@ -245,31 +246,29 @@ void Game::ProcessInput()
     if (aPressed && !mAPressedPrev) {
         bool isTitle = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Title;
         bool isOpening = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Opening;
+        bool isTalking = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Talking;
         if (isTitle) {
             mGameProgressState->SetSceneState("Opening");
-            mUIState->SetIsOpeningUIActive(true);
-        } else if (isOpening && mUIState->GetIsOpeningUIActive()) {
-            mUIState->IncOpeningUIIndex();
-        } else if (isOpening && !mUIState->GetIsOpeningUIActive()) {
+        } 
+        if (isTalking || isOpening) {
             mUIState->IncTalkUIIndex();
         }
-        if (mUIState->GetIsTutorialActive()) {
-            mUIState->SetIsTutorialActive(false);
-            mUIState->SetIsCrystalTutorialActive(true);
-        } else if (mUIState->GetIsCrystalTutorialActive()) {
-            mUIState->SetIsCrystalTutorialActive(false);
-            mUIState->SetIsUIActive(false);
-            mPlayers[0]->SetCanMove(true);
+        if (mUIState->GetCurrentTutorialKind() == UIState::TutorialKind::Battle) {
+            mUIState->SetCurrentTutorialKind("None");
+            mGameProgressState->SetSceneState("Playing");
         }
-        if (mUIState->GetIsBattleTutorialActive()) {
-            mUIState->SetIsBattleTutorialActive(false);
-            mUIState->SetIsUIActive(false);
-            mPlayers[0]->SetCanMove(true);
+        if (mUIState->GetCurrentTutorialKind() == UIState::TutorialKind::Break) {
+            mUIState->SetCurrentTutorialKind("None");
+            mGameProgressState->SetSceneState("Playing");
         }
-        if (mUIState->GetIsBreakTutorialActive()) {
-            mUIState->SetIsBreakTutorialActive(false);
-            mUIState->SetIsUIActive(false);
-            mPlayers[0]->SetCanMove(true);
+        std::vector<NPC*> NPCs = mPlayers[0]->GetCurrentPlanet()->GetNPCs();
+        for (auto NPC : NPCs) {
+            bool isTalkable = NPC->GetTalkableComponent()->GetIsTalkable();
+            if (isTalkable) {
+                mUIState->SetTalkWith("NPC");
+                mPlayers[0]->SetTalkingNPC(NPC);
+                mGameProgressState->SetSceneState("Talking");
+            }
         }
     }
 
@@ -296,16 +295,17 @@ void Game::UpdateGame()
         mHitStopTimer-= deltaTime;
         deltaTime = 0.0f;
     }
-    if (mUIState->GetIsUIActive()) {
+    if (mGameProgressState->GetSceneState() == GameProgressState::SceneState::ShowUI) {
         deltaTime = 0.0f;
     }
 
     mLastTime = currentTime;
 
     bool isTitle = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Title;
-    if (isTitle)
+    bool isTalking = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Talking;
+    bool isShowUI = mGameProgressState->GetSceneState() == GameProgressState::SceneState::ShowUI;
+    if (isTitle || isTalking || isShowUI)
         return;
-    
 
     for (const auto& actor_unique : mActors) {
         Actor* actor = actor_unique.get();
@@ -433,4 +433,13 @@ void Game::LoadModel() {
             }
         }
     }
+}
+
+void Game::ChangeStage(int stageNum) {
+    mCurrentStage = mStages[stageNum];
+    mCurrentStageNum = stageNum;
+    mIsChangeStage = true;
+    std::string stagePath = "../assets/data/stage" + std::to_string(stageNum) + ".yaml";
+    mCurrentStagePath = stagePath;
+    mGameProgressState->SetSceneState("Playing");
 }

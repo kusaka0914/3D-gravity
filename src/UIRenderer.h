@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 #include <vector>
 #include <unordered_map>
+#include <glm/glm.hpp>
 #include <SDL_ttf.h>
 
 class UIRenderer {
@@ -15,13 +16,15 @@ private:
 
     void DrawTitle();
     void DrawOpening();
+    void DrawTalkUI(const std::vector<std::string>& texts, int index);
     bool DrawStateUI();
     void DrawDefaultUI();
     void DrawOperationSupportUI();
     void DrawHpUI();
     void DrawSpecialAttackUI();
+    void DrawTalkableUI();
     void DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color);
-    void DrawText(float x, float y, float scale, const char* message, bool isCenterBase);
+    void DrawText(float x, float y, float scale, std::string message, bool isCenterBase, glm::vec4 color =  {255, 255, 255, 255});
     void DrawTexture(float x, float y, float width, float height, std::string textureName);
     
     void DrawTutorial();

@@ -7,6 +7,7 @@
 #include "Game.h"
 #include "PhysicsSystem.h"
 #include "UIState.h"
+#include "NPC.h"
 #include "GameProgressState.h"
 #include <btBulletDynamicsCommon.h>
 #include <cmath>
@@ -67,7 +68,7 @@ Player::~Player()
 void Player::ProcessActor()
 {   
     bool isPlaying = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Playing;
-    if(GetGame()->GetUIState()->GetIsUIActive() || !isPlaying) {
+    if(!isPlaying) {
         mCanMove = false;
     }
     

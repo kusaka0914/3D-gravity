@@ -1,34 +1,64 @@
+#include <string>
+
 class UIState {
 public:
+    enum class TalkWith {
+        Opening,
+        Mother,
+        Doctor,
+        NPC
+    };
+    enum class TutorialKind {
+        None,
+        BoatParts,
+        Crystal,
+        Battle,
+        Break
+    };
     UIState(class Game* game);
-    void SetIsUIActive(bool isUIActive) { mIsUIActive = isUIActive; }
-    void SetIsOpeningUIActive(bool isOpeningUIActive) { mIsOpeningUIActive = isOpeningUIActive; }
-    void SetIsTutorialActive(bool isTutorialActive) { mIsTutorialActive = isTutorialActive; }
-    void SetIsCrystalTutorialActive(bool isCrystalTutorialActive) { mIsCrystalTutorialActive = isCrystalTutorialActive; }
-    void SetIsBattleTutorialActive(bool isBattleTutorialActive) { mIsBattleTutorialActive = isBattleTutorialActive; }
+    void SetTalkUIIndex(int talkUIIndex) { mTalkUIIndex = talkUIIndex; }
+    void SetIsTutorialShown(bool isTutorialShown) { mIsTutorialShown = isTutorialShown; }
     void SetIsBattleTutorialShown(bool isBattleTutorialShown) { mIsBattleTutorialShown = isBattleTutorialShown; }
-    void SetIsBreakTutorialActive(bool isBreakTutorialActive) { mIsBreakTutorialActive = isBreakTutorialActive; }
-    void IncOpeningUIIndex() { mOpeningUIIndex++; }
     void IncTalkUIIndex() { mTalkUIIndex++; }
+    void SetTalkWith(std::string talkWith) {
+        if (talkWith == "Mother") {
+            mTalkWith = TalkWith::Mother;
+        } else if (talkWith == "Doctor") {
+            mTalkWith = TalkWith::Doctor;
+        } else if (talkWith == "NPC") {
+            mTalkWith = TalkWith::NPC;
+        } else {
+            mTalkWith = TalkWith::Opening;
+        }
+    }
+    void SetCurrentTutorialKind(std::string currentTutorialKind) {
+        if (currentTutorialKind == "BoatParts") {
+            mCurrentTutorialKind = TutorialKind::BoatParts;
+        } else if (currentTutorialKind == "Crystal") {
+            mCurrentTutorialKind = TutorialKind::Crystal;
+        } else if (currentTutorialKind == "Battle") {
+            mCurrentTutorialKind = TutorialKind::Battle;
+        } else if (currentTutorialKind == "Break") {
+            mCurrentTutorialKind = TutorialKind::Break;
+        } else {
+            mCurrentTutorialKind = TutorialKind::None;
+        }
+    }
 
-    bool GetIsUIActive() const { return mIsUIActive; }
-    bool GetIsOpeningUIActive() const { return mIsOpeningUIActive; }
-    int GetOpeningUIIndex() const { return mOpeningUIIndex; }
     int GetTalkUIIndex() const { return mTalkUIIndex; }
-    bool GetIsTutorialActive() const { return mIsTutorialActive; }
-    bool GetIsCrystalTutorialActive() const { return mIsCrystalTutorialActive; }
-    bool GetIsBattleTutorialActive() const { return mIsBattleTutorialActive; }
+    bool GetIsTutorialShown() const { return mIsTutorialShown; }
     bool GetIsBattleTutorialShown() const { return mIsBattleTutorialShown; }
-    bool GetIsBreakTutorialActive() const { return mIsBreakTutorialActive; }
+    TalkWith GetTalkWith() const { return mTalkWith; }
+    TutorialKind GetCurrentTutorialKind() const { return mCurrentTutorialKind; }
+
 private:
     Game* mGame;
-    bool mIsUIActive;
-    bool mIsOpeningUIActive;
-    int mOpeningUIIndex;
-    int mTalkUIIndex;
-    bool mIsTutorialActive;
-    bool mIsCrystalTutorialActive;
-    bool mIsBattleTutorialActive;
+
+    TalkWith mTalkWith;
+    TutorialKind mCurrentTutorialKind;
+
+    bool mIsTutorialShown;
     bool mIsBattleTutorialShown;
-    bool mIsBreakTutorialActive;
+
+    int mTalkUIIndex;
 };

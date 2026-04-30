@@ -11,6 +11,7 @@
 #include "VertexArray.h"
 #include "Game.h"
 #include "NPC.h"
+#include "UIState.h"
 #include "FocusComponent.h"
 #include "GameProgressState.h"
 #include <glm/glm.hpp>
@@ -78,9 +79,12 @@ void Renderer::Draw() {
             players[0]->SetCanMove(true);
         }
     }
-    bool isOpening = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
-    if (isOpening) {
+    bool isTalkWithMother = GetGame()->GetUIState()->GetTalkWith() == UIState::TalkWith::Mother;
+    bool isTalkWithDoctor = GetGame()->GetUIState()->GetTalkWith() == UIState::TalkWith::Doctor;
+    if (isTalkWithMother) {
         view = glm::lookAt(glm::vec3(-2.0f, 4.0f, -2.0f), glm::vec3(4.0f, 2.0f, 4.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    } else if (isTalkWithDoctor) {
+        view = glm::lookAt(glm::vec3(3.0f, 4.0f, 1.0f), glm::vec3(-4.0f, 2.0f, -4.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     }
     glm::mat4 view2P = isPlayer2Joined ? players[1]->getPlayerView(12.0f) : view;
 

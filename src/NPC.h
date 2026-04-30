@@ -24,7 +24,9 @@ public:
     void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
     void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
     void SetFacingYaw(float facingYaw) { mFacingYaw = facingYaw; }
+    void SetRadius(float radius) { mRadius = radius; }
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
+    void SetName(std::string name) { mName = name; }
     void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
 
     bool GetIsActive() const { return mIsActive; }
@@ -37,7 +39,11 @@ public:
     const glm::vec3& GetFacingLeftVec() const { return mFacingLeftVec; }
     int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
     float GetFacingYaw() const { return mFacingYaw; }
+    float GetRadius() const { return mRadius; }
     std::string GetModelPath() const { return mModelPath; }
+    std::string GetName() const { return mName; }
+
+    class TalkableComponent* GetTalkableComponent() const { return mTalkableComponent; }
 
     const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
 
@@ -50,6 +56,7 @@ private:
     int mCurrentPlanetNum;
 
     float mFacingYaw;
+    float mRadius;
 
     glm::vec3 mPos;
     glm::vec3 mUpVec;
@@ -59,8 +66,11 @@ private:
     glm::vec3 mFacingLeftVec;
 
     std::string mModelPath;
+    std::string mName;
 
     class Planet* mCurrentPlanet;
+
+    class TalkableComponent* mTalkableComponent;
 
     std::vector<struct LoadedMesh> mMeshes;
 };

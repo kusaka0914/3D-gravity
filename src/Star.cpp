@@ -30,13 +30,7 @@ void Star::UpdateActor(float deltaTime)
     if (mClearTimer >= 0.0f) {
         mClearTimer -= deltaTime;
         if (mClearTimer < 0.0f) {
-            Stage* selectStage = GetGame()->GetStages()[0];
-            GetGame()->SetCurrentStage(selectStage);
-            GetGame()->SetCurrentStageNum(0);
-            GetGame()->SetIsChangeStage(true);
-            std::string stagePath = "../assets/data/stage0.yaml";
-            GetGame()->SetCurrentStagePath(stagePath);
-            GetGame()->GetGameProgressState()->SetSceneState("Playing");
+            GetGame()->ChangeStage(0);
         }
     }
     if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal) {
