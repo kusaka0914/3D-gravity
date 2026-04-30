@@ -166,7 +166,7 @@ void UIRenderer::DrawOpening() {
         if (talkUIIndex < talkTexts.size() && talkUIIndex >= 0) {
             DrawTalkUI(talkTexts, talkUIIndex);
         } else if (talkUIIndex >= static_cast<int>(talkTexts.size())) {
-            GetGame()->GetUIState()->SetTalkUIIndex(-1);
+            GetGame()->GetUIState()->SetTalkUIIndex(0);
             GetGame()->SetFadeInTimer(1.0f);
             GetGame()->GetGameProgressState()->SetNextSceneState("Playing");
         }
@@ -424,37 +424,40 @@ void UIRenderer::DrawTexture(float x, float y, float width, float height, std::s
 }
 
 void UIRenderer::DrawBattleTutorial() {
-    float bgWidth = mFbWidth * 0.7f;
-    float bgHeight = mFbHeight * 0.7f;
-    float fbWidthHalf = mFbWidth * 0.5f;
-    float fbHeightHalf = mFbHeight * 0.5f;
-    float bgX = fbWidthHalf - bgWidth / 2;
-    float bgY = fbHeightHalf - bgHeight / 2;
-    float textX = bgX + bgWidth /2;
-    DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
-    DrawText(textX, bgY + 100, 0.5f, "攻撃してガードを壊そう！", true);
-    // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
-    DrawText(textX, bgY + bgHeight - 380, 0.5f, "攻撃: X 広範囲攻撃: Y", true);
-    DrawText(textX, bgY + bgHeight - 320, 0.5f, "敵はガードを所持していて、連続して3回攻撃を当てると1つ壊れます。", true);
-    DrawText(textX, bgY + bgHeight - 260, 0.5f, "全てのガードを破壊するとブレイク状態になります。", true);
-    DrawText(textX, bgY + bgHeight - 200, 0.5f, "まずは一度ブレイクしてみましょう。", true);
+    std::vector<std::string> tutorialTexts = {
+        "この惑星は敵が多そうですね...\nということで敵の倒し方を伝授します！",
+        "まずそれぞれの敵はガードというものを持っています。",
+        "連続して3回、敵に攻撃を当てることで\nガードを1つ破壊できます！",
+        "全てのガードを破壊すると敵がブレイク状態になり、\n有利に戦闘を進められますよ！",
+        "まずは1度ブレイクしてみましょう！",
+    };
+    int tutorialUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+    if (tutorialUIIndex < tutorialTexts.size()) {
+        DrawTalkUI(tutorialTexts, tutorialUIIndex);
+        return;
+    } else {
+        GetGame()->GetUIState()->SetTalkUIIndex(0);
+        GetGame()->GetUIState()->SetCurrentTutorialKind("None");
+        GetGame()->GetGameProgressState()->SetSceneState("Playing");
+    }
 }
 
 void UIRenderer::DrawBreakTutorial() {
-    float bgWidth = mFbWidth * 0.7f;
-    float bgHeight = mFbHeight * 0.7f;
-    float fbWidthHalf = mFbWidth * 0.5f;
-    float fbHeightHalf = mFbHeight * 0.5f;
-    float bgX = fbWidthHalf - bgWidth / 2;
-    float bgY = fbHeightHalf - bgHeight / 2;
-    float textX = bgX + bgWidth /2;
-    DrawBG(bgWidth, bgHeight, bgX, bgY, {0.0f, 0.0f, 0.0f});
-    DrawText(textX, bgY + 100, 0.5f, "溜め攻撃を繰り出そう！", true);
-    // DrawTexture(100, 100, 0.5, "../assets/textures/grassTex.png");
-    DrawText(textX, bgY + bgHeight - 380, 0.5f, "ナイスブレイク！", true);
-    DrawText(textX, bgY + bgHeight - 320, 0.5f, "ブレイクすると敵が空中に打ち上げられます。", true);
-    DrawText(textX, bgY + bgHeight - 260, 0.5f, "空中の敵を攻撃するにはジャンプしてXボタンを長押しします。", true);
-    DrawText(textX, bgY + bgHeight - 200, 0.5f, "最大まで溜めた状態で離すことで高火力な溜め攻撃が繰り出せます。", true);
+    std::vector<std::string> tutorialTexts = {
+        "ナイスブレイク！\nブレイクすると敵が空中に打ち上げられます！",
+        "空中の敵を攻撃するには空中溜め攻撃です！",
+        "覚えてますか？\n大きなクリスタルを破壊するときに使うアレです！",
+        "非常に強い技なのでブレイクして空中溜め攻撃で\nサクサク敵を倒していきましょう！",
+    };
+    int tutorialUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+    if (tutorialUIIndex < tutorialTexts.size()) {
+        DrawTalkUI(tutorialTexts, tutorialUIIndex);
+        return;
+    } else {
+        GetGame()->GetUIState()->SetTalkUIIndex(0);
+        GetGame()->GetUIState()->SetCurrentTutorialKind("None");
+        GetGame()->GetGameProgressState()->SetSceneState("Playing");
+    }
 }
 
 void UIRenderer::DrawStageClear() {

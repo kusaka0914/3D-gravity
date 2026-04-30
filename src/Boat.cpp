@@ -77,7 +77,7 @@ void Boat::UpdateActor(float deltaTime)
             mIsMoving = false;
             if (!GetGame()->GetUIState()->GetIsBattleTutorialShown()) {
                 GetGame()->GetUIState()->SetCurrentTutorialKind("Battle");
-                GetGame()->GetGameProgressState()->SetSceneState("ShowUI");
+                GetGame()->GetGameProgressState()->SetSceneState("Talking");
                 GetGame()->GetUIState()->SetIsBattleTutorialShown(true);
             }
         }

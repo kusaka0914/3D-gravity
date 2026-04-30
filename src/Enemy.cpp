@@ -212,7 +212,7 @@ void Enemy::LaunchCharacter(float deltaTime) {
     if (!GetGame()->GetGameProgressState()->GetIsFirstBreak()) {
         GetGame()->GetGameProgressState()->SetIsFirstBreak(true);
         GetGame()->GetUIState()->SetCurrentTutorialKind("Break");
-        GetGame()->GetGameProgressState()->SetSceneState("ShowUI");
+        GetGame()->GetGameProgressState()->SetSceneState("Talking");
     }
     float launchSpeed = 5.0f;
     mVelocity += mUpVec * launchSpeed;

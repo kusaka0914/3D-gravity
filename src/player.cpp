@@ -334,6 +334,14 @@ void Player::ApplyGravity(float deltaTime) {
     mVelocity -= mUpVec * 9.8f * deltaTime;
     mPos += mVelocity * deltaTime;
 
+    if (GetGame()->GetCurrentStageNum() == 0 && mPos.y <= -1.0f) {
+        mPos = mRestartPos;
+        mCurrentPlanetNum = mRestartPlanetIndex;
+        mCurrentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[mCurrentPlanetNum];
+        mVelocity = glm::vec3(0.0f);
+        mOnGround = true;
+    }
+
     if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal)
         return;
     

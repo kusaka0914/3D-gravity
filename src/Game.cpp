@@ -255,14 +255,6 @@ void Game::ProcessInput()
         if (isTalking || isOpening) {
             mUIState->IncTalkUIIndex();
         }
-        if (mUIState->GetCurrentTutorialKind() == UIState::TutorialKind::Battle) {
-            mUIState->SetCurrentTutorialKind("None");
-            mGameProgressState->SetSceneState("Playing");
-        }
-        if (mUIState->GetCurrentTutorialKind() == UIState::TutorialKind::Break) {
-            mUIState->SetCurrentTutorialKind("None");
-            mGameProgressState->SetSceneState("Playing");
-        }
         std::vector<NPC*> NPCs = mPlayers[0]->GetCurrentPlanet()->GetNPCs();
         for (auto NPC : NPCs) {
             if (!NPC->GetTalkableComponent()) continue;
