@@ -140,7 +140,6 @@ void Renderer::Draw() {
             }
             else
             {
-                std::cout << planets[i]->GetModelPath() << std::endl;
                 std::cout << "Planet Draw Error" << std::endl;
                 // glBindVertexArray(sphereVAO);
                 // glUniform1i(locUseTexture, 0);

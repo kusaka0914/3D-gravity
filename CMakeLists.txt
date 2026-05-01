@@ -33,6 +33,7 @@ add_executable(engine
     src/Stage.cpp
     src/Star.cpp
     src/TalkableComponent.cpp
+    src/UILoader.cpp
     src/UIRenderer.cpp
     src/UIState.cpp
     src/VertexArray.cpp

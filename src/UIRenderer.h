@@ -10,32 +10,46 @@ public:
     void Initialize();
     void Draw();
 
-    Game* GetGame() const { return mGame; }
 private:
     void AddImgInfo(std::string path, std::string name);
 
     void DrawTitle();
+
     void DrawOpening();
-    void DrawTalkUI(const std::vector<std::string>& texts, int index);
-    bool DrawStateUI();
+
+    void DrawOpeningIntro();
+    void DrawOpeningTalkWithMother();
+    void DrawOpeningTalkWithDoctor();
+
     void DrawDefaultUI();
+
     void DrawOperationSupportUI();
     void DrawHpUI();
     void DrawSpecialAttackUI();
     void DrawTalkableUI();
+    void DrawRemainPartsUI();
+
+    void DrawStateUI();
+   
+    void DrawBattleTutorial();
+    void DrawBreakTutorial();
+    void DrawTalkWithNPC();
+    void DrawStageClear();
+    void DrawTalkUI(const std::vector<std::string>& texts, int index);
+    void DrawLoading();
+
     void DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color);
     void DrawText(float x, float y, float scale, std::string message, bool isCenterBase, glm::vec4 color =  {255, 255, 255, 255});
     void DrawTexture(float x, float y, float width, float height, std::string textureName);
 
-    void DrawBattleTutorial();
-    void DrawBreakTutorial();
-    void DrawStageClear();
-    void DrawRemainPartsUI();
+    Game* GetGame() const { return mGame; }
 
 private:
     Game* mGame;
     class Shader* mShader;
     TTF_Font* mFont;
+    class UILoader* mUILoader;
+
     const std::unordered_map<const char*, std::unique_ptr<class VertexArray>>& mVertexArrays;
     std::unordered_map<std::string, GLuint> mTextures;
 

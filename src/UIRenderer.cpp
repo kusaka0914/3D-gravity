@@ -9,6 +9,7 @@
 #include "NPC.h"
 #include "TalkableComponent.h"
 #include "GameProgressState.h"
+#include "UILoader.h"
 #include "stb_image.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -20,13 +21,14 @@ UIRenderer::UIRenderer(Game* game)
     , mShader(game->GetShader())
     , mFont(game->GetFont())
     , mVertexArrays(game->GetVertexArrays())
+    , mUILoader(game->GetUILoader())
 {
     Initialize();
 }
 
 void UIRenderer::Initialize() {
     AddImgInfo("../assets/textures/titleBg.png", "titleBg");
-    AddImgInfo("../assets/textures/Opening.png", "Opening");
+    AddImgInfo("../assets/textures/opening.png", "opening");
     AddImgInfo("../assets/textures/textBg.png", "textBg");
     AddImgInfo("../assets/textures/slime.png", "slime");
 }
@@ -57,178 +59,106 @@ void UIRenderer::Draw() {
     glDepthMask(GL_FALSE);
 
     bool isTitle = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Title;
-    if (isTitle) {
+    if (isTitle)
         DrawTitle();
-    }
 
     bool isOpening = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
-    if (isOpening) {
+    if (isOpening)
         DrawOpening();
-    }
 
-    bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
     bool isPlaying = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Playing;
-    if (!isStageClear && isPlaying){
+    if (isPlaying)
         DrawDefaultUI();
-    } else if (isStageClear) {
-        DrawStageClear();
-    }
 
     DrawStateUI();
-
-    float fadeInTimer = GetGame()->GetFadeInTimer();
-    float alpha;
-    if (fadeInTimer >= 0.0f) {
-        alpha = 1.0f - fadeInTimer;
-    } else {
-        alpha = 1.0f + fadeInTimer;
-    }
-    if (alpha <= 0.0f) alpha = 0.0f; 
-    if (alpha > 0.0f) {
-        DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {0.0f, 0.0f, 0.0f, alpha});
-    }
-
-    if (GetGame()->GetIsChangeStage() && GetGame()->GetFadeInTimer() <= 0.1f) {
-        std::string text = "Loading...";
-        DrawText(30, mFbHeight -70, 0.5f, text.c_str(), false);
-        DrawTexture(30, mFbHeight - 130, 100, 68, "slime");
-    }
 
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
 }
 
 void UIRenderer::DrawTitle() {
-    DrawTexture(0.0f, 0.0f, mFbWidth, mFbHeight, "titleBg");
-    std::string text = "START: A";
-    DrawText(mFbWidth / 2, 3 * mFbHeight / 4, 1.0f, text.c_str(), true);
+    auto titleBgTextureInfo = mUILoader->GetTextureInfo("title", "bgTexture");
+    if (titleBgTextureInfo)
+        DrawTexture(titleBgTextureInfo->x, titleBgTextureInfo->y, mFbWidth * titleBgTextureInfo->widthRatio, mFbHeight * titleBgTextureInfo->heightRatio, "titleBg");
+
+    auto startTextInfo = mUILoader->GetTextInfo("title", "startText");
+    if (startTextInfo)
+        DrawText(mFbWidth * startTextInfo->xRatio, mFbHeight * startTextInfo->yRatio, startTextInfo->scaleRatio, startTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawOpening() {
+    auto talkWith = GetGame()->GetUIState()->GetTalkWith();
+
+    switch (talkWith)
+    {
+        case UIState::TalkWith::Opening: {
+            DrawOpeningIntro();
+            break;
+        }
+        case UIState::TalkWith::Mother: {
+            DrawOpeningTalkWithMother();
+            break;
+        }
+        case UIState::TalkWith::Doctor: {
+            DrawOpeningTalkWithDoctor();
+            break;
+        }
+    }
+}
+
+void UIRenderer::DrawOpeningIntro() {
+    auto openingBgTextureInfo = mUILoader->GetTextureInfo("opening", "bgTexture");
+    auto openingTalkTextInfo = mUILoader->GetTextInfo("opening", "openingText");
+
+    if (!openingBgTextureInfo || !openingTalkTextInfo) 
+        return;
+
     int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
-    switch (GetGame()->GetUIState()->GetTalkWith())
-    {
-    case UIState::TalkWith::Opening: {
-        std::vector<std::string> openingTexts = {
-            "ある草原のど真ん中\nスライムはママと仲良く暮らしていました。",
-            "ママはいつもお仕事で大忙し\nそれでもスライムを愛しているため一生懸命働いていました。",
-            "ある日、スライムはいつものように\nママのお見送りをしていました。"
-        };
-        int openingUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
-        if (openingUIIndex < openingTexts.size()) {
-            DrawTexture(0.0f, 0.0f, mFbWidth, mFbHeight, "Opening");
-            DrawTalkUI(openingTexts, openingUIIndex);
-            return;
-        } else {
-            GetGame()->GetUIState()->SetTalkWith("Mother");
-            GetGame()->GetUIState()->SetTalkUIIndex(0);
-        }
-    }
-    case UIState::TalkWith::Mother: {
-        std::vector<std::string> talkTexts = {
-            "スライム: ママ、いってらっしゃい！",
-            "ママ: いってきます。\nスライム、いい子にしてるんだよ。",
-            "ママ: !?",
-            "ママ: ううっ...",
-            "ママが突然倒れこんでしまいました。",
-            "スライム: どうしたの！？ママ！"
-        };
-        if (talkUIIndex < talkTexts.size()) {
-            DrawTalkUI(talkTexts, talkUIIndex);
-            return;
-        } else {
-            GetGame()->GetUIState()->SetTalkUIIndex(0);
-            GetGame()->GetUIState()->SetTalkWith("Doctor");
-        }
-        break;
-    }
-    case UIState::TalkWith::Doctor: {
-        std::vector<std::string> talkTexts = {
-            "スライムは急いでドクターを呼びました。",
-            "ドクター: これは、私にはどうしても治せない\nとてもとても複雑な病気だよ。",
-            "ドクター: きっともう目覚めることはないだろう。",
-            "スライム: ほ、ほんとなの、？",
-            "スライムは泣き出してしまいました。",
-            "スライム: どうにか治す方法はないの？",
-            "ドクター: ごめんな、普通の方法じゃ治らないんだ。\nただ...",
-            "スライム: ただ...？",
-            "ドクター: 一つだけ方法はあるんだが、\nこれはとても難しい方法なんだ。",
-            "ドクター: この世界の宇宙になんでも願いを叶えてくれる\n星が存在するという話は聞いたことあるかな？",
-            "スライム: 聞いたことないや、、",
-            "ドクター: そうか、もしその星を全て集めて、\nお母さんの病気が治ることを願うことができれば...",
-            "スライム: じゃあ僕が集めてくるよ！",
-            "ドクター: ダメだダメだ！\nおまえさん、宇宙がどれだけ危険なのか分かっているのか！",
-            "スライム: じゃあドクターはママを助けてくれるの？",
-            "ドクター: ...",
-            "スライム: ママを助けられるのは僕しかいない！",
-            "そういうとスライムはすぐに家を飛び出し、\nロケットに乗り込んで宇宙へと旅立ちました。"
-        };
-        if (talkUIIndex < talkTexts.size() && talkUIIndex >= 0) {
-            DrawTalkUI(talkTexts, talkUIIndex);
-        } else if (talkUIIndex >= static_cast<int>(talkTexts.size())) {
-            GetGame()->GetUIState()->SetTalkUIIndex(0);
-            GetGame()->SetFadeInTimer(1.0f);
-            GetGame()->GetGameProgressState()->SetNextSceneState("Playing");
-        }
-        break;
-    }
-    }
-}
+    std::vector<std::string> talkTexts = openingTalkTextInfo->texts;
 
-void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
-    float bgWidth = 3 * mFbWidth / 4;
-    float bgHeight = mFbHeight / 4;
-    float bgX = 60.0f;
-    float bgY = 50.0f;
-    DrawTexture(bgX, bgY, bgWidth, bgHeight, "textBg");
-
-    float textX = bgX + mFbWidth / 1600.0f * 40.0f;
-    float textY = bgY + bgHeight / 2 - mFbWidth / 1600.0f * 30.0f;
-    float textScale = mFbWidth / 3000.0f;
-    glm::vec4 textColor{0.0f, 0.0f, 0.0f, 0.0f};
-    DrawText(textX, textY, textScale, texts[index], false, textColor);
-}
-
-bool UIRenderer::DrawStateUI() {
-    UIState::TutorialKind currentTutorialKind = GetGame()->GetUIState()->GetCurrentTutorialKind();
-    switch (currentTutorialKind)
-    {
-    case UIState::TutorialKind::Battle:
-        DrawBattleTutorial();
-        return true;
+    if (talkUIIndex < talkTexts.size()) {
+        DrawTexture(openingBgTextureInfo->x, openingBgTextureInfo->y, mFbWidth * openingBgTextureInfo->widthRatio, mFbHeight * openingBgTextureInfo->heightRatio, "opening");
+        DrawTalkUI(talkTexts, talkUIIndex);
+        return;
+    }
     
-    case UIState::TutorialKind::Break:
-        DrawBreakTutorial();
-        return true; 
+    GetGame()->GetUIState()->SetTalkWith("Mother");
+    GetGame()->GetUIState()->SetTalkUIIndex(0);
+}
 
-    default:
-        break;
+void UIRenderer::DrawOpeningTalkWithMother() {
+    auto talkWithMotherTextInfo = mUILoader->GetTextInfo("opening", "talkWithMotherText");
+    if (!talkWithMotherTextInfo)
+        return;
+
+    int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+    std::vector<std::string> talkTexts = talkWithMotherTextInfo->texts;
+
+    if (talkUIIndex < talkTexts.size()) {
+        DrawTalkUI(talkTexts, talkUIIndex);
+        return;
     }
 
-    UIState::TalkWith currentTalkWith = GetGame()->GetUIState()->GetTalkWith();
-    switch (currentTalkWith)
-    {
-    case UIState::TalkWith::NPC: {
-        NPC* talkingNPC = GetGame()->GetPlayers()[0]->GetTalkingNPC();
-        std::vector<std::string> talkTexts = talkingNPC->GetTalkableComponent()->GetTalkTexts();
-        int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
-        if (talkUIIndex < talkTexts.size()) {
-            DrawTalkUI(talkTexts, talkUIIndex);
-            return true;
-        } else {
-            GetGame()->GetUIState()->SetTalkWith("None");
-            GetGame()->GetUIState()->SetTalkUIIndex(0);
-            GetGame()->GetGameProgressState()->SetSceneState("Playing");
-        }
-        return true;
-        break;
-        }
-    default:
-        break;
+    GetGame()->GetUIState()->SetTalkUIIndex(0);
+    GetGame()->GetUIState()->SetTalkWith("Doctor");
+}
+
+void UIRenderer::DrawOpeningTalkWithDoctor() {
+    auto talkWithDoctorTextInfo = mUILoader->GetTextInfo("opening", "talkWithDoctorText");
+    if (!talkWithDoctorTextInfo)
+        return;
+
+    int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+    std::vector<std::string> talkTexts = talkWithDoctorTextInfo->texts;
+
+    if (talkUIIndex < talkTexts.size() && talkUIIndex >= 0) {
+        DrawTalkUI(talkTexts, talkUIIndex);
     }
-
-    return false;
-
+    else if (talkUIIndex >= static_cast<int>(talkTexts.size())) {
+        GetGame()->GetUIState()->SetTalkUIIndex(0);
+        GetGame()->SetFadeInTimer(1.0f);
+        GetGame()->GetGameProgressState()->SetNextSceneState("Playing");
+    }
 }
 
 void UIRenderer::DrawDefaultUI() {
@@ -237,47 +167,217 @@ void UIRenderer::DrawDefaultUI() {
     DrawHpUI();
 
     std::vector<Player*> players = mGame->GetPlayers();
-    if (players[0]->GetSpecialAttackCooldownRemaining() <= 0.0f) {
+    float specialAttackCooldownRemaining = players[0]->GetSpecialAttackCooldownRemaining();
+
+    if (specialAttackCooldownRemaining <= 0.0f)
         DrawSpecialAttackUI();
-    }
     
     Planet* currentPlanet = players[0]->GetCurrentPlanet();
     std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
 
-    if (!boatParts.empty()){
+    if (!boatParts.empty())
         DrawRemainPartsUI();
-    }
 
     std::vector<NPC*> NPCs = currentPlanet->GetNPCs();
     if (!NPCs.empty()) {
         for (auto NPC : NPCs) {
             if (!NPC->GetTalkableComponent()) continue;
-            if (NPC->GetTalkableComponent()->GetIsTalkable()) {
-                DrawTalkableUI();
-            }
-        }
-    }
+            if (NPC->GetTalkableComponent()->GetIsTalkable())
+                DrawTalkableUI();  
+        }  
+    }   
 }
 
 void UIRenderer::DrawOperationSupportUI() {
-    DrawText(20, mFbHeight - 60, 0.5f, "A:ジャンプ B:回避 X:攻撃 Y:広範囲攻撃 L:スペシャル攻撃 空中でX長押し→離す:溜め攻撃", false);
+    auto operationSupportTextInfo = mUILoader->GetTextInfo("default", "operationSupportText");
+    if (!operationSupportTextInfo)
+        return;
+    
+    DrawText(operationSupportTextInfo->x, mFbHeight - operationSupportTextInfo->y, operationSupportTextInfo->scaleRatio, operationSupportTextInfo->texts[0], false);
 }
 
 void UIRenderer::DrawHpUI() {
+    auto hpTextInfo = mUILoader->GetTextInfo("default", "hpText");
+    if (!hpTextInfo)
+        return;
+
     std::vector<Player*> players = mGame->GetPlayers();
     int Hp = players[0]->GetHp();
-    std::string HpText = "体力: " + std::to_string(Hp);
-    DrawText(mFbWidth - 200, 40, 0.5f, HpText.c_str(), false);
+    std::string HpText = hpTextInfo->texts[0] + std::to_string(Hp);
+
+    DrawText(mFbWidth - hpTextInfo->x, hpTextInfo->y, hpTextInfo->scaleRatio, HpText, false);
 }
 
 void UIRenderer::DrawSpecialAttackUI() {
-    std::string text = "スペシャル攻撃OK!";
-    DrawText(mFbWidth / 2, 40, 0.5f, text.c_str(), true);
+    auto specialAttackTextInfo = mUILoader->GetTextInfo("default", "specialAttackText");
+    if (!specialAttackTextInfo)
+        return;
+
+    DrawText(mFbWidth * specialAttackTextInfo->xRatio, specialAttackTextInfo->y, specialAttackTextInfo->scaleRatio, specialAttackTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawTalkableUI() {
-    std::string text = "会話: A";
-    DrawText(mFbWidth / 2, mFbHeight / 2, 0.5f, text.c_str(), true);
+    auto talkableTextInfo = mUILoader->GetTextInfo("default", "talkableText");
+    if (!talkableTextInfo)
+        return;
+
+    DrawText(mFbWidth * talkableTextInfo->xRatio, mFbHeight * talkableTextInfo->yRatio, talkableTextInfo->scaleRatio, talkableTextInfo->texts[0], true);
+}
+
+void UIRenderer::DrawRemainPartsUI() {
+    auto remainPartsTextInfo = mUILoader->GetTextInfo("default", "remainPartsText");
+    if (!remainPartsTextInfo)
+        return;
+
+    std::vector<Player*> players = mGame->GetPlayers();
+    Planet* currentPlanet = players[0]->GetCurrentPlanet();
+    std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
+    
+    int remainBoatParts = 0;
+    for(auto parts : boatParts) {
+        if (!parts->GetIsActive()) continue;
+        remainBoatParts++;
+    }
+
+    std::string remainText = remainPartsTextInfo->texts[0] + std::to_string(remainBoatParts);
+    DrawText(remainPartsTextInfo->x, remainPartsTextInfo->y, remainPartsTextInfo->scaleRatio, remainText, false);
+}
+
+void UIRenderer::DrawStateUI() {
+    UIState::TutorialKind currentTutorialKind = GetGame()->GetUIState()->GetCurrentTutorialKind();
+
+    switch (currentTutorialKind)
+    {
+        case UIState::TutorialKind::Battle:
+            DrawBattleTutorial();
+            break;
+        
+        case UIState::TutorialKind::Break:
+            DrawBreakTutorial();
+            break; 
+
+        default:
+            break;
+    }
+
+    UIState::TalkWith currentTalkWith = GetGame()->GetUIState()->GetTalkWith();
+
+    switch (currentTalkWith)
+    {
+        case UIState::TalkWith::NPC: 
+            DrawTalkWithNPC();
+            break;
+
+        default:
+            break;
+    }
+
+    bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
+    if (isStageClear) 
+        DrawStageClear();
+
+    float fadeInTimer = GetGame()->GetFadeInTimer();
+    float alpha;
+
+    if (fadeInTimer >= 0.0f) 
+        alpha = 1.0f - fadeInTimer;
+    else 
+        alpha = 1.0f + fadeInTimer;
+
+    if (alpha > 0.0f) 
+        DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {0.0f, 0.0f, 0.0f, alpha});
+
+    // ローディング描画はフェードイン背景より後に描画する必要があるため以下動かさない
+    bool isLoading = GetGame()->GetIsChangeStage() && GetGame()->GetFadeInTimer() <= 0.1f;
+    if (isLoading) 
+        DrawLoading();
+}
+
+void UIRenderer::DrawBattleTutorial() {
+    auto battleTutorialTextInfo = mUILoader->GetTextInfo("state", "battleTutorialText");
+    if (!battleTutorialTextInfo)
+        return;
+
+    std::vector<std::string> battleTutorialTexts = battleTutorialTextInfo->texts;
+    int tutorialUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+
+    if (tutorialUIIndex < battleTutorialTexts.size()) {
+        DrawTalkUI(battleTutorialTexts, tutorialUIIndex);
+        return;
+    }
+
+    GetGame()->GetUIState()->SetTalkUIIndex(0);
+    GetGame()->GetUIState()->SetCurrentTutorialKind("None");
+    GetGame()->GetGameProgressState()->SetSceneState("Playing");
+}
+
+void UIRenderer::DrawBreakTutorial() {
+    auto breakTutorialTextInfo = mUILoader->GetTextInfo("state", "breakTutorialText");
+    if (!breakTutorialTextInfo)
+        return;
+
+    std::vector<std::string> breakTutorialTexts = breakTutorialTextInfo->texts;
+    int tutorialUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+
+    if (tutorialUIIndex < breakTutorialTexts.size()) {
+        DrawTalkUI(breakTutorialTexts, tutorialUIIndex);
+        return;
+    }
+
+    GetGame()->GetUIState()->SetTalkUIIndex(0);
+    GetGame()->GetUIState()->SetCurrentTutorialKind("None");
+    GetGame()->GetGameProgressState()->SetSceneState("Playing");
+}
+
+void UIRenderer::DrawStageClear() {
+    auto stageClearTextInfo = mUILoader->GetTextInfo("state", "stageClearText");
+    if (!stageClearTextInfo)
+        return;
+
+    DrawText(mFbWidth * stageClearTextInfo->xRatio, stageClearTextInfo->y, stageClearTextInfo->scaleRatio, stageClearTextInfo->texts[0], true);
+}
+
+void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
+    auto talkBgTextureInfo = mUILoader->GetTextureInfo("state", "talkBgTexture");
+    if (!talkBgTextureInfo)
+        return;
+
+    DrawTexture(talkBgTextureInfo->x, talkBgTextureInfo->y, mFbWidth * talkBgTextureInfo->widthRatio, mFbHeight * talkBgTextureInfo->heightRatio, "textBg");
+    
+    auto talkTextInfo = mUILoader->GetTextInfo("state", "talkText");
+    if (!talkTextInfo)
+        return;
+
+    glm::vec4 textColor{0.0f, 0.0f, 0.0f, 0.0f};
+    DrawText(mFbWidth * talkTextInfo->xRatio, mFbHeight * talkTextInfo->yRatio, mFbWidth * talkTextInfo->scaleRatio, texts[index], false, textColor);
+}
+
+void UIRenderer::DrawTalkWithNPC() {
+    NPC* talkingNPC = GetGame()->GetPlayers()[0]->GetTalkingNPC();
+    std::vector<std::string> talkTexts = talkingNPC->GetTalkableComponent()->GetTalkTexts();
+    int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+
+    if (talkUIIndex < talkTexts.size()) {
+        DrawTalkUI(talkTexts, talkUIIndex);
+        return;
+    } 
+
+    GetGame()->GetUIState()->SetTalkWith("None");
+    GetGame()->GetUIState()->SetTalkUIIndex(0);
+    GetGame()->GetGameProgressState()->SetSceneState("Playing");
+}
+
+void UIRenderer::DrawLoading() {
+    auto loadingTextInfo = mUILoader->GetTextInfo("state", "loadingText");
+    if (!loadingTextInfo)
+        return;
+
+    DrawText(loadingTextInfo->x, mFbHeight - loadingTextInfo->y, loadingTextInfo->scaleRatio, loadingTextInfo->texts[0], false);
+
+    auto loadingTextureInfo = mUILoader->GetTextureInfo("state", "loadingTexture");
+    if (!loadingTextureInfo)
+        return;
+    DrawTexture(loadingTextureInfo->x, mFbHeight - loadingTextureInfo->y, loadingTextureInfo->width, loadingTextureInfo->height, "slime");
 }
 
 void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color)
@@ -421,63 +521,4 @@ void UIRenderer::DrawTexture(float x, float y, float width, float height, std::s
 
     mVertexArrays.at("text")->SetActive();
     glDrawArrays(GL_TRIANGLES, 0, 6);
-}
-
-void UIRenderer::DrawBattleTutorial() {
-    std::vector<std::string> tutorialTexts = {
-        "この惑星は敵が多そうですね...\nということで敵の倒し方を伝授します！",
-        "まずそれぞれの敵はガードというものを持っています。",
-        "連続して3回、敵に攻撃を当てることで\nガードを1つ破壊できます！",
-        "全てのガードを破壊すると敵がブレイク状態になり、\n有利に戦闘を進められますよ！",
-        "まずは1度ブレイクしてみましょう！",
-    };
-    int tutorialUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
-    if (tutorialUIIndex < tutorialTexts.size()) {
-        DrawTalkUI(tutorialTexts, tutorialUIIndex);
-        return;
-    } else {
-        GetGame()->GetUIState()->SetTalkUIIndex(0);
-        GetGame()->GetUIState()->SetCurrentTutorialKind("None");
-        GetGame()->GetGameProgressState()->SetSceneState("Playing");
-    }
-}
-
-void UIRenderer::DrawBreakTutorial() {
-    std::vector<std::string> tutorialTexts = {
-        "ナイスブレイク！\nブレイクすると敵が空中に打ち上げられます！",
-        "空中の敵を攻撃するには空中溜め攻撃です！",
-        "覚えてますか？\n大きなクリスタルを破壊するときに使うアレです！",
-        "非常に強い技なのでブレイクして空中溜め攻撃で\nサクサク敵を倒していきましょう！",
-    };
-    int tutorialUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
-    if (tutorialUIIndex < tutorialTexts.size()) {
-        DrawTalkUI(tutorialTexts, tutorialUIIndex);
-        return;
-    } else {
-        GetGame()->GetUIState()->SetTalkUIIndex(0);
-        GetGame()->GetUIState()->SetCurrentTutorialKind("None");
-        GetGame()->GetGameProgressState()->SetSceneState("Playing");
-    }
-}
-
-void UIRenderer::DrawStageClear() {
-    float textX = mFbWidth * 0.5f;
-    DrawText(textX, 300, 1.0f, "ステージクリア！", true);
-}
-
-void UIRenderer::DrawRemainPartsUI() {
-    std::vector<Player*> players = mGame->GetPlayers();
-    Planet* currentPlanet = players[0]->GetCurrentPlanet();
-    std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
-    
-    int remainBoatParts = 0;
-    for(auto parts : boatParts) {
-        if (parts->GetIsActive()) {
-            remainBoatParts++;
-        }
-    }
-    std::string remainText = "残りのかけら数: " + std::to_string(remainBoatParts);
-    if (remainBoatParts != 0){
-        DrawText(40, 40, 0.5f, remainText.c_str(), false);
-    }
 }
