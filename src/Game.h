@@ -46,6 +46,7 @@ public:
     class Mesh* GetMesh() const { return mMesh.get(); }
     class UIState* GetUIState() const { return mUIState.get(); }
     class Loader* GetLoader() const { return mLoader.get(); }
+    class UILoader* GetUILoader() const { return mUILoader.get(); }
     class GameProgressState* GetGameProgressState() const { return mGameProgressState.get(); }
     float GetHitStopTimer() const { return mHitStopTimer; }
     float GetFadeInTimer() const { return mFadeInTimer; }
@@ -80,6 +81,7 @@ private:
     std::unique_ptr<class Shader> mShader;
     std::unique_ptr<class PhysicsSystem> mPhysicsSystem;
     std::unique_ptr<class Loader> mLoader;
+    std::unique_ptr<class UILoader> mUILoader;
     std::unique_ptr<class Mesh> mMesh;
     std::unique_ptr<class UIState> mUIState;
     std::unique_ptr<class GameProgressState> mGameProgressState;
@@ -93,6 +95,7 @@ private:
     double mLastTime;
 
     bool mReloadKeyPressedPrev;
+    bool mUIReloadKeyPressedPrev;
     bool mAPressedPrev;
     bool mIsStageClear;
     bool mIsPlayer2Joined;

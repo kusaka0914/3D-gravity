@@ -24,6 +24,7 @@
 #include "TalkableComponent.h"
 #include "Game.h"
 #include "NPC.h"
+#include "UILoader.h"
 #include <GLFW/glfw3.h>
 #include <SDL.h>
 #include <glm/glm.hpp>
@@ -45,6 +46,7 @@
 
 Game::Game()
     :mReloadKeyPressedPrev(false)
+    ,mUIReloadKeyPressedPrev(false)
     ,mCurrentStageNum(0) 
     ,mIsPlayer2Joined(false)
     ,mHitStopTimer(-1.0f)
@@ -130,6 +132,7 @@ bool Game::Initialize()
 
     mAudioSystem = std::make_unique<AudioSystem>(this);
     mShader = std::make_unique<Shader>();
+    mUILoader = std::make_unique<UILoader>(this); 
     mUIRenderer = std::make_unique<UIRenderer>(this);
     mRenderer = std::make_unique<Renderer>(this);
     mUIState = std::make_unique<UIState>(this);
@@ -226,6 +229,13 @@ void Game::ProcessInput()
     }
     mReloadKeyPressedPrev = reloadPressed;
 
+    bool UIreloadPressed = (glfwGetKey(mWindow, GLFW_KEY_U) == GLFW_PRESS);
+    if (UIreloadPressed && !mUIReloadKeyPressedPrev)
+    {
+        mUILoader->Initialize();
+    }
+    mUIReloadKeyPressedPrev = UIreloadPressed;
+
     // 2P参加
     bool pKeyNow = (glfwGetKey(mWindow, GLFW_KEY_P) == GLFW_PRESS);
     if (pKeyNow && !mIsPlayer2Joined)
@@ -291,7 +301,6 @@ void Game::UpdateGame()
         float prevFadeInTimer = mFadeInTimer;
         mFadeInTimer -= deltaTime;
         GameProgressState::SceneState nextSceneState = mGameProgressState->GetNextSceneState();
-        std::cout << static_cast<int>(nextSceneState) << std::endl;
         if (prevFadeInTimer >= 0.0f && mFadeInTimer <= 0.0f) {
             switch (nextSceneState)
             {
