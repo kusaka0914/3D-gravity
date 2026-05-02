@@ -112,7 +112,7 @@ void Enemy::UpdateDying(float deltaTime) {
 void Enemy::UpdateUpVec() {
     glm::vec3 center = mCurrentPlanet->GetCenter();
     float radius = mCurrentPlanet->GetRadius();
-    if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal) {
+    if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal) {
         mUpVec = {0.0f, 1.0f, 0.0f};
     } else {
         mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());

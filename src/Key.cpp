@@ -33,7 +33,7 @@ void Key::UpdateActor(float deltaTime)
             mIsActive = false;
         }
     }
-    if (mCurrentPlanet->GetPlanetType() == Planet::PlanetType::Normal) {
+    if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal) {
         mUpVec = {0.0f, 1.0f, 0.0f};
     } else {
         mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());

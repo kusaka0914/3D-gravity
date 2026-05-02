@@ -1,14 +1,9 @@
 crystals :
-  - currentPlanetNum : 0
-    theta : 79.7
-    u : 1.2
-    height : 0.0
+  - type: little
     scale : 0.0075 
+    hp: 10.0
     radius : 1.0
-  - currentPlanetNum : 0
-    theta : -0.35
-    u : 0.3
-    height : 0.5
+  - type: big
     scale : 0.02
     hp : 50.0
     radius : 2.3

@@ -15,13 +15,13 @@ public:
 
     void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(glm::vec3& pos) { mPos = pos; }
-    void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
+    void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
     void SetIsActive(bool isActive) override { mIsActive = isActive; }
 
     const glm::vec3& GetPos() const override { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
     class CollectableComponent* GetCollectableComponent() const { return mCollectableComponent; }
-    const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
+    std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
     class FocusComponent* GetFocusComponent() const { return mFocusComponent; }
     bool GetIsActive() const { return mIsActive; }
 
@@ -33,6 +33,6 @@ private:
     bool mIsActivePrev;
     bool mIsActive;
 
-    std::vector<struct LoadedMesh> mMeshes;
+    std::vector<struct LoadedMesh>* mMeshes;
     class FocusComponent* mFocusComponent;
 };

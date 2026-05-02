@@ -43,7 +43,7 @@ public:
     void SetAttackIndex(int attackIndex) { mAttackIndex = attackIndex; }
     void SetRestartPlanetIndex(int restartPlanetIndex) { mRestartPlanetIndex = restartPlanetIndex; }
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
-    void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
+    void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
     void SetTalkingNPC(class NPC* talkingNPC) { mTalkingNPC = talkingNPC; }
 
     Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
@@ -79,7 +79,7 @@ public:
     std::string GetModelPath() const { return mModelPath; }
     NPC* GetTalkingNPC() const { return mTalkingNPC; }
 
-    const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
+    std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
 
 private:
     void ProcessGameController();
@@ -166,5 +166,5 @@ private:
     class Planet* mCurrentPlanet;
     class NPC* mTalkingNPC;
 
-    std::vector<struct LoadedMesh> mMeshes;
+    std::vector<struct LoadedMesh>* mMeshes;
 };

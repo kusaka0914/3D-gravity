@@ -31,6 +31,8 @@ void UIRenderer::Initialize() {
     AddImgInfo("../assets/textures/opening.png", "opening");
     AddImgInfo("../assets/textures/textBg.png", "textBg");
     AddImgInfo("../assets/textures/slime.png", "slime");
+    AddImgInfo("../assets/textures/hp.png", "hp");
+    AddImgInfo("../assets/textures/special.png", "special");
 }
 
 void UIRenderer::AddImgInfo(std::string path, std::string name) {
@@ -164,28 +166,33 @@ void UIRenderer::DrawOpeningTalkWithDoctor() {
 void UIRenderer::DrawDefaultUI() {
     DrawOperationSupportUI();
 
-    DrawHpUI();
-
     std::vector<Player*> players = mGame->GetPlayers();
-    float specialAttackCooldownRemaining = players[0]->GetSpecialAttackCooldownRemaining();
-
-    if (specialAttackCooldownRemaining <= 0.0f)
-        DrawSpecialAttackUI();
-    
     Planet* currentPlanet = players[0]->GetCurrentPlanet();
-    std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
-
-    if (!boatParts.empty())
-        DrawRemainPartsUI();
-
     std::vector<NPC*> NPCs = currentPlanet->GetNPCs();
+
     if (!NPCs.empty()) {
         for (auto NPC : NPCs) {
             if (!NPC->GetTalkableComponent()) continue;
             if (NPC->GetTalkableComponent()->GetIsTalkable())
                 DrawTalkableUI();  
         }  
-    }   
+    }  
+    
+    int currentStageNum = GetGame()->GetCurrentStageNum();
+    if (currentStageNum == 0)
+        return;
+
+    DrawHpUI();
+
+    float specialAttackCooldownRemaining = players[0]->GetSpecialAttackCooldownRemaining();
+
+    if (specialAttackCooldownRemaining <= 0.0f)
+        DrawSpecialAttackUI();
+    
+    std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
+
+    if (!boatParts.empty())
+        DrawRemainPartsUI(); 
 }
 
 void UIRenderer::DrawOperationSupportUI() {
@@ -193,27 +200,37 @@ void UIRenderer::DrawOperationSupportUI() {
     if (!operationSupportTextInfo)
         return;
     
-    DrawText(operationSupportTextInfo->x, mFbHeight - operationSupportTextInfo->y, operationSupportTextInfo->scaleRatio, operationSupportTextInfo->texts[0], false);
+    DrawText(operationSupportTextInfo->x, mFbHeight - operationSupportTextInfo->y, mFbWidth * operationSupportTextInfo->scaleRatio, operationSupportTextInfo->texts[0], false);
 }
 
 void UIRenderer::DrawHpUI() {
-    auto hpTextInfo = mUILoader->GetTextInfo("default", "hpText");
-    if (!hpTextInfo)
+    auto hpTextureInfo = mUILoader->GetTextureInfo("default", "hpTexture");
+    if (!hpTextureInfo)
         return;
 
     std::vector<Player*> players = mGame->GetPlayers();
-    int Hp = players[0]->GetHp();
-    std::string HpText = hpTextInfo->texts[0] + std::to_string(Hp);
+    int hp = players[0]->GetHp() / 10;
 
-    DrawText(mFbWidth - hpTextInfo->x, hpTextInfo->y, hpTextInfo->scaleRatio, HpText, false);
+    float hpX = mFbWidth * hpTextureInfo->xRatio;
+    while (hp > 0) {
+        DrawTexture(hpX, mFbWidth * hpTextureInfo->yRatio, mFbWidth * hpTextureInfo->widthRatio, mFbWidth * hpTextureInfo->heightRatio, "hp");
+        hpX += mFbWidth / 28;
+        hp--;
+    }
 }
 
 void UIRenderer::DrawSpecialAttackUI() {
+    auto specialAttackTextureInfo = mUILoader->GetTextureInfo("default", "specialAttackTexture");
+    if (!specialAttackTextureInfo)
+        return;
+
+    DrawTexture(mFbWidth * specialAttackTextureInfo->xRatio, mFbWidth * specialAttackTextureInfo->yRatio, mFbWidth * specialAttackTextureInfo->widthRatio, mFbWidth * specialAttackTextureInfo->heightRatio, "special");
+
     auto specialAttackTextInfo = mUILoader->GetTextInfo("default", "specialAttackText");
     if (!specialAttackTextInfo)
         return;
 
-    DrawText(mFbWidth * specialAttackTextInfo->xRatio, specialAttackTextInfo->y, specialAttackTextInfo->scaleRatio, specialAttackTextInfo->texts[0], true);
+    DrawText(mFbWidth * specialAttackTextInfo->xRatio, mFbHeight * specialAttackTextInfo->yRatio, mFbWidth * specialAttackTextInfo->scaleRatio, specialAttackTextInfo->texts[0], false);
 }
 
 void UIRenderer::DrawTalkableUI() {
@@ -221,7 +238,7 @@ void UIRenderer::DrawTalkableUI() {
     if (!talkableTextInfo)
         return;
 
-    DrawText(mFbWidth * talkableTextInfo->xRatio, mFbHeight * talkableTextInfo->yRatio, talkableTextInfo->scaleRatio, talkableTextInfo->texts[0], true);
+    DrawText(mFbWidth * talkableTextInfo->xRatio, mFbHeight * talkableTextInfo->yRatio, mFbWidth * talkableTextInfo->scaleRatio, talkableTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawRemainPartsUI() {
@@ -239,8 +256,11 @@ void UIRenderer::DrawRemainPartsUI() {
         remainBoatParts++;
     }
 
+    if (remainBoatParts == 0)
+        return;
+
     std::string remainText = remainPartsTextInfo->texts[0] + std::to_string(remainBoatParts);
-    DrawText(remainPartsTextInfo->x, remainPartsTextInfo->y, remainPartsTextInfo->scaleRatio, remainText, false);
+    DrawText(mFbWidth - mFbWidth * remainPartsTextInfo->xRatio, mFbWidth * remainPartsTextInfo->yRatio, mFbWidth * remainPartsTextInfo->scaleRatio, remainText, false);
 }
 
 void UIRenderer::DrawStateUI() {

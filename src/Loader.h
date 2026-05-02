@@ -3,10 +3,19 @@
 #include <glm/glm.hpp>
 #include <yaml-cpp/yaml.h>
 #include <vector>
+#include <unordered_map>
 
 class Loader {
 public:
+    // struct PlayerInfo {
+    //     int currentPlanetNum = 0;
+    //     float hp = 0.0f;
+    //     float attack = 0.0f;
+    //     float cameraPitch = 0.0f;
+    //     std::string modelPath = "";
+    // };
     Loader(class Game* game);
+    // Initialize();
     bool LoadDataFromYaml(bool isLoadPlayer);
     
     Game* GetGame() const { return mGame; }
@@ -23,4 +32,5 @@ private:
 
     glm::vec3 CalculatePos(YAML::Node node, Planet* currentPlanet);
     Game* mGame;
+    // std::unordered_map<std::string, >
 };

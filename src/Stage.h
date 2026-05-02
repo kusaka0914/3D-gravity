@@ -10,12 +10,12 @@ public:
     Stage();
     void Initialize();
     void AddPlanet(class Planet* planet) { mPlanets.emplace_back(planet); }
-    void AddPlanetMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mPlanetMeshesByPath[modelPath] = meshes; }
+    void AddPlanetMesh(std::string modelPath, std::vector<struct LoadedMesh>* meshes) { mPlanetMeshesByPath[modelPath] = meshes; }
     void RemoveAllPlanet() { for(int i = 0; i < mPlanets.size(); i++) mPlanets.pop_back(); }
 
     const std::vector<class Planet*>& GetPlanets() const { return mPlanets; }
-    const std::unordered_map<std::string, std::vector<LoadedMesh>>& GetPlanetMeshesByPath() const { return mPlanetMeshesByPath; }
+    const std::unordered_map<std::string, std::vector<struct LoadedMesh>*>& GetPlanetMeshesByPath() const { return mPlanetMeshesByPath; }
 private:
     std::vector<class Planet*> mPlanets;
-    std::unordered_map<std::string, std::vector<LoadedMesh>> mPlanetMeshesByPath;
+    std::unordered_map<std::string, std::vector<struct LoadedMesh>*> mPlanetMeshesByPath;
 };
