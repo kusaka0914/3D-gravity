@@ -28,7 +28,7 @@ public:
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
     void SetName(std::string name) { mName = name; }
     void SetTalkableComponent(class TalkableComponent* talkableComponent) { mTalkableComponent = talkableComponent; }
-    void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
+    void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
 
     bool GetIsActive() const { return mIsActive; }
     Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
@@ -46,7 +46,7 @@ public:
 
     class TalkableComponent* GetTalkableComponent() const { return mTalkableComponent; }
 
-    const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
+    std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
 
 private:
     void UpdateWorldVec();
@@ -73,5 +73,5 @@ private:
 
     class TalkableComponent* mTalkableComponent;
 
-    std::vector<struct LoadedMesh> mMeshes;
+    std::vector<struct LoadedMesh>* mMeshes;
 };

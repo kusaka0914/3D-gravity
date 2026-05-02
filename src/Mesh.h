@@ -5,6 +5,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <unordered_map>
 
 
 struct LoadedMesh {
@@ -16,11 +17,19 @@ struct LoadedMesh {
 
 class Mesh {
 public:
+    Mesh();
+    void Initialize();
     unsigned int loadTexture(const char* path);
     std::vector<LoadedMesh> loadMeshFromFile(const char* path);
     /** 当たり判定用：頂点位置(x,y,zの連続)とインデックスを取得。全メッシュを結合する。 */
     bool loadMeshPositionsAndIndices(const char* path,
         std::vector<float>& outPositions, std::vector<unsigned int>& outIndices);
+    std::vector<LoadedMesh>* GetLoadedMeshes(const std::string& meshName) {
+        auto it = mLoadedMeshes.find(meshName);
+        return (it != mLoadedMeshes.end()) ? &it->second : nullptr;
+    }
 private:
 
+private:
+    std::unordered_map<std::string, std::vector<LoadedMesh>> mLoadedMeshes;
 };

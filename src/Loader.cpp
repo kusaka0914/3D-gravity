@@ -17,59 +17,62 @@
 Loader::Loader(Game* game)
     :mGame(game)
 {
-
+    // Initialize();
 }
+
+// void Loader::Initialize() {
+//     YAML::Node root = YAML::LoadFile("../");
+// }
 
 bool Loader::LoadDataFromYaml(bool isLoadPlayer) {
     std::string path = GetGame()->GetCurrentStagePath();
     if (!LoadPlanetsFromYaml(path.c_str())) {
         std::cerr << "Planet YAML Load failed" << std::endl;
-        // return false;
+        return false;
     }
     if (!LoadEnemiesFromYaml(path.c_str()))
     {
         std::cerr << "Enemy YAML Load failed" << std::endl;
-        // return false;
+        return false;
     }
     if (!LoadBoatsFromYaml(path.c_str()))
     {
         std::cerr << "Boats YAML Load failed" << std::endl;
-        // return false;
+        return false;
     }
     if (!LoadBoatPartsFromYaml(path.c_str()))
     {
         std::cerr << "BoatParts YAML Load failed" << std::endl;
-        // return false;
+        return false;
     }
     if (!LoadKeysFromYaml(path.c_str()))
     {
         std::cerr << "Keys YAML Load failed" << std::endl;
-        // return false;
+        return false;
     }
     if (!LoadCrystalsFromYaml(path.c_str()))
     {
         std::cerr << "Crystals YAML Load failed" << std::endl;
-        // return false;
+        return false;
     }
     if (!LoadStarFromYaml(path.c_str()))
     {
         std::cerr << "Star YAML Load failed" << std::endl;
-        // return false;
+        return false;
     }
     if (!LoadNPCsFromYaml(path.c_str())) {
         std::cerr << "NPC YAML Load failed" << std::endl;
-        // return false;
+        return false;
     }
-    if (!isLoadPlayer) return false;
     if (!LoadPlayersFromYaml(path.c_str())) {
         std::cerr << "Player YAML Load failed" << std::endl;
-        // return false;
+        return false;
     }
     return true;
 }
 
 bool Loader::LoadPlayersFromYaml(const char* path) {
-    try {
+    try {        
         YAML::Node root = YAML::LoadFile(path);
         if (!root["players"] || !root["players"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'players' sequence" << std::endl;
@@ -185,37 +188,45 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
             bool isBoss = node["isBoss"] ? node["isBoss"].as<int>() : false;
             enemy->SetIsBoss(isBoss);
 
-            float hp = node["hp"] ? node["hp"].as<float>() : 80.0f;
-            enemy->SetHp(hp);
-
             currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
-            enemy->SetCurrentPlanetNum(currentPlanetNum);
-            
-            std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "enemy.obj";
-            enemy->SetModelPath(modelPath);
-
-            float scale = node["scale"] ? node["scale"].as<float>() : 0.25f;
-            enemy->SetScale(scale);
-
-            float speed = node["speed"] ? node["speed"].as<float>() : 1.0f;
-            enemy->SetSpeed(speed);
-
-            float attack = node["attack"] ? node["attack"].as<float>() : 5.0f;
-            enemy->SetAttack(attack);
-
-            float radius = node["radius"] ? node["radius"].as<float>() : 0.75f;
-            enemy->SetRadius(radius);
-
-            int breakCountMax = node["breakCountMax"] ? node["breakCountMax"].as<int>() : 1;
-            enemy->SetBreakCountMax(breakCountMax);
-            enemy->SetBreakCount(breakCountMax);
-
+            enemy->SetCurrentPlanetNum(currentPlanetNum); 
 
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
             enemy->SetCurrentPlanet(currentPlanet);
 
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             enemy->SetPos(pos);
+
+            std::string type = node["type"] ? node["type"].as<std::string>() : "";
+            if (type == "boss") 
+                enemy->SetIsBoss(true);
+            YAML::Node enemyRoot = YAML::LoadFile("../assets/data/enemies.yaml");
+            for (auto enemyNode : enemyRoot["enemies"]){
+                if (type != enemyNode["type"].as<std::string>())
+                    continue;
+
+                float hp = enemyNode["hp"] ? enemyNode["hp"].as<float>() : 80.0f;
+                enemy->SetHp(hp);
+
+                float scale = enemyNode["scale"] ? enemyNode["scale"].as<float>() : 0.25f;
+                enemy->SetScale(scale);
+
+                float speed = enemyNode["speed"] ? enemyNode["speed"].as<float>() : 1.0f;
+                enemy->SetSpeed(speed);
+
+                float attack = enemyNode["attack"] ? enemyNode["attack"].as<float>() : 5.0f;
+                enemy->SetAttack(attack);
+
+                float radius = enemyNode["radius"] ? enemyNode["radius"].as<float>() : 0.75f;
+                enemy->SetRadius(radius);
+
+                int breakCountMax = enemyNode["breakCountMax"] ? enemyNode["breakCountMax"].as<int>() : 1;
+                enemy->SetBreakCountMax(breakCountMax);
+                enemy->SetBreakCount(breakCountMax);
+                
+                std::string modelPath = enemyNode["modelPath"] ? enemyNode["modelPath"].as<std::string>() : "";
+                enemy->SetModelPath(modelPath);
+            }
 
             Enemy* enemy_ptr = enemy.get();
             GetGame()->AddActor(std::move(enemy));
@@ -230,16 +241,12 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
 
 bool Loader::LoadPlanetsFromYaml(const char* path) {
     try {
+        GetGame()->GetCurrentStage()->RemoveAllPlanet();
         YAML::Node root = YAML::LoadFile(path);
         // 失敗処理
         if (!root["planets"] || !root["planets"].IsSequence()) {
             std::cerr << "Loader: missing or invalid 'planets' sequence" << std::endl;
-        }
-        for (const YAML::Node& node : root["planets"]) {
-            int stageNum = node["stageNum"] ? node["stageNum"].as<int>() : 0;
-            Stage* currentStage = GetGame()->GetStages()[stageNum];
-            currentStage->RemoveAllPlanet();
-        }
+        } 
         // 配列の各要素を回す
         for (const YAML::Node& node : root["planets"]) {
             // 惑星の初期化
@@ -274,8 +281,8 @@ bool Loader::LoadPlanetsFromYaml(const char* path) {
             std::string modelPath = node["model"] ? node["model"].as<std::string>() : "";
             planet->SetModelPath(modelPath);
 
-            std::string type = node["type"] ? node["type"].as<std::string>() : "Normal";
-            planet->SetPlanetType(type);
+            std::string shape = node["shape"] ? node["shape"].as<std::string>() : "Normal";
+            planet->SetPlanetShape(shape);
 
             // ステージ番号を設定
             int stageNum = node["stageNum"] ? node["stageNum"].as<int>() : 0;
@@ -371,8 +378,14 @@ bool Loader::LoadBoatPartsFromYaml(const char* path)
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             boatParts->SetPos(pos);
 
-            std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "";
-            boatParts->SetModelPath(modelPath);
+            std::string type = node["type"] ? node["type"].as<std::string>() : "";
+            YAML::Node boatPartsRoot = YAML::LoadFile("../assets/data/boatParts.yaml");
+            for (auto boatPartsNode : boatPartsRoot["boatParts"]){
+                if (type != boatPartsNode["type"].as<std::string>())
+                    continue;
+                std::string modelPath = boatPartsNode["modelPath"] ? boatPartsNode["modelPath"].as<std::string>() : "";
+                boatParts->SetModelPath(modelPath);
+            }
 
             BoatParts* boatParts_ptr = boatParts.get();
             GetGame()->AddActor(std::move(boatParts));

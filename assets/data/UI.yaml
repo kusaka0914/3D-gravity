@@ -65,32 +65,35 @@ default:
   - id: operationSupportText
     type: text
     pos: [20.0, 60.0]
-    scaleRatio: [0.5, 1.0]
-    text: ["A:ジャンプ B:回避 X:攻撃 Y:広範囲攻撃 L:スペシャル攻撃 空中でX長押し→離す:溜め攻撃"]
+    scaleRatio: [0.00025, 1.0]
+    text: ["A:ジャンプ B:回避 X:攻撃 Y:広範囲攻撃 空中でX長押し→離す:溜め攻撃"]
   
-  - id: hpText
-    type: text
-    pos: [200.0, 40.0]
-    scaleRatio: [0.5, 0.5]
-    text: ["体力: "]
+  - id: hpTexture
+    type: texture
+    posRatio: [0.01875, 0.01875]
+    scaleRatio: [0.03, 0.03]
 
+  - id: specialAttackTexture
+    type: texture
+    posRatio: [0.015, 0.06]
+    scaleRatio: [0.1, 0.1]
+  
   - id: specialAttackText
     type: text
-    pos: [0.0, 40.0]
-    posRatio: [0.5, 1.0]
-    scaleRatio: [0.5, 1.0]
-    text: ["スペシャル攻撃OK!"]
+    posRatio: [0.02, 0.28]
+    scaleRatio: [0.00025, 1.0]
+    text: ["Lを押して！"]
   
   - id: talkableText
     type: text
     posRatio: [0.5, 0.5]
-    scaleRatio: [0.5, 1.0]
+    scaleRatio: [0.0003125, 1.0]
     text: ["会話: A"]
   
   - id: remainPartsText
     type: text
-    pos: [40.0, 40.0]
-    scaleRatio: [0.5, 1.0]
+    posRatio: [0.2, 0.015]
+    scaleRatio: [0.0003125, 1.0]
     text: ["残りのかけら数: "]
 state:
   - id: battleTutorialText
@@ -120,7 +123,7 @@ state:
   
   - id: stageClearText
     type: text
-    pos: [300.0, 0.0]
+    pos: [0.0, 300.0]
     posRatio: [0.5, 0.0]
     scaleRatio: [1.0, 1.0]
     text: ["ステージクリア！"]

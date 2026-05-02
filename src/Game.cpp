@@ -52,7 +52,7 @@ Game::Game()
     ,mHitStopTimer(-1.0f)
     ,mFadeInTimer(-1.0f)
     ,mIsChangeStage(false)
-    ,mCurrentStagePath("../assets/data/house.yaml")
+    ,mCurrentStagePath("../assets/data/stage0.yaml")
 {
     
 }
@@ -137,6 +137,8 @@ bool Game::Initialize()
     mRenderer = std::make_unique<Renderer>(this);
     mUIState = std::make_unique<UIState>(this);
     mGameProgressState = std::make_unique<GameProgressState>(this);
+    // モデルロード（Mesh::Initialize）を行うため、LoadData より先に生成しておく
+    mMesh = std::make_unique<Mesh>();
     if (!mShader->GetShaderProgram())
     {
         glfwTerminate();
@@ -169,7 +171,6 @@ bool Game::Initialize()
 
     // 惑星/プレイヤー生成後に行う
     mPhysicsSystem = std::make_unique<PhysicsSystem>(this);
-    mMesh = std::make_unique<Mesh>();
 
     // 時間情報
     mLastTime = glfwGetTime();
@@ -198,8 +199,7 @@ void Game::Shutdown()
     {
         SDL_GameControllerClose(mSdlController);
     }
-    // for (auto &p : textTextureCache)
-    //     glDeleteTextures(1, &p.second.first);
+
     if (mFont) TTF_CloseFont(mFont);
     TTF_Quit();
     SDL_Quit();
@@ -225,7 +225,8 @@ void Game::ProcessInput()
     bool reloadPressed = (glfwGetKey(mWindow, GLFW_KEY_R) == GLFW_PRESS);
     if (reloadPressed && !mReloadKeyPressedPrev)
     {
-        LoadData(false);
+        LoadData(true);
+        mPhysicsSystem->Initialize();
     }
     mReloadKeyPressedPrev = reloadPressed;
 
@@ -248,8 +249,7 @@ void Game::ProcessInput()
         mPlayers.emplace_back(player2_ptr);
 
         // 2Pモデルロード
-        std::string path = "../assets/models/player.obj";
-        std::vector<LoadedMesh> playerMeshes = mMesh->loadMeshFromFile(path.c_str());
+        auto playerMeshes = mMesh->GetLoadedMeshes("player");
         mPlayers[1]->SetMeshes(playerMeshes);
     } 
 
@@ -386,21 +386,17 @@ void Game::LoadData(bool isLoadPlayer) {
 void Game::LoadModel() {
     // プレイヤーモデルをロード
     for (auto player : mPlayers) {
-        std::string path = "../assets/models/" + player->GetModelPath();
-        std::vector<LoadedMesh> playerMeshes = mMesh->loadMeshFromFile(path.c_str());
+        auto playerMeshes = mMesh->GetLoadedMeshes("player");
         player->SetMeshes(playerMeshes);
     }
     std::vector<Planet*> planets = mCurrentStage->GetPlanets();
     // 惑星モデルをロード
     for (auto planet : planets)
     {
-        std::unordered_map<std::string, std::vector<LoadedMesh>> planetMeshesByPath = planet->GetCurrentStage()->GetPlanetMeshesByPath();
-        if (planetMeshesByPath.find(planet->GetModelPath()) == planetMeshesByPath.end())
-        {
-            std::string path = "../assets/models/" + planet->GetModelPath();
-            auto planetMeshes = mMesh->loadMeshFromFile(path.c_str());
-            planet->GetCurrentStage()->AddPlanetMesh(planet->GetModelPath(), planetMeshes);
-        }
+        auto it = planet->GetModelPath().find(".");
+        std::string meshName = planet->GetModelPath().substr(0, it);
+        auto planetMeshes = mMesh->GetLoadedMeshes(meshName);
+        planet->SetMeshes(planetMeshes);
     }
     // 各惑星のオブジェクトのモデルをロード
     for (auto planet : planets) {
@@ -408,8 +404,9 @@ void Game::LoadModel() {
         std::vector<NPC*> NPCs = planet->GetNPCs();
         for (auto NPC : NPCs)
         {
-            std::string path = "../assets/models/" + NPC->GetModelPath();
-            std::vector<LoadedMesh> NPCMeshes = mMesh->loadMeshFromFile(path.c_str());
+            auto it = NPC->GetModelPath().find(".");
+            std::string meshName = NPC->GetModelPath().substr(0, it);
+            auto NPCMeshes = mMesh->GetLoadedMeshes(meshName);
             NPC->SetMeshes(NPCMeshes);
         }
 
@@ -417,30 +414,30 @@ void Game::LoadModel() {
         std::vector<Enemy*> enemies = planet->GetEnemies();
         for (auto enemy : enemies)
         {
-            std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = mCurrentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
-            std::string path = "../assets/models/" + enemy->GetModelPath();
-            auto enemyMeshes = mMesh->loadMeshFromFile(path.c_str());
-            mCurrentStage->GetPlanets()[0]->AddEnemyMesh(enemy->GetModelPath(), enemyMeshes);
+            auto it = enemy->GetModelPath().find(".");
+            std::string meshName = enemy->GetModelPath().substr(0, it);
+            auto enemyMeshes = mMesh->GetLoadedMeshes(meshName);
+            enemy->SetMeshes(enemyMeshes);
         }
 
         // 鍵モデルをロード
         Key* key = planet->GetKey();
         if (key) {
-            std::vector<LoadedMesh> keyMeshes = mMesh->loadMeshFromFile("../assets/models/key.obj");
+            auto keyMeshes = mMesh->GetLoadedMeshes("key");
             key->SetMeshes(keyMeshes);
         }
 
         // スターモデルをロード
         Star* star = planet->GetStar();
         if (star) {
-            std::vector<LoadedMesh> starMeshes = mMesh->loadMeshFromFile("../assets/models/star.obj");
+            auto starMeshes = mMesh->GetLoadedMeshes("star");
             star->SetMeshes(starMeshes);
         }
 
         // ボートモデルをロード
         std::vector<Boat*> boats = planet->GetBoats();
         if (!boats.empty()) {
-            std::vector<LoadedMesh> boatMeshes = mMesh->loadMeshFromFile("../assets/models/boat.obj");
+            auto boatMeshes = mMesh->GetLoadedMeshes("boat");
             for (auto boat : boats) {
                 boat->SetMeshes(boatMeshes);
             }
@@ -450,8 +447,9 @@ void Game::LoadModel() {
         std::vector<BoatParts*> boatParts = planet->GetBoatParts();
         if (!boatParts.empty()) {
             for (auto parts : boatParts) {
-                std::string path = "../assets/models/" + parts->GetModelPath();
-                std::vector<LoadedMesh> boatPartsMeshes = mMesh->loadMeshFromFile(path.c_str());
+                auto it = parts->GetModelPath().find(".");
+                std::string meshName = parts->GetModelPath().substr(0, it);
+                auto boatPartsMeshes = mMesh->GetLoadedMeshes(meshName);
                 parts->SetMeshes(boatPartsMeshes);
             }
         }
@@ -459,9 +457,9 @@ void Game::LoadModel() {
         // クリスタルモデルをロード
         std::vector<Crystal*> crystals = planet->GetCrystals();
         if (!crystals.empty()) {
-            std::vector<LoadedMesh> crystalsMeshes = mMesh->loadMeshFromFile("../assets/models/crystals.fbx");
-            for (auto parts : crystals) {
-                parts->SetMeshes(crystalsMeshes);
+            auto crystalsMeshes = mMesh->GetLoadedMeshes("crystals");
+            for (auto crystal : crystals) {
+                crystal->SetMeshes(crystalsMeshes);
             }
         }
     }
@@ -471,6 +469,7 @@ void Game::ChangeStage(int stageNum) {
     mCurrentStage = mStages[stageNum];
     mCurrentStageNum = stageNum;
     mIsChangeStage = true;
+
     std::string stagePath = "../assets/data/stage" + std::to_string(stageNum) + ".yaml";
     mCurrentStagePath = stagePath;
 }

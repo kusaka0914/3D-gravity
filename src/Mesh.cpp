@@ -7,6 +7,34 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+Mesh::Mesh() {
+    Initialize();
+}
+
+void Mesh::Initialize() {
+    mLoadedMeshes["player"] = loadMeshFromFile("../assets/models/player.obj");
+    mLoadedMeshes["enemy"] = loadMeshFromFile("../assets/models/enemy.obj");
+    mLoadedMeshes["key"] = loadMeshFromFile("../assets/models/key.obj");
+    mLoadedMeshes["star"] = loadMeshFromFile("../assets/models/star.obj");
+    mLoadedMeshes["spaceSlime"] = loadMeshFromFile("../assets/models/spaceSlime.obj");
+    mLoadedMeshes["selectField"] = loadMeshFromFile("../assets/models/selectField.obj");
+    mLoadedMeshes["planet"] = loadMeshFromFile("../assets/models/planet.obj");
+    mLoadedMeshes["planet_2"] = loadMeshFromFile("../assets/models/planet_2.obj");
+    mLoadedMeshes["planet_3"] = loadMeshFromFile("../assets/models/planet_3.obj");
+    mLoadedMeshes["house"] = loadMeshFromFile("../assets/models/house.obj");
+    mLoadedMeshes["badMotherSlime"] = loadMeshFromFile("../assets/models/badMotherSlime.obj");
+    mLoadedMeshes["boat"] = loadMeshFromFile("../assets/models/boat.obj");
+    mLoadedMeshes["rocketParts1"] = loadMeshFromFile("../assets/models/rocketParts1.obj");
+    mLoadedMeshes["rocketParts2"] = loadMeshFromFile("../assets/models/rocketParts2.obj");
+    mLoadedMeshes["rocketParts3"] = loadMeshFromFile("../assets/models/rocketParts3.obj");
+    mLoadedMeshes["rocketParts4"] = loadMeshFromFile("../assets/models/rocketParts4.obj");
+    mLoadedMeshes["rocketParts5"] = loadMeshFromFile("../assets/models/rocketParts5.obj");
+    mLoadedMeshes["crystals"] = loadMeshFromFile("../assets/models/crystals.fbx");
+    mLoadedMeshes["doctorSlime"] = loadMeshFromFile("../assets/models/doctorSlime.obj");
+    mLoadedMeshes["motherSlime"] = loadMeshFromFile("../assets/models/motherSlime.obj");
+    mLoadedMeshes["enemy"] = loadMeshFromFile("../assets/models/enemy.obj");
+}
+
 unsigned int Mesh::loadTexture(const char* path) {
     unsigned int texID;
     glGenTextures(1, &texID);

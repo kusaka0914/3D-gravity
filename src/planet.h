@@ -15,7 +15,7 @@ public:
         None
     };
 
-    enum class PlanetType {
+    enum class PlanetShape {
         Normal,
         Sphere
     };
@@ -28,7 +28,7 @@ public:
     void AddBoatParts(class BoatParts* boatParts) { mBoatParts.emplace_back(boatParts); }
     void AddCrystal(class Crystal* crystal) { mCrystals.emplace_back(crystal); }
     void AddNPC(class NPC* NPC) { mNPCs.emplace_back(NPC); }
-    void AddEnemyMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mEnemyMeshesByPath[modelPath] = meshes; }
+    void AddEnemyMesh(std::string modelPath, std::vector<struct LoadedMesh>* meshes) { mEnemyMeshesByPath[modelPath] = meshes; }
 
     void RemoveAllEnemy() { mEnemies.clear(); }
     void RemoveAllBoat() { mBoats.clear(); }
@@ -48,6 +48,7 @@ public:
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
     void SetKey(class Key* key) { mKey = key; }
     void SetStar(class Star* star) { mStar = star; }
+    void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
     void SetKeySpawnCondition(std::string keySpawnCondition) { 
         if(keySpawnCondition == "AllEnemiesDead") {
             mKeySpawnCondition = KeySpawnCondition::AllEnemiesDead;
@@ -57,11 +58,11 @@ public:
             mKeySpawnCondition = KeySpawnCondition::None;
         }
     }
-    void SetPlanetType(std::string planetType) { 
-        if(planetType == "Normal") {
-            mPlanetType = PlanetType::Normal;
-        }else if (planetType == "Sphere") {
-            mPlanetType = PlanetType::Sphere;
+    void SetPlanetShape(std::string PlanetShape) { 
+        if(PlanetShape == "Normal") {
+            mPlanetShape = PlanetShape::Normal;
+        }else if (PlanetShape == "Sphere") {
+            mPlanetShape = PlanetShape::Sphere;
         }
     }
 
@@ -78,8 +79,9 @@ public:
     const std::vector<class NPC*>& GetNPCs() const { return mNPCs; }
     class Key* GetKey() const { return mKey; }
     class Star* GetStar() const { return mStar; }
-    PlanetType GetPlanetType() const { return mPlanetType; }
-    const std::unordered_map<std::string, std::vector<LoadedMesh>>& GetEnemyMeshesByPath() const { return mEnemyMeshesByPath; }
+    PlanetShape GetPlanetShape() const { return mPlanetShape; }
+    const std::unordered_map<std::string, std::vector<struct LoadedMesh>*>& GetEnemyMeshesByPath() const { return mEnemyMeshesByPath; }
+    std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
 
 private:
     class Stage* mCurrentStage;
@@ -99,7 +101,8 @@ private:
     bool mIsAllBoatPartsCollected;
 
     KeySpawnCondition mKeySpawnCondition;
-    PlanetType mPlanetType;
+    PlanetShape mPlanetShape;
 
-    std::unordered_map<std::string, std::vector<LoadedMesh>> mEnemyMeshesByPath;
+    std::unordered_map<std::string, std::vector<struct LoadedMesh>*> mEnemyMeshesByPath;
+    std::vector<struct LoadedMesh>* mMeshes;
 };

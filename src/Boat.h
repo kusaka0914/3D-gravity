@@ -25,7 +25,7 @@ public:
     void SetPos(const glm::vec3& pos) { mPos = pos; }
     void SetStartPos(const glm::vec3& startPos) { mStartPos = startPos; }
     void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
-    void SetMeshes(const std::vector<struct LoadedMesh> meshes) { mMeshes = meshes; }
+    void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
 
     int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
     int GetStartPlanet() const { return mStartPlanet; }
@@ -39,7 +39,7 @@ public:
     const glm::vec3& GetDestPos() const { return mDestPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
     const std::vector<class Planet*>& GetPlanets() const { return mPlanets; }
-    const std::vector<struct LoadedMesh>& GetMeshes() const { return mMeshes; }
+    const std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
     class FocusComponent* GetFocusComponent() const { return mFocusComponent; }
 
 private:
@@ -61,6 +61,6 @@ private:
     glm::vec3 mDestPos;
     glm::vec3 mUpVec;
     std::vector<class Planet*> mPlanets;
-    std::vector<struct LoadedMesh> mMeshes;
+    std::vector<struct LoadedMesh>* mMeshes;
     class FocusComponent* mFocusComponent;
 };

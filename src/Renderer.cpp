@@ -112,43 +112,33 @@ void Renderer::Draw() {
         std::vector<Planet*> planets = currentStage->GetPlanets();
         auto planetMeshesByPath = currentStage->GetPlanetMeshesByPath();
         // 惑星描画
-        for (size_t i = 0; i < planets.size(); i++)
+        for (auto planet : planets)
         {
-            glm::mat4 planetModel = glm::translate(glm::mat4(1.0f), planets[i]->GetCenter()) * glm::scale(glm::mat4(1.0f), glm::vec3(planets[i]->GetRadius()));
+            glm::mat4 planetModel = glm::translate(glm::mat4(1.0f), planet->GetCenter()) * glm::scale(glm::mat4(1.0f), glm::vec3(planet->GetRadius()));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(planetModel));
-            glUniform4f(locObjectColor, planets[i]->GetColor().x, planets[i]->GetColor().y, planets[i]->GetColor().z, planets[i]->GetColor().w);
-            auto it = planetMeshesByPath.find(planets[i]->GetModelPath());
-            if (it != planetMeshesByPath.end() && !it->second.empty())
+            glUniform4f(locObjectColor, planet->GetColor().x, planet->GetColor().y, planet->GetColor().z, planet->GetColor().w);
+            
+            for (const LoadedMesh &m : *planet->GetMeshes())
             {
-                for (const LoadedMesh &m : it->second)
+                glBindVertexArray(m.VAO);
+                if (m.textureID != 0)
                 {
-                    glBindVertexArray(m.VAO);
-                    if (m.textureID != 0)
-                    {
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, m.textureID);
-                        glUniform1i(locDiffuseTexture, 0);
-                        glUniform1i(locUseTexture, 1);
-                    }
-                    else
-                    {
-                        glUniform1i(locUseTexture, 0);
-                    }
-                    glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, 0);
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, m.textureID);
+                    glUniform1i(locDiffuseTexture, 0);
+                    glUniform1i(locUseTexture, 1);
                 }
-                glUniform1i(locUseTexture, 0);
+                else
+                {
+                    glUniform1i(locUseTexture, 0);
+                }
+                glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, 0);
             }
-            else
-            {
-                std::cout << "Planet Draw Error" << std::endl;
-                // glBindVertexArray(sphereVAO);
-                // glUniform1i(locUseTexture, 0);
-                // glDrawElements(GL_TRIANGLES, sphereIndexCount, GL_UNSIGNED_INT, 0);
-            }
+            glUniform1i(locUseTexture, 0);
         }
 
         auto drawCharacter = [&](const glm::vec3 &pos, float scale, const glm::vec4 &fallbackColor,
-                                 const glm::vec3 &up, float yaw, const std::vector<LoadedMesh> &meshes,
+                                 const glm::vec3 &up, float yaw, const std::vector<struct LoadedMesh> *meshes,
                                  const glm::vec4 *colorOverride = nullptr)
         {
             glm::vec3 upN = glm::normalize(up);
@@ -164,10 +154,10 @@ void Renderer::Draw() {
             orient[2] = glm::vec4(right, 0.0f);
             orient[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) * orient * glm::scale(glm::mat4(1.0f), glm::vec3(scale));
-            if (!meshes.empty())
+            if (meshes && !meshes->empty())
             {
                 glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
-                for (const LoadedMesh &m : meshes)
+                for (const LoadedMesh &m : *meshes)
                 {
                     glBindVertexArray(m.VAO);
                     if (m.textureID != 0)
@@ -220,21 +210,15 @@ void Renderer::Draw() {
         if (currentPlanet){
             std::vector<Enemy*> enemies = currentPlanet->GetEnemies();
             // 敵描画
-            for (size_t ei = 0; ei < enemies.size(); ei++)
+            for (auto enemy : enemies)
             {
-                Enemy*& enemy = enemies[ei];
                 if (!enemy->GetIsAlive())
                     continue;
-                std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = currentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
-                auto eit = enemyMeshesByPath.find(enemy->GetModelPath());
-                if (eit == enemyMeshesByPath.end() || eit->second.empty())
-                    eit = enemyMeshesByPath.find("enemy.obj");
-                if (eit == enemyMeshesByPath.end() || eit->second.empty())
-                    continue;
+                
                 glm::vec3 enemyUp = enemy->GetUpVec();
                 glm::vec3 toPlayer = glm::normalize(players[0]->GetPos() - enemy->GetPos());
                 float enemyFacingYaw = players[0]->getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
-                drawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), enemyUp, enemyFacingYaw, eit->second);
+                drawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), enemyUp, enemyFacingYaw, enemy->GetMeshes());
                 // 敵の頭上にID（1始まり）をビルボード表示
                 if (mFont)
                 {
@@ -268,7 +252,7 @@ void Renderer::Draw() {
                         textTextureCache[s] = {tex, {tw, th}};
                         return {tex, {tw, th}};
                     };
-                    auto [texId, texSize] = getTextTexture(std::to_string(enemies[ei]->GetBreakCount()));
+                    auto [texId, texSize] = getTextTexture(std::to_string(enemy->GetBreakCount()));
                     if (texId != 0 && texSize.x > 0 && texSize.y > 0)
                     {
                         glm::vec3 camPos(glm::inverse(viewMat)[3]);

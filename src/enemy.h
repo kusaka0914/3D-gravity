@@ -35,6 +35,7 @@ public:
     void SetSensing(float sensing) { mSensing = sensing; }
     void SetBreakCount(int breakCount) { mBreakCount = breakCount; }
     void SetBreakCountMax(int breakCountMax) { mBreakCountMax = breakCountMax; }
+    void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
 
     class Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
     const glm::vec3& GetPos() const override { return mPos; }
@@ -59,6 +60,7 @@ public:
     float GetLaunchedTimer() const { return mLaunchedTimer; }
     bool GetIsAttack() const { return mIsAttack; }
     float GetSensing() const { return mSensing; }
+    std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
 
 private:
     void UpdateAlive(float deltaTime);
@@ -112,4 +114,5 @@ private:
     std::string mModelPath;
 
     class Planet* mCurrentPlanet;
+    std::vector<struct LoadedMesh>* mMeshes;
 };
