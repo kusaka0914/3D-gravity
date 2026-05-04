@@ -12,6 +12,7 @@
 #include "Game.h"
 #include "NPC.h"
 #include "UIState.h"
+#include "stb_image.h"
 #include "FocusComponent.h"
 #include "GameProgressState.h"
 #include <glm/glm.hpp>
@@ -25,7 +26,13 @@ Renderer::Renderer(Game* game)
     , mShader(game->GetShader())
     , mFont(game->GetFont())
     , mVertexArrays(game->GetVertexArrays())
-{}
+{
+    Initialize();
+}
+
+void Renderer::Initialize() {
+    AddImgInfo("../assets/textures/guard.png", "guard");
+}
 
 void Renderer::Draw() {
     bool isTitle = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Title;
@@ -110,7 +117,6 @@ void Renderer::Draw() {
 
         Stage* currentStage = mGame->GetCurrentStage();
         std::vector<Planet*> planets = currentStage->GetPlanets();
-        auto planetMeshesByPath = currentStage->GetPlanetMeshesByPath();
         // 惑星描画
         for (auto planet : planets)
         {
@@ -118,7 +124,7 @@ void Renderer::Draw() {
             glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(planetModel));
             glUniform4f(locObjectColor, planet->GetColor().x, planet->GetColor().y, planet->GetColor().z, planet->GetColor().w);
             
-            for (const LoadedMesh &m : *planet->GetMeshes())
+            for (auto m : *planet->GetMeshes())
             {
                 glBindVertexArray(m.VAO);
                 if (m.textureID != 0)
@@ -137,73 +143,16 @@ void Renderer::Draw() {
             glUniform1i(locUseTexture, 0);
         }
 
-        auto drawCharacter = [&](const glm::vec3 &pos, float scale, const glm::vec4 &fallbackColor,
-                                 const glm::vec3 &up, float yaw, const std::vector<struct LoadedMesh> *meshes,
-                                 const glm::vec4 *colorOverride = nullptr)
-        {
-            glm::vec3 upN = glm::normalize(up);
-            glm::vec3 worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 0, 1)));
-            if (glm::length(worldLeft) < 0.01f)
-                worldLeft = glm::normalize(glm::cross(upN, glm::vec3(1, 0, 0)));
-            glm::vec3 fwd = glm::normalize(glm::cross(worldLeft, upN) * std::cos(yaw) - std::sin(yaw) * worldLeft);
-            glm::vec3 left = glm::normalize(glm::cross(upN, fwd));
-            glm::vec3 right = -left;
-            glm::mat4 orient = glm::mat4(1.0f);
-            orient[0] = glm::vec4(-fwd, 0.0f);
-            orient[1] = glm::vec4(up, 0.0f);
-            orient[2] = glm::vec4(right, 0.0f);
-            orient[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) * orient * glm::scale(glm::mat4(1.0f), glm::vec3(scale));
-            if (meshes && !meshes->empty())
-            {
-                glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
-                for (const LoadedMesh &m : *meshes)
-                {
-                    glBindVertexArray(m.VAO);
-                    if (m.textureID != 0)
-                    {
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, m.textureID);
-                        glUniform1i(locDiffuseTexture, 0);
-                        glUniform1i(locUseTexture, 1);
-                    }
-                    else
-                    {
-                        glUniform1i(locUseTexture, 0);
-                    }
-                    if (colorOverride)
-                    {
-                        glUniform4f(locObjectColor, colorOverride->x, colorOverride->y, colorOverride->z, colorOverride->w);
-                    }
-                    else
-                    {
-                        glUniform4f(locObjectColor, m.diffuseColor[0], m.diffuseColor[1], m.diffuseColor[2], 1.0f);
-                    }
-                    glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, 0);
-                }
-                glUniform1i(locUseTexture, 0);
-            }
-            else
-            {
-                glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
-                // glBindVertexArray(VAO);
-                glm::vec4 c = colorOverride ? *colorOverride : fallbackColor;
-                glUniform4f(locObjectColor, c.x, c.y, c.z, c.w);
-                glDrawArrays(GL_TRIANGLES, 0, 3);
-                std::cout << "not Mesh" << std::endl;
-            }
-        };
-
         const float playerScale = 0.25f;
         // 1Pの描画
         if (players[0]->GetIsActive()) {
-            drawCharacter(players[0]->GetPos(), playerScale, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), players[0]->GetUpVec(), players[0]->GetFacingYaw(), players[0]->GetMeshes());
+            DrawCharacter(players[0]->GetPos(), playerScale, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), players[0]->GetUpVec(), players[0]->GetFacingYaw(), players[0]->GetMeshes());
         }
 
         // 2Pの描画
         if (isPlayer2Joined)
         {
-            drawCharacter(players[1]->GetPos(), playerScale, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), players[1]->GetUpVec(), players[1]->GetFacingYaw(),  players[1]->GetMeshes());
+            DrawCharacter(players[1]->GetPos(), playerScale, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), players[1]->GetUpVec(), players[1]->GetFacingYaw(),  players[1]->GetMeshes());
         }
 
         Planet* currentPlanet = players[0]->GetCurrentPlanet();
@@ -218,71 +167,46 @@ void Renderer::Draw() {
                 glm::vec3 enemyUp = enemy->GetUpVec();
                 glm::vec3 toPlayer = glm::normalize(players[0]->GetPos() - enemy->GetPos());
                 float enemyFacingYaw = players[0]->getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
-                drawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), enemyUp, enemyFacingYaw, enemy->GetMeshes());
+
+                DrawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), enemyUp, enemyFacingYaw, enemy->GetMeshes());
+
                 // 敵の頭上にID（1始まり）をビルボード表示
-                if (mFont)
+                GLuint texId = mTextures["guard"];
+                if (enemy->GetBreakCount() == 0)
+                    continue;
+                if (texId != 0)
                 {
-                    std::unordered_map<std::string, std::pair<GLuint, glm::ivec2>> textTextureCache;
-                    // 文字列→テクスチャ（敵ID表示用、キャッシュ付き）
-                    auto getTextTexture = [&](const std::string &s) -> std::pair<GLuint, glm::ivec2>
-                    {
-                        if (!mFont || s.empty())
-                            return {0, {0, 0}};
-                        auto it = textTextureCache.find(s);
-                        if (it != textTextureCache.end())
-                            return it->second;
-                        SDL_Color white = {255, 255, 255, 255};
-                        SDL_Surface *surf = TTF_RenderText_Blended(mFont, s.c_str(), white);
-                        if (!surf)
-                            return {0, {0, 0}};
-                        SDL_Surface *rgba = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
-                        SDL_FreeSurface(surf);
-                        if (!rgba)
-                            return {0, {0, 0}};
-                        int tw = rgba->w, th = rgba->h;
-                        GLuint tex;
-                        glGenTextures(1, &tex);
-                        glBindTexture(GL_TEXTURE_2D, tex);
-                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tw, th, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                        SDL_FreeSurface(rgba);
-                        textTextureCache[s] = {tex, {tw, th}};
-                        return {tex, {tw, th}};
-                    };
-                    auto [texId, texSize] = getTextTexture(std::to_string(enemy->GetBreakCount()));
-                    if (texId != 0 && texSize.x > 0 && texSize.y > 0)
-                    {
-                        glm::vec3 camPos(glm::inverse(viewMat)[3]);
-                        glm::vec3 quadCenter = enemy->GetPos() + enemyUp * 0.8f;
-                        glm::vec3 forward = glm::normalize(camPos - quadCenter);
-                        glm::vec3 right = glm::normalize(glm::cross(enemyUp, forward));
-                        if (glm::length(right) < 0.01f)
-                            right = glm::normalize(glm::cross(enemyUp, glm::vec3(0, 0, 1)));
-                        glm::vec3 upQuad = glm::cross(forward, right);
-                        // 敵のどれくらい上にラベルを描画するのか
-                        const float enemyLabelHeight = 0.5f;
-                        float w = enemyLabelHeight * static_cast<float>(texSize.x) / static_cast<float>(texSize.y);
-                        glm::mat4 billboard(1.0f);
-                        billboard[0] = glm::vec4(right * w, 0.0f);
-                        billboard[1] = glm::vec4(upQuad * enemyLabelHeight, 0.0f);
-                        billboard[2] = glm::vec4(forward, 0.0f);
-                        billboard[3] = glm::vec4(quadCenter, 1.0f);
-                        glEnable(GL_BLEND);
-                        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                        glDepthMask(GL_FALSE);
-                        glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, texId);
-                        glUniform1i(locUseTexture, 1);
-                        mVertexArrays.at("text")->SetActive();
-                        glDrawArrays(GL_TRIANGLES, 0, 6);
-                        glUniform1i(locUseTexture, 0);
-                        glDepthMask(GL_TRUE);
-                        glDisable(GL_BLEND);
-                    }
+                    glm::vec3 camPos(glm::inverse(viewMat)[3]);
+                    glm::vec3 quadCenter = enemy->GetPos() + enemyUp * 0.8f;
+                    glm::vec3 forward = glm::normalize(camPos - quadCenter);
+                    glm::vec3 right = glm::normalize(glm::cross(enemyUp, forward));
+                    if (glm::length(right) < 0.01f)
+                        right = glm::normalize(glm::cross(enemyUp, glm::vec3(0, 0, 1)));
+                    glm::vec3 upQuad = glm::cross(forward, right);
+                    glm::vec3 drawPos = enemy->GetPos() + enemyUp * 0.8f;
+                    
+                    const float enemyLabelHeight = 0.5f;
+
+                    glm::mat4 billboard(1.0f);
+                    billboard[0] = glm::vec4(right * enemyLabelHeight, 0.0f);
+                    billboard[1] = glm::vec4(-upQuad * enemyLabelHeight, 0.0f);
+                    billboard[2] = glm::vec4(forward, 0.0f);
+                    billboard[3] = glm::vec4(drawPos, 1.0f);
+
+                    glEnable(GL_BLEND);
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                    glDepthMask(GL_FALSE);
+
+                    glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, texId);
+                    glUniform1i(locUseTexture, 1);
+                    mVertexArrays.at("text")->SetActive();
+                    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+                    glUniform1i(locUseTexture, 0);
+                    glDepthMask(GL_TRUE);
+                    glDisable(GL_BLEND);
                 }
             }
         }
@@ -294,7 +218,7 @@ void Renderer::Draw() {
             {
                 const float keyScale = 2.0f;
                 const glm::vec4 keyColor(0.85f, 0.65f, 0.13f, 1.0f); // 金色
-                drawCharacter(key->GetPos(), keyScale, keyColor, key->GetUpVec(), 0.0f, key->GetMeshes(), &keyColor);
+                DrawCharacter(key->GetPos(), keyScale, keyColor, key->GetUpVec(), 0.0f, key->GetMeshes(), &keyColor);
             }
         }
 
@@ -305,7 +229,7 @@ void Renderer::Draw() {
                 if (NPC->GetIsActive())
                 {
                     const float NPCScale = 0.25f;
-                    drawCharacter(NPC->GetPos(), NPCScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), NPC->GetUpVec(), NPC->GetFacingYaw(), NPC->GetMeshes());
+                    DrawCharacter(NPC->GetPos(), NPCScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), NPC->GetUpVec(), NPC->GetFacingYaw(), NPC->GetMeshes());
                 }
             }
         }
@@ -317,7 +241,7 @@ void Renderer::Draw() {
                 if (boat->GetIsActive())
                 {
                     const float boatScale = 0.8f;
-                    drawCharacter(boat->GetPos(), boatScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), boat->GetUpVec(), 0.0f, boat->GetMeshes());
+                    DrawCharacter(boat->GetPos(), boatScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), boat->GetUpVec(), 0.0f, boat->GetMeshes());
                 }
             }
         }
@@ -328,7 +252,7 @@ void Renderer::Draw() {
             for (auto parts : boatParts) { 
                 if (parts->GetIsActive()) {
                     const float boatPartsScale = 1.0f;
-                    drawCharacter(parts->GetPos(), boatPartsScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), parts->GetUpVec(), 0.0f, parts->GetMeshes());
+                    DrawCharacter(parts->GetPos(), boatPartsScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), parts->GetUpVec(), 0.0f, parts->GetMeshes());
                 }
             }
         }
@@ -340,7 +264,7 @@ void Renderer::Draw() {
             {
                 glm::vec4 starColor(1.0f, 0.9f, 0.2f, 1.0f);
                 const float starScale = 0.3f;
-                drawCharacter(star->GetPos(), starScale, starColor, star->GetUpVec(), 0.0f, star->GetMeshes());
+                DrawCharacter(star->GetPos(), starScale, starColor, star->GetUpVec(), 0.0f, star->GetMeshes());
             }
         }
 
@@ -349,7 +273,7 @@ void Renderer::Draw() {
         if (!crystals.empty()) {
             for (auto crystal : crystals) { 
                 if (crystal->GetIsActive()) {
-                    drawCharacter(crystal->GetPos(), crystal->GetScale(), glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), crystal->GetUpVec(), 0.0f, crystal->GetMeshes());
+                    DrawCharacter(crystal->GetPos(), crystal->GetScale(), glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), crystal->GetUpVec(), 0.0f, crystal->GetMeshes());
                 }
             }
         }
@@ -372,4 +296,82 @@ void Renderer::Draw() {
         glViewport(static_cast<GLsizei>(halfW), 0, static_cast<GLsizei>(halfW), fbHeight);
         drawScene(view2P, projHalf);
     }
+}
+
+void Renderer::DrawCharacter(const glm::vec3 &pos, float scale, const glm::vec4 &fallbackColor,
+    const glm::vec3 &up, float yaw, const std::vector<struct LoadedMesh> *meshes,
+    const glm::vec4 *colorOverride) 
+{
+    GLint locModel = mShader->GetLocModel();
+    GLint locObjectColor = mShader->GetLocObjectColor();
+    GLint locUseTexture = mShader->GetLocUseTexture();
+    GLint locDiffuseTexture = mShader->GetLocDiffuseTexture();
+
+    glm::vec3 upN = glm::normalize(up);
+    glm::vec3 worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 0, 1)));
+    if (glm::length(worldLeft) < 0.01f)
+        worldLeft = glm::normalize(glm::cross(upN, glm::vec3(1, 0, 0)));
+    glm::vec3 fwd = glm::normalize(glm::cross(worldLeft, upN) * std::cos(yaw) - std::sin(yaw) * worldLeft);
+    glm::vec3 left = glm::normalize(glm::cross(upN, fwd));
+    glm::vec3 right = -left;
+    glm::mat4 orient = glm::mat4(1.0f);
+    orient[0] = glm::vec4(-fwd, 0.0f);
+    orient[1] = glm::vec4(up, 0.0f);
+    orient[2] = glm::vec4(right, 0.0f);
+    orient[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) * orient * glm::scale(glm::mat4(1.0f), glm::vec3(scale));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
+    if (!meshes->empty())
+    {
+        for (const LoadedMesh &m : *meshes)
+        {
+            glBindVertexArray(m.VAO);
+            if (m.textureID != 0)
+            {
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, m.textureID);
+                glUniform1i(locDiffuseTexture, 0);
+                glUniform1i(locUseTexture, 1);
+            }
+            else
+            {
+                glUniform1i(locUseTexture, 0);
+            }
+            if (colorOverride)
+            {
+                glUniform4f(locObjectColor, colorOverride->x, colorOverride->y, colorOverride->z, colorOverride->w);
+            }
+            else
+            {
+                glUniform4f(locObjectColor, m.diffuseColor[0], m.diffuseColor[1], m.diffuseColor[2], 1.0f);
+            }
+            glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, 0);
+        }
+        glUniform1i(locUseTexture, 0);
+    }
+    else
+    {
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
+        // glBindVertexArray(VAO);
+        glm::vec4 c = colorOverride ? *colorOverride : fallbackColor;
+        glUniform4f(locObjectColor, c.x, c.y, c.z, c.w);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        std::cout << "not Mesh" << std::endl;
+    }
+}
+
+void Renderer::AddImgInfo(std::string path, std::string name) {
+    int imgWidth, imgHeight, imgChannels;
+    unsigned char* imageData = stbi_load(path.c_str(), &imgWidth, &imgHeight, &imgChannels, STBI_rgb_alpha);
+
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imgWidth, imgHeight, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+    stbi_image_free(imageData);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    mTextures[name] = tex;
 }
