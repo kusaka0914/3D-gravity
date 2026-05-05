@@ -11,32 +11,24 @@ CollectableComponent::CollectableComponent(Actor* owner, int updateOrder)
 {
 }
 
-void CollectableComponent::Update(float deltaTime)
-{
+void CollectableComponent::Update(float deltaTime) {
+    if (mIsObtained)
+        return;
+
+    HandleCollected();
+}
+
+void CollectableComponent::HandleCollected() {
     std::vector<Player*> players = GetOwner()->GetGame()->GetPlayers();
-    if (!mIsObtained) {
-        // プレイヤーが触れたら取得する
-        for (auto player : players) {
-            BoatParts* boatParts = dynamic_cast<BoatParts*>(GetOwner());
+    for (auto player : players) {
+        glm::vec3 ownerPos = GetOwner()->GetPos();
+        float distTo = glm::length(player->GetPos() - ownerPos);
 
-            float distTo;
-            if (boatParts)
-                distTo = glm::length(player->GetPos() - boatParts->GetPos()); 
-
-            Key* key = dynamic_cast<Key*>(GetOwner());
-            if (key)
-                distTo = glm::length(player->GetPos() - key->GetPos()); 
-
-            Star* star = dynamic_cast<Star*>(GetOwner());
-            if (star)
-                distTo = glm::length(player->GetPos() - star->GetPos()); 
-
-            const float pickupRadius = 0.8f;
-            float attackMotionTimer = player->GetAttackMotionTimer();
-            if (distTo < pickupRadius && attackMotionTimer < 0.0f)
-            {
-                mIsObtained = true;
-            }
+        const float pickupRadius = 0.8f;
+        float attackMotionTimer = player->GetAttackMotionTimer();
+        if (distTo < pickupRadius && attackMotionTimer < 0.0f) {
+            mIsObtained = true;
+            break;
         }
     }
 }

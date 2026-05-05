@@ -9,33 +9,42 @@ DestructibleComponent::DestructibleComponent(Actor* owner, int updateOrder)
 {
 }
 
-void DestructibleComponent::Update(float deltaTime)
-{
-    std::vector<Player*> players = GetOwner()->GetGame()->GetPlayers();
+void DestructibleComponent::Update(float deltaTime)　{
     if (!mIsDestroyed) {
-        // 攻撃中のプレイヤーが触れたら破壊
-        for (auto player : players) {
-            if (player->GetAttackMotionTimer() < 0.0f) {
-                mIsAttackedPrev = false;
-            }
-            Crystal* ownerCrystal = dynamic_cast<Crystal*>(GetOwner());
-            float distTo = glm::length(player->GetPos() - ownerCrystal->GetPos()); 
-            if (distTo < ownerCrystal->GetRadius() + 2.0f && player->GetStrongAttackTimer() >= 0.0f)
-            {
-                mDestroyHp -= player->GetAttack() * 5;
-                mIsAttackedPrev = true;
-            }
-            if (distTo < ownerCrystal->GetRadius() && player->GetAttackMotionTimer() >= 0.0f && !mIsAttackedPrev)
-            {
-                mDestroyHp -= player->GetAttack();
-                mIsAttackedPrev = true;
-            }
-            if (mDestroyHp <= 0) {
-                mDestroyHp = 0;
-                mIsDestroyed = true;
-                ownerCrystal->SetIsActive(false);
-                GetOwner()->GetGame()->GetAudioSystem()->PlaySE("destroySE");
-            }
+        HandleDestroyed();
+    }
+}
+
+void DestructibleComponent::HandleDestroyed() {
+    std::vector<Player*> players = GetOwner()->GetGame()->GetPlayers();
+    for (auto player : players) {
+        float attackMotionTimer = player->GetAttackMotionTimer();
+        if (attackMotionTimer < 0.0f) {
+            mIsAttackedPrev = false;
+        }
+        
+        glm::vec3 ownerPos = GetOwner()->GetPos();
+        float distTo = glm::length(player->GetPos() - ownerPos); 
+        Crystal* ownerCrystal = dynamic_cast<Crystal*>(GetOwner());
+        float ownerRadius = ownerCrystal->GetRadius();
+        float strongAttackTimer = player->GetStrongAttackTimer();
+
+        float attack = player->GetAttack();
+        if (distTo < ownerRadius + 2.0f && strongAttackTimer >= 0.0f) {
+            mDestroyHp -= attack * 5;
+            mIsAttackedPrev = true;
+        }
+        
+        if (distTo < ownerRadius && attackMotionTimer >= 0.0f && !mIsAttackedPrev) {
+            mDestroyHp -= attack;
+            mIsAttackedPrev = true;
+        } 
+        
+        if (mDestroyHp <= 0) {
+            mDestroyHp = 0;
+            mIsDestroyed = true;
+            ownerCrystal->SetIsActive(false);
+            GetOwner()->GetGame()->GetAudioSystem()->PlaySE("destroySE");
         }
     }
 }

@@ -16,6 +16,7 @@ public:
 
     float GetFocusTimer() const { return mFocusTimer; }
     glm::mat4 GetFocusView();
+    
 private:
     float mFocusTimer;
 };

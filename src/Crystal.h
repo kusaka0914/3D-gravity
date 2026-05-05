@@ -14,14 +14,11 @@ public:
     void UpdateActor(float deltaTime) override;
 
     void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
-    void SetPos(glm::vec3& pos) { mPos = pos; }
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
     void SetRadius(const float radius) { mRadius = radius; }
     void SetScale(const float scale) { mScale = scale; }
     void SetIsActive(bool isActive) { mIsActive = isActive; }
 
-    const glm::vec3& GetPos() const { return mPos; }
-    const glm::vec3& GetUpVec() const { return mUpVec; }
     DestructibleComponent* GetDestructibleComponent() const { return mDestructibleComponent; }
     std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
     float GetRadius() const { return mRadius; }
@@ -29,13 +26,13 @@ public:
     bool GetIsActive() const { return mIsActive; }
 
 private:
-    Planet* mCurrentPlanet;
-    DestructibleComponent* mDestructibleComponent;
-    glm::vec3 mPos;
-    glm::vec3 mUpVec;
-    float mRadius;
-    float mScale;
     bool mIsActive;
 
+    float mRadius;
+    float mScale;
+
     std::vector<struct LoadedMesh>* mMeshes;
+
+    Planet* mCurrentPlanet;
+    DestructibleComponent* mDestructibleComponent;
 };

@@ -16,9 +16,13 @@ public:
     void SetDestroyHp(int destroyHp) { mDestroyHp = destroyHp; }
 
     bool GetIsDestroyed() const { return mIsDestroyed; }
-    // int GetDestroyCount() const { return mDestroyCount; }
+
+private:
+    void HandleDestroyed();
+
 private:
     bool mIsDestroyed;
     bool mIsAttackedPrev;
+
     float mDestroyHp;
 };

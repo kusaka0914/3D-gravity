@@ -28,21 +28,14 @@ void FocusComponent::Update(float deltaTime)
 
 glm::mat4 FocusComponent::GetFocusView() {
     const float cameraDistance = 15.0f;
-    Boat* boat = dynamic_cast<Boat*>(GetOwner());
-    Key* key = dynamic_cast<Key*>(GetOwner());
+    glm::vec3 ownerPos = GetOwner()->GetPos();
 
-    glm::vec3 pos;
-    if (boat)
-        pos = boat->GetPos();
-    if (key)
-        pos = key->GetPos();
-        
     Planet* currentPlanet = GetOwner()->GetGame()->GetPlayers()[0]->GetCurrentPlanet();
-    glm::vec3 upVec = glm::normalize(pos - currentPlanet->GetCenter());
+    glm::vec3 upVec = glm::normalize(ownerPos - currentPlanet->GetCenter());
     glm::vec3 worldLeft = glm::cross(upVec, glm::vec3(0, 0, 1));
     glm::vec3 forwardVec = glm::normalize(glm::cross(worldLeft, upVec) * std::cos(0.6f) - std::sin(0.6f) * worldLeft);
     glm::vec3 back = glm::normalize(-forwardVec);
     glm::vec3 cameraDir = glm::normalize(std::cos(-0.5f) * back + std::sin(-0.5f) * upVec);
-    glm::vec3 cameraPos = pos - cameraDir * cameraDistance;
-    return glm::lookAt(cameraPos, pos, upVec);
+    glm::vec3 cameraPos = ownerPos - cameraDir * cameraDistance;
+    return glm::lookAt(cameraPos, ownerPos, upVec);
 }

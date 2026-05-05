@@ -16,10 +16,8 @@ Boat::Boat(Game* game)
     , mIsActive(false)
     , mTransitionTimer(0.0f)
     , mProgress(0.0f)
-    , mPos({0.0f, 8.0f, 0.0f})
-    , mStartPos(mPos)
+    , mStartPos(GetPos())
     , mDestPos(0.0f)
-    , mUpVec(0.0f, 1.0f, 0.0f)
 {
     std::unique_ptr<FocusComponent> focusComponent = std::make_unique<FocusComponent>(this, 100);
     mFocusComponent = focusComponent.get();
@@ -28,13 +26,13 @@ Boat::Boat(Game* game)
 
 void Boat::Initialize() {
     glm::vec3 destPlanetCenter = mDestPlanet->GetCenter();
-    glm::vec3 toDestPlanet = glm::normalize(destPlanetCenter - mPos);
+    glm::vec3 boatPos = GetPos();
+    glm::vec3 toDestPlanet = glm::normalize(destPlanetCenter - boatPos);
     float destPlanetRadius = mDestPlanet->GetRadius();
     mDestPos = destPlanetCenter - toDestPlanet * (destPlanetRadius + 3.0f);
 }
 
-void Boat::UpdateActor(float deltaTime)
-{
+void Boat::UpdateActor(float deltaTime) {
     UpdateUpVec();
 
     if (!mIsActivePrev && mIsActive)
@@ -44,18 +42,6 @@ void Boat::UpdateActor(float deltaTime)
         UpdateMoving(deltaTime);
 
     mIsActivePrev = mIsActive;
-}
-
-void Boat::UpdateUpVec() {
-    auto planetShape = mCurrentPlanet->GetPlanetShape();
-    auto normalShape = Planet::PlanetShape::Normal;
-
-    if (planetShape == normalShape) {
-        mUpVec = {0.0f, 1.0f, 0.0f};
-    } else {
-        glm::vec3 planetCenter = mCurrentPlanet->GetCenter();
-        mUpVec = glm::normalize(mPos - planetCenter);
-    }
 }
 
 void Boat::OnShown() {
@@ -88,11 +74,12 @@ void Boat::HandleMoving(float deltaTime) {
     mProgress = glm::min(1.0f, mTransitionTimer / transitionDuration);
     mProgress = mProgress * mProgress * (3.0f - 2.0f * mProgress);
 
-    mPos = mStartPos + (mDestPos - mStartPos) * mProgress;
+    SetPos(mStartPos + (mDestPos - mStartPos) * mProgress);
 }
 
 void Boat::HandleArrived() {
-    mPos = mDestPos;
+
+    SetPos(mDestPos);
     mIsMoving = false;
     if (!GetGame()->GetUIState()->GetIsBattleTutorialShown()) {
         GetGame()->GetUIState()->SetCurrentTutorialKind("Battle");

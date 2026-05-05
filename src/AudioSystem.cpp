@@ -10,8 +10,7 @@ AudioSystem::AudioSystem(Game* game)
     Initialize();
 }
 
-void AudioSystem::Initialize()
-{
+void AudioSystem::Initialize() {
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) != 0) {
         std::cerr << "Mix_OpenAudio error: " << Mix_GetError() << std::endl;
         return;
@@ -42,8 +41,7 @@ void AudioSystem::Initialize()
     AddSE("../assets/audio/Charging.wav", "chargingSE");
 }
 
-void AudioSystem::Update()
-{
+void AudioSystem::Update() {
     std::vector<class Player*> players = GetGame()->GetPlayers();
     bool isPlaying = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Playing;
     if (isPlaying && players[0]->GetCurrentPlanetNum() != mCurrentBgmPlanetIndex || GetGame()->GetIsChangeStage())

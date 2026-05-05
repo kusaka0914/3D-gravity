@@ -6,7 +6,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "CollectableComponent.h"
 
 class BoatParts : public Actor {
 public:
@@ -14,25 +13,24 @@ public:
     void UpdateActor(float deltaTime) override;
 
     void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
-    void SetPos(glm::vec3& pos) { mPos = pos; }
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
     void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
 
-    const glm::vec3& GetPos() const { return mPos; }
-    const glm::vec3& GetUpVec() const { return mUpVec; }
     class CollectableComponent* GetCollectableComponent() const { return mCollectableComponent; }
     std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
     bool GetIsActive() const { return mIsActive; }
     std::string GetModelPath() const { return mModelPath; }
 
 private:
+
+private:
     class Planet* mCurrentPlanet;
-    CollectableComponent* mCollectableComponent;
-    glm::vec3 mPos;
-    glm::vec3 mUpVec;
+
     bool mIsActive;
+
     std::string mModelPath;
 
     std::vector<struct LoadedMesh>* mMeshes;
+    class CollectableComponent* mCollectableComponent;
 };
