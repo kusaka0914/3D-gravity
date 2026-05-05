@@ -66,13 +66,13 @@ glm::mat4 NPC::getNPCView(float cameraDistance, bool isFixed) {
     if (isFixed) {
         toPosX = glm::normalize(mFacingForwardVec);
         cameraDir = glm::normalize(std::cos(-0.2f) * toPosX + std::sin(-0.2f) * GetUpVec());  
-        cameraPos = GetPos() - cameraDir * cameraDistance;
+        cameraPos = mPos - cameraDir * cameraDistance;
         glm::vec3 offset = glm::normalize(GetUpVec()) * 1.0f;
-        return glm::lookAt(cameraPos, GetPos() + offset, GetUpVec());  
+        return glm::lookAt(cameraPos, mPos + offset, GetUpVec());  
     }
 
     // toPosX = glm::normalize(-mForwardVec);
     // cameraDir = glm::normalize(std::cos(mCameraPitch) * toPosX + std::sin(mCameraPitch) * GetUpVec());
-    // cameraPos = GetPos() - cameraDir * cameraDistance;
-    // return glm::lookAt(cameraPos, GetPos(), GetUpVec());
+    // cameraPos = mPos - cameraDir * cameraDistance;
+    // return glm::lookAt(cameraPos, mPos, GetUpVec());
 }

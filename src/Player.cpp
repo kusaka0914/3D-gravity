@@ -85,7 +85,7 @@ void Player::UpdateActor(float deltaTime)
 
     UpdateDodge(deltaTime);
 
-    bool isRising = glm::dot(mVelocity, GetUpVec()) > 0.2f;
+    bool isRising = glm::dot(mVelocity, mUpVec) > 0.2f;
     if (mDodgeTimer <= 0.0f && !isRising)
         DetermineLanding();
 
@@ -114,7 +114,7 @@ void Player::UpdateActor(float deltaTime)
     if (mHp <= 0)
         Die();
 
-    std::vector<Boat*> boats = GetCurrentPlanet()->GetBoats();
+    std::vector<Boat*> boats = mCurrentPlanet->GetBoats();
     if (!boats.empty()) {
         RideBoat();
     }
@@ -224,37 +224,37 @@ void Player::UpdateCamera(float deltaTime) {
 }
 
 void Player::UpdateWorldVec() {
-    if (GetCurrentPlanet()->GetPlanetShape() == Planet::PlanetShape::Normal) {
-        SetUpVec({0.0f, 1.0f, 0.0f});
+    if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal) {
+        mUpVec = {0.0f, 1.0f, 0.0f};
     } else {
-        SetUpVec(glm::normalize(GetPos() - GetCurrentPlanet()->GetCenter()));
+        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
     }
 
-    glm::vec3 worldLeft = glm::cross(GetUpVec(), glm::vec3(0, 0, 1));
+    glm::vec3 worldLeft = glm::cross(mUpVec, glm::vec3(0, 0, 1));
     if (glm::length(worldLeft) < 0.01f)
-        worldLeft = glm::normalize(glm::cross(GetUpVec(), glm::vec3(0, 1, 0)));
+        worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 1, 0)));
     else 
         worldLeft = glm::normalize(worldLeft);
 
-    mForwardVec = glm::normalize(glm::cross(worldLeft, GetUpVec()) * std::cos(mCameraYaw) - std::sin(mCameraYaw) * worldLeft);
-    mLeftVec = glm::normalize(glm::cross(GetUpVec(), mForwardVec));
+    mForwardVec = glm::normalize(glm::cross(worldLeft, mUpVec) * std::cos(mCameraYaw) - std::sin(mCameraYaw) * worldLeft);
+    mLeftVec = glm::normalize(glm::cross(mUpVec, mForwardVec));
 
-    mFacingForwardVec = glm::normalize(glm::cross(worldLeft, GetUpVec()) * std::cos(mFacingYaw) - std::sin(mFacingYaw) * worldLeft);
-    mFacingLeftVec = glm::normalize(glm::cross(GetUpVec(), mFacingForwardVec));
+    mFacingForwardVec = glm::normalize(glm::cross(worldLeft, mUpVec) * std::cos(mFacingYaw) - std::sin(mFacingYaw) * worldLeft);
+    mFacingLeftVec = glm::normalize(glm::cross(mUpVec, mFacingForwardVec));
 }
 
 void Player::UpdateWalk(float deltaTime) {
     // プレイヤー移動（ダメージ時、空中固定時、回避時以外）
     glm::vec3 moveDelta = mForwardVec * mMoveForward * mMoveSpeed * deltaTime + mLeftVec * mMoveLeft * mMoveSpeed * deltaTime;
-    glm::vec3 desiredPos = GetPos() + moveDelta;
+    glm::vec3 desiredPos = mPos + moveDelta;
 
     desiredPos = GetGame()->GetPhysicsSystem()->CheckCollision(moveDelta, desiredPos);
 
-    SetPos(desiredPos);
+    mPos = desiredPos;
     // ジャンプ処理
     if (mOnGround && mJumpPressed)
     {
-        mVelocity += GetUpVec() * 5.0f;
+        mVelocity += mUpVec * 5.0f;
         mOnGround = false;
         GetGame()->GetAudioSystem()->PlaySE("jumpSE");
     }
@@ -276,7 +276,7 @@ void Player::StartDodge(float dodgeDuration, float dodgeCooldownTime) {
     mDodgeDir = -mFacingForwardVec;
     mDodgeTimer = dodgeDuration;
     mDodgeCooldown = dodgeCooldownTime;
-    mDodgeStartHeight = glm::length(GetPos() - GetCurrentPlanet()->GetCenter());
+    mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
     mVelocity = glm::vec3(0.0f);
     GetGame()->GetAudioSystem()->PlaySE("dodgeSE");
 }
@@ -285,24 +285,24 @@ void Player::Dodge(float deltaTime, float dodgeDuration) {
     const float dodgeDistance = 2.0f;
     float dodgeSpeed = dodgeDistance / dodgeDuration;
     glm::vec3 moveDelta = mDodgeDir * dodgeSpeed * deltaTime;
-    glm::vec3 desiredPos = GetPos() + moveDelta;
+    glm::vec3 desiredPos = mPos + moveDelta;
     
     desiredPos = GetGame()->GetPhysicsSystem()->CheckCollision(moveDelta, desiredPos);
-    SetPos(desiredPos);
+    mPos = desiredPos;
 
-    glm::vec3 center = GetCurrentPlanet()->GetCenter();
+    glm::vec3 center = mCurrentPlanet->GetCenter();
     // 空中回避：直前の高さを維持して浮遊
-    float dist = glm::length(GetPos() - center);
+    float dist = glm::length(mPos - center);
     if (dist > 1e-6f)
-        SetPos(center + (GetPos() - center) / dist * mDodgeStartHeight);
+        mPos = center + (mPos - center) / dist * mDodgeStartHeight;
 }
 
 void Player::DetermineLanding() {
     bool meshGround = false;
-    glm::vec3 center = GetCurrentPlanet()->GetCenter();
+    glm::vec3 center = mCurrentPlanet->GetCenter();
 
-    glm::vec3 rayFromPos = GetPos() + GetUpVec() * 0.1f;
-    glm::vec3 rayToPos = GetPos() - GetUpVec() * 0.1f;
+    glm::vec3 rayFromPos = mPos + mUpVec * 0.1f;
+    glm::vec3 rayToPos = mPos - mUpVec * 0.1f;
     btVector3 rayFrom(rayFromPos.x, rayFromPos.y, rayFromPos.z);
     btVector3 rayTo(rayToPos.x, rayToPos.y, rayToPos.z);
 
@@ -316,7 +316,7 @@ void Player::DetermineLanding() {
         btVector3 hitPt = rayCallback.m_hitPointWorld;
         glm::vec3 hitPos(hitPt.x(), hitPt.y(), hitPt.z());
         
-        SetPos(hitPos);
+        mPos = hitPos;
         mOnGround = true;
         mVelocity = glm::vec3(0.0f);
         meshGround = true;
@@ -329,29 +329,29 @@ void Player::DetermineLanding() {
 }
 
 void Player::ApplyGravity(float deltaTime) {
-    mVelocity -= GetUpVec() * 9.8f * deltaTime;
-    SetPos(GetPos() + mVelocity * deltaTime);
+    mVelocity -= mUpVec * 9.8f * deltaTime;
+    mPos += mVelocity * deltaTime;
 
-    if (GetGame()->GetCurrentStageNum() == 0 && GetPos().y <= -1.0f) {
-        SetPos(mRestartPos);
+    if (GetGame()->GetCurrentStageNum() == 0 && mPos.y <= -1.0f) {
+        mPos = mRestartPos;
         mCurrentPlanetNum = mRestartPlanetIndex;
-        SetCurrentPlanet(GetGame()->GetCurrentStage()->GetPlanets()[mCurrentPlanetNum]);
+        mCurrentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[mCurrentPlanetNum];
         mVelocity = glm::vec3(0.0f);
         mOnGround = true;
     }
 
-    if (GetCurrentPlanet()->GetPlanetShape() == Planet::PlanetShape::Normal)
+    if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal)
         return;
     
-    glm::vec3 center = GetCurrentPlanet()->GetCenter();
-    float radius = GetCurrentPlanet()->GetRadius();
-    float dist = glm::length(GetPos() - center);
+    glm::vec3 center = mCurrentPlanet->GetCenter();
+    float radius = mCurrentPlanet->GetRadius();
+    float dist = glm::length(mPos - center);
     // 落下して惑星内部にめり込んだらリスタート地点へ
     if (dist < radius * 0.5f)
     {
-        SetPos(mRestartPos);
+        mPos = mRestartPos;
         mCurrentPlanetNum = mRestartPlanetIndex;
-        SetCurrentPlanet(GetGame()->GetCurrentStage()->GetPlanets()[mCurrentPlanetNum]);
+        mCurrentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[mCurrentPlanetNum];
         mVelocity = glm::vec3(0.0f);
         mOnGround = true;
     }
@@ -364,12 +364,12 @@ void Player::ChangeFaceDir() {
     {
         // 移動方向を正規化
         moveDir /= len;
-        mFacingYaw = getYawFromDirection(GetUpVec(), moveDir) + 3.14159265f;
+        mFacingYaw = getYawFromDirection(mUpVec, moveDir) + 3.14159265f;
     }
 }
 
 void Player::Attack(float deltaTime) {
-    mAttackStartHeight = glm::length(GetPos() - GetCurrentPlanet()->GetCenter());
+    mAttackStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
     mVelocity = glm::vec3(0.0f);
 
     auto applyAttackLocksFromCooldown = [this]() {
@@ -403,7 +403,7 @@ void Player::Attack(float deltaTime) {
         mAttack = 50;
     }
 
-    std::vector<Enemy*> enemies = GetCurrentPlanet()->GetEnemies();
+    std::vector<Enemy*> enemies = mCurrentPlanet->GetEnemies();
     std::vector<Enemy*> hitEnemies;
     for (auto& enemy : enemies)
     {
@@ -412,8 +412,8 @@ void Player::Attack(float deltaTime) {
         if (mStrongAttackTimer >= 0.0f && enemy->GetOnGround())
             continue;
         glm::vec3 enemyPos = enemy->GetPos();
-        glm::vec3 toEnemy = glm::normalize(enemyPos - GetPos());
-        float dist = glm::length(enemyPos - GetPos());
+        glm::vec3 toEnemy = glm::normalize(enemyPos - mPos);
+        float dist = glm::length(enemyPos - mPos);
         float dot = glm::dot(-mFacingForwardVec, toEnemy);
         float effectiveRange = mAttackRange + enemy->GetRadius();
         if (mStrongAttackTimer >= 0.0f && dist <= effectiveRange) {
@@ -470,7 +470,7 @@ void Player::Attack(float deltaTime) {
 }
 
 void Player::SpecialAttack() {
-    std::vector<Enemy*> enemies = GetCurrentPlanet()->GetEnemies();
+    std::vector<Enemy*> enemies = mCurrentPlanet->GetEnemies();
     for (auto& enemy : enemies)
     {
         if (!enemy->GetIsAlive())
@@ -492,8 +492,8 @@ void Player::ChargeAttack(float deltaTime) {
         float attackPressTimerPrev = mAttackPressTimer;
         mAttackPressTimer -= deltaTime;
         if (mAttackPressTimer >= 0.0f) {
-            SetPos(GetPos() - -mFacingForwardVec * 6.0f * deltaTime);
-            SetPos(GetPos() - -GetUpVec() * 6.0f * deltaTime);
+            mPos -= -mFacingForwardVec * 6.0f * deltaTime;
+            mPos -= -mUpVec * 6.0f * deltaTime;
         } else {
             mAttackPressTimer = 0.0f;
         }
@@ -516,14 +516,14 @@ void Player::TakeDamage() {
 
 void Player::Die() {
     mHp = 100;
-    SetPos(mRestartPos);
+    mPos = mRestartPos;
     mCurrentPlanetNum = mRestartPlanetIndex;
     mVelocity = {0.0f, 0.0f, 0.0f};
     mOnGround = true;
 }
 
 void Player::RideBoat() {
-    std::vector<Boat*> boats = GetCurrentPlanet()->GetBoats();
+    std::vector<Boat*> boats = mCurrentPlanet->GetBoats();
     for (auto boat : boats) {
         glm::vec3 boatPos = boat->GetPos();
         bool boatIsActive = boat->GetIsActive();
@@ -531,9 +531,9 @@ void Player::RideBoat() {
         bool moving = boat->GetIsMoving();
         if (moving) {
             // ボートと一緒にプレイヤーを移動
-            SetPos(boatPos);
+            mPos = boatPos;
         } else if (!moving && boatIsActive) {
-            float distToBoat = glm::length(GetPos() - boatPos);
+            float distToBoat = glm::length(mPos - boatPos);
 
             const float boatTouchRadius = 0.9f;
             if (distToBoat >= boatTouchRadius)
@@ -550,10 +550,10 @@ void Player::RideBoat() {
             mCurrentPlanetNum++;
 
             std::vector<Planet*> planets = GetGame()->GetCurrentStage()->GetPlanets();
-            SetCurrentPlanet(planets[mCurrentPlanetNum]);
+            mCurrentPlanet = planets[mCurrentPlanetNum];
 
             glm::vec3 boatDestPos = boat->GetDestPos();
-            SetPos(boatDestPos);
+            mPos = boatDestPos;
             mVelocity = glm::vec3(0.0f);
 
             mOnGround = true;
@@ -575,8 +575,8 @@ void Player::UpdateTimer(float deltaTime) {
     if (mDamageTimer > 0.0f)
     {
         mDamageTimer -= deltaTime;
-        glm::vec3 toPlayer = glm::normalize(GetPos() - mKnockBackFrom);
-        SetPos(GetPos() + toPlayer * deltaTime);
+        glm::vec3 toPlayer = glm::normalize(mPos - mKnockBackFrom);
+        mPos += toPlayer * deltaTime;
     }
 
     if (mSpecialAttackCooldownRemaining >= 0.0f)
@@ -595,9 +595,9 @@ void Player::UpdateTimer(float deltaTime) {
     {
         mAttackMotionTimer -= deltaTime;
         if (mAttackMotionTimer >= 0.15f) {
-            SetPos(GetPos() + -mFacingForwardVec * 5.0f * deltaTime);
+            mPos += -mFacingForwardVec * 5.0f * deltaTime;
         }else {
-            SetPos(GetPos() - -mFacingForwardVec * 5.0f * deltaTime);
+            mPos -= -mFacingForwardVec * 5.0f * deltaTime;
         }
     }
 
@@ -630,8 +630,8 @@ void Player::UpdateTimer(float deltaTime) {
     if (mStrongAttackTimer >= 0.0f)
     {
         mStrongAttackTimer -= deltaTime;
-        SetPos(GetPos() + -mFacingForwardVec * 100.0f * deltaTime);
-        SetPos(GetPos() + -GetUpVec() * 100.0f * deltaTime);
+        mPos = mPos + -mFacingForwardVec * 100.0f * deltaTime;
+        mPos = mPos + -mUpVec * 100.0f * deltaTime;
     }
 }
 
@@ -644,10 +644,10 @@ void Player::UpdatePrev() {
 }
 
 float Player::getYawFromDirection(const glm::vec3& up, const glm::vec3& dir) {
-    glm::vec3 worldLeft = glm::normalize(glm::cross(GetUpVec(), glm::vec3(0, 0, 1)));
+    glm::vec3 worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 0, 1)));
     if (glm::length(worldLeft) < 0.01f)
-        worldLeft = glm::normalize(glm::cross(GetUpVec(), glm::vec3(1, 0, 0)));
-    glm::vec3 right = glm::cross(worldLeft, GetUpVec());
+        worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(1, 0, 0)));
+    glm::vec3 right = glm::cross(worldLeft, mUpVec);
     return std::atan2(-glm::dot(dir, worldLeft), glm::dot(dir, right));
 }
 
@@ -657,14 +657,14 @@ glm::mat4 Player::getPlayerView(float cameraDistance, bool isFixed) {
     glm::vec3 cameraPos;
     if (isFixed) {
         toPosX = glm::normalize(mFacingForwardVec);
-        cameraDir = glm::normalize(std::cos(-0.2f) * toPosX + std::sin(-0.2f) * GetUpVec());  
-        cameraPos = GetPos() - cameraDir * cameraDistance;
-        glm::vec3 offset = glm::normalize(GetUpVec()) * 1.0f;
-        return glm::lookAt(cameraPos, GetPos() + offset, GetUpVec());  
+        cameraDir = glm::normalize(std::cos(-0.2f) * toPosX + std::sin(-0.2f) * mUpVec);  
+        cameraPos = mPos - cameraDir * cameraDistance;
+        glm::vec3 offset = glm::normalize(mUpVec) * 1.0f;
+        return glm::lookAt(cameraPos, mPos + offset, mUpVec);  
     }
 
     toPosX = glm::normalize(-mForwardVec);
-    cameraDir = glm::normalize(std::cos(mCameraPitch) * toPosX + std::sin(mCameraPitch) * GetUpVec());
-    cameraPos = GetPos() - cameraDir * cameraDistance;
-    return glm::lookAt(cameraPos, GetPos(), GetUpVec());
+    cameraDir = glm::normalize(std::cos(mCameraPitch) * toPosX + std::sin(mCameraPitch) * mUpVec);
+    cameraPos = mPos - cameraDir * cameraDistance;
+    return glm::lookAt(cameraPos, mPos, mUpVec);
 }

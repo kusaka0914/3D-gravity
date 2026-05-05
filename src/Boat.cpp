@@ -16,7 +16,7 @@ Boat::Boat(Game* game)
     , mIsActive(false)
     , mTransitionTimer(0.0f)
     , mProgress(0.0f)
-    , mStartPos(GetPos())
+    , mStartPos(mPos)
     , mDestPos(0.0f)
 {
     std::unique_ptr<FocusComponent> focusComponent = std::make_unique<FocusComponent>(this, 100);
@@ -26,7 +26,7 @@ Boat::Boat(Game* game)
 
 void Boat::Initialize() {
     glm::vec3 destPlanetCenter = mDestPlanet->GetCenter();
-    glm::vec3 boatPos = GetPos();
+    glm::vec3 boatPos = mPos;
     glm::vec3 toDestPlanet = glm::normalize(destPlanetCenter - boatPos);
     float destPlanetRadius = mDestPlanet->GetRadius();
     mDestPos = destPlanetCenter - toDestPlanet * (destPlanetRadius + 3.0f);
@@ -74,12 +74,12 @@ void Boat::HandleMoving(float deltaTime) {
     mProgress = glm::min(1.0f, mTransitionTimer / transitionDuration);
     mProgress = mProgress * mProgress * (3.0f - 2.0f * mProgress);
 
-    SetPos(mStartPos + (mDestPos - mStartPos) * mProgress);
+    mPos = mStartPos + (mDestPos - mStartPos) * mProgress;
 }
 
 void Boat::HandleArrived() {
 
-    SetPos(mDestPos);
+    mPos = mDestPos;
     mIsMoving = false;
     if (!GetGame()->GetUIState()->GetIsBattleTutorialShown()) {
         GetGame()->GetUIState()->SetCurrentTutorialKind("Battle");
