@@ -28,7 +28,8 @@ Player::Player(Game* game)
     , mAttackStartHeight(0.0f)
     , mDodgeTimer(0.0f)
     , mDodgeCooldown(0.0f)
-    , mMoveSpeed(3.2f)
+    // , mMoveSpeed(3.2f)
+    , mMoveSpeed(10.2f)
     , mCameraStickX(0.0f)
     , mCameraStickY(0.0f)
     , mVelocity(0.0f, 0.0f, 0.0f)
@@ -391,18 +392,17 @@ void Player::Attack(float deltaTime) {
         }
     };
     
-    float attackRange;
     float attackAngle;
     if (mAttackPressed) {
-        attackRange = 1.0f;
+        mAttackRange = 1.6f;
         attackAngle = 0.8f;
         mAttack = 10;
     } else if (mWideAttackPressed) {
-        attackRange = 2.8f;
+        mAttackRange = 2.8f;
         attackAngle = 0.4f;
         mAttack = 5;
     } else if (mStrongAttackTimer >= 0.0f) {
-        attackRange = 6.0f;
+        mAttackRange = 6.0f;
         mAttack = 50;
     }
 
@@ -418,7 +418,7 @@ void Player::Attack(float deltaTime) {
         glm::vec3 toEnemy = glm::normalize(enemyPos - mPos);
         float dist = glm::length(enemyPos - mPos);
         float dot = glm::dot(-mFacingForwardVec, toEnemy);
-        float effectiveRange = attackRange + enemy->GetRadius();
+        float effectiveRange = mAttackRange + enemy->GetRadius();
         if (mStrongAttackTimer >= 0.0f && dist <= effectiveRange) {
             hitEnemies.push_back(enemy);
         }
@@ -528,35 +528,42 @@ void Player::Die() {
 void Player::RideBoat() {
     std::vector<Boat*> boats = mCurrentPlanet->GetBoats();
     for (auto boat : boats) {
-        if (!boat->GetIsMoving() && boat->GetIsActive() && mCurrentPlanetNum == boat->GetCurrentPlanetNum())
-        {
-            float distToBoat = glm::length(mPos - boat->GetPos());
-            const float boatTouchRadius = 0.9f;
-            if (distToBoat < boatTouchRadius)
-            {
-                boat->SetIsMoving(true);
-                mIsActive = false;
-            }
-        }
+        glm::vec3 boatPos = boat->GetPos();
+        bool boatIsActive = boat->GetIsActive();
+
         bool moving = boat->GetIsMoving();
         if (moving) {
             // ボートと一緒にプレイヤーを移動
-            mPos = boat->GetPos();
+            mPos = boatPos;
+        } else if (!moving && boatIsActive) {
+            float distToBoat = glm::length(mPos - boatPos);
+
+            const float boatTouchRadius = 0.9f;
+            if (distToBoat >= boatTouchRadius)
+                return;
+            
+            boat->SetIsMoving(true);
+            mIsActive = false;
         }
-        float progress = boat->GetProgress();
+        
         // 到着処理
-        std::vector<Planet*> planets = GetGame()->GetCurrentStage()->GetPlanets();
+        float progress = boat->GetProgress();
         if (progress >= 1.0f)
         {
-            mCurrentPlanetNum = boat->GetDestPlanet();
+            mCurrentPlanetNum++;
+
+            std::vector<Planet*> planets = GetGame()->GetCurrentStage()->GetPlanets();
             mCurrentPlanet = planets[mCurrentPlanetNum];
-            mPos = boat->GetDestPos();
-            mOnGround = true;
+
+            glm::vec3 boatDestPos = boat->GetDestPos();
+            mPos = boatDestPos;
             mVelocity = glm::vec3(0.0f);
-            mRestartPos = boat->GetDestPos();
-            mRestartPlanetIndex = boat->GetDestPlanet();
+
+            mOnGround = true;
             mIsActive = true;
-            glm::vec3 boatUpVec = boat->GetUpVec();
+
+            mRestartPos = boatDestPos;
+            mRestartPlanetIndex = mCurrentPlanetNum;
         }
     }
 }

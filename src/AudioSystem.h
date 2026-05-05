@@ -8,9 +8,13 @@
 class AudioSystem {
 public:
     AudioSystem(class Game* game);
+
     void Initialize();
+
     void Update();
+
     void Shutdown();
+
     void PlayBGM(std::string name);
     void PlaySE(std::string name);
 
@@ -24,5 +28,6 @@ private:
     
     std::unordered_map<std::string, Mix_Music*> mBGMList;
     std::unordered_map<std::string, Mix_Chunk*> mSEList;
+    
     int mCurrentBgmPlanetIndex;
 };

@@ -32,7 +32,7 @@ public:
 
     bool GetIsActive() const { return mIsActive; }
     Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
-    const glm::vec3& GetPos() const override { return mPos; }
+    const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
     const glm::vec3& GetForwardVec() const { return mForwardVec; }
     const glm::vec3& GetLeftVec() const { return mLeftVec; }

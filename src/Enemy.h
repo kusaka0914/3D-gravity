@@ -17,6 +17,7 @@ public:
     void SetPos(const glm::vec3& pos) { mPos = pos; }
     void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
     void SetHp(float hp) { mHp = hp; }
+    void SetMaxHp(float maxHp) { mMaxHp = maxHp; }
     void SetIsAlive(bool isAlive) { mIsAlive = isAlive; }
     void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
     void SetIsCountered(bool isCountered) { mIsCountered = isCountered; }
@@ -38,11 +39,12 @@ public:
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
 
     class Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
-    const glm::vec3& GetPos() const override { return mPos; }
+    const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
     int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
     int GetBreakCount() const { return mBreakCount; }
     float GetHp() const { return mHp; }
+    float GetMaxHp() const { return mMaxHp; }
     bool GetIsAlive() const { return mIsAlive; }
     bool GetIsDamaged() const { return mIsDamaged; }
     bool GetIsCountered() const { return mIsCountered; }
@@ -53,7 +55,7 @@ public:
     float GetDeathTimer() const { return mDeathTimer; }
     const std::string& GetModelPath() const { return mModelPath; }
     float GetScale() const { return mScale; }
-    float GetRadius() const override { return mRadius; }
+    float GetRadius() const { return mRadius; }
     float GetSpeed() const { return mSpeed; }
     float GetAttack() const { return mAttack; }
     float GetStandByAttackTimer() const { return mStandByAttackTimer; }
@@ -100,6 +102,7 @@ private:
     float mSpeed;
     float mAttack;
     float mHp;
+    float mMaxHp;
     float mSensing;
     float mStandByAttackTimer;
     float mLaunchedTimer;

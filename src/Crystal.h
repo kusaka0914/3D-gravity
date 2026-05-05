@@ -20,11 +20,11 @@ public:
     void SetScale(const float scale) { mScale = scale; }
     void SetIsActive(bool isActive) { mIsActive = isActive; }
 
-    const glm::vec3& GetPos() const override { return mPos; }
+    const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
     DestructibleComponent* GetDestructibleComponent() const { return mDestructibleComponent; }
     std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
-    float GetRadius() const override { return mRadius; }
+    float GetRadius() const { return mRadius; }
     float GetScale() const { return mScale; }
     bool GetIsActive() const { return mIsActive; }
 

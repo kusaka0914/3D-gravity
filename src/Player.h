@@ -34,7 +34,7 @@ public:
     void SetHp(float hp) { mHp = hp; }
     void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
     void SetIsDamagePrev(bool isDamagePrev) { mIsDamagePrev = isDamagePrev; }
-    void SetIsActive(bool isActive) override { mIsActive = isActive; }
+    void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetCanMove(bool canMove) { mCanMove = canMove; }
     void SetDamageTimer(float damageTimer) { mDamageTimer = damageTimer; }
     void SetAttackCooldownRemaining(float attackCooldownRemaining) { mAttackCooldownRemaining = attackCooldownRemaining; }
@@ -47,7 +47,7 @@ public:
     void SetTalkingNPC(class NPC* talkingNPC) { mTalkingNPC = talkingNPC; }
 
     Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
-    const glm::vec3& GetPos() const override { return mPos; }
+    const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
     const glm::vec3& GetForwardVec() const { return mForwardVec; }
     const glm::vec3& GetLeftVec() const { return mLeftVec; }
@@ -74,6 +74,7 @@ public:
     float GetStrongAttackTimer() const { return mStrongAttackTimer; }
     float GetInvincibleTimer() const { return mInvincibleTimer; }
     float GetSpecialAttackCooldownRemaining() const { return mSpecialAttackCooldownRemaining; }
+    float GetAttackRange() const { return mAttackRange; }
     int GetAttackIndex() const { return mAttackIndex; }
     int GetRestartPlanetIndex() const { return mRestartPlanetIndex; }
     std::string GetModelPath() const { return mModelPath; }
@@ -149,6 +150,7 @@ private:
     float mStrongAttackTimer;
     float mComboTimer;
     float mInvincibleTimer;
+    float mAttackRange;
 
     glm::vec3 mPos;
     glm::vec3 mUpVec;

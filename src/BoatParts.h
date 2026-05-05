@@ -16,10 +16,10 @@ public:
     void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(glm::vec3& pos) { mPos = pos; }
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
-    void SetIsActive(bool isActive) override { mIsActive = isActive; }
+    void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
 
-    const glm::vec3& GetPos() const override { return mPos; }
+    const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
     class CollectableComponent* GetCollectableComponent() const { return mCollectableComponent; }
     std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }

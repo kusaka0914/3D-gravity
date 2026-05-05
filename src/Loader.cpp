@@ -207,6 +207,7 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
 
                 float hp = enemyNode["hp"] ? enemyNode["hp"].as<float>() : 80.0f;
                 enemy->SetHp(hp);
+                enemy->SetMaxHp(hp);
 
                 float scale = enemyNode["scale"] ? enemyNode["scale"].as<float>() : 0.25f;
                 enemy->SetScale(scale);
@@ -324,24 +325,23 @@ bool Loader::LoadBoatsFromYaml(const char* path)
         for (auto node : root["boats"]){
             std::unique_ptr<Boat> boat = std::make_unique<Boat>(GetGame());
 
-            int startPlanet = node["startPlanet"] ? node["startPlanet"].as<int>() : 0;
-            boat->SetStartPlanet(startPlanet);
-            boat->SetCurrentPlanetNum(startPlanet);
+            int startPlanetNum = node["startPlanet"] ? node["startPlanet"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[startPlanetNum];
+            boat->SetCurrentPlanet(currentPlanet);
 
-            int destPlanet = node["destPlanet"] ? node["destPlanet"].as<int>() : 0;
+            int destPlanetNum = node["destPlanet"] ? node["destPlanet"].as<int>() : 0;
+            Planet* destPlanet = GetGame()->GetCurrentStage()->GetPlanets()[destPlanetNum];
             boat->SetDestPlanet(destPlanet);
 
             int destStage = node["destStage"] ? node["destStage"].as<int>() : 0;
             boat->SetDestStage(destStage);
 
-            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[startPlanet];
-            boat->SetCurrentPlanet(currentPlanet);
-
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             boat->SetPos(pos);
             boat->SetStartPos(pos);
 
-            boat->SetPlanets(GetGame()->GetCurrentStage()->GetPlanets());
+            // Planetsの設定後ではないと初期化不可
+            boat->Initialize();
 
             Boat* boat_ptr = boat.get();
             GetGame()->AddActor(std::move(boat));

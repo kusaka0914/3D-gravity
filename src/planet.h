@@ -69,7 +69,7 @@ public:
     class Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetStageNum() const { return mStageNum; }
     const glm::vec3& GetCenter() const { return mCenter; }
-    float GetRadius() const override { return mRadius; }
+    float GetRadius() const { return mRadius; }
     const glm::vec4& GetColor() const { return mColor; }
     const std::string& GetModelPath() const { return mModelPath; }
     const std::vector<class Enemy*>& GetEnemies() const { return mEnemies; }
