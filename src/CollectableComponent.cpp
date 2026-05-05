@@ -19,9 +19,9 @@ void CollectableComponent::Update(float deltaTime) {
 }
 
 void CollectableComponent::HandleCollected() {
-    std::vector<Player*> players = GetOwner()->GetGame()->GetPlayers();
+    std::vector<Player*> players = mOwner->GetGame()->GetPlayers();
     for (auto player : players) {
-        glm::vec3 ownerPos = GetOwner()->GetPos();
+        glm::vec3 ownerPos = mOwner->GetPos();
         float distTo = glm::length(player->GetPos() - ownerPos);
 
         const float pickupRadius = 0.8f;

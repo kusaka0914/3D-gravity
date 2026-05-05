@@ -12,9 +12,9 @@ TalkableComponent::TalkableComponent(Actor* owner, int updateOrder)
 
 void TalkableComponent::Update(float deltaTime)
 {
-    std::vector<Player*> players = GetOwner()->GetGame()->GetPlayers();
+    std::vector<Player*> players = mOwner->GetGame()->GetPlayers();
     for (auto player : players) {
-        NPC* npc = dynamic_cast<NPC*>(GetOwner());
+        NPC* npc = dynamic_cast<NPC*>(mOwner);
         if (npc == nullptr) return;
 
         glm::vec3 playerPos = player->GetPos();

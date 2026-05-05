@@ -16,16 +16,16 @@ void DestructibleComponent::Update(float deltaTime)　{
 }
 
 void DestructibleComponent::HandleDestroyed() {
-    std::vector<Player*> players = GetOwner()->GetGame()->GetPlayers();
+    std::vector<Player*> players = mOwner->GetGame()->GetPlayers();
     for (auto player : players) {
         float attackMotionTimer = player->GetAttackMotionTimer();
         if (attackMotionTimer < 0.0f) {
             mIsAttackedPrev = false;
         }
         
-        glm::vec3 ownerPos = GetOwner()->GetPos();
+        glm::vec3 ownerPos = mOwner->GetPos();
         float distTo = glm::length(player->GetPos() - ownerPos); 
-        Crystal* ownerCrystal = dynamic_cast<Crystal*>(GetOwner());
+        Crystal* ownerCrystal = dynamic_cast<Crystal*>(mOwner);
         float ownerRadius = ownerCrystal->GetRadius();
         float strongAttackTimer = player->GetStrongAttackTimer();
 
@@ -44,7 +44,7 @@ void DestructibleComponent::HandleDestroyed() {
             mDestroyHp = 0;
             mIsDestroyed = true;
             ownerCrystal->SetIsActive(false);
-            GetOwner()->GetGame()->GetAudioSystem()->PlaySE("destroySE");
+            mOwner->GetGame()->GetAudioSystem()->PlaySE("destroySE");
         }
     }
 }

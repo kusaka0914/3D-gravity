@@ -15,6 +15,6 @@ public:
     class Actor* GetOwner() const { return mOwner; }
 protected:
     Actor* mOwner;
-    
+
     int mUpdateOrder;
 };
