@@ -19,9 +19,6 @@ public:
     glm::mat4 getNPCView(float cameraDistance, bool isFixed = false);
 
     void SetIsActive(bool isActive) { mIsActive = isActive; }
-    void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
-    void SetPos(const glm::vec3& pos) { mPos = pos; }
-    void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
     void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
     void SetFacingYaw(float facingYaw) { mFacingYaw = facingYaw; }
     void SetRadius(float radius) { mRadius = radius; }
@@ -31,9 +28,6 @@ public:
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
 
     bool GetIsActive() const { return mIsActive; }
-    Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
-    const glm::vec3& GetPos() const { return mPos; }
-    const glm::vec3& GetUpVec() const { return mUpVec; }
     const glm::vec3& GetForwardVec() const { return mForwardVec; }
     const glm::vec3& GetLeftVec() const { return mLeftVec; }
     const glm::vec3& GetFacingForwardVec() const { return mFacingForwardVec; }
@@ -59,8 +53,6 @@ private:
     float mFacingYaw;
     float mRadius;
 
-    glm::vec3 mPos;
-    glm::vec3 mUpVec;
     glm::vec3 mForwardVec;
     glm::vec3 mLeftVec;
     glm::vec3 mFacingForwardVec;
@@ -68,8 +60,6 @@ private:
 
     std::string mModelPath;
     std::string mName;
-
-    class Planet* mCurrentPlanet;
 
     class TalkableComponent* mTalkableComponent;
 

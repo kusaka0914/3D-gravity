@@ -13,7 +13,6 @@ public:
     void Initialize() override;
     void UpdateActor(float deltaTime) override;
 
-    void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetDestPlanet(Planet* destPlanet) { mDestPlanet = destPlanet; }
     void SetDestStage(int destStage) { mDestStage = destStage; }
     void SetIsMoving(bool isMoving) { mIsMoving = isMoving; }
@@ -39,7 +38,6 @@ private:
     void HandleArrived();
 
 private:
-    class Planet* mCurrentPlanet;
     Planet* mDestPlanet;
 
     bool mIsMoving;

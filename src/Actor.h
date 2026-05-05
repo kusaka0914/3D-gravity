@@ -23,13 +23,16 @@ public:
 
     void SetPos(const glm::vec3& pos) { mPos = pos; }
     void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
+    void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
 
     class Game* GetGame() const { return mGame; }
     const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
-private:
+    Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
+    
+protected:
     Game* mGame;
-    class Planet* mCurrentPlanet;
+    Planet* mCurrentPlanet;
     std::vector<std::unique_ptr<Component>> mComponents;
 
     glm::vec3 mPos;

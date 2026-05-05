@@ -12,7 +12,6 @@ public:
     BoatParts(class Game* game);
     void UpdateActor(float deltaTime) override;
 
-    void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
     void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
@@ -25,8 +24,6 @@ public:
 private:
 
 private:
-    class Planet* mCurrentPlanet;
-
     bool mIsActive;
 
     std::string mModelPath;

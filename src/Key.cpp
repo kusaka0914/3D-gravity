@@ -8,7 +8,6 @@
 
 Key::Key(Game* game)
     : Actor(game)
-    , mPos({0.0f, 8.0f, 0.0f})
     , mIsActivePrev(false)
     , mIsActive(false)
 {
@@ -22,21 +21,17 @@ Key::Key(Game* game)
 
 void Key::UpdateActor(float deltaTime)
 {
+    UpdateUpVec();
     if (!mIsActivePrev && mIsActive) {
         GetGame()->GetAudioSystem()->PlaySE("showKeySE");
         mIsActivePrev = true;
     }
     if (mCollectableComponent->GetIsObtained() && mIsActive) {
-        std::vector<Boat*> boats = mCurrentPlanet->GetBoats();
+        std::vector<Boat*> boats = GetCurrentPlanet()->GetBoats();
         for (auto boat : boats) {
             boat->GetFocusComponent()->SetFocusTimer(3.0f);
             mIsActive = false;
         }
-    }
-    if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal) {
-        mUpVec = {0.0f, 1.0f, 0.0f};
-    } else {
-        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
     }
 }
 

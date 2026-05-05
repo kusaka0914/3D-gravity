@@ -18,9 +18,6 @@ public:
     float getYawFromDirection(const glm::vec3& up, const glm::vec3& dir);
     glm::mat4 getPlayerView(float cameraDistance, bool isFixed = false);
 
-    void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
-    void SetPos(const glm::vec3& pos) { mPos = pos; }
-    void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
     void SetKnockBackFrom(const glm::vec3& knockBackFrom) { mKnockBackFrom = knockBackFrom; }
     void SetRestartPos(const glm::vec3& restartPos) { mRestartPos = restartPos; }
     void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
@@ -46,9 +43,6 @@ public:
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
     void SetTalkingNPC(class NPC* talkingNPC) { mTalkingNPC = talkingNPC; }
 
-    Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
-    const glm::vec3& GetPos() const { return mPos; }
-    const glm::vec3& GetUpVec() const { return mUpVec; }
     const glm::vec3& GetForwardVec() const { return mForwardVec; }
     const glm::vec3& GetLeftVec() const { return mLeftVec; }
     const glm::vec3& GetFacingForwardVec() const { return mFacingForwardVec; }
@@ -152,8 +146,6 @@ private:
     float mInvincibleTimer;
     float mAttackRange;
 
-    glm::vec3 mPos;
-    glm::vec3 mUpVec;
     glm::vec3 mForwardVec;
     glm::vec3 mLeftVec;
     glm::vec3 mFacingForwardVec;
@@ -165,7 +157,6 @@ private:
 
     std::string mModelPath;
 
-    class Planet* mCurrentPlanet;
     class NPC* mTalkingNPC;
 
     std::vector<struct LoadedMesh>* mMeshes;

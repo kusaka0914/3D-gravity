@@ -9,7 +9,6 @@
 
 Enemy::Enemy(Game* game)
     :Actor(game)
-    ,mPos({0.0f, 8.0f, 0.0f})
     ,mVelocity(0.0f)
     ,mCurrentPlanetNum(0)
     ,mHp(10.0f)
@@ -110,12 +109,12 @@ void Enemy::UpdateDying(float deltaTime) {
 }
 
 void Enemy::UpdateUpVec() {
-    glm::vec3 center = mCurrentPlanet->GetCenter();
-    float radius = mCurrentPlanet->GetRadius();
-    if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal) {
+    glm::vec3 center = GetCurrentPlanet()->GetCenter();
+    float radius = GetCurrentPlanet()->GetRadius();
+    if (GetCurrentPlanet()->GetPlanetShape() == Planet::PlanetShape::Normal) {
         mUpVec = {0.0f, 1.0f, 0.0f};
     } else {
-        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
+        mUpVec = glm::normalize(mPos - GetCurrentPlanet()->GetCenter());
     }
 }
 
@@ -140,8 +139,8 @@ void Enemy::UpdateBehavior(float deltaTime, Player* player) {
     if (distToPlayer <= mSensing && !player->GetIsDamaged() && distToPlayer >= GetRadius() + 0.2f && mStandByAttackTimer <= 0.0f && mAttackMotionTimer <= 0.0f && mKnockBackTimer <= 0.0f)
     {
         mPos += vecToPlayer * mSpeed * deltaTime;
-        float planetRadius = mCurrentPlanet->GetRadius();
-        glm::vec3 planetCenter = mCurrentPlanet->GetCenter();
+        float planetRadius = GetCurrentPlanet()->GetRadius();
+        glm::vec3 planetCenter = GetCurrentPlanet()->GetCenter();
         mPos = planetCenter + glm::normalize(mPos - planetCenter) * planetRadius;
     }
 
@@ -259,8 +258,8 @@ void Enemy::ApplyGravity(float deltaTime) {
         mVelocity -= mUpVec * gravity * deltaTime;
         mPos += mVelocity * deltaTime;
 
-        glm::vec3 center = mCurrentPlanet->GetCenter();
-        float radius = mCurrentPlanet->GetRadius();
+        glm::vec3 center = GetCurrentPlanet()->GetCenter();
+        float radius = GetCurrentPlanet()->GetRadius();
         if (glm::length(mPos - center) <= radius) {
             mOnGround = true;
             mVelocity = {0.0f, 0.0f, 0.0f};
@@ -283,15 +282,15 @@ void Enemy::ApplyGravity(float deltaTime) {
 }
 
 void Enemy::FixPlanetSurface() {
-    glm::vec3 center = mCurrentPlanet->GetCenter();
-    float radius = mCurrentPlanet->GetRadius();
+    glm::vec3 center = GetCurrentPlanet()->GetCenter();
+    float radius = GetCurrentPlanet()->GetRadius();
     mPos = center + glm::normalize(mPos - center) * radius;
 }
 
 void Enemy::FinishDying() {
     mIsAlive = false;
     // ボス撃破でスター出現（撃破前のボスがいた場所に置く）
-    Star* star = mCurrentPlanet->GetStar();
+    Star* star = GetCurrentPlanet()->GetStar();
     if (mIsBoss)
     {
         star->SetIsActive(true); 

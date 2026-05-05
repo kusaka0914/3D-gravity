@@ -13,7 +13,6 @@ public:
     Crystal(class Game* game);
     void UpdateActor(float deltaTime) override;
 
-    void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
     void SetRadius(const float radius) { mRadius = radius; }
     void SetScale(const float scale) { mScale = scale; }
@@ -33,6 +32,5 @@ private:
 
     std::vector<struct LoadedMesh>* mMeshes;
 
-    Planet* mCurrentPlanet;
     DestructibleComponent* mDestructibleComponent;
 };

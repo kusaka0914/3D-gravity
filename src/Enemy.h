@@ -13,7 +13,6 @@ public:
 
     virtual bool IsBoss() const { return false; }
 
-    void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
     void SetPos(const glm::vec3& pos) { mPos = pos; }
     void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
     void SetHp(float hp) { mHp = hp; }
@@ -38,7 +37,6 @@ public:
     void SetBreakCountMax(int breakCountMax) { mBreakCountMax = breakCountMax; }
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
 
-    class Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
     const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
     int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
@@ -116,6 +114,5 @@ private:
 
     std::string mModelPath;
 
-    class Planet* mCurrentPlanet;
     std::vector<struct LoadedMesh>* mMeshes;
 };
