@@ -437,6 +437,7 @@ void Player::Attack(float deltaTime) {
         if (mStrongAttackTimer >= 0.0f) {
             for (Enemy* enemy : hitEnemies) {
                 enemy->SetIsStrongAttacked(true);
+                mAttackIndex = 0;
             }
             GetGame()->GetAudioSystem()->PlaySE("attackAirSE");
             mAttackIndex = 0;

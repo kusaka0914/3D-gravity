@@ -12,9 +12,12 @@ public:
 
     Game* GetGame() const { return mGame; }
 private:
+void DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat);
     void DrawCharacter(const glm::vec3 &pos, float scale, const glm::vec4 &fallbackColor,
         const glm::vec3 &up, float yaw, const std::vector<struct LoadedMesh> *meshes,
         const glm::vec4 *colorOverride = nullptr);
+    void DrawGuard(glm::mat4 viewMat, class Enemy* enemy);
+    std::vector<glm::mat4> GetViews();
     void AddImgInfo(std::string path, std::string name);
 
 private:

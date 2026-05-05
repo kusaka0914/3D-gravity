@@ -454,17 +454,24 @@ bool Loader::LoadCrystalsFromYaml(const char* path)
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
             crystal->SetCurrentPlanet(currentPlanet);
 
+            std::string type = node["type"] ? node["type"].as<std::string>() : "";
+            YAML::Node crystalRoot = YAML::LoadFile("../assets/data/crystals.yaml");
+            for (auto crystalNode : crystalRoot["crystals"]){
+                if (type != crystalNode["type"].as<std::string>())
+                    continue;
+
+                float hp = crystalNode["hp"] ? crystalNode["hp"].as<float>() : 80.0f;
+                crystal->GetDestructibleComponent()->SetDestroyHp(hp);
+
+                float scale = crystalNode["scale"] ? crystalNode["scale"].as<float>() : 0.25f;
+                crystal->SetScale(scale);
+
+                float radius = crystalNode["radius"] ? crystalNode["radius"].as<float>() : 1.0f;
+                crystal->SetRadius(radius);
+            }
+
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             crystal->SetPos(pos);
-
-            float scale = node["scale"] ? node["scale"].as<float>() : 0.0f;
-            crystal->SetScale(scale);
-
-            float radius = node["radius"] ? node["radius"].as<float>() : 0.0f;
-            crystal->SetRadius(radius);
-
-            float hp = node["hp"] ? node["hp"].as<float>() : 10.0;
-            crystal->GetDestructibleComponent()->SetDestroyHp(hp);
 
             Crystal* crystal_ptr = crystal.get();
             GetGame()->AddActor(std::move(crystal));

@@ -43,80 +43,49 @@ void Renderer::Draw() {
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
 
-    std::vector<Player*> players = mGame->GetPlayers();
-    bool isPlayer2Joined = mGame->GetIsPlayer2Joined();
-
-    Planet* currentPlanet = players[0]->GetCurrentPlanet();
-    std::vector<Boat*> boats = currentPlanet->GetBoats();
-    Key* key = currentPlanet->GetKey();
-    glm::mat4 view;
-    bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
-    if (!boats.empty()) {
-        for (auto boat : boats) {
-            if (boat->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
-                view = boat->GetFocusComponent()->GetFocusView();
-                players[0]->SetCanMove(false);
-            } else if (isStageClear) {
-                view = players[0]->getPlayerView(4.0f, true);
-            }
-            else {
-                view = players[0]->getPlayerView(10.0f);
-                players[0]->SetCanMove(true);
-            }
-        }
-    }
-    if (key) {
-        if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
-            view = key->GetFocusComponent()->GetFocusView();
-            players[0]->SetCanMove(false);
-        } else if (isStageClear) {
-            view = players[0]->getPlayerView(4.0f, true);
-        }
-        else {
-            view = players[0]->getPlayerView(10.0f);
-            players[0]->SetCanMove(true);
-        }
-    }
-    if (boats.empty() && !key) {
-        if (isStageClear) {
-            view = players[0]->getPlayerView(4.0f, true);
-        }
-        else {
-            view = players[0]->getPlayerView(10.0f);
-            players[0]->SetCanMove(true);
-        }
-    }
-    bool isTalkWithMother = GetGame()->GetUIState()->GetTalkWith() == UIState::TalkWith::Mother;
-    bool isTalkWithDoctor = GetGame()->GetUIState()->GetTalkWith() == UIState::TalkWith::Doctor;
-    if (isTalkWithMother) {
-        view = glm::lookAt(glm::vec3(-2.0f, 4.0f, -2.0f), glm::vec3(4.0f, 2.0f, 4.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    } else if (isTalkWithDoctor) {
-        view = glm::lookAt(glm::vec3(3.0f, 4.0f, 1.0f), glm::vec3(-4.0f, 2.0f, -4.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    }
-    glm::mat4 view2P = isPlayer2Joined ? players[1]->getPlayerView(12.0f) : view;
-
     glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // これから描画するときにどのプログラムを使うのか設定
     glUseProgram(mShader->GetShaderProgram());
 
-    auto drawScene = [&](const glm::mat4 &viewMat, const glm::mat4 &projMat)
+    std::vector<glm::mat4> views = GetViews();
+
+    bool isPlayer2Joined = mGame->GetIsPlayer2Joined();
+    if (!isPlayer2Joined)
     {
-        GLint locModel = mShader->GetLocModel();
-        GLint locView = mShader->GetLocView();
-        GLint locProj = mShader->GetLocProj();
-        GLint locObjectColor = mShader->GetLocObjectColor();
-        GLint locUseTexture = mShader->GetLocUseTexture();
-        GLint locDiffuseTexture = mShader->GetLocDiffuseTexture();
+        glViewport(0, 0, fbWidth, fbHeight);
+        float aspect = static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
+        glm::mat4 proj = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
+        DrawScene(views[0], proj);
+        return;
+    }
 
-        // CPU側のMVPをシェーダーのそれぞれのuniformに渡して使えるようにしている
-        // 惑星描画
-        glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(viewMat));
-        glUniformMatrix4fv(locProj, 1, GL_FALSE, glm::value_ptr(projMat));
+    float halfW = fbWidth * 0.5f;
+    float aspectHalf = halfW / static_cast<float>(fbHeight);
+    glm::mat4 projHalf = glm::perspective(glm::radians(45.0f), aspectHalf, 0.1f, 100.0f);
+    glViewport(0, 0, static_cast<GLsizei>(halfW), fbHeight);
+    DrawScene(views[0], projHalf);
+    glViewport(static_cast<GLsizei>(halfW), 0, static_cast<GLsizei>(halfW), fbHeight);
+    DrawScene(views[1], projHalf);
+}
 
-        Stage* currentStage = mGame->GetCurrentStage();
-        std::vector<Planet*> planets = currentStage->GetPlanets();
+void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
+    GLint locModel = mShader->GetLocModel();
+    GLint locView = mShader->GetLocView();
+    GLint locProj = mShader->GetLocProj();
+    GLint locObjectColor = mShader->GetLocObjectColor();
+    GLint locUseTexture = mShader->GetLocUseTexture();
+    GLint locDiffuseTexture = mShader->GetLocDiffuseTexture();
+
+    glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(viewMat));
+    glUniformMatrix4fv(locProj, 1, GL_FALSE, glm::value_ptr(projMat));
+
+    Stage* currentStage = mGame->GetCurrentStage();
+    if (!currentStage)
+        return;
+
+    std::vector<Planet*> planets = currentStage->GetPlanets();
+
+    if (!planets.empty()) {
         // 惑星描画
         for (auto planet : planets)
         {
@@ -142,161 +111,115 @@ void Renderer::Draw() {
             }
             glUniform1i(locUseTexture, 0);
         }
+    }
 
-        const float playerScale = 0.25f;
-        // 1Pの描画
-        if (players[0]->GetIsActive()) {
-            DrawCharacter(players[0]->GetPos(), playerScale, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), players[0]->GetUpVec(), players[0]->GetFacingYaw(), players[0]->GetMeshes());
-        }
+    std::vector<Player*> players = mGame->GetPlayers();
+    const float playerScale = 0.25f;
+    // 1Pの描画
+    if (players[0]->GetIsActive()) {
+        DrawCharacter(players[0]->GetPos(), playerScale, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), players[0]->GetUpVec(), players[0]->GetFacingYaw(), players[0]->GetMeshes());
+    }
 
-        // 2Pの描画
-        if (isPlayer2Joined)
+    // 2Pの描画
+    bool isPlayer2Joined = mGame->GetIsPlayer2Joined();
+    if (isPlayer2Joined)
+    {
+        DrawCharacter(players[1]->GetPos(), playerScale, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), players[1]->GetUpVec(), players[1]->GetFacingYaw(),  players[1]->GetMeshes());
+    }
+
+    Planet* currentPlanet = players[0]->GetCurrentPlanet();
+    if (!currentPlanet)
+        return;
+
+    std::vector<Enemy*> enemies = currentPlanet->GetEnemies();
+    // 敵描画
+    if (!enemies.empty()) {
+        for (auto enemy : enemies)
         {
-            DrawCharacter(players[1]->GetPos(), playerScale, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), players[1]->GetUpVec(), players[1]->GetFacingYaw(),  players[1]->GetMeshes());
-        }
+            if (!enemy->GetIsAlive())
+                continue;
+            
+            glm::vec3 enemyUp = enemy->GetUpVec();
+            glm::vec3 toPlayer = glm::normalize(players[0]->GetPos() - enemy->GetPos());
+            float enemyFacingYaw = players[0]->getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
 
-        Planet* currentPlanet = players[0]->GetCurrentPlanet();
-        if (currentPlanet){
-            std::vector<Enemy*> enemies = currentPlanet->GetEnemies();
-            // 敵描画
-            for (auto enemy : enemies)
+            DrawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), enemyUp, enemyFacingYaw, enemy->GetMeshes());
+
+            int breakCount = enemy->GetBreakCount();
+            if (breakCount == 0)
+                continue;
+
+            DrawGuard(viewMat, enemy);
+        }
+    }
+
+    // 鍵描画
+    Key* key = currentPlanet->GetKey();
+    if (key) {
+        if (key->GetIsActive())
+        {
+            const float keyScale = 2.0f;
+            const glm::vec4 keyColor(0.85f, 0.65f, 0.13f, 1.0f); // 金色
+            DrawCharacter(key->GetPos(), keyScale, keyColor, key->GetUpVec(), 0.0f, key->GetMeshes(), &keyColor);
+        }
+    }
+
+    std::vector<NPC*> NPCs = currentPlanet->GetNPCs();
+    // NPC描画
+    if (!NPCs.empty()) {
+        for (auto NPC : NPCs) {
+            if (NPC->GetIsActive())
             {
-                if (!enemy->GetIsAlive())
-                    continue;
-                
-                glm::vec3 enemyUp = enemy->GetUpVec();
-                glm::vec3 toPlayer = glm::normalize(players[0]->GetPos() - enemy->GetPos());
-                float enemyFacingYaw = players[0]->getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
-
-                DrawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), enemyUp, enemyFacingYaw, enemy->GetMeshes());
-
-                // 敵の頭上にID（1始まり）をビルボード表示
-                GLuint texId = mTextures["guard"];
-                if (enemy->GetBreakCount() == 0)
-                    continue;
-                if (texId != 0)
-                {
-                    glm::vec3 camPos(glm::inverse(viewMat)[3]);
-                    glm::vec3 quadCenter = enemy->GetPos() + enemyUp * 0.8f;
-                    glm::vec3 forward = glm::normalize(camPos - quadCenter);
-                    glm::vec3 right = glm::normalize(glm::cross(enemyUp, forward));
-                    if (glm::length(right) < 0.01f)
-                        right = glm::normalize(glm::cross(enemyUp, glm::vec3(0, 0, 1)));
-                    glm::vec3 upQuad = glm::cross(forward, right);
-                    glm::vec3 drawPos = enemy->GetPos() + enemyUp * 0.8f;
-                    
-                    const float enemyLabelHeight = 0.5f;
-
-                    glm::mat4 billboard(1.0f);
-                    billboard[0] = glm::vec4(right * enemyLabelHeight, 0.0f);
-                    billboard[1] = glm::vec4(-upQuad * enemyLabelHeight, 0.0f);
-                    billboard[2] = glm::vec4(forward, 0.0f);
-                    billboard[3] = glm::vec4(drawPos, 1.0f);
-
-                    glEnable(GL_BLEND);
-                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                    glDepthMask(GL_FALSE);
-
-                    glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, texId);
-                    glUniform1i(locUseTexture, 1);
-                    mVertexArrays.at("text")->SetActive();
-                    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-                    glUniform1i(locUseTexture, 0);
-                    glDepthMask(GL_TRUE);
-                    glDisable(GL_BLEND);
-                }
+                const float NPCScale = 0.25f;
+                DrawCharacter(NPC->GetPos(), NPCScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), NPC->GetUpVec(), NPC->GetFacingYaw(), NPC->GetMeshes());
             }
         }
+    }
 
-        // 鍵描画
-        Key* key = currentPlanet->GetKey();
-        if (key) {
-            if (key->GetIsActive())
+    std::vector<Boat*> boats = currentPlanet->GetBoats();
+    // ボート描画
+    if (!boats.empty()) {
+        for (auto boat : boats) {
+            if (boat->GetIsActive())
             {
-                const float keyScale = 2.0f;
-                const glm::vec4 keyColor(0.85f, 0.65f, 0.13f, 1.0f); // 金色
-                DrawCharacter(key->GetPos(), keyScale, keyColor, key->GetUpVec(), 0.0f, key->GetMeshes(), &keyColor);
+                const float boatScale = 0.8f;
+                DrawCharacter(boat->GetPos(), boatScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), boat->GetUpVec(), 0.0f, boat->GetMeshes());
             }
         }
+    }
 
-        std::vector<NPC*> NPCs = currentPlanet->GetNPCs();
-        // NPC描画
-        if (!NPCs.empty()) {
-            for (auto NPC : NPCs) {
-                if (NPC->GetIsActive())
-                {
-                    const float NPCScale = 0.25f;
-                    DrawCharacter(NPC->GetPos(), NPCScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), NPC->GetUpVec(), NPC->GetFacingYaw(), NPC->GetMeshes());
-                }
+    // ボートのかけら描画
+    std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
+    if (!boatParts.empty()) {
+        for (auto parts : boatParts) { 
+            if (parts->GetIsActive()) {
+                const float boatPartsScale = 1.0f;
+                DrawCharacter(parts->GetPos(), boatPartsScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), parts->GetUpVec(), 0.0f, parts->GetMeshes());
             }
         }
+    }
 
-        std::vector<Boat*> boats = currentPlanet->GetBoats();
-        // ボート描画
-        if (!boats.empty()) {
-            for (auto boat : boats) {
-                if (boat->GetIsActive())
-                {
-                    const float boatScale = 0.8f;
-                    DrawCharacter(boat->GetPos(), boatScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), boat->GetUpVec(), 0.0f, boat->GetMeshes());
-                }
-            }
-        }
-
-        // ボートのかけら描画
-        std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
-        if (!boatParts.empty()) {
-            for (auto parts : boatParts) { 
-                if (parts->GetIsActive()) {
-                    const float boatPartsScale = 1.0f;
-                    DrawCharacter(parts->GetPos(), boatPartsScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), parts->GetUpVec(), 0.0f, parts->GetMeshes());
-                }
-            }
-        }
-
-        // スター描画
-        Star* star = currentPlanet->GetStar();
-        if (star) {
+    // スター描画
+    Star* star = currentPlanet->GetStar();
+    if (star) {
         if (star->GetIsActive())
-            {
-                glm::vec4 starColor(1.0f, 0.9f, 0.2f, 1.0f);
-                const float starScale = 0.3f;
-                DrawCharacter(star->GetPos(), starScale, starColor, star->GetUpVec(), 0.0f, star->GetMeshes());
+        {
+            glm::vec4 starColor(1.0f, 0.9f, 0.2f, 1.0f);
+            const float starScale = 0.3f;
+            DrawCharacter(star->GetPos(), starScale, starColor, star->GetUpVec(), 0.0f, star->GetMeshes());
+        }
+    }
+
+    // クリスタル描画
+    std::vector<Crystal*> crystals = currentPlanet->GetCrystals();
+    if (!crystals.empty()) {
+        for (auto crystal : crystals) { 
+            if (crystal->GetIsActive()) {
+                DrawCharacter(crystal->GetPos(), crystal->GetScale(), glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), crystal->GetUpVec(), 0.0f, crystal->GetMeshes());
             }
         }
-
-        // クリスタル描画
-        std::vector<Crystal*> crystals = currentPlanet->GetCrystals();
-        if (!crystals.empty()) {
-            for (auto crystal : crystals) { 
-                if (crystal->GetIsActive()) {
-                    DrawCharacter(crystal->GetPos(), crystal->GetScale(), glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), crystal->GetUpVec(), 0.0f, crystal->GetMeshes());
-                }
-            }
-        }
-    };
-
-    if (!isPlayer2Joined)
-    {
-        glViewport(0, 0, fbWidth, fbHeight);
-        float aspect = static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
-        glm::mat4 proj = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
-        drawScene(view, proj);
     }
-    else
-    {
-        float halfW = fbWidth * 0.5f;
-        float aspectHalf = halfW / static_cast<float>(fbHeight);
-        glm::mat4 projHalf = glm::perspective(glm::radians(45.0f), aspectHalf, 0.1f, 100.0f);
-        glViewport(0, 0, static_cast<GLsizei>(halfW), fbHeight);
-        drawScene(view, projHalf);
-        glViewport(static_cast<GLsizei>(halfW), 0, static_cast<GLsizei>(halfW), fbHeight);
-        drawScene(view2P, projHalf);
-    }
-}
+};
 
 void Renderer::DrawCharacter(const glm::vec3 &pos, float scale, const glm::vec4 &fallbackColor,
     const glm::vec3 &up, float yaw, const std::vector<struct LoadedMesh> *meshes,
@@ -319,8 +242,10 @@ void Renderer::DrawCharacter(const glm::vec3 &pos, float scale, const glm::vec4 
     orient[1] = glm::vec4(up, 0.0f);
     orient[2] = glm::vec4(right, 0.0f);
     orient[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
     glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) * orient * glm::scale(glm::mat4(1.0f), glm::vec3(scale));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
+
     if (!meshes->empty())
     {
         for (const LoadedMesh &m : *meshes)
@@ -348,16 +273,125 @@ void Renderer::DrawCharacter(const glm::vec3 &pos, float scale, const glm::vec4 
             glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, 0);
         }
         glUniform1i(locUseTexture, 0);
+        return;
     }
-    else
-    {
-        glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
-        // glBindVertexArray(VAO);
-        glm::vec4 c = colorOverride ? *colorOverride : fallbackColor;
-        glUniform4f(locObjectColor, c.x, c.y, c.z, c.w);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        std::cout << "not Mesh" << std::endl;
+    std::cout << "not Mesh" << std::endl;
+}
+
+void Renderer::DrawGuard(glm::mat4 viewMat, Enemy* enemy) {
+    GLint locModel = mShader->GetLocModel();
+    GLint locObjectColor = mShader->GetLocObjectColor();
+    GLint locUseTexture = mShader->GetLocUseTexture();
+    GLint locDiffuseTexture = mShader->GetLocDiffuseTexture();
+
+    GLuint texId = mTextures["guard"];
+    glm::vec3 enemyPos = enemy->GetPos();
+    glm::vec3 enemyUp = enemy->GetUpVec();
+    int enemyBreakCount = enemy->GetBreakCount();
+    float enemyRadius = enemy->GetRadius();
+
+    glm::vec3 camPos(glm::inverse(viewMat)[3]);
+    glm::vec3 quadCenter = enemyPos + enemyUp * 0.8f;
+    glm::vec3 forward = glm::normalize(camPos - quadCenter);
+    glm::vec3 right = glm::normalize(glm::cross(enemyUp, forward));
+    if (glm::length(right) < 0.01f)
+        right = glm::normalize(glm::cross(enemyUp, glm::vec3(0, 0, 1)));
+    glm::vec3 upQuad = glm::cross(forward, right);
+    glm::vec3 drawPos = enemyPos + enemyUp * 0.8f;
+    
+    const float enemyLabelWidth = 0.5f;
+    const float enemyLabelHeight = 0.5f;
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texId);
+    glUniform1i(locUseTexture, 1);
+    mVertexArrays.at("text")->SetActive();
+    glm::mat4 billboard(1.0f);
+    billboard[0] = glm::vec4(right * enemyLabelWidth, 0.0f);
+    billboard[1] = glm::vec4(-upQuad * enemyLabelHeight, 0.0f);
+    billboard[2] = glm::vec4(forward, 0.0f);
+    
+    float rightMargin = 0;
+    for (int i = 0; i < enemyBreakCount; i++) {
+        float rightMargin = (i - (enemyBreakCount - 1) * 0.5f) * 0.4f;
+        glm::vec3 drawPos = enemyPos + enemyUp * enemyRadius * 0.8f + right * rightMargin;
+        billboard[3] = glm::vec4(drawPos, 1.0f);
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
+        glDrawArrays(GL_TRIANGLES, 0, 6);            
     }
+
+    glUniform1i(locUseTexture, 0);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+}
+
+std::vector<glm::mat4> Renderer::GetViews() {
+    std::vector<glm::mat4> views;
+
+    bool isOpening = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
+    if (isOpening) {
+        bool isTalkWithMother = GetGame()->GetUIState()->GetTalkWith() == UIState::TalkWith::Mother;
+        bool isTalkWithDoctor = GetGame()->GetUIState()->GetTalkWith() == UIState::TalkWith::Doctor;
+
+        if (isTalkWithMother) {
+            glm::mat4 view = glm::lookAt(glm::vec3(-2.0f, 4.0f, -2.0f), glm::vec3(4.0f, 2.0f, 4.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+            views.emplace_back(view);
+        } else if (isTalkWithDoctor) {
+            glm::mat4 view = glm::lookAt(glm::vec3(3.0f, 4.0f, 1.0f), glm::vec3(-4.0f, 2.0f, -4.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+            views.emplace_back(view);
+        }
+
+        if(!views.empty())
+            return views;
+    }
+
+    std::vector<Player*> players = mGame->GetPlayers();
+    Planet* currentPlanet = players[0]->GetCurrentPlanet();
+
+    std::vector<Boat*> boats = currentPlanet->GetBoats();
+    if (!boats.empty()) {
+        for (auto boat : boats) {
+            if (boat->GetFocusComponent()->GetFocusTimer() < 0.0f)
+                continue;
+                
+            glm::mat4 view = boat->GetFocusComponent()->GetFocusView();
+            views.emplace_back(view);
+            players[0]->SetCanMove(false);
+        }
+    }
+
+    Key* key = currentPlanet->GetKey();
+    if (key) {
+        if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
+            glm::mat4 view = key->GetFocusComponent()->GetFocusView();
+            views.emplace_back(view);
+            players[0]->SetCanMove(false);
+        }
+    }
+    
+    bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
+    if (isStageClear) {
+        glm::mat4 view = players[0]->getPlayerView(4.0f, true);
+        views.emplace_back(view);
+    }
+
+    if (views.empty()) {
+        glm::mat4 view = players[0]->getPlayerView(10.0f);
+        views.emplace_back(view);
+        players[0]->SetCanMove(true);
+    }    
+
+    bool isPlayer2Joined = mGame->GetIsPlayer2Joined();
+    if (isPlayer2Joined) {
+        glm::mat4 view2 = players[1]->getPlayerView(4.0f, true);
+        views.emplace_back(view2);
+    }
+
+    return views;
 }
 
 void Renderer::AddImgInfo(std::string path, std::string name) {
