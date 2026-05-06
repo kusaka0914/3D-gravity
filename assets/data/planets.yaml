@@ -18,7 +18,7 @@ planets:
     # keySpawnCondition: AllBoatPartsCollected
   - type: stage1planet2
     center: [32.0, 0.0, 0.0]
-    radius: 5.0
+    radius: 4.0
     color: [0.0, 1.0, 0.0, 1.0]
     model: planet.obj
     stageNum: 1
@@ -26,7 +26,7 @@ planets:
     # keySpawnCondition: AllEnemiesDead
   - type: stage1planet3
     center: [64.0, 0.0, 0.0]
-    radius: 5.0
+    radius: 4.0
     color: [0.0, 1.0, 0.0, 1.0]
     model: planet_2.obj
     stageNum: 1

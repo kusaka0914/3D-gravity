@@ -47,7 +47,6 @@ Player::Player(Game* game)
     , mAttackMoveLockRemaining(0.0f)
     , mAttackDodgeLockRemaining(0.0f)
     , mAttackIndex(0)
-    , mAirAttackIndex(0)
     , mIsActive(true)
     , mAttackPressTimer(-1.0f)
     , mStrongAttackTimer(-1.0f)
@@ -224,11 +223,7 @@ void Player::UpdateCamera(float deltaTime) {
 }
 
 void Player::UpdateWorldVec() {
-    if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal) {
-        mUpVec = {0.0f, 1.0f, 0.0f};
-    } else {
-        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
-    }
+    UpdateUpVec();
 
     glm::vec3 worldLeft = glm::cross(mUpVec, glm::vec3(0, 0, 1));
     if (glm::length(worldLeft) < 0.01f)
@@ -254,36 +249,34 @@ void Player::UpdateWalk(float deltaTime) {
     // ジャンプ処理
     if (mOnGround && mJumpPressed)
     {
-        mVelocity += mUpVec * 5.0f;
+        float jumpVel = 5.0f;
+        mVelocity += mUpVec * jumpVel;
         mOnGround = false;
         GetGame()->GetAudioSystem()->PlaySE("jumpSE");
     }
 }
 
 void Player::UpdateDodge(float deltaTime) {
-    const float dodgeDuration = 0.05f;
-    const float dodgeCooldownTime = 1.0f;
     // 向いている方向へ回避開始
     if (mDodgePressed && !mDodgePressedPrev && mDodgeCooldown <= 0.0f && mAttackDodgeLockRemaining <= 0.0f)
-        StartDodge(dodgeDuration, dodgeCooldownTime);
+        StartDodge();
     
     // 回避中移動
     if (mDodgeTimer > 0.0f)
-        Dodge(deltaTime, dodgeDuration);
+        Dodge(deltaTime);
 }
 
-void Player::StartDodge(float dodgeDuration, float dodgeCooldownTime) {
+void Player::StartDodge() {
     mDodgeDir = -mFacingForwardVec;
-    mDodgeTimer = dodgeDuration;
-    mDodgeCooldown = dodgeCooldownTime;
+    mDodgeTimer = mDodgeDuration;
+    mDodgeCooldown = mDodgeCooldownTime;
     mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
     mVelocity = glm::vec3(0.0f);
     GetGame()->GetAudioSystem()->PlaySE("dodgeSE");
 }
 
-void Player::Dodge(float deltaTime, float dodgeDuration) {
-    const float dodgeDistance = 2.0f;
-    float dodgeSpeed = dodgeDistance / dodgeDuration;
+void Player::Dodge(float deltaTime) {
+    float dodgeSpeed = mDodgeDistance / mDodgeDuration;
     glm::vec3 moveDelta = mDodgeDir * dodgeSpeed * deltaTime;
     glm::vec3 desiredPos = mPos + moveDelta;
     
@@ -329,7 +322,8 @@ void Player::DetermineLanding() {
 }
 
 void Player::ApplyGravity(float deltaTime) {
-    mVelocity -= mUpVec * 9.8f * deltaTime;
+    float gravity = 9.8f;
+    mVelocity -= mUpVec * gravity * deltaTime;
     mPos += mVelocity * deltaTime;
 
     if (GetGame()->GetCurrentStageNum() == 0 && mPos.y <= -1.0f) {
@@ -378,29 +372,23 @@ void Player::Attack(float deltaTime) {
         mComboTimer = mAttackMoveLockRemaining + 1.0f;
         if (!mOnGround)
         {
-            // mAttackCooldownRemaining = 0.2f;
-            // mAirAttackIndex++;
-            // if (mAirAttackIndex == 5) {
-            //     mAirAttackIndex = 0;
-            // }
+
         } else {
-            mAttackMotionTimer = 0.3f;
-            mAirAttackIndex = 0;
+            mAttackMotionTimer = mDefaultAttackMotionTimer;;
         }
     };
     
-    float attackAngle;
     if (mAttackPressed) {
-        mAttackRange = 1.6f;
-        attackAngle = 0.8f;
-        mAttack = 10;
+        mAttackRange = mNormalAttackRange;
+        mAttackAngle = mNormalAttackAngle;
+        mAttack = mNormalAttack;
     } else if (mWideAttackPressed) {
-        mAttackRange = 2.8f;
-        attackAngle = 0.4f;
-        mAttack = 5;
+        mAttackRange = mWideAttackRange;
+        mAttackAngle = mWideAttackAngle;
+        mAttack = mWideAttack;
     } else if (mStrongAttackTimer >= 0.0f) {
-        mAttackRange = 6.0f;
-        mAttack = 50;
+        mAttackRange = mStrongAttackRange;
+        mAttack = mStrongAttack;
     }
 
     std::vector<Enemy*> enemies = mCurrentPlanet->GetEnemies();
@@ -419,7 +407,7 @@ void Player::Attack(float deltaTime) {
         if (mStrongAttackTimer >= 0.0f && dist <= effectiveRange) {
             hitEnemies.push_back(enemy);
         }
-        if (dist <= effectiveRange && dot >= attackAngle)
+        if (dist <= effectiveRange && dot >= mAttackAngle)
             hitEnemies.push_back(enemy);
     }
 
@@ -428,7 +416,7 @@ void Player::Attack(float deltaTime) {
         for (Enemy* enemy : hitEnemies)
             enemy->SetIsDamaged(true);
 
-        mAttackCooldownRemaining = 0.3f;
+        mAttackCooldownRemaining = mAttackCooldown;
         mAttackIndex++;
         float strongAttackTimerNext = mStrongAttackTimer - deltaTime;
         if (mStrongAttackTimer >= 0.0f) {
@@ -441,7 +429,7 @@ void Player::Attack(float deltaTime) {
         }
         if (mAttackIndex == 3)
         {
-            mAttackCooldownRemaining = 1.0f;
+            mAttackCooldownRemaining = mLastAttackCooldown;
             mAttackIndex = 0;
             for (Enemy* enemy : hitEnemies)
             {
@@ -457,11 +445,11 @@ void Player::Attack(float deltaTime) {
     }
     else
     {
-        mAttackCooldownRemaining = 0.3f;
+        mAttackCooldownRemaining = mAttackCooldown;
         mAttackIndex++;
         if (mAttackIndex == 3)
         {
-            mAttackCooldownRemaining = 1.0f;
+            mAttackCooldownRemaining = mLastAttackCooldown;
             mAttackIndex = 0;
         }
         applyAttackLocksFromCooldown();
@@ -475,25 +463,25 @@ void Player::SpecialAttack() {
     {
         if (!enemy->GetIsAlive())
             continue;
-        mAttack = 10;
+        mAttack = mNormalAttack;
         enemy->SetIsDamaged(true);
         if (enemy->GetOnGround()) {
             enemy->SetIsBroken(true);
         }
-        mSpecialAttackCooldownRemaining = 30.0f;
+        mSpecialAttackCooldownRemaining = mSpecialAttackCooldown;
     }
 }
 
 void Player::ChargeAttack(float deltaTime) {
     if (mAttackPressed && !mAttackPressedPrev) {
-        mAttackPressTimer = 0.5f;
+        mAttackPressTimer = mDefaultAttackPressTimer;
         GetGame()->GetAudioSystem()->PlaySE("chargingSE");
     } else if (mAttackPressed && mAttackPressedPrev) {
         float attackPressTimerPrev = mAttackPressTimer;
         mAttackPressTimer -= deltaTime;
         if (mAttackPressTimer >= 0.0f) {
-            mPos -= -mFacingForwardVec * 6.0f * deltaTime;
-            mPos -= -mUpVec * 6.0f * deltaTime;
+            mPos -= -mFacingForwardVec * mChargeMoveSpeed * deltaTime;
+            mPos -= -mUpVec * mChargeMoveSpeed * deltaTime;
         } else {
             mAttackPressTimer = 0.0f;
         }
@@ -501,21 +489,21 @@ void Player::ChargeAttack(float deltaTime) {
             GetGame()->GetAudioSystem()->PlaySE("chargedSE");
         }
     } else if (!mAttackPressed && mAttackPressedPrev && mAttackPressTimer <= 0.0f) {
-        mStrongAttackTimer = 0.03f;
+        mStrongAttackTimer = mDefaultStrongAttackTimer;
     } else if (!mAttackPressed && !mAttackPressedPrev && mAttackPressTimer >= 0.0f) {
         mAttackPressTimer = -1.0f;
     }
 }
 
 void Player::TakeDamage() {
-    mDamageTimer = 1.0f;
-    mInvincibleTimer = 2.0f;
+    mDamageTimer = mDefaultDamageTimer;
+    mInvincibleTimer = mDefaultInvincibleTimer;
     mIsDamaged = false;
     GetGame()->GetAudioSystem()->PlaySE("damagedSE");
 }
 
 void Player::Die() {
-    mHp = 100;
+    mHp = mMaxHp;
     mPos = mRestartPos;
     mCurrentPlanetNum = mRestartPlanetIndex;
     mVelocity = {0.0f, 0.0f, 0.0f};
@@ -594,10 +582,10 @@ void Player::UpdateTimer(float deltaTime) {
     if (mAttackMotionTimer >= 0.0f)
     {
         mAttackMotionTimer -= deltaTime;
-        if (mAttackMotionTimer >= 0.15f) {
-            mPos += -mFacingForwardVec * 5.0f * deltaTime;
+        if (mAttackMotionTimer >= mDefaultAttackMotionTimer / 2.0f) {
+            mPos += -mFacingForwardVec * mAttackSpeed * deltaTime;
         }else {
-            mPos -= -mFacingForwardVec * 5.0f * deltaTime;
+            mPos -= -mFacingForwardVec * mAttackSpeed * deltaTime;
         }
     }
 
@@ -630,8 +618,8 @@ void Player::UpdateTimer(float deltaTime) {
     if (mStrongAttackTimer >= 0.0f)
     {
         mStrongAttackTimer -= deltaTime;
-        mPos = mPos + -mFacingForwardVec * 100.0f * deltaTime;
-        mPos = mPos + -mUpVec * 100.0f * deltaTime;
+        mPos = mPos + -mFacingForwardVec * mStrongAttackSpeed * deltaTime;
+        mPos = mPos + -mUpVec * mStrongAttackSpeed * deltaTime;
     }
 }
 

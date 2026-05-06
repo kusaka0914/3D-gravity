@@ -29,6 +29,11 @@ Enemy::Enemy(Game* game)
     ,mKnockBackTimer(-1.0f)
     ,mIsBroken(false)
     ,mIsCountered(false)
+    ,mDefaultStandByAttackTimer(-1.0f)
+    ,mDefaultLaunchedTimer(-1.0f)
+    ,mDefaultAttackMotionTimer(-1.0f)
+    ,mKnockBackSpeed(5.0f)
+    ,mAttackSpeed(1.5f)
 {
     
 }
@@ -108,21 +113,10 @@ void Enemy::UpdateDying(float deltaTime) {
     }
 }
 
-void Enemy::UpdateUpVec() {
-    glm::vec3 center = GetCurrentPlanet()->GetCenter();
-    float radius = GetCurrentPlanet()->GetRadius();
-    if (GetCurrentPlanet()->GetPlanetShape() == Planet::PlanetShape::Normal) {
-        mUpVec = {0.0f, 1.0f, 0.0f};
-    } else {
-        mUpVec = glm::normalize(mPos - GetCurrentPlanet()->GetCenter());
-    }
-}
-
 void Enemy::UpdateKnockBack(float deltaTime, Player* player) {
     glm::vec3 playerPos = player->GetPos();
     glm::vec3 toEnemy = glm::normalize(mPos - playerPos);
-    float moveSpeed = 5.0f;
-    mPos += toEnemy * moveSpeed * deltaTime;
+    mPos += toEnemy * mKnockBackSpeed * deltaTime;
     if (mKnockBackTimer >= 0.0f) {
         mKnockBackTimer -= deltaTime;
     }
@@ -149,7 +143,7 @@ void Enemy::UpdateBehavior(float deltaTime, Player* player) {
     {
         if (!player->GetIsDamagePrev()) {
             mIsPreparing = true;
-            mStandByAttackTimer = 2.0f;
+            mStandByAttackTimer = mDefaultStandByAttackTimer;
         }
     }
     // 攻撃準備
@@ -164,7 +158,7 @@ void Enemy::UpdateBehavior(float deltaTime, Player* player) {
     if (mStandByAttackTimer <= 0.0f && mIsPreparing)
     {
         mStandByAttackTimer = -1.0f;
-        mAttackMotionTimer = 1.5f;
+        mAttackMotionTimer = mDefaultAttackMotionTimer;
         mIsPreparing = false;
         mIsHit = false;
     }
@@ -229,12 +223,10 @@ void Enemy::UpdateMotionTimer(float deltaTime, Player* player) {
 
     glm::vec3 playerPos = player->GetPos();
     glm::vec3 toPlayer = glm::normalize(playerPos - mPos);
-    float attackSpeed = 2.5f;
-    float halfAttackMotionTimer = 0.7f;
-    if (mAttackMotionTimer >= halfAttackMotionTimer) {
-        mPos += toPlayer * attackSpeed * deltaTime;
+    if (mAttackMotionTimer >= mDefaultAttackMotionTimer / 2) {
+        mPos += toPlayer * mAttackSpeed * deltaTime;
     }else {
-        mPos -= toPlayer * attackSpeed * deltaTime;
+        mPos -= toPlayer * mAttackSpeed * deltaTime;
     }
     FixPlanetSurface();
 
@@ -242,8 +234,7 @@ void Enemy::UpdateMotionTimer(float deltaTime, Player* player) {
 
     const float attackRangeMargin = 0.2f;
     bool inRangeOfPlayer = (distToPlayer <= GetRadius() + attackRangeMargin);
-    if (inRangeOfPlayer && !mIsHit && player->GetInvincibleTimer() <= 0.0f)
-    {
+    if (inRangeOfPlayer && !mIsHit && player->GetInvincibleTimer() <= 0.0f) {
         player->SetIsDamaged(true);
         player->SetHp(player->GetHp() - mAttack);
         player->SetKnockBackFrom(mPos);
@@ -277,7 +268,7 @@ void Enemy::ApplyGravity(float deltaTime) {
 
     // 頂点で固定開始
     if (vPrev > 0.0f && vNow <= 0.0f) {
-        mLaunchedTimer = 3.0f;
+        mLaunchedTimer = mDefaultLaunchedTimer;
     }
 }
 
@@ -291,8 +282,7 @@ void Enemy::FinishDying() {
     mIsAlive = false;
     // ボス撃破でスター出現（撃破前のボスがいた場所に置く）
     Star* star = GetCurrentPlanet()->GetStar();
-    if (mIsBoss)
-    {
+    if (mIsBoss) {
         star->SetIsActive(true); 
         star->SetPos(mPos);
     }

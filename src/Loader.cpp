@@ -90,6 +90,7 @@ bool Loader::LoadPlayersFromYaml(const char* path) {
             player->SetCurrentPlanetNum(currentPlanetNum);
             player->SetRestartPlanetIndex(currentPlanetNum);
 
+
             float hp = node["hp"] ? node["hp"].as<float>() : 100.0f;
             player->SetHp(hp);
 
@@ -106,6 +107,88 @@ bool Loader::LoadPlayersFromYaml(const char* path) {
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             player->SetPos(pos);
             player->SetRestartPos(pos);
+
+            YAML::Node playerRoot = YAML::LoadFile("../assets/data/players.yaml");
+            for (auto playerNode : playerRoot["players"]){
+                float hp = playerNode["hp"] ? playerNode["hp"].as<float>() : 0.0f;
+                player->SetHp(hp);
+                player->SetMaxHp(hp);
+
+                float attackSpeed = playerNode["attackSpeed"] ? playerNode["attackSpeed"].as<float>() : 0.0f;
+                player->SetAttackSpeed(attackSpeed);
+
+                float attack = playerNode["attack"] ? playerNode["attack"].as<float>() : 0.0f;
+                player->SetAttack(attack);
+
+                float cameraPitch = playerNode["cameraPitch"] ? playerNode["cameraPitch"].as<float>() : 0.0f;
+                player->SetCameraPitch(cameraPitch);
+
+                float moveSpeed = playerNode["moveSpeed"] ? playerNode["moveSpeed"].as<float>() : 0.0f;
+                player->SetMoveSpeed(moveSpeed);
+
+                float dodgeDuration = playerNode["dodgeDuration"] ? playerNode["dodgeDuration"].as<float>() : 0.0f;
+                player->SetDodgeDuration(dodgeDuration);
+
+                float dodgeCooldownTime = playerNode["dodgeCooldownTime"] ? playerNode["dodgeCooldownTime"].as<float>() : 0.0f;
+                player->SetDodgeCooldownTime(dodgeCooldownTime);
+
+                float dodgeDistance = playerNode["dodgeDistance"] ? playerNode["dodgeDistance"].as<float>() : 0.0f;
+                player->SetDodgeDistance(dodgeDistance);
+
+                float normalAttackRange = playerNode["normalAttackRange"] ? playerNode["normalAttackRange"].as<float>() : 0.0f;
+                player->SetNormalAttackRange(normalAttackRange);
+
+                float normalAttackAngle = playerNode["normalAttackAngle"] ? playerNode["normalAttackAngle"].as<float>() : 0.0f;
+                player->SetNormalAttackAngle(normalAttackAngle);
+
+                float normalAttack = playerNode["normalAttack"] ? playerNode["normalAttack"].as<float>() : 0.0f;
+                player->SetNormalAttack(normalAttack);
+
+                float wideAttackRange = playerNode["wideAttackRange"] ? playerNode["wideAttackRange"].as<float>() : 0.0f;
+                player->SetWideAttackRange(wideAttackRange);
+
+                float wideAttackAngle = playerNode["wideAttackAngle"] ? playerNode["wideAttackAngle"].as<float>() : 0.0f;
+                player->SetWideAttackAngle(wideAttackAngle);
+
+                float wideAttack = playerNode["wideAttack"] ? playerNode["wideAttack"].as<float>() : 0.0f;
+                player->SetWideAttack(wideAttack);
+
+                float strongAttackRange = playerNode["strongAttackRange"] ? playerNode["strongAttackRange"].as<float>() : 0.0f;
+                player->SetStrongAttackRange(strongAttackRange);
+
+                float strongAttack = playerNode["strongAttack"] ? playerNode["strongAttack"].as<float>() : 0.0f;
+                player->SetStrongAttack(strongAttack);
+
+                float strongAttackSpeed = playerNode["strongAttackSpeed"] ? playerNode["strongAttackSpeed"].as<float>() : 0.0f;
+                player->SetStrongAttackSpeed(strongAttackSpeed);
+
+                float specialAttackCooldown = playerNode["specialAttackCooldown"] ? playerNode["specialAttackCooldown"].as<float>() : 0.0f;
+                player->SetSpecialAttackCooldown(specialAttackCooldown);
+
+                float defaultInvincibleTimer = playerNode["defaultInvincibleTimer"] ? playerNode["defaultInvincibleTimer"].as<float>() : 0.0f;
+                player->SetDefaultInvincibleTimer(defaultInvincibleTimer);
+
+                float defaultDamageTimer = playerNode["defaultDamageTimer"] ? playerNode["defaultDamageTimer"].as<float>() : 0.0f;
+                player->SetDefaultDamageTimer(defaultDamageTimer);
+
+                float defaultAttackMotionTimer = playerNode["defaultAttackMotionTimer"] ? playerNode["defaultAttackMotionTimer"].as<float>() : 0.0f;
+                player->SetDefaultAttackMotionTimer(defaultAttackMotionTimer);
+
+                float attackCooldown = playerNode["attackCooldown"] ? playerNode["attackCooldown"].as<float>() : 0.0f;
+                player->SetAttackCooldown(attackCooldown);
+
+                float lastAttackCooldown = playerNode["lastAttackCooldown"] ? playerNode["lastAttackCooldown"].as<float>() : 0.0f;
+                player->SetLastAttackCooldown(lastAttackCooldown);
+
+                float defaultAttackPressTimer = playerNode["defaultAttackPressTimer"] ? playerNode["defaultAttackPressTimer"].as<float>() : 0.0f;
+                player->SetDefaultAttackPressTimer(defaultAttackPressTimer);
+
+                float chargeMoveSpeed = playerNode["chargeMoveSpeed"] ? playerNode["chargeMoveSpeed"].as<float>() : 0.0f;
+                player->SetChargeMoveSpeed(chargeMoveSpeed);
+
+                float defaultStrongAttackTimer = playerNode["defaultStrongAttackTimer"] ? playerNode["defaultStrongAttackTimer"].as<float>() : 0.0f;
+                player->SetDefaultStrongAttackTimer(defaultStrongAttackTimer);
+            }
 
             Player* player_ptr = player.get();
             GetGame()->AddActor(std::move(player));
@@ -202,6 +285,24 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
                 enemy->SetIsBoss(true);
             YAML::Node enemyRoot = YAML::LoadFile("../assets/data/enemies.yaml");
             for (auto enemyNode : enemyRoot["enemies"]){
+                if (enemyNode["type"].as<std::string>() == "common") {
+                    float knockBackSpeed = enemyNode["knockBackSpeed"] ? enemyNode["knockBackSpeed"].as<float>() : 0.0f;
+                    enemy->SetKnockBackSpeed(knockBackSpeed);
+
+                    float defaultStandByAttackTimer = enemyNode["defaultStandByAttackTimer"] ? enemyNode["defaultStandByAttackTimer"].as<float>() : 0.0f;
+                    enemy->SetDefaultStandByAttackTimer(defaultStandByAttackTimer);
+
+                    float defaultAttackMotionTimer = enemyNode["defaultAttackMotionTimer"] ? enemyNode["defaultAttackMotionTimer"].as<float>() : 0.0f;
+                    enemy->SetDefaultAttackMotionTimer(defaultAttackMotionTimer);
+
+                    float attackSpeed = enemyNode["attackSpeed"] ? enemyNode["attackSpeed"].as<float>() : 0.0f;
+                    enemy->SetAttackSpeed(attackSpeed);
+
+                    float defaultLaunchedTimer = enemyNode["defaultLaunchedTimer"] ? enemyNode["defaultLaunchedTimer"].as<float>() : 0.0f;
+                    enemy->SetDefaultLaunchedTimer(defaultLaunchedTimer);
+                    continue;
+                }
+
                 if (type != enemyNode["type"].as<std::string>())
                     continue;
 
