@@ -1,6 +1,7 @@
 // 学習用にコメントをつけています。
 #include <GL/glew.h>
-#include "Shader.h"
+#include "Shader3D.h"
+#include "UIShader.h"
 #include "Planet.h"
 #include "Stage.h"
 #include "Player.h"
@@ -131,7 +132,8 @@ bool Game::Initialize()
     }
 
     mAudioSystem = std::make_unique<AudioSystem>(this);
-    mShader = std::make_unique<Shader>();
+    mShader3D = std::make_unique<Shader3D>();
+    mUIShader = std::make_unique<UIShader>();
     mUILoader = std::make_unique<UILoader>(this); 
     mUIRenderer = std::make_unique<UIRenderer>(this);
     mRenderer = std::make_unique<Renderer>(this);
@@ -139,7 +141,7 @@ bool Game::Initialize()
     mGameProgressState = std::make_unique<GameProgressState>(this);
     // モデルロード（Mesh::Initialize）を行うため、LoadData より先に生成しておく
     mMesh = std::make_unique<Mesh>();
-    if (!mShader->GetShaderProgram())
+    if (!mShader3D->GetShaderProgram() || !mUIShader->GetShaderProgram())
     {
         glfwTerminate();
         return false;

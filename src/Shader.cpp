@@ -5,14 +5,7 @@
 
 Shader::Shader()
 {
-    mShaderProgram = createShaderProgram("../shaders/vertex.glsl", "../shaders/fragment.glsl");
-    // シェーダープログラム内のMVPのIDを探して格納
-    mLocModel = glGetUniformLocation(mShaderProgram, "model");
-    mLocView = glGetUniformLocation(mShaderProgram, "view");
-    mLocProj = glGetUniformLocation(mShaderProgram, "projection");
-    mLocObjectColor = glGetUniformLocation(mShaderProgram, "objectColor");
-    mLocUseTexture = glGetUniformLocation(mShaderProgram, "useTexture");
-    mLocDiffuseTexture = glGetUniformLocation(mShaderProgram, "diffuseTexture");
+
 }
 
 Shader::~Shader()

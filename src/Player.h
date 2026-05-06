@@ -131,6 +131,7 @@ public:
     const glm::vec3& GetKnockBackFrom() const { return mKnockBackFrom; }
     const glm::vec3& GetRestartPos() const { return mRestartPos; }
     const glm::vec3& GetVelocity() const { return mVelocity; }
+    const glm::vec3& GetCameraPos() const { return mCameraPos; }
 
     NPC* GetTalkingNPC() const { return mTalkingNPC; }
 
@@ -236,6 +237,7 @@ private:
     glm::vec3 mRestartPos;
     glm::vec3 mVelocity;
     glm::vec3 mDodgeDir;
+    glm::vec3 mCameraPos;
 
     std::string mModelPath;
 

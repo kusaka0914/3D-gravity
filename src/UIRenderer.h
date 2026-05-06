@@ -46,7 +46,7 @@ private:
 
 private:
     Game* mGame;
-    class Shader* mShader;
+    class UIShader* mUIShader;
     TTF_Font* mFont;
     class UILoader* mUILoader;
 

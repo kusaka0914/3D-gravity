@@ -12,7 +12,7 @@ public:
 
     Game* GetGame() const { return mGame; }
 private:
-void DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat);
+    void DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat);
     void DrawCharacter(const glm::vec3 &pos, float scale, const glm::vec4 &fallbackColor,
         const glm::vec3 &up, float yaw, const std::vector<struct LoadedMesh> *meshes,
         const glm::vec4 *colorOverride = nullptr);
@@ -22,7 +22,7 @@ void DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat);
 
 private:
     Game* mGame;
-    class Shader* mShader;
+    class Shader3D* mShader3D;
     TTF_Font* mFont;
     const std::unordered_map<const char*, std::unique_ptr<class VertexArray>>& mVertexArrays;
     std::unordered_map<std::string, GLuint> mTextures;

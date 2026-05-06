@@ -1,5 +1,5 @@
 #include "Renderer.h"
-#include "Shader.h"
+#include "Shader3D.h"
 #include "Player.h"
 #include "Stage.h"
 #include "Enemy.h"
@@ -23,7 +23,7 @@
 
 Renderer::Renderer(Game* game)
     : mGame(game)
-    , mShader(game->GetShader())
+    , mShader3D(game->GetShader3D())
     , mFont(game->GetFont())
     , mVertexArrays(game->GetVertexArrays())
 {
@@ -45,7 +45,7 @@ void Renderer::Draw() {
 
     glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUseProgram(mShader->GetShaderProgram());
+    glUseProgram(mShader3D->GetShaderProgram());
 
     std::vector<glm::mat4> views = GetViews();
 
@@ -69,15 +69,35 @@ void Renderer::Draw() {
 }
 
 void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
-    GLint locModel = mShader->GetLocModel();
-    GLint locView = mShader->GetLocView();
-    GLint locProj = mShader->GetLocProj();
-    GLint locObjectColor = mShader->GetLocObjectColor();
-    GLint locUseTexture = mShader->GetLocUseTexture();
-    GLint locDiffuseTexture = mShader->GetLocDiffuseTexture();
+    GLint locModel = mShader3D->GetLocModel();
+    GLint locView = mShader3D->GetLocView();
+    GLint locProj = mShader3D->GetLocProj();
+    GLint locObjectColor = mShader3D->GetLocObjectColor();
+    GLint locUseTexture = mShader3D->GetLocUseTexture();
+    GLint locDiffuseTexture = mShader3D->GetLocDiffuseTexture();
+    GLint locLightPos = mShader3D->GetLocLightPos();
+    GLint locLightColor = mShader3D->GetLocLightColor();
+    GLint locViewPos = mShader3D->GetLocViewPos();
+    GLint locAmbientStrength = mShader3D->GetLocAmbientStrength();
+    GLint locToonLevels = mShader3D->GetLocToonLevels();
+    GLint locToonStrength = mShader3D->GetLocToonStrength();
+    GLint locRimStrength = mShader3D->GetLocRimStrength();
+    GLint locRimPower = mShader3D->GetLocRimPower();
 
     glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(viewMat));
     glUniformMatrix4fv(locProj, 1, GL_FALSE, glm::value_ptr(projMat));
+    std::vector<Player*> players = mGame->GetPlayers();
+    glm::vec3 cameraPos = players[0]->GetCameraPos();
+    glUniform3f(locLightPos, cameraPos.x,cameraPos.y, cameraPos.z);
+    glUniform3f(locLightColor, 0.5f, 0.5f, 0.5f);
+    glUniform3f(locViewPos, cameraPos.x, cameraPos.y, cameraPos.z);
+
+    glUniform1f(locAmbientStrength, 0.8f);
+    glUniform1f(locToonLevels, 5.0f);
+    glUniform1f(locToonStrength, 0.45f);
+
+    glUniform1f(locRimStrength, 0.20f);
+    glUniform1f(locRimPower, 2.5f);
 
     Stage* currentStage = mGame->GetCurrentStage();
     if (!currentStage)
@@ -113,7 +133,6 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
         }
     }
 
-    std::vector<Player*> players = mGame->GetPlayers();
     const float playerScale = 0.25f;
     // 1Pの描画
     if (players[0]->GetIsActive()) {
@@ -246,10 +265,10 @@ void Renderer::DrawCharacter(const glm::vec3 &pos, float scale, const glm::vec4 
     const glm::vec3 &up, float yaw, const std::vector<struct LoadedMesh> *meshes,
     const glm::vec4 *colorOverride) 
 {
-    GLint locModel = mShader->GetLocModel();
-    GLint locObjectColor = mShader->GetLocObjectColor();
-    GLint locUseTexture = mShader->GetLocUseTexture();
-    GLint locDiffuseTexture = mShader->GetLocDiffuseTexture();
+    GLint locModel = mShader3D->GetLocModel();
+    GLint locObjectColor = mShader3D->GetLocObjectColor();
+    GLint locUseTexture = mShader3D->GetLocUseTexture();
+    GLint locDiffuseTexture = mShader3D->GetLocDiffuseTexture();
 
     glm::vec3 upN = glm::normalize(up);
     glm::vec3 worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 0, 1)));
@@ -300,10 +319,10 @@ void Renderer::DrawCharacter(const glm::vec3 &pos, float scale, const glm::vec4 
 }
 
 void Renderer::DrawGuard(glm::mat4 viewMat, Enemy* enemy) {
-    GLint locModel = mShader->GetLocModel();
-    GLint locObjectColor = mShader->GetLocObjectColor();
-    GLint locUseTexture = mShader->GetLocUseTexture();
-    GLint locDiffuseTexture = mShader->GetLocDiffuseTexture();
+    GLint locModel = mShader3D->GetLocModel();
+    GLint locObjectColor = mShader3D->GetLocObjectColor();
+    GLint locUseTexture = mShader3D->GetLocUseTexture();
+    GLint locDiffuseTexture = mShader3D->GetLocDiffuseTexture();
 
     GLuint texId = mTextures["guard"];
     glm::vec3 enemyPos = enemy->GetPos();

@@ -10,16 +10,15 @@ uniform mat4 view;
 uniform mat4 projection;
 
 // フラグメントに渡すためのもの
-out vec3 FragPos;
-out vec3 Normal;
-out vec2 TexCoord;
+out vec3 fragPos;
+out vec3 normal;
+out vec2 texCoord;
 
 void main()
 {
-    // フラグメントに渡すものを準備
-    FragPos = vec3(model * vec4(aPos, 1.0));
-    Normal = mat3(transpose(inverse(model))) * aNormal;
-    TexCoord = aTexCoord;
-    // 特別な変数
+    fragPos = vec3(model * vec4(aPos, 1.0));
+    normal = mat3(transpose(inverse(model))) * aNormal;
+    texCoord = aTexCoord;
+
     gl_Position = projection * view * model * vec4(aPos, 1.0);
 }

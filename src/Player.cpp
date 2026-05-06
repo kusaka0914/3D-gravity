@@ -642,17 +642,16 @@ float Player::getYawFromDirection(const glm::vec3& up, const glm::vec3& dir) {
 glm::mat4 Player::getPlayerView(float cameraDistance, bool isFixed) {
     glm::vec3 toPosX;
     glm::vec3 cameraDir;
-    glm::vec3 cameraPos;
     if (isFixed) {
         toPosX = glm::normalize(mFacingForwardVec);
         cameraDir = glm::normalize(std::cos(-0.2f) * toPosX + std::sin(-0.2f) * mUpVec);  
-        cameraPos = mPos - cameraDir * cameraDistance;
+        mCameraPos = mPos - cameraDir * cameraDistance;
         glm::vec3 offset = glm::normalize(mUpVec) * 1.0f;
-        return glm::lookAt(cameraPos, mPos + offset, mUpVec);  
+        return glm::lookAt(mCameraPos, mPos + offset, mUpVec);  
     }
 
     toPosX = glm::normalize(-mForwardVec);
     cameraDir = glm::normalize(std::cos(mCameraPitch) * toPosX + std::sin(mCameraPitch) * mUpVec);
-    cameraPos = mPos - cameraDir * cameraDistance;
-    return glm::lookAt(cameraPos, mPos, mUpVec);
+    mCameraPos = mPos - cameraDir * cameraDistance;
+    return glm::lookAt(mCameraPos, mPos, mUpVec);
 }

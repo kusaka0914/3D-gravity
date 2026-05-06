@@ -14,7 +14,6 @@ public:
     };
     GameProgressState(class Game* game);
     void SetIsFirstBreak(bool isFirstBreak) { mIsFirstBreak = isFirstBreak; }
-    void SetIsStageClear(bool isStageClear) { mIsStageClear = isStageClear; }
     void SetSceneState(std::string sceneState) {
         if (sceneState == "Title") {
             mSceneState = SceneState::Title;
@@ -56,13 +55,11 @@ public:
     }
 
     bool GetIsFirstBreak() const { return mIsFirstBreak; }
-    bool GetIsStageClear() const { return mIsStageClear; }
     SceneState GetSceneState() const { return mSceneState; }
     SceneState GetNextSceneState() const { return mNextSceneState; }
 private:
     Game* mGame;
     bool mIsFirstBreak;
-    bool mIsStageClear;
 
     SceneState mSceneState;
     SceneState mNextSceneState;
