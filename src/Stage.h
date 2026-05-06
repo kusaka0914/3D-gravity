@@ -11,7 +11,7 @@ public:
     void Initialize();
     void AddPlanet(class Planet* planet) { mPlanets.emplace_back(planet); }
     void AddPlanetMesh(std::string modelPath, std::vector<struct LoadedMesh>* meshes) { mPlanetMeshesByPath[modelPath] = meshes; }
-    void RemoveAllPlanet() { for(int i = 0; i < mPlanets.size(); i++) mPlanets.pop_back(); }
+    void RemoveAllPlanet() { mPlanets.clear(); }
 
     const std::vector<class Planet*>& GetPlanets() const { return mPlanets; }
     const std::unordered_map<std::string, std::vector<struct LoadedMesh>*>& GetPlanetMeshesByPath() const { return mPlanetMeshesByPath; }
