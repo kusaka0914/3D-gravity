@@ -77,6 +77,8 @@ void Player::UpdateActor(float deltaTime)
 {
     UpdateCamera(deltaTime);
 
+    UpdateUpVec();
+    mUpVec = GetAverageNormal();
     UpdateWorldVec();
 
     if (!mIsDamaged && mAttackMoveLockRemaining <= 0.0f && mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f && mCanMove)
@@ -84,12 +86,12 @@ void Player::UpdateActor(float deltaTime)
 
     UpdateDodge(deltaTime);
 
-    bool isRising = glm::dot(mVelocity, mUpVec) > 0.2f;
-    if (mDodgeTimer <= 0.0f && !isRising)
-        DetermineLanding();
-
     if (mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f && mStrongAttackTimer <= 0.0f)
         ApplyGravity(deltaTime);
+    
+    bool isRising = glm::dot(mVelocity, mUpVec) > 0.2f;
+    if (mDodgeTimer <= 0.0f && !isRising) 
+        DetermineLanding();
 
     if (mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
         ChangeFaceDir();
@@ -223,8 +225,6 @@ void Player::UpdateCamera(float deltaTime) {
 }
 
 void Player::UpdateWorldVec() {
-    UpdateUpVec();
-
     glm::vec3 worldLeft = glm::cross(mUpVec, glm::vec3(0, 0, 1));
     if (glm::length(worldLeft) < 0.01f)
         worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 1, 0)));
@@ -297,7 +297,6 @@ void Player::Dodge(float deltaTime) {
 
 void Player::DetermineLanding() {
     bool meshGround = false;
-    glm::vec3 center = mCurrentPlanet->GetPos();
 
     glm::vec3 rayFromPos = mPos + mUpVec * 0.1f;
     glm::vec3 rayToPos = mPos - mUpVec * 0.1f;
@@ -305,25 +304,95 @@ void Player::DetermineLanding() {
     btVector3 rayTo(rayToPos.x, rayToPos.y, rayToPos.z);
 
     btCollisionWorld::ClosestRayResultCallback rayCallback(rayFrom, rayTo);
+
     PhysicsSystem* physics = GetGame()->GetPhysicsSystem();
     btDiscreteDynamicsWorld* bulletWorld = physics ? physics->GetBulletWorld() : nullptr;
+    if (!bulletWorld)
+        return;
+
     bulletWorld->rayTest(rayFrom, rayTo, rayCallback);
-    // 着地処理
+
     if (rayCallback.hasHit())
     {
         btVector3 hitPt = rayCallback.m_hitPointWorld;
         glm::vec3 hitPos(hitPt.x(), hitPt.y(), hitPt.z());
-        
+
         mPos = hitPos;
+
         mOnGround = true;
         mVelocity = glm::vec3(0.0f);
         meshGround = true;
     }
-    // 落下開始
+
     if (!meshGround && mOnGround)
     {
         mOnGround = false;
     }
+}
+
+glm::vec3 Player::GetAverageNormal()
+{
+    PhysicsSystem* physics = GetGame()->GetPhysicsSystem();
+    btDiscreteDynamicsWorld* bulletWorld = physics ? physics->GetBulletWorld() : nullptr;
+    if (!bulletWorld)
+        return mUpVec;
+
+    glm::vec3 up = glm::normalize(mUpVec);
+
+    glm::vec3 side = glm::cross(up, glm::vec3(0.0f, 0.0f, 1.0f));
+    if (glm::length(side) < 0.01f)
+        side = glm::cross(up, glm::vec3(1.0f, 0.0f, 0.0f));
+    side = glm::normalize(side);
+
+    glm::vec3 forward = glm::normalize(glm::cross(side, up));
+
+    const float footRadius = 0.25f;
+    const float rayStartOffset = 0.2f;
+    const float rayLength = 2.0f;
+
+    std::vector<glm::vec3> offsets = {
+        glm::vec3(0.0f),
+        forward * footRadius,
+        -forward * footRadius,
+        side * footRadius,
+        -side * footRadius
+    };
+
+    glm::vec3 normalSum(0.0f);
+    int hitCount = 0;
+
+    for (const auto& offset : offsets) {
+        glm::vec3 fromPos = mPos + offset + up * rayStartOffset;
+        glm::vec3 toPos   = mPos + offset - up * rayLength;
+
+        btVector3 rayFrom(fromPos.x, fromPos.y, fromPos.z);
+        btVector3 rayTo(toPos.x, toPos.y, toPos.z);
+
+        btCollisionWorld::ClosestRayResultCallback cb(rayFrom, rayTo);
+        bulletWorld->rayTest(rayFrom, rayTo, cb);
+
+        if (!cb.hasHit())
+            continue;
+
+        btVector3 hitN = cb.m_hitNormalWorld;
+        glm::vec3 hitNormal(hitN.x(), hitN.y(), hitN.z());
+        if (glm::length(hitNormal) < 1e-6f)
+            continue;
+
+        hitNormal = glm::normalize(hitNormal);
+
+        // 裏返り防止
+        if (glm::dot(hitNormal, up) < 0.0f)
+            hitNormal = -hitNormal;
+
+        normalSum += hitNormal;
+        hitCount++;
+    }
+
+    if (hitCount == 0 || glm::length(normalSum) < 1e-6f)
+        return up;
+
+    return glm::normalize(normalSum);
 }
 
 void Player::ApplyGravity(float deltaTime) {
@@ -346,14 +415,14 @@ void Player::ApplyGravity(float deltaTime) {
     float radius = mCurrentPlanet->GetRadius();
     float dist = glm::length(mPos - center);
     // 落下して惑星内部にめり込んだらリスタート地点へ
-    if (dist < radius * 0.5f)
-    {
-        mPos = mRestartPos;
-        mCurrentPlanetNum = mRestartPlanetIndex;
-        mCurrentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[mCurrentPlanetNum];
-        mVelocity = glm::vec3(0.0f);
-        mOnGround = true;
-    }
+    // if (dist < radius * 0.5f)
+    // {
+    //     mPos = mRestartPos;
+    //     mCurrentPlanetNum = mRestartPlanetIndex;
+    //     mCurrentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[mCurrentPlanetNum];
+    //     mVelocity = glm::vec3(0.0f);
+    //     mOnGround = true;
+    // }
 }
 
 void Player::ChangeFaceDir() {

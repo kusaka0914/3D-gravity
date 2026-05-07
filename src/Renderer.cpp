@@ -110,7 +110,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
         // 惑星描画
         for (auto planet : planets)
         {
-            glm::mat4 planetModel = glm::translate(glm::mat4(1.0f), planet->GetPos()) * glm::scale(glm::mat4(1.0f), glm::vec3(planet->GetRadius()));
+            glm::mat4 planetModel = glm::translate(glm::mat4(1.0f), planet->GetPos()) * glm::scale(glm::mat4(1.0f), glm::vec3(planet->GetScale()));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(planetModel));
             glUniform4f(locObjectColor, planet->GetColor().x, planet->GetColor().y, planet->GetColor().z, planet->GetColor().w);
             

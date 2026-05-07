@@ -6,9 +6,9 @@ planets:
   #   shape : Sphere
   #   keySpawnCondition: AllBoatPartsCollected
   - center: [0.0, 0.0, 0.0]
-    scale: [8.0, 8.0, 8.0]
+    scale: [8.0, 2.0, 8.0]
     color: [1.0, 0.0, 0.0, 1.0]
-    model: planet_3.obj
+    model: planet.obj
     shape : Sphere
     keySpawnCondition: AllBoatPartsCollected
   - center: [32.0, 0.0, 0.0]
@@ -206,8 +206,11 @@ players:
   # - theta : 2.5
   #   u : -0.35
   #   currentPlanetNum: 0
-  - theta : 1.7
-    u : 9.5
+  # - theta : 1.7
+  #   u : 9.5
+  #   currentPlanetNum: 0
+  - theta : 0.0
+    u : 0.0
     currentPlanetNum: 0
   
 star:

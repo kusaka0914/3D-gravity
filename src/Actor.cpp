@@ -6,6 +6,7 @@
 Actor::Actor(Game* game)
 : mGame(game)
 ,mYaw(0.0f)
+, mUpVec(0.0f, 1.0f, 0.0f)
 {
     
 }

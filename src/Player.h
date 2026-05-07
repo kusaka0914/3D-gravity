@@ -141,6 +141,7 @@ private:
     void StartDodge();
     void Dodge(float deltaTime);
     void DetermineLanding();
+    glm::vec3 GetAverageNormal();
     void ApplyGravity(float deltaTime);
     void ChangeFaceDir();
     void Attack(float deltaTime);
