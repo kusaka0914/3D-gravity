@@ -1,26 +1,46 @@
 #version 330 core
-// 実際の色になる
-out vec4 FragColor;
 
-// 頂点シェーダーから受け取る
-in vec3 FragPos;
-in vec3 Normal;
-in vec2 TexCoord;
+out vec4 fragColor;
 
-// デフォルトの色
+in vec3 fragPos;
+in vec3 normal;
+in vec2 texCoord;
+
 uniform vec4 objectColor;
-// テクスチャを使うのか
-uniform int useTexture;
-// 実際のテクスチャ
+uniform bool useTexture;
 uniform sampler2D diffuseTexture;
+
+uniform vec3 viewPos;
+uniform vec3 lightPos;
+uniform vec3 lightColor;
+uniform float ambientStrength;
+uniform float rimStrength;
+uniform float rimPower;
+uniform float toonLevels;
+uniform float toonStrength;
 
 void main()
 {
-    if (useTexture != 0) {
-        // 頂点シェーダーから渡されたテクスチャのUV座標から色を取得
-        FragColor = texture(diffuseTexture, TexCoord);
-    } else {
-        // デフォルトの色にする
-        FragColor = vec4(objectColor);
-    }
+    vec4 baseColor = useTexture ? texture(diffuseTexture, texCoord) : objectColor;
+
+    vec3 norm = normalize(normal);
+    vec3 lightDir = normalize(lightPos - fragPos);
+    vec3 viewDir = normalize(viewPos - fragPos);
+
+    vec3 ambient = ambientStrength * lightColor;
+
+    float diff = max(dot(norm, lightDir), 0.0);
+    float levels = max(toonLevels, 1.0);
+    float toonDiffuse = floor(diff * levels) / levels;
+    float finalDiffuse = mix(diff, toonDiffuse, toonStrength);
+
+    float rim = 1.0 - max(dot(viewDir, norm), 0.0);
+    rim = pow(rim, rimPower);
+    vec3 rimLight = rimStrength * rim * lightColor;
+
+    vec3 lighting = ambient + finalDiffuse * lightColor + rimLight;
+    vec3 finalColor = baseColor.rgb * lighting;
+    finalColor = pow(finalColor, vec3(1.0 / 2.2));
+
+    fragColor = vec4(finalColor, baseColor.a);
 }

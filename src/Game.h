@@ -41,7 +41,8 @@ public:
     const std::vector<class Player*>& GetPlayers() const { return mPlayers; }
     const std::vector<class Stage*>& GetStages() const { return mStages; }
     AudioSystem* GetAudioSystem() const { return mAudioSystem.get(); }
-    class Shader* GetShader() const { return mShader.get(); }
+    class Shader3D* GetShader3D() const { return mShader3D.get(); }
+    class UIShader* GetUIShader() const { return mUIShader.get(); }
     class PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }
     class Mesh* GetMesh() const { return mMesh.get(); }
     class UIState* GetUIState() const { return mUIState.get(); }
@@ -53,7 +54,6 @@ public:
 
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }
-    bool GetIsStageClear() const { return mIsStageClear; }
     bool GetIsChangeStage() const { return mIsChangeStage; }
     bool GetIsPlayer2Joined() const { return mIsPlayer2Joined; }
     std::string GetCurrentStagePath() const { return mCurrentStagePath; }
@@ -78,7 +78,8 @@ private:
     std::unique_ptr<class AudioSystem> mAudioSystem;
     std::unique_ptr<class UIRenderer> mUIRenderer;
     std::unique_ptr<class Renderer> mRenderer;
-    std::unique_ptr<class Shader> mShader;
+    std::unique_ptr<class Shader3D> mShader3D;
+    std::unique_ptr<class UIShader> mUIShader;
     std::unique_ptr<class PhysicsSystem> mPhysicsSystem;
     std::unique_ptr<class Loader> mLoader;
     std::unique_ptr<class UILoader> mUILoader;
@@ -97,7 +98,6 @@ private:
     bool mReloadKeyPressedPrev;
     bool mUIReloadKeyPressedPrev;
     bool mAPressedPrev;
-    bool mIsStageClear;
     bool mIsPlayer2Joined;
     bool mIsChangeStage;
     std::string mCurrentStagePath;

@@ -1,6 +1,7 @@
 // 学習用にコメントをつけています。
 #include <GL/glew.h>
-#include "Shader.h"
+#include "Shader3D.h"
+#include "UIShader.h"
 #include "Planet.h"
 #include "Stage.h"
 #include "Player.h"
@@ -16,6 +17,7 @@
 #include "Crystal.h"
 #include "UIRenderer.h"
 #include "UIState.h"
+#include "Platform.h"
 #include "GameProgressState.h"
 #include "Renderer.h"
 #include "BoatParts.h"
@@ -131,7 +133,8 @@ bool Game::Initialize()
     }
 
     mAudioSystem = std::make_unique<AudioSystem>(this);
-    mShader = std::make_unique<Shader>();
+    mShader3D = std::make_unique<Shader3D>();
+    mUIShader = std::make_unique<UIShader>();
     mUILoader = std::make_unique<UILoader>(this); 
     mUIRenderer = std::make_unique<UIRenderer>(this);
     mRenderer = std::make_unique<Renderer>(this);
@@ -139,7 +142,7 @@ bool Game::Initialize()
     mGameProgressState = std::make_unique<GameProgressState>(this);
     // モデルロード（Mesh::Initialize）を行うため、LoadData より先に生成しておく
     mMesh = std::make_unique<Mesh>();
-    if (!mShader->GetShaderProgram())
+    if (!mShader3D->GetShaderProgram() || !mUIShader->GetShaderProgram())
     {
         glfwTerminate();
         return false;
@@ -164,6 +167,16 @@ bool Game::Initialize()
         -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
     };
     mVertexArrays["text"] = std::make_unique<VertexArray>(textLabel.data(), 6, nullptr, 0);
+
+    std::vector<float> hpBar = {
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    };
+    mVertexArrays["hpBar"] = std::make_unique<VertexArray>(hpBar.data(), 6, nullptr, 0);
 
     mLoader = std::make_unique<Loader>(this); 
 
@@ -460,6 +473,15 @@ void Game::LoadModel() {
             auto crystalsMeshes = mMesh->GetLoadedMeshes("crystals");
             for (auto crystal : crystals) {
                 crystal->SetMeshes(crystalsMeshes);
+            }
+        }
+
+        // クリスタルモデルをロード
+        std::vector<Platform*> platforms = planet->GetPlatforms();
+        if (!platforms.empty()) {
+            auto platformMeshes = mMesh->GetLoadedMeshes("platform");
+            for (auto platform : platforms) {
+                platform->SetMeshes(platformMeshes);
             }
         }
     }

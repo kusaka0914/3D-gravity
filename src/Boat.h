@@ -10,57 +10,48 @@
 class Boat : public Actor {
 public:
     Boat(class Game* game);
+    void Initialize() override;
     void UpdateActor(float deltaTime) override;
 
-    void SetPlanets(std::vector<class Planet*> planets) { mPlanets = planets; }
-    void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
-    void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
-    void SetStartPlanet(int startPlanetNum) { mStartPlanet = startPlanetNum; }
-    void SetDestPlanet(int destPlanetNum) { mDestPlanet = destPlanetNum; }
+    void SetDestPlanet(Planet* destPlanet) { mDestPlanet = destPlanet; }
     void SetDestStage(int destStage) { mDestStage = destStage; }
     void SetIsMoving(bool isMoving) { mIsMoving = isMoving; }
-    void SetIsActive(bool isActive) override{ mIsActive = isActive; }
+    void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetTransitionTimer(float transitionTimer) { mTransitionTimer = transitionTimer; }
     void SetProgress(float progress) { mProgress = progress; }
-    void SetPos(const glm::vec3& pos) { mPos = pos; }
     void SetStartPos(const glm::vec3& startPos) { mStartPos = startPos; }
-    void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
 
-    int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
-    int GetStartPlanet() const { return mStartPlanet; }
-    int GetDestPlanet() const { return mDestPlanet; }
     bool GetIsMoving() const { return mIsMoving; }
     bool GetIsActive() const { return mIsActive; }
     float GetTransitionTimer() const { return mTransitionTimer; }
     float GetProgress() const { return mProgress; }
-    const glm::vec3& GetPos() const override { return mPos; }
     const glm::vec3& GetStartPos() const { return mStartPos; }
     const glm::vec3& GetDestPos() const { return mDestPos; }
-    const glm::vec3& GetUpVec() const { return mUpVec; }
-    const std::vector<class Planet*>& GetPlanets() const { return mPlanets; }
     const std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
     class FocusComponent* GetFocusComponent() const { return mFocusComponent; }
 
 private:
-    void ChangeStage();
+    void OnShown();
+    void UpdateMoving(float deltaTime);
+    void HandleMoving(float deltaTime);
+    void HandleArrived();
 
 private:
-    class Planet* mCurrentPlanet;
-    int mCurrentPlanetNum;
-    int mStartPlanet;
-    int mDestPlanet;
-    int mDestStage;
+    Planet* mDestPlanet;
+
     bool mIsMoving;
     bool mIsActivePrev;
     bool mIsActive;
+
+    int mDestStage;
+    
     float mTransitionTimer;
     float mProgress;
-    glm::vec3 mPos;
+
     glm::vec3 mStartPos;
     glm::vec3 mDestPos;
-    glm::vec3 mUpVec;
-    std::vector<class Planet*> mPlanets;
+
     std::vector<struct LoadedMesh>* mMeshes;
     class FocusComponent* mFocusComponent;
 };

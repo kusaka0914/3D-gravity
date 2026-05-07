@@ -13,22 +13,14 @@ public:
     Star(class Game* game);
     void UpdateActor(float deltaTime) override;
 
-    void SetPos(glm::vec3& pos) { mPos = pos; }
-    void SetIsActive(bool isActive) override { mIsActive = isActive; }
-    void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
+    void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
 
-    const glm::vec3& GetPos() const override{ return mPos; }
-    const glm::vec3& GetUpVec() const { return mUpVec; }
     bool GetIsActive() const { return mIsActive; }
-    class Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
     class CollectableComponent* GetCollectableComponent() const { return mCollectableComponent; }
     std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
 
 private:
-    Planet* mCurrentPlanet;
-    glm::vec3 mPos;
-    glm::vec3 mUpVec;
     bool mIsActive;
     float mClearTimer;
     CollectableComponent* mCollectableComponent;

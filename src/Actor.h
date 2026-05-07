@@ -7,30 +7,45 @@ class Actor {
 public:
     Actor(class Game* game);
     ~Actor();
+
     virtual void Initialize();
+
     void Update(float deltaTime);
     virtual void UpdateActor(float deltaTime);
+
     void ProcessInput();
     virtual void ProcessActor();
+
+    void UpdateUpVec();
+
     void AddComponent(std::unique_ptr<class Component> component);
     void RemoveComponent(std::unique_ptr<Component> component);
 
-    virtual void SetIsActive(bool isActive) {
-        
-    };
+    void SetPos(const glm::vec3& pos) { mPos = pos; }
+    void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
+    void SetScale(const glm::vec3& scale) { mScale = scale; }
 
-    Game* GetGame() const { return mGame; }
-    virtual const glm::vec3& GetPos() const
-    {
-        static const glm::vec3 kZero(0.0f, 0.0f, 0.0f);
-        return kZero;
-    }
+    void SetModelPath(const std::string& modelPath) { mModelPath = modelPath; }
 
-    virtual float GetRadius() const
-    {
-        return 0.0f;
-    }
-private:
+    void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
+
+    const glm::vec3& GetPos() const { return mPos; }
+    const glm::vec3& GetUpVec() const { return mUpVec; }
+    const glm::vec3& GetScale() const { return mScale; }
+
+    const std::string& GetModelPath() const { return mModelPath; }
+
+    class Game* GetGame() const { return mGame; }
+    Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
+
+protected:
+    Game* mGame;
+    Planet* mCurrentPlanet;
     std::vector<std::unique_ptr<Component>> mComponents;
-    class Game* mGame;
+
+    glm::vec3 mPos;
+    glm::vec3 mUpVec;
+    glm::vec3 mScale;
+
+    std::string mModelPath;
 };

@@ -7,7 +7,6 @@
 
 Crystal::Crystal(Game* game)
     : Actor(game)
-    , mPos({0.0f, 8.0f, 0.0f})
     , mRadius(1.0f)
     , mIsActive(true)
 {
@@ -18,12 +17,5 @@ Crystal::Crystal(Game* game)
 
 void Crystal::UpdateActor(float deltaTime)
 {
-    if (mDestructibleComponent->GetIsDestroyed()) {
-        
-    }
-    if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal) {
-        mUpVec = {0.0f, 1.0f, 0.0f};
-    } else {
-        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
-    }
+    UpdateUpVec();
 }

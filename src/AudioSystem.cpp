@@ -10,15 +10,18 @@ AudioSystem::AudioSystem(Game* game)
     Initialize();
 }
 
-void AudioSystem::Initialize()
-{
-    // SDL_mixtureの初期化（オーディオを開く）
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) != 0)
-    {
+void AudioSystem::Initialize() {
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) != 0) {
         std::cerr << "Mix_OpenAudio error: " << Mix_GetError() << std::endl;
+        return;
     }
+
+    Mix_VolumeMusic(80);
+    Mix_Volume(-1, 60);
+
     AddBGM("../assets/audio/normalBGM.wav", "normalBGM");
     AddBGM("../assets/audio/boss.wav", "bossBGM");
+
     AddSE("../assets/audio/attack.wav", "attackSE");
     AddSE("../assets/audio/attack_miss.wav", "attackMissSE");
     AddSE("../assets/audio/attack_pre.wav", "attackPreSE");
@@ -38,8 +41,7 @@ void AudioSystem::Initialize()
     AddSE("../assets/audio/Charging.wav", "chargingSE");
 }
 
-void AudioSystem::Update()
-{
+void AudioSystem::Update() {
     std::vector<class Player*> players = GetGame()->GetPlayers();
     bool isPlaying = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Playing;
     if (isPlaying && players[0]->GetCurrentPlanetNum() != mCurrentBgmPlanetIndex || GetGame()->GetIsChangeStage())
@@ -48,15 +50,13 @@ void AudioSystem::Update()
             PlayBGM("normalBGM");
         }
         mCurrentBgmPlanetIndex = players[0]->GetCurrentPlanetNum();
-        if (mCurrentBgmPlanetIndex == 2)
-        {
+        if (mCurrentBgmPlanetIndex == 2) {
             PlayBGM("bossBGM");
         }
     }
 }
 
 void AudioSystem::Shutdown() {
-    // 再生中の曲を止める（オーディオは開いたままだから他の曲を流せる）
     Mix_HaltMusic();
     Mix_CloseAudio();
 }
@@ -64,38 +64,41 @@ void AudioSystem::Shutdown() {
 void AudioSystem::PlayBGM(std::string name) {
     auto it = mBGMList.find(name);
     Mix_Music* BGM = (it != mBGMList.end()) ? it->second : nullptr;
-    if (BGM)
+    if (BGM) {
         Mix_PlayMusic(BGM, -1);
-    else std::cout << "error" << std::endl;
+        return;
+    }
+    
+    std::cerr << "can't find BGM" << std::endl;
 }
 
 void AudioSystem::PlaySE(std::string name) {
     auto it = mSEList.find(name);
     Mix_Chunk* SE = (it != mSEList.end()) ? it->second : nullptr;
-    if (SE)
+    if (SE) {
         Mix_PlayChannel(-1, SE, 0);
+        return;
+    }
+
+    std::cerr << "can't find SE" << std::endl;
 }
 
 void AudioSystem::AddBGM(std::string path, std::string name) {
     Mix_Music* addBGM = Mix_LoadMUS(path.c_str());
-    if (addBGM)
-    {
+    if (addBGM) {
         mBGMList[name] = addBGM;
+        return;
     }
-    else
-    {
-        std::cerr << "Mix_LoadMUS (" + name + ") error: " << Mix_GetError() << std::endl;
-    }
+
+    std::cerr << "Mix_LoadMUS (" + name + ") error: " << Mix_GetError() << std::endl;
 }
 
 void AudioSystem::AddSE(std::string path, std::string name) {
     Mix_Chunk* addSE = Mix_LoadWAV(path.c_str());
-    if (addSE)
-    {
+    if (addSE) {
         mSEList[name] = addSE;
+        return;
     }
-    else
-    {
-        std::cerr << "Mix_LoadWAV (" + name + ") error: " << Mix_GetError() << std::endl;
-    }
+
+    std::cerr << "Mix_LoadWAV (" + name + ") error: " << Mix_GetError() << std::endl;
 }

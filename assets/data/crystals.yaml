@@ -1,9 +1,9 @@
 crystals :
   - type: little
-    scale : 0.0075 
+    scale: 0.0075 
     hp: 10.0
     radius : 1.0
   - type: big
-    scale : 0.02
-    hp : 50.0
-    radius : 2.3
+    scale: 0.02
+    hp: 50.0
+    radius: 2.3

@@ -8,17 +8,14 @@ Component::Component(Actor* owner, int updateOrder)
     
 }
 
-Component::~Component()
-{
+Component::~Component() {
     
 }
 
-void Component::Update(float deltaTime)
-{
+void Component::Update(float deltaTime) {
     
 }
 
-void Component::ProcessInput(const uint8_t* state)
-{
+void Component::ProcessInput(const uint8_t* state) {
 
 }

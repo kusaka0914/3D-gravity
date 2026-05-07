@@ -13,29 +13,23 @@ public:
     Crystal(class Game* game);
     void UpdateActor(float deltaTime) override;
 
-    void SetCurrentPlanet(class Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
-    void SetPos(glm::vec3& pos) { mPos = pos; }
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
     void SetRadius(const float radius) { mRadius = radius; }
-    void SetScale(const float scale) { mScale = scale; }
+
     void SetIsActive(bool isActive) { mIsActive = isActive; }
 
-    const glm::vec3& GetPos() const override { return mPos; }
-    const glm::vec3& GetUpVec() const { return mUpVec; }
     DestructibleComponent* GetDestructibleComponent() const { return mDestructibleComponent; }
     std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
-    float GetRadius() const override { return mRadius; }
-    float GetScale() const { return mScale; }
+    float GetRadius() const { return mRadius; }
+
     bool GetIsActive() const { return mIsActive; }
 
 private:
-    Planet* mCurrentPlanet;
-    DestructibleComponent* mDestructibleComponent;
-    glm::vec3 mPos;
-    glm::vec3 mUpVec;
-    float mRadius;
-    float mScale;
     bool mIsActive;
 
+    float mRadius;
+
     std::vector<struct LoadedMesh>* mMeshes;
+
+    DestructibleComponent* mDestructibleComponent;
 };

@@ -21,6 +21,7 @@ void Mesh::Initialize() {
     mLoadedMeshes["planet"] = loadMeshFromFile("../assets/models/planet.obj");
     mLoadedMeshes["planet_2"] = loadMeshFromFile("../assets/models/planet_2.obj");
     mLoadedMeshes["planet_3"] = loadMeshFromFile("../assets/models/planet_3.obj");
+    mLoadedMeshes["planet7"] = loadMeshFromFile("../assets/models/planet7.obj");
     mLoadedMeshes["house"] = loadMeshFromFile("../assets/models/house.obj");
     mLoadedMeshes["badMotherSlime"] = loadMeshFromFile("../assets/models/badMotherSlime.obj");
     mLoadedMeshes["boat"] = loadMeshFromFile("../assets/models/boat.obj");
@@ -33,6 +34,7 @@ void Mesh::Initialize() {
     mLoadedMeshes["doctorSlime"] = loadMeshFromFile("../assets/models/doctorSlime.obj");
     mLoadedMeshes["motherSlime"] = loadMeshFromFile("../assets/models/motherSlime.obj");
     mLoadedMeshes["enemy"] = loadMeshFromFile("../assets/models/enemy.obj");
+    mLoadedMeshes["platform"] = loadMeshFromFile("../assets/models/platform.obj");
 }
 
 unsigned int Mesh::loadTexture(const char* path) {

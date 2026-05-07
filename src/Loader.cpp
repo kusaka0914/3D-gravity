@@ -10,6 +10,7 @@
 #include "Crystal.h"
 #include "Star.h"
 #include "NPC.h"
+#include "Platform.h"
 #include "TalkableComponent.h"
 #include <glm/glm.hpp>
 #include <iostream>
@@ -64,6 +65,10 @@ bool Loader::LoadDataFromYaml(bool isLoadPlayer) {
         std::cerr << "NPC YAML Load failed" << std::endl;
         return false;
     }
+    if (!LoadPlatformsFromYaml(path.c_str())) {
+        std::cerr << "Platform YAML Load failed" << std::endl;
+        return false;
+    }
     if (!LoadPlayersFromYaml(path.c_str())) {
         std::cerr << "Player YAML Load failed" << std::endl;
         return false;
@@ -90,6 +95,7 @@ bool Loader::LoadPlayersFromYaml(const char* path) {
             player->SetCurrentPlanetNum(currentPlanetNum);
             player->SetRestartPlanetIndex(currentPlanetNum);
 
+
             float hp = node["hp"] ? node["hp"].as<float>() : 100.0f;
             player->SetHp(hp);
 
@@ -106,6 +112,88 @@ bool Loader::LoadPlayersFromYaml(const char* path) {
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             player->SetPos(pos);
             player->SetRestartPos(pos);
+
+            YAML::Node playerRoot = YAML::LoadFile("../assets/data/players.yaml");
+            for (auto playerNode : playerRoot["players"]){
+                float hp = playerNode["hp"] ? playerNode["hp"].as<float>() : 0.0f;
+                player->SetHp(hp);
+                player->SetMaxHp(hp);
+
+                float attackSpeed = playerNode["attackSpeed"] ? playerNode["attackSpeed"].as<float>() : 0.0f;
+                player->SetAttackSpeed(attackSpeed);
+
+                float attack = playerNode["attack"] ? playerNode["attack"].as<float>() : 0.0f;
+                player->SetAttack(attack);
+
+                float cameraPitch = playerNode["cameraPitch"] ? playerNode["cameraPitch"].as<float>() : 0.0f;
+                player->SetCameraPitch(cameraPitch);
+
+                float moveSpeed = playerNode["moveSpeed"] ? playerNode["moveSpeed"].as<float>() : 0.0f;
+                player->SetMoveSpeed(moveSpeed);
+
+                float dodgeDuration = playerNode["dodgeDuration"] ? playerNode["dodgeDuration"].as<float>() : 0.0f;
+                player->SetDodgeDuration(dodgeDuration);
+
+                float dodgeCooldownTime = playerNode["dodgeCooldownTime"] ? playerNode["dodgeCooldownTime"].as<float>() : 0.0f;
+                player->SetDodgeCooldownTime(dodgeCooldownTime);
+
+                float dodgeDistance = playerNode["dodgeDistance"] ? playerNode["dodgeDistance"].as<float>() : 0.0f;
+                player->SetDodgeDistance(dodgeDistance);
+
+                float normalAttackRange = playerNode["normalAttackRange"] ? playerNode["normalAttackRange"].as<float>() : 0.0f;
+                player->SetNormalAttackRange(normalAttackRange);
+
+                float normalAttackAngle = playerNode["normalAttackAngle"] ? playerNode["normalAttackAngle"].as<float>() : 0.0f;
+                player->SetNormalAttackAngle(normalAttackAngle);
+
+                float normalAttack = playerNode["normalAttack"] ? playerNode["normalAttack"].as<float>() : 0.0f;
+                player->SetNormalAttack(normalAttack);
+
+                float wideAttackRange = playerNode["wideAttackRange"] ? playerNode["wideAttackRange"].as<float>() : 0.0f;
+                player->SetWideAttackRange(wideAttackRange);
+
+                float wideAttackAngle = playerNode["wideAttackAngle"] ? playerNode["wideAttackAngle"].as<float>() : 0.0f;
+                player->SetWideAttackAngle(wideAttackAngle);
+
+                float wideAttack = playerNode["wideAttack"] ? playerNode["wideAttack"].as<float>() : 0.0f;
+                player->SetWideAttack(wideAttack);
+
+                float strongAttackRange = playerNode["strongAttackRange"] ? playerNode["strongAttackRange"].as<float>() : 0.0f;
+                player->SetStrongAttackRange(strongAttackRange);
+
+                float strongAttack = playerNode["strongAttack"] ? playerNode["strongAttack"].as<float>() : 0.0f;
+                player->SetStrongAttack(strongAttack);
+
+                float strongAttackSpeed = playerNode["strongAttackSpeed"] ? playerNode["strongAttackSpeed"].as<float>() : 0.0f;
+                player->SetStrongAttackSpeed(strongAttackSpeed);
+
+                float specialAttackCooldown = playerNode["specialAttackCooldown"] ? playerNode["specialAttackCooldown"].as<float>() : 0.0f;
+                player->SetSpecialAttackCooldown(specialAttackCooldown);
+
+                float defaultInvincibleTimer = playerNode["defaultInvincibleTimer"] ? playerNode["defaultInvincibleTimer"].as<float>() : 0.0f;
+                player->SetDefaultInvincibleTimer(defaultInvincibleTimer);
+
+                float defaultDamageTimer = playerNode["defaultDamageTimer"] ? playerNode["defaultDamageTimer"].as<float>() : 0.0f;
+                player->SetDefaultDamageTimer(defaultDamageTimer);
+
+                float defaultAttackMotionTimer = playerNode["defaultAttackMotionTimer"] ? playerNode["defaultAttackMotionTimer"].as<float>() : 0.0f;
+                player->SetDefaultAttackMotionTimer(defaultAttackMotionTimer);
+
+                float attackCooldown = playerNode["attackCooldown"] ? playerNode["attackCooldown"].as<float>() : 0.0f;
+                player->SetAttackCooldown(attackCooldown);
+
+                float lastAttackCooldown = playerNode["lastAttackCooldown"] ? playerNode["lastAttackCooldown"].as<float>() : 0.0f;
+                player->SetLastAttackCooldown(lastAttackCooldown);
+
+                float defaultAttackPressTimer = playerNode["defaultAttackPressTimer"] ? playerNode["defaultAttackPressTimer"].as<float>() : 0.0f;
+                player->SetDefaultAttackPressTimer(defaultAttackPressTimer);
+
+                float chargeMoveSpeed = playerNode["chargeMoveSpeed"] ? playerNode["chargeMoveSpeed"].as<float>() : 0.0f;
+                player->SetChargeMoveSpeed(chargeMoveSpeed);
+
+                float defaultStrongAttackTimer = playerNode["defaultStrongAttackTimer"] ? playerNode["defaultStrongAttackTimer"].as<float>() : 0.0f;
+                player->SetDefaultStrongAttackTimer(defaultStrongAttackTimer);
+            }
 
             Player* player_ptr = player.get();
             GetGame()->AddActor(std::move(player));
@@ -202,14 +290,33 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
                 enemy->SetIsBoss(true);
             YAML::Node enemyRoot = YAML::LoadFile("../assets/data/enemies.yaml");
             for (auto enemyNode : enemyRoot["enemies"]){
+                if (enemyNode["type"].as<std::string>() == "common") {
+                    float knockBackSpeed = enemyNode["knockBackSpeed"] ? enemyNode["knockBackSpeed"].as<float>() : 0.0f;
+                    enemy->SetKnockBackSpeed(knockBackSpeed);
+
+                    float defaultStandByAttackTimer = enemyNode["defaultStandByAttackTimer"] ? enemyNode["defaultStandByAttackTimer"].as<float>() : 0.0f;
+                    enemy->SetDefaultStandByAttackTimer(defaultStandByAttackTimer);
+
+                    float defaultAttackMotionTimer = enemyNode["defaultAttackMotionTimer"] ? enemyNode["defaultAttackMotionTimer"].as<float>() : 0.0f;
+                    enemy->SetDefaultAttackMotionTimer(defaultAttackMotionTimer);
+
+                    float attackSpeed = enemyNode["attackSpeed"] ? enemyNode["attackSpeed"].as<float>() : 0.0f;
+                    enemy->SetAttackSpeed(attackSpeed);
+
+                    float defaultLaunchedTimer = enemyNode["defaultLaunchedTimer"] ? enemyNode["defaultLaunchedTimer"].as<float>() : 0.0f;
+                    enemy->SetDefaultLaunchedTimer(defaultLaunchedTimer);
+                    continue;
+                }
+
                 if (type != enemyNode["type"].as<std::string>())
                     continue;
 
                 float hp = enemyNode["hp"] ? enemyNode["hp"].as<float>() : 80.0f;
                 enemy->SetHp(hp);
+                enemy->SetMaxHp(hp);
 
                 float scale = enemyNode["scale"] ? enemyNode["scale"].as<float>() : 0.25f;
-                enemy->SetScale(scale);
+                enemy->SetScale(glm::vec3(scale));
 
                 float speed = enemyNode["speed"] ? enemyNode["speed"].as<float>() : 1.0f;
                 enemy->SetSpeed(speed);
@@ -257,14 +364,19 @@ bool Loader::LoadPlanetsFromYaml(const char* path) {
                 float x = node["center"][0] ? node["center"][0].as<float>() : 0.0f;
                 float y = node["center"][1] ? node["center"][1].as<float>() : 0.0f;
                 float z = node["center"][2] ? node["center"][2].as<float>() : 0.0f;
-                planet->SetCenter(glm::vec3(x,y,z));
+                planet->SetPos(glm::vec3(x,y,z));
             } else {
-                planet->SetCenter(glm::vec3(0.0f));
+                planet->SetPos(glm::vec3(0.0f));
             }
 
-            // 惑星半径を設定
-            float radius = node["radius"] ? node["radius"].as<float>() : 8.0f;
-            planet->SetRadius(radius);
+            if (node["scale"]) {
+                float scaleX = node["scale"][0] ? node["scale"][0].as<float>() : 1.0f;
+                float scaleY = node["scale"][1] ? node["scale"][1].as<float>() : 1.0f;
+                float scaleZ = node["scale"][2] ? node["scale"][2].as<float>() : 1.0f;
+                glm::vec3 scale = glm::vec3(scaleX, scaleY, scaleZ);
+                planet->SetScale(scale);
+                planet->SetRadius(scaleX);
+            }
 
             // 惑星色を設定
             if (node["color"]) {
@@ -324,24 +436,23 @@ bool Loader::LoadBoatsFromYaml(const char* path)
         for (auto node : root["boats"]){
             std::unique_ptr<Boat> boat = std::make_unique<Boat>(GetGame());
 
-            int startPlanet = node["startPlanet"] ? node["startPlanet"].as<int>() : 0;
-            boat->SetStartPlanet(startPlanet);
-            boat->SetCurrentPlanetNum(startPlanet);
+            int startPlanetNum = node["startPlanet"] ? node["startPlanet"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[startPlanetNum];
+            boat->SetCurrentPlanet(currentPlanet);
 
-            int destPlanet = node["destPlanet"] ? node["destPlanet"].as<int>() : 0;
+            int destPlanetNum = node["destPlanet"] ? node["destPlanet"].as<int>() : 0;
+            Planet* destPlanet = GetGame()->GetCurrentStage()->GetPlanets()[destPlanetNum];
             boat->SetDestPlanet(destPlanet);
 
             int destStage = node["destStage"] ? node["destStage"].as<int>() : 0;
             boat->SetDestStage(destStage);
 
-            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[startPlanet];
-            boat->SetCurrentPlanet(currentPlanet);
-
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             boat->SetPos(pos);
             boat->SetStartPos(pos);
 
-            boat->SetPlanets(GetGame()->GetCurrentStage()->GetPlanets());
+            // Planetsの設定後ではないと初期化不可
+            boat->Initialize();
 
             Boat* boat_ptr = boat.get();
             GetGame()->AddActor(std::move(boat));
@@ -454,17 +565,24 @@ bool Loader::LoadCrystalsFromYaml(const char* path)
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
             crystal->SetCurrentPlanet(currentPlanet);
 
+            std::string type = node["type"] ? node["type"].as<std::string>() : "";
+            YAML::Node crystalRoot = YAML::LoadFile("../assets/data/crystals.yaml");
+            for (auto crystalNode : crystalRoot["crystals"]){
+                if (type != crystalNode["type"].as<std::string>())
+                    continue;
+
+                float hp = crystalNode["hp"] ? crystalNode["hp"].as<float>() : 80.0f;
+                crystal->GetDestructibleComponent()->SetDestroyHp(hp);
+
+                float scale = crystalNode["scale"] ? crystalNode["scale"].as<float>() : 0.25f;
+                crystal->SetScale(glm::vec3(scale));
+
+                float radius = crystalNode["radius"] ? crystalNode["radius"].as<float>() : 1.0f;
+                crystal->SetRadius(radius);
+            }
+
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             crystal->SetPos(pos);
-
-            float scale = node["scale"] ? node["scale"].as<float>() : 0.0f;
-            crystal->SetScale(scale);
-
-            float radius = node["radius"] ? node["radius"].as<float>() : 0.0f;
-            crystal->SetRadius(radius);
-
-            float hp = node["hp"] ? node["hp"].as<float>() : 10.0;
-            crystal->GetDestructibleComponent()->SetDestroyHp(hp);
 
             Crystal* crystal_ptr = crystal.get();
             GetGame()->AddActor(std::move(crystal));
@@ -508,6 +626,59 @@ bool Loader::LoadStarFromYaml(const char* path) {
     }
 }
 
+bool Loader::LoadPlatformsFromYaml(const char* path)
+{
+    try {
+        int currentPlanetNum = 0;
+        YAML::Node root = YAML::LoadFile(path);
+        if (!root["platforms"] || !root["platforms"].IsSequence()) {
+            std::cerr << "Loader: missing or invalid 'platforms' sequence" << std::endl;
+        }
+        for (const YAML::Node& node : root["platforms"]) {
+            currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            currentPlanet->RemoveAllPlatforms();
+        }
+
+        for (auto node : root["platforms"]){
+            std::unique_ptr<Platform> platform = std::make_unique<Platform>(GetGame());
+
+            int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            platform->SetCurrentPlanet(currentPlanet);
+
+            std::string type = node["type"] ? node["type"].as<std::string>() : "";
+            YAML::Node platformRoot = YAML::LoadFile("../assets/data/platforms.yaml");
+            for (auto platformNode : platformRoot["platforms"]){
+                if (type != platformNode["type"].as<std::string>())
+                    continue;
+
+                std::string modelPath = platformNode["modelPath"] ? platformNode["modelPath"].as<std::string>() : "";
+                platform->SetModelPath(modelPath);
+
+                if (platformNode["scale"]) {
+                    float scaleX = platformNode["scale"][0].as<float>();
+                    float scaleY = platformNode["scale"][1].as<float>();
+                    float scaleZ = platformNode["scale"][2].as<float>();
+                    glm::vec3 scale = glm::vec3(scaleX, scaleY, scaleZ);
+                    platform->SetScale(scale);
+                }
+            }
+
+            glm::vec3 pos = CalculatePos(node, currentPlanet);
+            platform->SetPos(pos);
+
+            Platform* platformPtr = platform.get();
+            GetGame()->AddActor(std::move(platform));
+            currentPlanet->AddPlatform(platformPtr);
+        }
+        return true;
+    } catch (const YAML::Exception& ex) {
+        std::cerr << "Crystals Load error: " << ex.what() << std::endl;
+        return false;
+    }
+}
+
 glm::vec3 Loader::CalculatePos(YAML::Node node, Planet* currentPlanet) 
 {   
     if (node["pos"]) {
@@ -524,6 +695,6 @@ glm::vec3 Loader::CalculatePos(YAML::Node node, Planet* currentPlanet)
     if (len < 1e-6f) dir = glm::vec3(1.0f, 0.0f, 0.0f);
     else dir /= len;
 
-    glm::vec3 pos = currentPlanet->GetCenter() + (currentPlanet->GetRadius() + height) * dir;
+    glm::vec3 pos = currentPlanet->GetPos() + (currentPlanet->GetRadius() + height) * dir;
     return pos;
 }

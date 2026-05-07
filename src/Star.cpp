@@ -8,9 +8,7 @@
 
 Star::Star(Game* game)
     : Actor(game)
-    , mPos({32.0f, 8.0f, 0.0f})
     , mIsActive(false)
-    , mCurrentPlanet(0)
     , mClearTimer(-1.0f)
 {
     std::unique_ptr<CollectableComponent> collectableComponent = std::make_unique<CollectableComponent>(this, 100);
@@ -20,6 +18,8 @@ Star::Star(Game* game)
 
 void Star::UpdateActor(float deltaTime)
 {
+    UpdateUpVec();
+
     if (mCollectableComponent->GetIsObtained() && mIsActive) {
         mIsActive = false;
         GetGame()->GetGameProgressState()->SetSceneState("StageClear");
@@ -33,10 +33,5 @@ void Star::UpdateActor(float deltaTime)
             GetGame()->SetFadeInTimer(1.0f);
             GetGame()->GetGameProgressState()->SetNextSceneState("Playing");
         }
-    }
-    if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal) {
-        mUpVec = {0.0f, 1.0f, 0.0f};
-    } else {
-        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
     }
 }

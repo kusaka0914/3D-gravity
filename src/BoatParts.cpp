@@ -3,10 +3,10 @@
 #include "Game.h"
 #include "Player.h"
 #include "BoatParts.h"
+#include "CollectableComponent.h"
 
 BoatParts::BoatParts(Game* game)
     : Actor(game)
-    , mPos({32.0f, 8.0f, 0.0f})
     , mIsActive(true)
 {
     std::unique_ptr<CollectableComponent> collectableComponent = std::make_unique<CollectableComponent>(this, 100);
@@ -14,15 +14,11 @@ BoatParts::BoatParts(Game* game)
     AddComponent(std::move(collectableComponent));
 }
 
-void BoatParts::UpdateActor(float deltaTime)
-{
+void BoatParts::UpdateActor(float deltaTime) {
+    UpdateUpVec();
+
     if (mCollectableComponent->GetIsObtained() && mIsActive) {
         mIsActive = false;
         GetGame()->GetAudioSystem()->PlaySE("pickUpSE");
-    }
-    if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal) {
-        mUpVec = {0.0f, 1.0f, 0.0f};
-    } else {
-        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
     }
 }

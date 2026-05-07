@@ -12,17 +12,17 @@ TalkableComponent::TalkableComponent(Actor* owner, int updateOrder)
 
 void TalkableComponent::Update(float deltaTime)
 {
-    std::vector<Player*> players = GetOwner()->GetGame()->GetPlayers();
+    std::vector<Player*> players = mOwner->GetGame()->GetPlayers();
     for (auto player : players) {
-        NPC* npc = dynamic_cast<NPC*>(GetOwner());
+        NPC* npc = dynamic_cast<NPC*>(mOwner);
         if (npc == nullptr) return;
 
         glm::vec3 playerPos = player->GetPos();
-        glm::vec3 toNPC = glm::normalize(GetOwner()->GetPos() - playerPos);
+        glm::vec3 toNPC = glm::normalize(npc->GetPos() - playerPos);
         float npcYaw = player->getYawFromDirection(npc->GetUpVec(), toNPC);
         npc->SetFacingYaw(npcYaw);
         float talkableDist = 1.0f;
-        float toPlayerDist = glm::length(playerPos - GetOwner()->GetPos());
+        float toPlayerDist = glm::length(playerPos - npc->GetPos());
         
         if (toPlayerDist <= talkableDist) {
             mIsTalkable = true;

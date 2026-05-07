@@ -27,14 +27,17 @@ add_executable(game
     src/NPC.cpp
     src/PhysicsSystem.cpp
     src/Planet.cpp
+    src/Platform.cpp
     src/Player.cpp
     src/Renderer.cpp
     src/Shader.cpp
+    src/Shader3D.cpp
     src/Stage.cpp
     src/Star.cpp
     src/TalkableComponent.cpp
     src/UILoader.cpp
     src/UIRenderer.cpp
+    src/UIShader.cpp
     src/UIState.cpp
     src/VertexArray.cpp
 )

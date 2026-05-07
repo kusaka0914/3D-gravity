@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <string>
 
@@ -17,7 +19,8 @@ public:
     int GetLocObjectColor() const { return mLocObjectColor; }
     int GetLocUseTexture() const { return mLocUseTexture; }
     int GetLocDiffuseTexture() const { return mLocDiffuseTexture; }
-private:
+
+protected:
     unsigned int mShaderProgram;
     int mLocModel;
     int mLocView;

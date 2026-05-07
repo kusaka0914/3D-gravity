@@ -1,5 +1,5 @@
 #include "UIRenderer.h"
-#include "Shader.h"
+#include "UIShader.h"
 #include "VertexArray.h"
 #include "Game.h"
 #include "Player.h"
@@ -18,7 +18,7 @@
 
 UIRenderer::UIRenderer(Game* game)
     : mGame(game)
-    , mShader(game->GetShader())
+    , mUIShader(game->GetUIShader())
     , mFont(game->GetFont())
     , mVertexArrays(game->GetVertexArrays())
     , mUILoader(game->GetUILoader())
@@ -55,7 +55,7 @@ void UIRenderer::Draw() {
     GLFWwindow* window = mGame->GetWindow();
     glfwGetFramebufferSize(window, &mFbWidth, &mFbHeight);
 
-    glUseProgram(mShader->GetShaderProgram());
+    glUseProgram(mUIShader->GetShaderProgram());
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
@@ -407,11 +407,11 @@ void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector
                 * glm::scale(glm::mat4(1.0f), glm::vec3(width, height, 1.0f));
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 proj = glm::ortho(0.0f, (float)mFbWidth, (float)mFbHeight, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(mShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(mShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(mShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
-    glUniform1i(mShader->GetLocUseTexture(), 0);
-    glUniform4fv(mShader->GetLocObjectColor(), 1, color.data());
+    glUniformMatrix4fv(mUIShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(mUIShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(mUIShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
+    glUniform1i(mUIShader->GetLocUseTexture(), 0);
+    glUniform4fv(mUIShader->GetLocObjectColor(), 1, color.data());
     mVertexArrays.at("text")->SetActive();
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
@@ -470,11 +470,11 @@ void UIRenderer::DrawText(float x, float y, float scale, std::string message, bo
     }
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 proj = glm::ortho(0.0f, (float)mFbWidth, (float)mFbHeight, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(mShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(mShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(mShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
-    glUniform1i(mShader->GetLocDiffuseTexture(), 0);
-    glUniform1i(mShader->GetLocUseTexture(), 1);
+    glUniformMatrix4fv(mUIShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(mUIShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(mUIShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
+    glUniform1i(mUIShader->GetLocDiffuseTexture(), 0);
+    glUniform1i(mUIShader->GetLocUseTexture(), 1);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -511,11 +511,11 @@ void UIRenderer::DrawText(float x, float y, float scale, std::string message, bo
         }
         view = glm::mat4(1.0f);
         proj = glm::ortho(0.0f, (float)mFbWidth, (float)mFbHeight, 0.0f, -1.0f, 1.0f);
-        glUniformMatrix4fv(mShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(mShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(mShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
-        glUniform1i(mShader->GetLocDiffuseTexture(), 0);
-        glUniform1i(mShader->GetLocUseTexture(), 1);
+        glUniformMatrix4fv(mUIShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(mUIShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(mUIShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
+        glUniform1i(mUIShader->GetLocDiffuseTexture(), 0);
+        glUniform1i(mUIShader->GetLocUseTexture(), 1);
 
         glBindTexture(GL_TEXTURE_2D, tex);
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -527,11 +527,11 @@ void UIRenderer::DrawTexture(float x, float y, float width, float height, std::s
                     * glm::scale(glm::mat4(1.0f), glm::vec3(width, height, 1.0f));
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 proj = glm::ortho(0.0f, (float)mFbWidth, (float)mFbHeight, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(mShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(mShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(mShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
-    glUniform1i(mShader->GetLocDiffuseTexture(), 0);
-    glUniform1i(mShader->GetLocUseTexture(), 1);
+    glUniformMatrix4fv(mUIShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(mUIShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(mUIShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
+    glUniform1i(mUIShader->GetLocDiffuseTexture(), 0);
+    glUniform1i(mUIShader->GetLocUseTexture(), 1);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

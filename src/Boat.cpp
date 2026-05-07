@@ -10,76 +10,80 @@
 
 Boat::Boat(Game* game)
     : Actor(game)
-    , mStartPlanet(0)
-    , mDestPlanet(1)
     , mDestStage(0)
     , mIsMoving(false)
     , mIsActivePrev(false)
     , mIsActive(false)
     , mTransitionTimer(0.0f)
     , mProgress(0.0f)
-    , mPos({0.0f, 8.0f, 0.0f})
     , mStartPos(mPos)
     , mDestPos(0.0f)
-    , mUpVec(0.0f, 1.0f, 0.0f)
 {
-    mCurrentPlanetNum = mStartPlanet;
     std::unique_ptr<FocusComponent> focusComponent = std::make_unique<FocusComponent>(this, 100);
     mFocusComponent = focusComponent.get();
     AddComponent(std::move(focusComponent));
 }
 
-void Boat::UpdateActor(float deltaTime)
-{
-    if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal) {
-        mUpVec = {0.0f, 1.0f, 0.0f};
-    } else {
-        mUpVec = glm::normalize(mPos - mCurrentPlanet->GetCenter());
-    }
-    if (!mIsActivePrev && mIsActive) {
-        int currentStageNum = GetGame()->GetCurrentStageNum();
-        if (currentStageNum != 0) {
-            GetGame()->GetAudioSystem()->PlaySE("showBoatSE");
-        }
-        mIsActivePrev = true;
-    }
-    // 移動中
+void Boat::Initialize() {
+    glm::vec3 destPlanetCenter = mDestPlanet->GetPos();
+    glm::vec3 boatPos = mPos;
+    glm::vec3 toDestPlanet = glm::normalize(destPlanetCenter - boatPos);
+    float destPlanetRadius = mDestPlanet->GetRadius();
+    mDestPos = destPlanetCenter - toDestPlanet * (destPlanetRadius + 3.0f);
+}
+
+void Boat::UpdateActor(float deltaTime) {
+    UpdateUpVec();
+
+    if (!mIsActivePrev && mIsActive)
+        OnShown();
+
     if (mIsMoving)
-    {   
-        int currentStageNum = GetGame()->GetCurrentStageNum();
-        if (currentStageNum == 0) {
-            GetGame()->ChangeStage(mDestStage);
-            GetGame()->SetFadeInTimer(1.0f);
-            mIsMoving = false;
-            return;
-        }
-        Planet* dest = mPlanets[mDestPlanet];
-        glm::vec3 toDest = glm::normalize(dest->GetCenter() - mPos);
-        mDestPos = dest->GetCenter() - toDest * (dest->GetRadius() + 3.0f);
-        mTransitionTimer += deltaTime;
+        UpdateMoving(deltaTime);
 
-        // ボード移動がどれくらい進んだかの割合を更新
-        float transitionDuration = 3.0f;
-        mProgress = glm::min(1.0f, mTransitionTimer / transitionDuration);
-        mProgress = mProgress * mProgress * (3.0f - 2.0f * mProgress);
+    mIsActivePrev = mIsActive;
+}
 
-        // ボートの位置を更新
-        mPos = mStartPos + (mDestPos - mStartPos) * mProgress;
+void Boat::OnShown() {
+    int currentStageNum = GetGame()->GetCurrentStageNum();
+    if (currentStageNum != 0) {
+        GetGame()->GetAudioSystem()->PlaySE("showBoatSE");
+    }
+}
 
-        // ボートから一番近い惑星を現在の惑星に更新
-        float startDist = glm::length(mPos - mPlanets[mStartPlanet]->GetCenter());
-        float destDist = glm::length(mPos - mPlanets[mDestPlanet]->GetCenter());
-        mCurrentPlanetNum = (startDist < destDist) ? mStartPlanet : mDestPlanet;
+void Boat::UpdateMoving(float deltaTime) {
+    int currentStageNum = GetGame()->GetCurrentStageNum();
+    if (currentStageNum == 0) {
+        GetGame()->ChangeStage(mDestStage);
+        GetGame()->SetFadeInTimer(1.0f);
+        mIsMoving = false;
+        return;
+    }
 
-        if (mProgress >= 1.0f)
-        {
-            mPos = mDestPos;
-            mIsMoving = false;
-            if (!GetGame()->GetUIState()->GetIsBattleTutorialShown()) {
-                GetGame()->GetUIState()->SetCurrentTutorialKind("Battle");
-                GetGame()->GetGameProgressState()->SetSceneState("Talking");
-                GetGame()->GetUIState()->SetIsBattleTutorialShown(true);
-            }
-        }
+    if (mProgress < 1.0f) {
+        HandleMoving(deltaTime);
+        return;
+    }
+    HandleArrived();
+}
+
+void Boat::HandleMoving(float deltaTime) {
+    mTransitionTimer += deltaTime;
+
+    float transitionDuration = 3.0f;
+    mProgress = glm::min(1.0f, mTransitionTimer / transitionDuration);
+    mProgress = mProgress * mProgress * (3.0f - 2.0f * mProgress);
+
+    mPos = mStartPos + (mDestPos - mStartPos) * mProgress;
+}
+
+void Boat::HandleArrived() {
+
+    mPos = mDestPos;
+    mIsMoving = false;
+    if (!GetGame()->GetUIState()->GetIsBattleTutorialShown()) {
+        GetGame()->GetUIState()->SetCurrentTutorialKind("Battle");
+        GetGame()->GetGameProgressState()->SetSceneState("Talking");
+        GetGame()->GetUIState()->SetIsBattleTutorialShown(true);
     }
 }
