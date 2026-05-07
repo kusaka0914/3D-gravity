@@ -7,10 +7,11 @@ players:
     attackSpeed: 5.0
     camera_pitch: 0.4
     
-    moveSpeed: 10.2
-    dodgeDuration: 0.05
+    moveSpeed: 4.0
+    # moveSpeed: 10.2
+    dodgeDuration: 0.1
     dodgeCooldownTime: 1.0
-    dodgeDistance: 2.0
+    dodgeDistance: 3.0
     normalAttackRange: 1.6
     normalAttackAngle: 0.8
     normalAttack: 10

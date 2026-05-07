@@ -30,6 +30,10 @@ public:
     btSphereShape* GetBulletWallSphere() const { return mBulletWallSphere; }
 
     glm::vec3 CheckCollision(glm::vec3 moveDelta, glm::vec3 desiredPos);
+
+private:
+    void CreateBody(class Actor* actor);
+
 private:
     class Game* mGame;
 

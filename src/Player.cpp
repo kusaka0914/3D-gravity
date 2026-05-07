@@ -270,7 +270,7 @@ void Player::StartDodge() {
     mDodgeDir = -mFacingForwardVec;
     mDodgeTimer = mDodgeDuration;
     mDodgeCooldown = mDodgeCooldownTime;
-    mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
+    mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetPos());
     mVelocity = glm::vec3(0.0f);
     GetGame()->GetAudioSystem()->PlaySE("dodgeSE");
 }
@@ -283,16 +283,14 @@ void Player::Dodge(float deltaTime) {
     desiredPos = GetGame()->GetPhysicsSystem()->CheckCollision(moveDelta, desiredPos);
     mPos = desiredPos;
 
-    glm::vec3 center = mCurrentPlanet->GetCenter();
+    glm::vec3 center = mCurrentPlanet->GetPos();
     // 空中回避：直前の高さを維持して浮遊
-    float dist = glm::length(mPos - center);
-    if (dist > 1e-6f)
-        mPos = center + (mPos - center) / dist * mDodgeStartHeight;
+    mPos = center + glm::normalize(mPos - center) * mDodgeStartHeight;
 }
 
 void Player::DetermineLanding() {
     bool meshGround = false;
-    glm::vec3 center = mCurrentPlanet->GetCenter();
+    glm::vec3 center = mCurrentPlanet->GetPos();
 
     glm::vec3 rayFromPos = mPos + mUpVec * 0.1f;
     glm::vec3 rayToPos = mPos - mUpVec * 0.1f;
@@ -337,7 +335,7 @@ void Player::ApplyGravity(float deltaTime) {
     if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal)
         return;
     
-    glm::vec3 center = mCurrentPlanet->GetCenter();
+    glm::vec3 center = mCurrentPlanet->GetPos();
     float radius = mCurrentPlanet->GetRadius();
     float dist = glm::length(mPos - center);
     // 落下して惑星内部にめり込んだらリスタート地点へ
@@ -363,7 +361,7 @@ void Player::ChangeFaceDir() {
 }
 
 void Player::Attack(float deltaTime) {
-    mAttackStartHeight = glm::length(mPos - mCurrentPlanet->GetCenter());
+    mAttackStartHeight = glm::length(mPos - mCurrentPlanet->GetPos());
     mVelocity = glm::vec3(0.0f);
 
     auto applyAttackLocksFromCooldown = [this]() {

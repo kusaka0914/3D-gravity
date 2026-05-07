@@ -1,25 +1,30 @@
 planets:
   - center: [0.0, 0.0, 0.0]
-    radius: 8.0
+    scale: [8.0, 8.0, 8.0]
     color: [1.0, 1.0, 1.0, 1.0]
     model: selectField.obj
   
+platforms:
+  - type: normal
+    pos: [0.0, 2.0, 0.0]
+    currentPlanetNum: 0
+  
 boats:
-  - pos : [-10.0, 1.0, 0.0]
-    destStage : 1
-  - pos : [-5.0, 1.0, -5.0]
-    destStage : 2
+  - pos: [-10.0, 1.0, 0.0]
+    destStage: 1
+  - pos: [-5.0, 1.0, -5.0]
+    destStage: 2
 
 players:
-  - pos : [0.0, 1.0, 10.0]
+  - pos: [0.0, 1.0, 10.0]
     currentPlanetNum: 0
   
 NPCs:
-  - pos : [-8.5, 1.0, 0.0]
+  - pos: [-8.5, 1.0, 0.0]
     modelPath: spaceSlime.obj
     name: BoatPartsNPC
     talkTexts: [こちらステージ1行きロケット〜まもなく発射します〜。\nお乗りの方はお急ぎください〜。]
-  - pos : [-3.5, 1.0, -5.0]
+  - pos: [-3.5, 1.0, -5.0]
     modelPath: spaceSlime.obj
     name: CrystalNPC
     talkTexts: [こちらステージ2行きロケット〜まもなく発射します〜。\nお乗りの方はお急ぎください〜。]

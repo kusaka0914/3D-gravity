@@ -7,6 +7,8 @@
 #include "Enemy.h"
 #include "Crystal.h"
 #include "NPC.h"
+#include "Platform.h"
+#include "Actor.h"
 
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
@@ -90,57 +92,28 @@ PhysicsSystem::~PhysicsSystem()
 }
 
 void PhysicsSystem::Initialize() { 
+    mMeshLoader = mGame->GetMesh();
+
+    mBulletCollisionConfig = new btDefaultCollisionConfiguration();
+    mBulletDispatcher = new btCollisionDispatcher(mBulletCollisionConfig);
+    mBulletBroadphase = new btDbvtBroadphase();
+    mBulletSolver = new btSequentialImpulseConstraintSolver();
+    mBulletWorld = new btDiscreteDynamicsWorld(mBulletDispatcher, mBulletBroadphase, mBulletSolver, mBulletCollisionConfig);
+    mBulletWorld->setGravity(btVector3(0, -9.8f, 0));
+    mBulletBroadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
+
+    // 惑星メッシュから実際の剛体を作成し、物理ワールドに追加する
     const std::vector<Planet*> planets = mGame->GetCurrentStage()->GetPlanets();
-    if (!planets.empty())
-    {
-        
-        mMeshLoader = mGame->GetMesh();
-
-        mBulletCollisionConfig = new btDefaultCollisionConfiguration();
-        mBulletDispatcher = new btCollisionDispatcher(mBulletCollisionConfig);
-        mBulletBroadphase = new btDbvtBroadphase();
-        mBulletSolver = new btSequentialImpulseConstraintSolver();
-        mBulletWorld = new btDiscreteDynamicsWorld(mBulletDispatcher, mBulletBroadphase, mBulletSolver, mBulletCollisionConfig);
-        mBulletWorld->setGravity(btVector3(0, -9.8f, 0));
-        mBulletBroadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
-
-        std::vector<float> pos;
-        std::vector<unsigned int> idx;
-        // 惑星メッシュから実際の剛体を作成し、物理ワールドに追加する
+    if (!planets.empty()) {
         for (auto planet : planets)
         {
-            std::string meshPath = "../assets/models/" + planet->GetModelPath();
-            if (!mMeshLoader->loadMeshPositionsAndIndices(meshPath.c_str(), pos, idx) || pos.size() < 9 || idx.size() < 3)
-                continue;
+            CreateBody(planet);
 
-            const glm::vec3& center = planet->GetCenter();
-            float radius = planet->GetRadius();
-            btTriangleMesh* triMesh = new btTriangleMesh();
-            for (size_t i = 0; i + 2 < idx.size(); i += 3)
-            {
-                unsigned int i0 = idx[i], i1 = idx[i + 1], i2 = idx[i + 2];
-                if (i0 * 3 + 2 >= pos.size() || i1 * 3 + 2 >= pos.size() || i2 * 3 + 2 >= pos.size())
-                    continue;
-                btVector3 v0(center.x + radius * pos[i0 * 3], center.y + radius * pos[i0 * 3 + 1], center.z + radius * pos[i0 * 3 + 2]);
-                btVector3 v1(center.x + radius * pos[i1 * 3], center.y + radius * pos[i1 * 3 + 1], center.z + radius * pos[i1 * 3 + 2]);
-                btVector3 v2(center.x + radius * pos[i2 * 3], center.y + radius * pos[i2 * 3 + 1], center.z + radius * pos[i2 * 3 + 2]);
-                triMesh->addTriangle(v0, v1, v2);
+            std::vector<Platform*> platforms = planet->GetPlatforms();
+            
+            for (auto platform : platforms) {
+                CreateBody(platform);
             }
-
-            mBulletPlanetMeshes.emplace_back(triMesh);
-            btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(triMesh, true);
-            mBulletPlanetShapes.emplace_back(shape);
-
-            btTransform startTransform;
-            startTransform.setIdentity();
-            startTransform.setOrigin(btVector3(0, 0, 0));
-
-            btRigidBody::btRigidBodyConstructionInfo rbInfo(0, nullptr, shape);
-            btRigidBody* body = new btRigidBody(rbInfo);
-            body->setWorldTransform(startTransform);
-            body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-            mBulletWorld->addRigidBody(body, (short)btBroadphaseProxy::DefaultFilter, (short)-1);
-            mBulletPlanetBodies.emplace_back(body);
         }
         mBulletInitialized = !mBulletPlanetBodies.empty();
 
@@ -158,7 +131,7 @@ void PhysicsSystem::Initialize() {
         {
             return;
         }
-        glm::vec3 spawnUp = glm::normalize(players[0]->GetPos() - planets[0]->GetCenter());
+        glm::vec3 spawnUp = glm::normalize(players[0]->GetPos() - planets[0]->GetPos());
         float capHalf = capHeight * 0.5f;
         glm::vec3 ghostOrigin = players[0]->GetPos() + spawnUp * (capHalf + 0.15f);
         ghostTrans.setOrigin(btVector3(ghostOrigin.x, ghostOrigin.y, ghostOrigin.z));
@@ -169,11 +142,8 @@ void PhysicsSystem::Initialize() {
         mBulletCharController->setJumpSpeed(5.0f);
         mBulletCharController->setFallSpeed(55.0f);
         mBulletWorld->addAction(mBulletCharController);
-    }
-    else
-    {
-        if (!mBulletInitialized)
-        {
+    } else {
+        if (!mBulletInitialized) {
             std::cerr << "Bullet: planet mesh load failed, using sphere collision." << std::endl;
         }
         mBulletInitialized = false;
@@ -291,4 +261,41 @@ glm::vec3 PhysicsSystem::CheckCollision(glm::vec3 moveDelta, glm::vec3 desiredPo
             }
         }
     }
+}
+
+void PhysicsSystem::CreateBody(Actor* actor) {
+    std::string meshPath = "../assets/models/" + actor->GetModelPath();
+    std::vector<float> pos;
+    std::vector<unsigned int> idx;
+    if (!mMeshLoader->loadMeshPositionsAndIndices(meshPath.c_str(), pos, idx) || pos.size() < 9 || idx.size() < 3)
+        return;
+
+    const glm::vec3& actorPos = actor->GetPos();
+    const glm::vec3& scale = actor->GetScale();
+    btTriangleMesh* triMesh = new btTriangleMesh();
+    for (size_t i = 0; i + 2 < idx.size(); i += 3)
+    {
+        unsigned int i0 = idx[i], i1 = idx[i + 1], i2 = idx[i + 2];
+        if (i0 * 3 + 2 >= pos.size() || i1 * 3 + 2 >= pos.size() || i2 * 3 + 2 >= pos.size())
+            return;
+        btVector3 v0(actorPos.x + scale.x * pos[i0 * 3], actorPos.y + scale.y * pos[i0 * 3 + 1], actorPos.z + scale.z * pos[i0 * 3 + 2]);
+        btVector3 v1(actorPos.x + scale.x * pos[i1 * 3], actorPos.y + scale.y * pos[i1 * 3 + 1], actorPos.z + scale.z * pos[i1 * 3 + 2]);
+        btVector3 v2(actorPos.x + scale.x * pos[i2 * 3], actorPos.y + scale.y * pos[i2 * 3 + 1], actorPos.z + scale.z * pos[i2 * 3 + 2]);
+        triMesh->addTriangle(v0, v1, v2);
+    }
+
+    mBulletPlanetMeshes.emplace_back(triMesh);
+    btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(triMesh, true);
+    mBulletPlanetShapes.emplace_back(shape);
+
+    btTransform startTransform;
+    startTransform.setIdentity();
+    startTransform.setOrigin(btVector3(0, 0, 0));
+
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(0, nullptr, shape);
+    btRigidBody* body = new btRigidBody(rbInfo);
+    body->setWorldTransform(startTransform);
+    body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+    mBulletWorld->addRigidBody(body, (short)btBroadphaseProxy::DefaultFilter, (short)-1);
+    mBulletPlanetBodies.emplace_back(body);
 }

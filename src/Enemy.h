@@ -31,7 +31,6 @@ public:
     void SetDeathTimer(float damageTimer) { mDeathTimer = damageTimer; }
     void SetLaunchedTimer(float launchedTimer) { mLaunchedTimer = launchedTimer; }
     void SetDefaultLaunchedTimer(float defaultLaunchedTimer) { mDefaultLaunchedTimer = defaultLaunchedTimer; }
-    void SetScale(float scale) { mScale = scale; }
     void SetRadius(float radius) { mRadius = radius; }
     void SetSpeed(float speed) { mSpeed = speed; }
     void SetAttack(float attack) { mAttack = attack; }
@@ -41,8 +40,6 @@ public:
     void SetSensing(float sensing) { mSensing = sensing; }
     void SetKnockBackSpeed(float knockBackSpeed) { mKnockBackSpeed = knockBackSpeed; }
     void SetAttackSpeed(float attackSpeed) { mAttackSpeed = attackSpeed; }
-
-    void SetModelPath(const std::string& modelPath) { mModelPath = modelPath; }
 
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
 
@@ -61,7 +58,6 @@ public:
     float GetHp() const { return mHp; }
     float GetMaxHp() const { return mMaxHp; }
     float GetDeathTimer() const { return mDeathTimer; }
-    float GetScale() const { return mScale; }
     float GetRadius() const { return mRadius; }
     float GetSpeed() const { return mSpeed; }
     float GetAttack() const { return mAttack; }
@@ -73,8 +69,6 @@ public:
     float GetSensing() const { return mSensing; }
     float GetKnockBackSpeed() const { return mKnockBackSpeed; }
     float GetAttackSpeed() const { return mAttackSpeed; }
-
-    const std::string& GetModelPath() const { return mModelPath; }
 
     std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
 
@@ -110,7 +104,6 @@ private:
     int mBreakCount;
     int mBreakCountMax;
 
-    float mScale;
     float mRadius;
     float mSpeed;
     float mAttack;
@@ -129,8 +122,6 @@ private:
     float mAttackSpeed;
 
     glm::vec3 mVelocity;
-
-    std::string mModelPath;
 
     std::vector<struct LoadedMesh>* mMeshes;
 };

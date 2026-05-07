@@ -14,7 +14,7 @@ planets:
     color: [1.0, 0.0, 0.0, 1.0]
     model: planet_3.obj
     stageNum: 1
-    shape : Sphere
+    shape: Sphere
     # keySpawnCondition: AllBoatPartsCollected
   - type: stage1planet2
     center: [32.0, 0.0, 0.0]
@@ -22,7 +22,7 @@ planets:
     color: [0.0, 1.0, 0.0, 1.0]
     model: planet.obj
     stageNum: 1
-    shape : Sphere
+    shape: Sphere
     # keySpawnCondition: AllEnemiesDead
   - type: stage1planet3
     center: [64.0, 0.0, 0.0]
@@ -30,4 +30,4 @@ planets:
     color: [0.0, 1.0, 0.0, 1.0]
     model: planet_2.obj
     stageNum: 1
-    shape : Sphere
+    shape: Sphere

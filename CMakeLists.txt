@@ -27,6 +27,7 @@ add_executable(game
     src/NPC.cpp
     src/PhysicsSystem.cpp
     src/Planet.cpp
+    src/Platform.cpp
     src/Player.cpp
     src/Renderer.cpp
     src/Shader.cpp

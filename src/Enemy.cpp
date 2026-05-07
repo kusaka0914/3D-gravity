@@ -16,8 +16,6 @@ Enemy::Enemy(Game* game)
     ,mOnGround(true)
     ,mDeathTimer(-1.0f)
     ,mIsDamaged(false)
-    ,mModelPath("enemy.obj")
-    ,mScale(0.25f)
     ,mSpeed(2.0f)
     ,mAttack(20.0f)
     ,mStandByAttackTimer(-1.0f)
@@ -134,7 +132,7 @@ void Enemy::UpdateBehavior(float deltaTime, Player* player) {
     {
         mPos += vecToPlayer * mSpeed * deltaTime;
         float planetRadius = GetCurrentPlanet()->GetRadius();
-        glm::vec3 planetCenter = GetCurrentPlanet()->GetCenter();
+        glm::vec3 planetCenter = GetCurrentPlanet()->GetPos();
         mPos = planetCenter + glm::normalize(mPos - planetCenter) * planetRadius;
     }
 
@@ -249,7 +247,7 @@ void Enemy::ApplyGravity(float deltaTime) {
         mVelocity -= mUpVec * gravity * deltaTime;
         mPos += mVelocity * deltaTime;
 
-        glm::vec3 center = GetCurrentPlanet()->GetCenter();
+        glm::vec3 center = GetCurrentPlanet()->GetPos();
         float radius = GetCurrentPlanet()->GetRadius();
         if (glm::length(mPos - center) <= radius) {
             mOnGround = true;
@@ -273,7 +271,7 @@ void Enemy::ApplyGravity(float deltaTime) {
 }
 
 void Enemy::FixPlanetSurface() {
-    glm::vec3 center = GetCurrentPlanet()->GetCenter();
+    glm::vec3 center = GetCurrentPlanet()->GetPos();
     float radius = GetCurrentPlanet()->GetRadius();
     mPos = center + glm::normalize(mPos - center) * radius;
 }

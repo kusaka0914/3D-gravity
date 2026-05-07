@@ -17,6 +17,7 @@
 #include "Crystal.h"
 #include "UIRenderer.h"
 #include "UIState.h"
+#include "Platform.h"
 #include "GameProgressState.h"
 #include "Renderer.h"
 #include "BoatParts.h"
@@ -472,6 +473,15 @@ void Game::LoadModel() {
             auto crystalsMeshes = mMesh->GetLoadedMeshes("crystals");
             for (auto crystal : crystals) {
                 crystal->SetMeshes(crystalsMeshes);
+            }
+        }
+
+        // クリスタルモデルをロード
+        std::vector<Platform*> platforms = planet->GetPlatforms();
+        if (!platforms.empty()) {
+            auto platformMeshes = mMesh->GetLoadedMeshes("platform");
+            for (auto platform : platforms) {
+                platform->SetMeshes(platformMeshes);
             }
         }
     }

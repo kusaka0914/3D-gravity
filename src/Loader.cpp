@@ -10,6 +10,7 @@
 #include "Crystal.h"
 #include "Star.h"
 #include "NPC.h"
+#include "Platform.h"
 #include "TalkableComponent.h"
 #include <glm/glm.hpp>
 #include <iostream>
@@ -62,6 +63,10 @@ bool Loader::LoadDataFromYaml(bool isLoadPlayer) {
     }
     if (!LoadNPCsFromYaml(path.c_str())) {
         std::cerr << "NPC YAML Load failed" << std::endl;
+        return false;
+    }
+    if (!LoadPlatformsFromYaml(path.c_str())) {
+        std::cerr << "Platform YAML Load failed" << std::endl;
         return false;
     }
     if (!LoadPlayersFromYaml(path.c_str())) {
@@ -311,7 +316,7 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
                 enemy->SetMaxHp(hp);
 
                 float scale = enemyNode["scale"] ? enemyNode["scale"].as<float>() : 0.25f;
-                enemy->SetScale(scale);
+                enemy->SetScale(glm::vec3(scale));
 
                 float speed = enemyNode["speed"] ? enemyNode["speed"].as<float>() : 1.0f;
                 enemy->SetSpeed(speed);
@@ -359,14 +364,19 @@ bool Loader::LoadPlanetsFromYaml(const char* path) {
                 float x = node["center"][0] ? node["center"][0].as<float>() : 0.0f;
                 float y = node["center"][1] ? node["center"][1].as<float>() : 0.0f;
                 float z = node["center"][2] ? node["center"][2].as<float>() : 0.0f;
-                planet->SetCenter(glm::vec3(x,y,z));
+                planet->SetPos(glm::vec3(x,y,z));
             } else {
-                planet->SetCenter(glm::vec3(0.0f));
+                planet->SetPos(glm::vec3(0.0f));
             }
 
-            // 惑星半径を設定
-            float radius = node["radius"] ? node["radius"].as<float>() : 8.0f;
-            planet->SetRadius(radius);
+            if (node["scale"]) {
+                float scaleX = node["scale"][0] ? node["scale"][0].as<float>() : 1.0f;
+                float scaleY = node["scale"][1] ? node["scale"][1].as<float>() : 1.0f;
+                float scaleZ = node["scale"][2] ? node["scale"][2].as<float>() : 1.0f;
+                glm::vec3 scale = glm::vec3(scaleX, scaleY, scaleZ);
+                planet->SetScale(scale);
+                planet->SetRadius(scaleX);
+            }
 
             // 惑星色を設定
             if (node["color"]) {
@@ -565,7 +575,7 @@ bool Loader::LoadCrystalsFromYaml(const char* path)
                 crystal->GetDestructibleComponent()->SetDestroyHp(hp);
 
                 float scale = crystalNode["scale"] ? crystalNode["scale"].as<float>() : 0.25f;
-                crystal->SetScale(scale);
+                crystal->SetScale(glm::vec3(scale));
 
                 float radius = crystalNode["radius"] ? crystalNode["radius"].as<float>() : 1.0f;
                 crystal->SetRadius(radius);
@@ -616,6 +626,59 @@ bool Loader::LoadStarFromYaml(const char* path) {
     }
 }
 
+bool Loader::LoadPlatformsFromYaml(const char* path)
+{
+    try {
+        int currentPlanetNum = 0;
+        YAML::Node root = YAML::LoadFile(path);
+        if (!root["platforms"] || !root["platforms"].IsSequence()) {
+            std::cerr << "Loader: missing or invalid 'platforms' sequence" << std::endl;
+        }
+        for (const YAML::Node& node : root["platforms"]) {
+            currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            currentPlanet->RemoveAllPlatforms();
+        }
+
+        for (auto node : root["platforms"]){
+            std::unique_ptr<Platform> platform = std::make_unique<Platform>(GetGame());
+
+            int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
+            Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
+            platform->SetCurrentPlanet(currentPlanet);
+
+            std::string type = node["type"] ? node["type"].as<std::string>() : "";
+            YAML::Node platformRoot = YAML::LoadFile("../assets/data/platforms.yaml");
+            for (auto platformNode : platformRoot["platforms"]){
+                if (type != platformNode["type"].as<std::string>())
+                    continue;
+
+                std::string modelPath = platformNode["modelPath"] ? platformNode["modelPath"].as<std::string>() : "";
+                platform->SetModelPath(modelPath);
+
+                if (platformNode["scale"]) {
+                    float scaleX = platformNode["scale"][0].as<float>();
+                    float scaleY = platformNode["scale"][1].as<float>();
+                    float scaleZ = platformNode["scale"][2].as<float>();
+                    glm::vec3 scale = glm::vec3(scaleX, scaleY, scaleZ);
+                    platform->SetScale(scale);
+                }
+            }
+
+            glm::vec3 pos = CalculatePos(node, currentPlanet);
+            platform->SetPos(pos);
+
+            Platform* platformPtr = platform.get();
+            GetGame()->AddActor(std::move(platform));
+            currentPlanet->AddPlatform(platformPtr);
+        }
+        return true;
+    } catch (const YAML::Exception& ex) {
+        std::cerr << "Crystals Load error: " << ex.what() << std::endl;
+        return false;
+    }
+}
+
 glm::vec3 Loader::CalculatePos(YAML::Node node, Planet* currentPlanet) 
 {   
     if (node["pos"]) {
@@ -632,6 +695,6 @@ glm::vec3 Loader::CalculatePos(YAML::Node node, Planet* currentPlanet)
     if (len < 1e-6f) dir = glm::vec3(1.0f, 0.0f, 0.0f);
     else dir /= len;
 
-    glm::vec3 pos = currentPlanet->GetCenter() + (currentPlanet->GetRadius() + height) * dir;
+    glm::vec3 pos = currentPlanet->GetPos() + (currentPlanet->GetRadius() + height) * dir;
     return pos;
 }

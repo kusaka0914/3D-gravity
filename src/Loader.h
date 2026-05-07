@@ -29,6 +29,7 @@ private:
     bool LoadKeysFromYaml(const char* path);
     bool LoadCrystalsFromYaml(const char* path);
     bool LoadStarFromYaml(const char* path);
+    bool LoadPlatformsFromYaml(const char* path);
 
     glm::vec3 CalculatePos(YAML::Node node, Planet* currentPlanet);
     Game* mGame;

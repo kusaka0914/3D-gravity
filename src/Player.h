@@ -63,8 +63,6 @@ public:
     void SetDefaultStrongAttackTimer(float defaultStrongAttackTimer) { mDefaultStrongAttackTimer = defaultStrongAttackTimer; }
     void SetDefaultAttackMotionTimer(float defaultAttackMotionTimer) { mDefaultAttackMotionTimer = defaultAttackMotionTimer; }
 
-    void SetModelPath(std::string modelPath) { mModelPath = modelPath; }
-
     void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
     void SetKnockBackFrom(const glm::vec3& knockBackFrom) { mKnockBackFrom = knockBackFrom; }
     void SetRestartPos(const glm::vec3& restartPos) { mRestartPos = restartPos; }
@@ -120,8 +118,6 @@ public:
     float GetStrongAttack() const { return mStrongAttack; }
     float GetStrongAttackSpeed() const { return mStrongAttackSpeed; }
     float GetDefaultStrongAttackTimer() const { return mDefaultStrongAttackTimer; }
-    
-    std::string GetModelPath() const { return mModelPath; }
 
     std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
     const glm::vec3& GetForwardVec() const { return mForwardVec; }
@@ -238,8 +234,6 @@ private:
     glm::vec3 mVelocity;
     glm::vec3 mDodgeDir;
     glm::vec3 mCameraPos;
-
-    std::string mModelPath;
 
     class NPC* mTalkingNPC;
 

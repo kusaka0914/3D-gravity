@@ -11,6 +11,7 @@
 #include "VertexArray.h"
 #include "Game.h"
 #include "NPC.h"
+#include "Platform.h"
 #include "UIState.h"
 #include "stb_image.h"
 #include "FocusComponent.h"
@@ -109,7 +110,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
         // 惑星描画
         for (auto planet : planets)
         {
-            glm::mat4 planetModel = glm::translate(glm::mat4(1.0f), planet->GetCenter()) * glm::scale(glm::mat4(1.0f), glm::vec3(planet->GetRadius()));
+            glm::mat4 planetModel = glm::translate(glm::mat4(1.0f), planet->GetPos()) * glm::scale(glm::mat4(1.0f), glm::vec3(planet->GetRadius()));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(planetModel));
             glUniform4f(locObjectColor, planet->GetColor().x, planet->GetColor().y, planet->GetColor().z, planet->GetColor().w);
             
@@ -133,7 +134,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
         }
     }
 
-    const float playerScale = 0.25f;
+    glm::vec3 playerScale = glm::vec3(0.25f);
     // 1Pの描画
     if (players[0]->GetIsActive()) {
         DrawCharacter(players[0]->GetPos(), playerScale, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), players[0]->GetUpVec(), players[0]->GetFacingYaw(), players[0]->GetMeshes());
@@ -198,7 +199,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
     if (key) {
         if (key->GetIsActive())
         {
-            const float keyScale = 2.0f;
+            glm::vec3 keyScale = glm::vec3(2.0f);
             const glm::vec4 keyColor(0.85f, 0.65f, 0.13f, 1.0f); // 金色
             DrawCharacter(key->GetPos(), keyScale, keyColor, key->GetUpVec(), 0.0f, key->GetMeshes(), &keyColor);
         }
@@ -210,7 +211,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
         for (auto NPC : NPCs) {
             if (NPC->GetIsActive())
             {
-                const float NPCScale = 0.25f;
+                glm::vec3 NPCScale = glm::vec3(0.25f);
                 DrawCharacter(NPC->GetPos(), NPCScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), NPC->GetUpVec(), NPC->GetFacingYaw(), NPC->GetMeshes());
             }
         }
@@ -222,7 +223,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
         for (auto boat : boats) {
             if (boat->GetIsActive())
             {
-                const float boatScale = 0.8f;
+                glm::vec3 boatScale = glm::vec3(0.8f);
                 DrawCharacter(boat->GetPos(), boatScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), boat->GetUpVec(), 0.0f, boat->GetMeshes());
             }
         }
@@ -233,7 +234,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
     if (!boatParts.empty()) {
         for (auto parts : boatParts) { 
             if (parts->GetIsActive()) {
-                const float boatPartsScale = 1.0f;
+                glm::vec3 boatPartsScale = glm::vec3(1.0f);
                 DrawCharacter(parts->GetPos(), boatPartsScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), parts->GetUpVec(), 0.0f, parts->GetMeshes());
             }
         }
@@ -245,7 +246,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
         if (star->GetIsActive())
         {
             glm::vec4 starColor(1.0f, 0.9f, 0.2f, 1.0f);
-            const float starScale = 0.3f;
+            glm::vec3 starScale = glm::vec3(0.3f);
             DrawCharacter(star->GetPos(), starScale, starColor, star->GetUpVec(), 0.0f, star->GetMeshes());
         }
     }
@@ -259,9 +260,19 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
             }
         }
     }
+
+    // クリスタル描画
+    std::vector<Platform*> platforms = currentPlanet->GetPlatforms();
+    if (!platforms.empty()) {
+        for (auto platform : platforms) { 
+            if (platform->GetIsActive()) {
+                DrawCharacter(platform->GetPos(), platform->GetScale(), glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), platform->GetUpVec(), 0.0f, platform->GetMeshes());
+            }
+        }
+    }
 };
 
-void Renderer::DrawCharacter(const glm::vec3 &pos, float scale, const glm::vec4 &fallbackColor,
+void Renderer::DrawCharacter(const glm::vec3 &pos, glm::vec3 scale, const glm::vec4 &fallbackColor,
     const glm::vec3 &up, float yaw, const std::vector<struct LoadedMesh> *meshes,
     const glm::vec4 *colorOverride) 
 {

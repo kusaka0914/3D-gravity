@@ -25,7 +25,7 @@ Boat::Boat(Game* game)
 }
 
 void Boat::Initialize() {
-    glm::vec3 destPlanetCenter = mDestPlanet->GetCenter();
+    glm::vec3 destPlanetCenter = mDestPlanet->GetPos();
     glm::vec3 boatPos = mPos;
     glm::vec3 toDestPlanet = glm::normalize(destPlanetCenter - boatPos);
     float destPlanetRadius = mDestPlanet->GetRadius();

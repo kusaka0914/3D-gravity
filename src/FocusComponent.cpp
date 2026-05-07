@@ -31,7 +31,7 @@ glm::mat4 FocusComponent::GetFocusView() {
     glm::vec3 ownerPos = mOwner->GetPos();
 
     Planet* currentPlanet = mOwner->GetGame()->GetPlayers()[0]->GetCurrentPlanet();
-    glm::vec3 upVec = glm::normalize(ownerPos - currentPlanet->GetCenter());
+    glm::vec3 upVec = glm::normalize(ownerPos - currentPlanet->GetPos());
     glm::vec3 worldLeft = glm::cross(upVec, glm::vec3(0, 0, 1));
     glm::vec3 forwardVec = glm::normalize(glm::cross(worldLeft, upVec) * std::cos(0.6f) - std::sin(0.6f) * worldLeft);
     glm::vec3 back = glm::normalize(-forwardVec);

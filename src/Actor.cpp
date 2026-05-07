@@ -62,7 +62,7 @@ void Actor::UpdateUpVec() {
     if (planetShape == normalShape) {
         mUpVec = {0.0f, 1.0f, 0.0f};
     } else {
-        glm::vec3 planetCenter = mCurrentPlanet->GetCenter();
+        glm::vec3 planetCenter = mCurrentPlanet->GetPos();
         mUpVec = glm::normalize(mPos - planetCenter);
     }
 }
