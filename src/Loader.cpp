@@ -294,9 +294,6 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
                     float knockBackSpeed = enemyNode["knockBackSpeed"] ? enemyNode["knockBackSpeed"].as<float>() : 0.0f;
                     enemy->SetKnockBackSpeed(knockBackSpeed);
 
-                    float defaultStandByAttackTimer = enemyNode["defaultStandByAttackTimer"] ? enemyNode["defaultStandByAttackTimer"].as<float>() : 0.0f;
-                    enemy->SetDefaultStandByAttackTimer(defaultStandByAttackTimer);
-
                     float defaultAttackMotionTimer = enemyNode["defaultAttackMotionTimer"] ? enemyNode["defaultAttackMotionTimer"].as<float>() : 0.0f;
                     enemy->SetDefaultAttackMotionTimer(defaultAttackMotionTimer);
 
@@ -333,6 +330,9 @@ bool Loader::LoadEnemiesFromYaml(const char* path) {
                 
                 std::string modelPath = enemyNode["modelPath"] ? enemyNode["modelPath"].as<std::string>() : "";
                 enemy->SetModelPath(modelPath);
+
+                float defaultStandByAttackTimer = enemyNode["defaultStandByAttackTimer"] ? enemyNode["defaultStandByAttackTimer"].as<float>() : 0.0f;
+                enemy->SetDefaultStandByAttackTimer(defaultStandByAttackTimer);
             }
 
             Enemy* enemy_ptr = enemy.get();

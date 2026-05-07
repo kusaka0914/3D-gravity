@@ -6,10 +6,9 @@
 enemies:
   - type: common
     knockBackSpeed: 5.0
-    defaultStandByAttackTimer: 4.0
     defaultAttackMotionTimer: 3.0
     attackSpeed: 1.5
-    defaultLaunchedTimer: 3.0
+    defaultLaunchedTimer: 4.0
 
   - type: normal
     hp: 80
@@ -19,12 +18,14 @@ enemies:
     attack: 5.0
     breakCountMax: 1
     radius: 0.75
+    defaultStandByAttackTimer: 6.0
 
   - type: boss
-    hp: 200
+    hp: 400
     modelPath: enemy.obj
     scale: 1.0
     speed: 3.0
     attack: 10.0
     breakCountMax: 3
     radius: 1.5
+    defaultStandByAttackTimer: 3.0

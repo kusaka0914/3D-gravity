@@ -186,10 +186,6 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
 
             DrawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), enemyUp, enemyFacingYaw, enemy->GetMeshes());
 
-            int breakCount = enemy->GetBreakCount();
-            if (breakCount == 0)
-                continue;
-
             DrawGuard(viewMat, enemy);
         }
     }
@@ -365,18 +361,21 @@ void Renderer::DrawGuard(glm::mat4 viewMat, Enemy* enemy) {
     billboard[1] = glm::vec4(-upQuad * enemyLabelHeight, 0.0f);
     billboard[2] = glm::vec4(forward, 0.0f);
     
-    float rightMargin = 0;
-    for (int i = 0; i < enemyBreakCount; i++) {
-        float rightMargin = (i - (enemyBreakCount - 1) * 0.5f) * 0.4f;
-        glm::vec3 drawPos = enemyPos + enemyUp * enemyRadius * 0.8f + right * rightMargin;
-        billboard[3] = glm::vec4(drawPos, 1.0f);
-        glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
-        glDrawArrays(GL_TRIANGLES, 0, 6);           
-    }
+    int breakCount = enemy->GetBreakCount();
+    if (breakCount != 0) {
+        float rightMargin = 0;
+        for (int i = 0; i < enemyBreakCount; i++) {
+            float rightMargin = (i - (enemyBreakCount - 1) * 0.5f) * 0.4f;
+            glm::vec3 drawPos = enemyPos + enemyUp * enemyRadius * 0.8f + right * rightMargin;
+            billboard[3] = glm::vec4(drawPos, 1.0f);
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
+            glDrawArrays(GL_TRIANGLES, 0, 6);           
+        }
 
-    glUniform1i(locUseTexture, 0);
-    glDepthMask(GL_TRUE);
-    glDisable(GL_BLEND);
+        glUniform1i(locUseTexture, 0);
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
+    }
 
     glBindTexture(GL_TEXTURE_2D, 0);
     glUniform1i(locUseTexture, 0);

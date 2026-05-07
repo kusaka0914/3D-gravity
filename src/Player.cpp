@@ -91,7 +91,7 @@ void Player::UpdateActor(float deltaTime)
     if (mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f && mStrongAttackTimer <= 0.0f)
         ApplyGravity(deltaTime);
 
-    if (mDodgeTimer <= 0.0f && mAttackMoveLockRemaining <= 0.0f && mAttackPressTimer < 0.0f && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
+    if (mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
         ChangeFaceDir();
 
     // 攻撃
@@ -267,9 +267,16 @@ void Player::UpdateDodge(float deltaTime) {
 }
 
 void Player::StartDodge() {
-    mDodgeDir = -mFacingForwardVec;
+    if (mMoveForward != 0.0f || mMoveLeft != 0.0f)
+        mDodgeDir = -mFacingForwardVec;
+    else
+        mDodgeDir = mFacingForwardVec;
     mDodgeTimer = mDodgeDuration;
-    mDodgeCooldown = mDodgeCooldownTime;
+    if (mOnGround) 
+        mDodgeCooldown = mDodgeCooldownTime;
+    else
+        mDodgeCooldown = mDodgeCooldownTime * 3;
+    
     mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetPos());
     mVelocity = glm::vec3(0.0f);
     GetGame()->GetAudioSystem()->PlaySE("dodgeSE");
@@ -365,7 +372,8 @@ void Player::Attack(float deltaTime) {
     mVelocity = glm::vec3(0.0f);
 
     auto applyAttackLocksFromCooldown = [this]() {
-        mAttackMoveLockRemaining = std::min(mAttackCooldownRemaining, 0.5f) + 0.2f;
+        // mAttackMoveLockRemaining = std::min(mAttackCooldownRemaining, 0.5f) + 0.2f;
+        mAttackMoveLockRemaining = 0.2f;
         mAttackDodgeLockRemaining = std::max(0.0f, mAttackMoveLockRemaining - 0.5f);
         mComboTimer = mAttackMoveLockRemaining + 1.0f;
         if (!mOnGround)
@@ -402,10 +410,13 @@ void Player::Attack(float deltaTime) {
         float dist = glm::length(enemyPos - mPos);
         float dot = glm::dot(-mFacingForwardVec, toEnemy);
         float effectiveRange = mAttackRange + enemy->GetRadius();
-        if (mStrongAttackTimer >= 0.0f && dist <= effectiveRange) {
+        if (mStrongAttackTimer >= 0.0f && dist <= effectiveRange)
             hitEnemies.push_back(enemy);
-        }
-        if (dist <= effectiveRange && dot >= mAttackAngle)
+
+        if (mAttackPressed && dist <= effectiveRange)
+            hitEnemies.push_back(enemy);
+
+        if (mWideAttackPressed && dist <= effectiveRange && dot >= mAttackAngle)
             hitEnemies.push_back(enemy);
     }
 
@@ -414,7 +425,10 @@ void Player::Attack(float deltaTime) {
         for (Enemy* enemy : hitEnemies)
             enemy->SetIsDamaged(true);
 
-        mAttackCooldownRemaining = mAttackCooldown;
+        if (mWideAttackPressed)
+            mAttackCooldownRemaining = mAttackCooldown;
+        else if (mAttackPressed)
+            mAttackCooldownRemaining = mLastAttackCooldown;
         mAttackIndex++;
         float strongAttackTimerNext = mStrongAttackTimer - deltaTime;
         if (mStrongAttackTimer >= 0.0f) {
@@ -424,6 +438,7 @@ void Player::Attack(float deltaTime) {
             }
             GetGame()->GetAudioSystem()->PlaySE("attackAirSE");
             mAttackIndex = 0;
+            mStrongAttackTimer = -1.0f;
         }
         if (mAttackIndex == 3)
         {
@@ -443,7 +458,10 @@ void Player::Attack(float deltaTime) {
     }
     else
     {
-        mAttackCooldownRemaining = mAttackCooldown;
+        if (mWideAttackPressed)
+            mAttackCooldownRemaining = mAttackCooldown;
+        else if (mAttackPressed)
+            mAttackCooldownRemaining = mLastAttackCooldown;
         mAttackIndex++;
         if (mAttackIndex == 3)
         {
@@ -627,14 +645,6 @@ void Player::UpdatePrev() {
     mDodgePressedPrev = mDodgePressed;
     mSpecialAttackPressedPrev = mSpecialAttackPressed;
     mIsDamagePrev = mIsDamaged;
-}
-
-float Player::getYawFromDirection(const glm::vec3& up, const glm::vec3& dir) {
-    glm::vec3 worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 0, 1)));
-    if (glm::length(worldLeft) < 0.01f)
-        worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(1, 0, 0)));
-    glm::vec3 right = glm::cross(worldLeft, mUpVec);
-    return std::atan2(-glm::dot(dir, worldLeft), glm::dot(dir, right));
 }
 
 glm::mat4 Player::getPlayerView(float cameraDistance, bool isFixed) {

@@ -10,13 +10,13 @@ players:
     moveSpeed: 4.0
     # moveSpeed: 10.2
     dodgeDuration: 0.1
-    dodgeCooldownTime: 1.0
+    dodgeCooldownTime: 0.3
     dodgeDistance: 3.0
-    normalAttackRange: 1.6
+    normalAttackRange: 2.8
     normalAttackAngle: 0.8
     normalAttack: 10
     wideAttackRange: 2.8
-    wideAttackAngle: 0.4
+    wideAttackAngle: -0.2
     wideAttack: 5
     strongAttackRange: 6.0
     strongAttack: 50

@@ -12,23 +12,23 @@ planets:
     shape : Sphere
     keySpawnCondition: AllBoatPartsCollected
   - center: [32.0, 0.0, 0.0]
-    scale: [5.0, 5.0, 5.0]
+    scale: [4.0, 4.0, 4.0]
     color: [0.0, 1.0, 0.0, 1.0]
     model: planet.obj
     shape : Sphere
     keySpawnCondition: AllEnemiesDead
   - center: [64.0, 0.0, 0.0]
-    scale: [5.0, 5.0, 5.0]
+    scale: [4.0, 4.0, 4.0]
     color: [0.0, 1.0, 0.0, 1.0]
     model: planet_2.obj
     shape : Sphere
 
 enemies:
-  # - type: normal
-  #   theta: 0.0
-  #   u: 0.0
-  #   height : 0.0
-  #   currentPlanetNum: 0
+  - type: normal
+    theta: 0.0
+    u: 0.0
+    height : 0.0
+    currentPlanetNum: 0
   - type: normal
     theta: 2.056
     u: 1.0
@@ -74,6 +74,66 @@ enemies:
     u: 1.6
     height : 0.0
     currentPlanetNum: 1
+  - type: normal
+    theta: 6.226
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  - type: normal
+    theta: 6.426
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  - type: normal
+    theta: 6.626
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  - type: normal
+    theta: 6.826
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  - type: normal
+    theta: 6.026
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  - type: normal
+    theta: 7.026
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  - type: normal
+    theta: 6.026
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  - type: normal
+    theta: 7.226
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  - type: normal
+    theta: 7.426
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  - type: normal
+    theta: 6.026
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  - type: normal
+    theta: 7.626
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
+  - type: normal
+    theta: 7.826
+    u: 1.6
+    height : 0.0
+    currentPlanetNum: 1
   # ボス（撃破でスター出現）
   - type: boss
     theta: 6.083
@@ -112,35 +172,35 @@ boats:
     destPlanet : 2
 
 boatParts:
-  # - type: parts1
-  #   currentPlanetNum : 0
-  #   theta : 1.0
-  #   u : 0.0
-  #   height : 0.0
   - type: parts1
     currentPlanetNum : 0
-    theta : 2.4
-    u : -0.65
-    height : 4.0
-  - type: parts2
-    currentPlanetNum : 0
-    theta : 19.45
-    u : 1.05
-    height : 3.3
-  - type: parts3
-    currentPlanetNum : 0
-    theta : 42.65
-    u : -0.8
-    height : 2.3
-  - type: parts4
-    currentPlanetNum : 0
-    theta : -0.35
-    u : 0.3
-    height : 1.0
-  - type: parts5
-    currentPlanetNum : 0
-    theta : 79.7
-    u : 1.2
+    theta : 1.0
+    u : 0.0
+    height : 0.0
+  # - type: parts1
+  #   currentPlanetNum : 0
+  #   theta : 2.4
+  #   u : -0.65
+  #   height : 4.0
+  # - type: parts2
+  #   currentPlanetNum : 0
+  #   theta : 19.45
+  #   u : 1.05
+  #   height : 3.3
+  # - type: parts3
+  #   currentPlanetNum : 0
+  #   theta : 42.65
+  #   u : -0.8
+  #   height : 2.3
+  # - type: parts4
+  #   currentPlanetNum : 0
+  #   theta : -0.35
+  #   u : 0.3
+  #   height : 1.0
+  # - type: parts5
+  #   currentPlanetNum : 0
+  #   theta : 79.7
+  #   u : 1.2
 
 players:
   # - theta : 2.5

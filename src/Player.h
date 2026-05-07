@@ -15,7 +15,6 @@ public:
     void ProcessActor() override;
     void UpdateActor(float deltaTime) override;
     
-    float getYawFromDirection(const glm::vec3& up, const glm::vec3& dir);
     glm::mat4 getPlayerView(float cameraDistance, bool isFixed = false);
 
     void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
