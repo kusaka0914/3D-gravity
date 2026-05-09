@@ -150,10 +150,15 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
     if (players[0]->GetAttackMotionTimer() >= 0.0f) {
         glm::vec3 up = players[0]->GetUpVec();
         float yaw = players[0]->GetFacingYaw();
-                    glm::vec3 upN = glm::normalize(up);
-        glm::vec3 worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 0, 1)));
-        if (glm::length(worldLeft) < 0.01f)
-            worldLeft = glm::normalize(glm::cross(upN, glm::vec3(1, 0, 0)));
+        glm::vec3 upN = glm::normalize(up);
+        glm::vec3 worldLeft = glm::cross(upN, glm::vec3(0, 0, 1));
+        if (glm::length(worldLeft) < 0.01f){
+            worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 1, 0)));
+        }
+        else 
+            worldLeft = glm::normalize(worldLeft);
+        
+        worldLeft = glm::normalize(worldLeft);
         glm::vec3 fwd = glm::normalize(glm::cross(worldLeft, upN) * std::cos(yaw) - std::sin(yaw) * worldLeft);
         glm::vec3 left = glm::normalize(glm::cross(upN, fwd));
         glm::vec3 right = -left;
@@ -167,6 +172,31 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
         mVertexArrays.at("text")->SetActive();
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
+
+    glm::vec3 up = players[0]->GetUpVec();
+        float yaw = players[0]->GetFacingYaw();
+        glm::vec3 upN = glm::normalize(up);
+        glm::vec3 worldLeft = glm::cross(upN, glm::vec3(0, 0, 1));
+        if (glm::length(worldLeft) < 0.01f){
+            worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 1, 0)));
+        }
+        else 
+            worldLeft = glm::normalize(worldLeft);
+        glm::vec3 fwd = glm::normalize(glm::cross(worldLeft, upN) * std::cos(yaw) - std::sin(yaw) * worldLeft);
+        glm::vec3 left = glm::normalize(glm::cross(upN, fwd));
+        glm::vec3 right = -left;
+        glm::mat4 orient = glm::mat4(1.0f);
+        orient[0] = glm::vec4(-fwd, 0.0f);
+        orient[1] = glm::vec4(up, 0.0f);
+        orient[2] = glm::vec4(right, 0.0f);
+        orient[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        std::vector<Player::RaySegment> rayCasts = players[0]->GetRayCasts();
+        for (auto rayCast : rayCasts) {
+            glm::mat4 model = glm::translate(glm::mat4(1.0), (rayCast.from)) * orient * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, glm::length(rayCast.from - rayCast.to), 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
+            mVertexArrays.at("text")->SetActive();
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
 
     Planet* currentPlanet = players[0]->GetCurrentPlanet();
     if (!currentPlanet)
@@ -278,9 +308,12 @@ void Renderer::DrawCharacter(const glm::vec3 &pos, glm::vec3 scale, const glm::v
     GLint locDiffuseTexture = mShader3D->GetLocDiffuseTexture();
 
     glm::vec3 upN = glm::normalize(up);
-    glm::vec3 worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 0, 1)));
-    if (glm::length(worldLeft) < 0.01f)
-        worldLeft = glm::normalize(glm::cross(upN, glm::vec3(1, 0, 0)));
+    glm::vec3 worldLeft = glm::cross(upN, glm::vec3(0, 0, 1));
+    if (glm::length(worldLeft) < 0.01f){
+        worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 1, 0)));
+    }
+    else 
+        worldLeft = glm::normalize(worldLeft);
     glm::vec3 fwd = glm::normalize(glm::cross(worldLeft, upN) * std::cos(yaw) - std::sin(yaw) * worldLeft);
     glm::vec3 left = glm::normalize(glm::cross(upN, fwd));
     glm::vec3 right = -left;

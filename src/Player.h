@@ -12,6 +12,11 @@ public:
     Player(class Game* game);
     ~Player();
 
+    struct RaySegment {
+        glm::vec3 from;
+        glm::vec3 to;
+    };
+
     void ProcessActor() override;
     void UpdateActor(float deltaTime) override;
     
@@ -127,6 +132,7 @@ public:
     const glm::vec3& GetRestartPos() const { return mRestartPos; }
     const glm::vec3& GetVelocity() const { return mVelocity; }
     const glm::vec3& GetCameraPos() const { return mCameraPos; }
+    const std::vector<RaySegment>& GetRayCasts() const { return mRayCasts; }
 
     NPC* GetTalkingNPC() const { return mTalkingNPC; }
 
@@ -152,6 +158,7 @@ private:
     void RideBoat();
     void UpdateTimer(float deltaTime);
     void UpdatePrev();
+    void UpdateCameraSmoothing(float deltaTime);
 
 private:
     bool mOnGround;
@@ -224,6 +231,7 @@ private:
     float mStrongAttackRange;
     float mStrongAttack;
     float mStrongAttackSpeed;
+    float mRayCastTimer;
 
     glm::vec3 mForwardVec;
     glm::vec3 mLeftVec;
@@ -234,6 +242,10 @@ private:
     glm::vec3 mVelocity;
     glm::vec3 mDodgeDir;
     glm::vec3 mCameraPos;
+    std::vector<RaySegment> mRayCasts;
+
+    glm::vec3 mCameraUpVec;
+glm::vec3 mCameraTargetPos;
 
     class NPC* mTalkingNPC;
 

@@ -70,9 +70,12 @@ void Actor::UpdateUpVec() {
 }
 
 float Actor::getYawFromDirection(const glm::vec3& up, const glm::vec3& dir) {
-    glm::vec3 worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 0, 1)));
-    if (glm::length(worldLeft) < 0.01f)
-        worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(1, 0, 0)));
+    glm::vec3 worldLeft = glm::cross(mUpVec, glm::vec3(0, 0, 1));
+    if (glm::length(worldLeft) < 0.01f){
+        worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 1, 0)));
+    }
+    else 
+        worldLeft = glm::normalize(worldLeft);
     glm::vec3 right = glm::cross(worldLeft, mUpVec);
     return std::atan2(-glm::dot(dir, worldLeft), glm::dot(dir, right));
 }

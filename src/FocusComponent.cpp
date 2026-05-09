@@ -33,6 +33,11 @@ glm::mat4 FocusComponent::GetFocusView() {
     Planet* currentPlanet = mOwner->GetGame()->GetPlayers()[0]->GetCurrentPlanet();
     glm::vec3 upVec = glm::normalize(ownerPos - currentPlanet->GetPos());
     glm::vec3 worldLeft = glm::cross(upVec, glm::vec3(0, 0, 1));
+    if (glm::length(worldLeft) < 0.01f){
+        worldLeft = glm::normalize(glm::cross(upVec, glm::vec3(0, 1, 0)));
+    }
+    else 
+        worldLeft = glm::normalize(worldLeft);
     glm::vec3 forwardVec = glm::normalize(glm::cross(worldLeft, upVec) * std::cos(0.6f) - std::sin(0.6f) * worldLeft);
     glm::vec3 back = glm::normalize(-forwardVec);
     glm::vec3 cameraDir = glm::normalize(std::cos(-0.5f) * back + std::sin(-0.5f) * upVec);

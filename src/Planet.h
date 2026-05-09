@@ -17,7 +17,8 @@ public:
 
     enum class PlanetShape {
         Normal,
-        Sphere
+        Sphere,
+        Ellipse
     };
 
     Planet(class Game* game);
@@ -63,6 +64,8 @@ public:
             mPlanetShape = PlanetShape::Normal;
         }else if (PlanetShape == "Sphere") {
             mPlanetShape = PlanetShape::Sphere;
+        }else if (PlanetShape == "Ellipse") {
+            mPlanetShape = PlanetShape::Ellipse;
         }
     }
 

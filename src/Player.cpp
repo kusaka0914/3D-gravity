@@ -53,6 +53,7 @@ Player::Player(Game* game)
     , mInvincibleTimer(-1.0f)
     , mComboTimer(-1.0f)
     , mSpecialAttackCooldownRemaining(-1.0f)
+    , mRayCastTimer(0.5f)
 {
     
 }
@@ -77,9 +78,20 @@ void Player::UpdateActor(float deltaTime)
 {
     UpdateCamera(deltaTime);
 
-    UpdateUpVec();
-    mUpVec = GetAverageNormal();
+    glm::vec3 prevUp = mUpVec;
+    glm::vec3 avgUp = GetAverageNormal();
+
+    if (glm::length(avgUp) > 1e-6f) {
+        mUpVec = avgUp;
+    } else if (mRayCastTimer <= 0.0f) {
+        UpdateUpVec(); // fallback
+    }
     UpdateWorldVec();
+
+    UpdateCameraSmoothing(deltaTime);
+
+    if (mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
+        ChangeFaceDir();
 
     if (!mIsDamaged && mAttackMoveLockRemaining <= 0.0f && mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f && mCanMove)
         UpdateWalk(deltaTime);
@@ -92,9 +104,6 @@ void Player::UpdateActor(float deltaTime)
     bool isRising = glm::dot(mVelocity, mUpVec) > 0.2f;
     if (mDodgeTimer <= 0.0f && !isRising) 
         DetermineLanding();
-
-    if (mDodgeTimer <= 0.0f && mAttackPressTimer < 0.0f && (std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f))
-        ChangeFaceDir();
 
     // 攻撃
     bool canAttack = ((mAttackPressed && !mAttackPressedPrev) || (mWideAttackPressed && !mWideAttackPressedPrev)) && mAttackCooldownRemaining <= 0.0f && mOnGround || mStrongAttackTimer >= 0.0f;
@@ -217,25 +226,32 @@ void Player::ProcessKeyboard() {
 }
 
 void Player::UpdateCamera(float deltaTime) {
-    // カメラ更新
     const float cameraSensitivity = 2.5f;
-    mCameraYaw += mCameraStickX * cameraSensitivity * deltaTime;
+
+    mCameraYaw = mCameraStickX * cameraSensitivity * deltaTime;
     mCameraPitch -= mCameraStickY * cameraSensitivity * deltaTime;
     mCameraPitch = glm::clamp(mCameraPitch, -1.2f, -0.2f);
 }
 
 void Player::UpdateWorldVec() {
-    glm::vec3 worldLeft = glm::cross(mUpVec, glm::vec3(0, 0, 1));
-    if (glm::length(worldLeft) < 0.01f)
-        worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 1, 0)));
-    else 
-        worldLeft = glm::normalize(worldLeft);
+    glm::vec3 projectedForward = mForwardVec - glm::dot(mForwardVec, mUpVec) * mUpVec;
 
-    mForwardVec = glm::normalize(glm::cross(worldLeft, mUpVec) * std::cos(mCameraYaw) - std::sin(mCameraYaw) * worldLeft);
+    if (glm::length(projectedForward) < 1e-6f) {
+        projectedForward = glm::cross(glm::vec3(1, 0, 0), mUpVec);
+        if (glm::length(projectedForward) < 1e-6f)
+            projectedForward = glm::cross(glm::vec3(0, 1, 0), mUpVec);
+    }
+    projectedForward = glm::normalize(projectedForward);
+
+    glm::vec3 worldLeft = glm::normalize(glm::cross(mUpVec, projectedForward));
+
+    if (glm::length(mLeftVec) > 1e-6f && glm::dot(worldLeft, mLeftVec) < 0.0f)
+        worldLeft = -worldLeft;
+
+    mForwardVec = glm::normalize(projectedForward * std::cos(mCameraYaw)
+                               - worldLeft * std::sin(mCameraYaw));
+
     mLeftVec = glm::normalize(glm::cross(mUpVec, mForwardVec));
-
-    mFacingForwardVec = glm::normalize(glm::cross(worldLeft, mUpVec) * std::cos(mFacingYaw) - std::sin(mFacingYaw) * worldLeft);
-    mFacingLeftVec = glm::normalize(glm::cross(mUpVec, mFacingForwardVec));
 }
 
 void Player::UpdateWalk(float deltaTime) {
@@ -268,9 +284,9 @@ void Player::UpdateDodge(float deltaTime) {
 
 void Player::StartDodge() {
     if (mMoveForward != 0.0f || mMoveLeft != 0.0f)
-        mDodgeDir = -mFacingForwardVec;
-    else
         mDodgeDir = mFacingForwardVec;
+    else
+        mDodgeDir = -mFacingForwardVec;
     mDodgeTimer = mDodgeDuration;
     if (mOnGround) 
         mDodgeCooldown = mDodgeCooldownTime;
@@ -292,6 +308,12 @@ void Player::Dodge(float deltaTime) {
 
     glm::vec3 center = mCurrentPlanet->GetPos();
     // 空中回避：直前の高さを維持して浮遊
+    auto planetShape = mCurrentPlanet->GetPlanetShape();
+    auto sphereShape = Planet::PlanetShape::Sphere;
+
+    if (planetShape != sphereShape)
+        return;
+
     mPos = center + glm::normalize(mPos - center) * mDodgeStartHeight;
 }
 
@@ -348,51 +370,87 @@ glm::vec3 Player::GetAverageNormal()
 
     const float footRadius = 0.25f;
     const float rayStartOffset = 0.2f;
-    const float rayLength = 2.0f;
+    const float rayLength = 10.0f;
+    const float minDot = 0.9f;
+
+    auto castRay = [&](const glm::vec3& offset,
+        glm::vec3& outNormal,
+        const btCollisionObject*& outObj) -> bool
+    {
+    glm::vec3 fromPos = mPos + offset + up * rayStartOffset;
+    glm::vec3 toPos   = mPos + offset - up * rayLength;
+
+    btVector3 rayFrom(fromPos.x, fromPos.y, fromPos.z);
+    btVector3 rayTo(toPos.x, toPos.y, toPos.z);
+
+    btCollisionWorld::ClosestRayResultCallback cb(rayFrom, rayTo);
+    bulletWorld->rayTest(rayFrom, rayTo, cb);
+
+    if (!cb.hasHit())
+    return false;
+
+    btVector3 hitN = cb.m_hitNormalWorld;
+    glm::vec3 hitNormal(hitN.x(), hitN.y(), hitN.z());
+    if (glm::length(hitNormal) < 1e-6f)
+    return false;
+
+    hitNormal = glm::normalize(hitNormal);
+
+    const float minDotAngle50 = 0.8428f;
+    if (glm::dot(hitNormal, up) < minDotAngle50)
+        return false;
+
+    if (glm::dot(hitNormal, up) < 0.0f)
+    hitNormal = -hitNormal;
+
+    outNormal = hitNormal;
+    outObj = cb.m_collisionObject;
+    return true;
+    };
+
+    glm::vec3 mainNormal;
+    const btCollisionObject* mainObj = nullptr;
+    if (!castRay(glm::vec3(0.0f), mainNormal, mainObj))
+        return glm::vec3(0.0f);
+    
+    mRayCastTimer = 0.5f;
+
+    glm::vec3 normalSum = mainNormal * 3.0f;
+    float weightSum = 3.0f;
 
     std::vector<glm::vec3> offsets = {
-        glm::vec3(0.0f),
         forward * footRadius,
         -forward * footRadius,
         side * footRadius,
         -side * footRadius
     };
 
-    glm::vec3 normalSum(0.0f);
-    int hitCount = 0;
-
     for (const auto& offset : offsets) {
-        glm::vec3 fromPos = mPos + offset + up * rayStartOffset;
-        glm::vec3 toPos   = mPos + offset - up * rayLength;
-
-        btVector3 rayFrom(fromPos.x, fromPos.y, fromPos.z);
-        btVector3 rayTo(toPos.x, toPos.y, toPos.z);
-
-        btCollisionWorld::ClosestRayResultCallback cb(rayFrom, rayTo);
-        bulletWorld->rayTest(rayFrom, rayTo, cb);
-
-        if (!cb.hasHit())
+        glm::vec3 hitNormal;
+        const btCollisionObject* hitObj = nullptr;
+        if (!castRay(offset, hitNormal, hitObj))
             continue;
 
-        btVector3 hitN = cb.m_hitNormalWorld;
-        glm::vec3 hitNormal(hitN.x(), hitN.y(), hitN.z());
-        if (glm::length(hitNormal) < 1e-6f)
+        if (hitObj != mainObj)
             continue;
 
-        hitNormal = glm::normalize(hitNormal);
-
-        // 裏返り防止
-        if (glm::dot(hitNormal, up) < 0.0f)
-            hitNormal = -hitNormal;
+        if (glm::dot(hitNormal, mainNormal) < minDot)
+            continue;
 
         normalSum += hitNormal;
-        hitCount++;
+        weightSum += 1.0f;
     }
 
-    if (hitCount == 0 || glm::length(normalSum) < 1e-6f)
-        return up;
+    return glm::normalize(normalSum / weightSum);
+}
 
-    return glm::normalize(normalSum);
+void Player::UpdateCameraSmoothing(float deltaTime)
+{
+    float upSmooth = 1.0f - std::exp(-8.0f * deltaTime);
+    mCameraUpVec = glm::normalize(glm::mix(mCameraUpVec, mUpVec, upSmooth));
+
+    float targetSmooth = 1.0f - std::exp(-10.0f * deltaTime);
+    mCameraTargetPos = glm::mix(mCameraTargetPos, mPos, targetSmooth);
 }
 
 void Player::ApplyGravity(float deltaTime) {
@@ -428,10 +486,12 @@ void Player::ApplyGravity(float deltaTime) {
 void Player::ChangeFaceDir() {
     glm::vec3 moveDir = mForwardVec * mMoveForward + mLeftVec * mMoveLeft;
     float len = glm::length(moveDir);
-    if (len > 0.001f)
-    {
-        // 移動方向を正規化
+    if (len > 0.001f) {
         moveDir /= len;
+        mFacingForwardVec = moveDir;
+        mFacingLeftVec = glm::normalize(glm::cross(mUpVec, mFacingForwardVec));
+
+        // 描画用に yaw が必要なら残す
         mFacingYaw = getYawFromDirection(mUpVec, moveDir) + 3.14159265f;
     }
 }
@@ -477,7 +537,7 @@ void Player::Attack(float deltaTime) {
         glm::vec3 enemyPos = enemy->GetPos();
         glm::vec3 toEnemy = glm::normalize(enemyPos - mPos);
         float dist = glm::length(enemyPos - mPos);
-        float dot = glm::dot(-mFacingForwardVec, toEnemy);
+        float dot = glm::dot(mFacingForwardVec, toEnemy);
         float effectiveRange = mAttackRange + enemy->GetRadius();
         if (mStrongAttackTimer >= 0.0f && dist <= effectiveRange)
             hitEnemies.push_back(enemy);
@@ -565,7 +625,7 @@ void Player::ChargeAttack(float deltaTime) {
         float attackPressTimerPrev = mAttackPressTimer;
         mAttackPressTimer -= deltaTime;
         if (mAttackPressTimer >= 0.0f) {
-            mPos -= -mFacingForwardVec * mChargeMoveSpeed * deltaTime;
+            mPos -= mFacingForwardVec * mChargeMoveSpeed * deltaTime;
             mPos -= -mUpVec * mChargeMoveSpeed * deltaTime;
         } else {
             mAttackPressTimer = 0.0f;
@@ -668,9 +728,9 @@ void Player::UpdateTimer(float deltaTime) {
     {
         mAttackMotionTimer -= deltaTime;
         if (mAttackMotionTimer >= mDefaultAttackMotionTimer / 2.0f) {
-            mPos += -mFacingForwardVec * mAttackSpeed * deltaTime;
+            mPos += mFacingForwardVec * mAttackSpeed * deltaTime;
         }else {
-            mPos -= -mFacingForwardVec * mAttackSpeed * deltaTime;
+            mPos -= mFacingForwardVec * mAttackSpeed * deltaTime;
         }
     }
 
@@ -703,8 +763,12 @@ void Player::UpdateTimer(float deltaTime) {
     if (mStrongAttackTimer >= 0.0f)
     {
         mStrongAttackTimer -= deltaTime;
-        mPos = mPos + -mFacingForwardVec * mStrongAttackSpeed * deltaTime;
+        mPos = mPos + mFacingForwardVec * mStrongAttackSpeed * deltaTime;
         mPos = mPos + -mUpVec * mStrongAttackSpeed * deltaTime;
+    }
+
+    if (mRayCastTimer >= 0.0f) {
+        mRayCastTimer -= deltaTime;
     }
 }
 
@@ -719,16 +783,17 @@ void Player::UpdatePrev() {
 glm::mat4 Player::getPlayerView(float cameraDistance, bool isFixed) {
     glm::vec3 toPosX;
     glm::vec3 cameraDir;
+
     if (isFixed) {
-        toPosX = glm::normalize(mFacingForwardVec);
-        cameraDir = glm::normalize(std::cos(-0.2f) * toPosX + std::sin(-0.2f) * mUpVec);  
-        mCameraPos = mPos - cameraDir * cameraDistance;
-        glm::vec3 offset = glm::normalize(mUpVec) * 1.0f;
-        return glm::lookAt(mCameraPos, mPos + offset, mUpVec);  
+        toPosX = glm::normalize(-mFacingForwardVec);
+        cameraDir = glm::normalize(std::cos(-0.2f) * toPosX + std::sin(-0.2f) * mCameraUpVec);
+        mCameraPos = mCameraTargetPos - cameraDir * cameraDistance;
+        glm::vec3 offset = glm::normalize(mCameraUpVec) * 1.0f;
+        return glm::lookAt(mCameraPos, mCameraTargetPos + offset, mCameraUpVec);
     }
 
     toPosX = glm::normalize(-mForwardVec);
-    cameraDir = glm::normalize(std::cos(mCameraPitch) * toPosX + std::sin(mCameraPitch) * mUpVec);
-    mCameraPos = mPos - cameraDir * cameraDistance;
-    return glm::lookAt(mCameraPos, mPos, mUpVec);
+    cameraDir = glm::normalize(std::cos(mCameraPitch) * toPosX + std::sin(mCameraPitch) * mCameraUpVec);
+    mCameraPos = mCameraTargetPos - cameraDir * cameraDistance;
+    return glm::lookAt(mCameraPos, mCameraTargetPos, mCameraUpVec);
 }
