@@ -6,14 +6,14 @@
 #include "Stage.h"
 #include "GameProgressState.h"
 #include "UIState.h"
+#include "PhysicsSystem.h"
+#include <btBulletDynamicsCommon.h>
 
 Enemy::Enemy(Game* game)
-    :Actor(game)
-    ,mVelocity(0.0f)
+    :CharacterActor(game)
     ,mCurrentPlanetNum(0)
     ,mHp(10.0f)
     ,mIsAlive(true)
-    ,mOnGround(true)
     ,mDeathTimer(-1.0f)
     ,mIsDamaged(false)
     ,mSpeed(2.0f)
@@ -41,8 +41,6 @@ void Enemy::UpdateActor(float deltaTime) {
 
     if (!mIsAlive)
         return;
-    
-    UpdateUpVec();
 
     if (mDeathTimer > 0.0f) {
         UpdateDying(deltaTime);
@@ -97,9 +95,7 @@ void Enemy::UpdateDying(float deltaTime) {
     for(auto player : players) {
         UpdateKnockBack(deltaTime, player);
         
-        if (mOnGround) {
-            FixPlanetSurface();
-        } else {
+        if (!mOnGround) {
             ApplyGravity(deltaTime);
         }
         mDeathTimer -= deltaTime;
@@ -131,9 +127,6 @@ void Enemy::UpdateBehavior(float deltaTime, Player* player) {
     if (distToPlayer <= mSensing && !player->GetIsDamaged() && distToPlayer >= GetRadius() + 0.2f && mStandByAttackTimer <= 0.0f && mAttackMotionTimer <= 0.0f && mKnockBackTimer <= 0.0f)
     {
         mPos += vecToPlayer * mSpeed * deltaTime;
-        float planetRadius = GetCurrentPlanet()->GetRadius();
-        glm::vec3 planetCenter = GetCurrentPlanet()->GetPos();
-        mPos = planetCenter + glm::normalize(mPos - planetCenter) * planetRadius;
     }
 
     // 攻撃タイマー開始
@@ -212,6 +205,7 @@ void Enemy::LaunchCharacter(float deltaTime) {
     mStandByAttackTimer = -1.0f;
     mAttackMotionTimer = -1.0f;
     mIsPreparing = false;
+    mIsJudgeLanding = false;
     GetGame()->GetAudioSystem()->PlaySE("breakSE");
     GetGame()->SetHitStopTimer(0.6f);
 }
@@ -226,7 +220,6 @@ void Enemy::UpdateMotionTimer(float deltaTime, Player* player) {
     }else {
         mPos -= toPlayer * mAttackSpeed * deltaTime;
     }
-    FixPlanetSurface();
 
     float distToPlayer = glm::length(playerPos - mPos);
 
@@ -246,17 +239,11 @@ void Enemy::ApplyGravity(float deltaTime) {
         float gravity = 9.8f;
         mVelocity -= mUpVec * gravity * deltaTime;
         mPos += mVelocity * deltaTime;
-
-        glm::vec3 center = GetCurrentPlanet()->GetPos();
-        float radius = GetCurrentPlanet()->GetRadius();
-        if (glm::length(mPos - center) <= radius) {
-            mOnGround = true;
-            mVelocity = {0.0f, 0.0f, 0.0f};
-        }
     } else {
         mLaunchedTimer -= deltaTime;
         if (mLaunchedTimer <= 0.0f) {
             mBreakCount = mBreakCountMax;
+            mIsJudgeLanding = true;
         }
         return;
     }
@@ -268,12 +255,6 @@ void Enemy::ApplyGravity(float deltaTime) {
     if (vPrev > 0.0f && vNow <= 0.0f) {
         mLaunchedTimer = mDefaultLaunchedTimer;
     }
-}
-
-void Enemy::FixPlanetSurface() {
-    glm::vec3 center = GetCurrentPlanet()->GetPos();
-    float radius = GetCurrentPlanet()->GetRadius();
-    mPos = center + glm::normalize(mPos - center) * radius;
 }
 
 void Enemy::FinishDying() {

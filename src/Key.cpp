@@ -21,7 +21,6 @@ Key::Key(Game* game)
 
 void Key::UpdateActor(float deltaTime)
 {
-    UpdateUpVec();
     if (!mIsActivePrev && mIsActive) {
         GetGame()->GetAudioSystem()->PlaySE("showKeySE");
         mIsActivePrev = true;

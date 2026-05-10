@@ -2,8 +2,8 @@ planets:
   - center: [0.0, 0.0, 0.0]
     scale: [8.0, 8.0, 8.0]
     color: [1.0, 0.0, 0.0, 1.0]
-    model: planet_3.obj
-    shape : Sphere
+    model: planet.obj
+    shape : Ellipse
     keySpawnCondition: AllBoatPartsCollected
   # - center: [0.0, 0.0, 0.0]
   #   scale: [8.0, 10.0, 8.0]
@@ -25,14 +25,14 @@ planets:
 
 enemies:
   - type: normal
-    theta: 0.0
+    theta: -4.0
     u: 0.0
     height : 0.0
     currentPlanetNum: 0
   - type: normal
-    theta: 2.056
-    u: 1.0
-    height : 0.0
+    theta: 0.0
+    u: 0.0
+    height : 2.0
     currentPlanetNum: 1
   - type: normal
     theta: 3.513
@@ -143,16 +143,13 @@ enemies:
 
 keys:
   - currentPlanetNum : 1
-    theta : 100.0
-    u : 0.0
-    height : 0.0
+    pos: [0.0, 2.0, 0.0]
+    modelPath: key.obj
   
 crystals:
   - type: little
     currentPlanetNum : 0
-    theta : 79.7
-    u : 1.2
-    height : 0.0
+    pos: [6.0, 1.0, 0.0]
   - type: big
     currentPlanetNum : 0
     theta : -0.35
@@ -160,23 +157,17 @@ crystals:
     height : 0.5
 
 boats:
-  - theta : 0.0
-    u : 0.0
-    height : 0.0
+  - pos: [0.0, 2.0, 0.0]
     startPlanet : 0
     destPlanet : 1
-  - theta : 0.0
-    u : 0.0
-    height : 0.0
+  - pos: [0.0, 2.0, 0.0]
     startPlanet : 1
     destPlanet : 2
 
 boatParts:
   - type: parts1
     currentPlanetNum : 0
-    theta : 1.0
-    u : 0.0
-    height : 0.0
+    pos: [-7.0, 1.0, 0.0]
   # - type: parts1
   #   currentPlanetNum : 0
   #   theta : 2.4
@@ -216,24 +207,23 @@ star:
   - currentPlanetNum : 2
 
 NPCs:
-  - theta : 2.7
-    u : -0.35
-    height : 0.0
-    facingYaw: 3.0
+  - theta : 1.0
+    u : 0.0
+    height : 1.0
     modelPath: spaceSlime.obj
     name: BoatPartsNPC
     talkTexts: [星を探している？残念だがこの惑星にはそんなものないぞ。,あー、確か近くの惑星にいいものを持っている\nでっかいやつがいるって噂を聞いたことあるな。,そこに行ってみたらどうだ？,隣の惑星に行くならそこらへんに落ちている\nロケットのパーツを拾ってロケットで行くんだな！]
-  - theta : 79.9
-    u : 1.2
-    height : 0.0
-    facingYaw: 3.0
+  # - theta : 79.9
+  #   u : 1.2
+  #   height : 0.0
+  - pos: [9.0, -8.0, 1.0]
     modelPath: spaceSlime.obj
     name: CrystalNPC
     talkTexts: [これはクリスタル！\nXで攻撃して壊せるよ！,中にアイテムが隠れてるかもしれないから\n見つけたらどんどん壊してね！]
-  - theta : -0.55
-    u : 0.3
-    height : 0.0
-    facingYaw: 3.0
+  # - theta : -0.55
+  #   u : 0.3
+  #   height : 0.0
+  - pos: [-2.0, -8.0, -2.0]
     modelPath: spaceSlime.obj
     name: BigCrystalNPC
     talkTexts: [大きなクリスタルは空中溜め攻撃で壊せるよ！,空中溜め攻撃はジャンプしてX長押し！\n溜まったらXを離して！]

@@ -2,12 +2,12 @@
 
 #include "Mesh.h"
 #include "Planet.h"
-#include "Actor.h"
+#include "CharacterActor.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 
-class Player : public Actor {
+class Player : public CharacterActor {
 public:
     Player(class Game* game);
     ~Player();
@@ -26,7 +26,6 @@ public:
     void SetIsDamagePrev(bool isDamagePrev) { mIsDamagePrev = isDamagePrev; }
     void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetCanMove(bool canMove) { mCanMove = canMove; }
-    void SetOnGround(bool onGround) { mOnGround = onGround; }
 
     void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
     void SetPlayerNum(int playerNum) { mPlayerNum = playerNum; }
@@ -74,7 +73,6 @@ public:
 
     void SetTalkingNPC(class NPC* talkingNPC) { mTalkingNPC = talkingNPC; }
 
-    bool GetOnGround() const { return mOnGround; }
     bool GetIsDamaged() const { return mIsDamaged; }
     bool GetIsDamagePrev() const { return mIsDamagePrev; }
     bool GetIsActive() const { return mIsActive; }
@@ -130,7 +128,6 @@ public:
     const glm::vec3& GetFacingLeftVec() const { return mFacingLeftVec; }
     const glm::vec3& GetKnockBackFrom() const { return mKnockBackFrom; }
     const glm::vec3& GetRestartPos() const { return mRestartPos; }
-    const glm::vec3& GetVelocity() const { return mVelocity; }
     const glm::vec3& GetCameraPos() const { return mCameraPos; }
     const std::vector<RaySegment>& GetRayCasts() const { return mRayCasts; }
 
@@ -146,8 +143,6 @@ private:
     void UpdateDodge(float deltaTime);
     void StartDodge();
     void Dodge(float deltaTime);
-    void DetermineLanding();
-    glm::vec3 GetAverageNormal();
     void ApplyGravity(float deltaTime);
     void ChangeFaceDir();
     void Attack(float deltaTime);
@@ -161,7 +156,6 @@ private:
     void UpdateCameraSmoothing(float deltaTime);
 
 private:
-    bool mOnGround;
     bool mIsDamaged;
     bool mIsDamagePrev;
     bool mDodgePressed;
@@ -239,13 +233,12 @@ private:
     glm::vec3 mFacingLeftVec;
     glm::vec3 mKnockBackFrom;
     glm::vec3 mRestartPos;
-    glm::vec3 mVelocity;
     glm::vec3 mDodgeDir;
     glm::vec3 mCameraPos;
     std::vector<RaySegment> mRayCasts;
 
     glm::vec3 mCameraUpVec;
-glm::vec3 mCameraTargetPos;
+    glm::vec3 mCameraTargetPos;
 
     class NPC* mTalkingNPC;
 

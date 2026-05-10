@@ -18,8 +18,6 @@ Star::Star(Game* game)
 
 void Star::UpdateActor(float deltaTime)
 {
-    UpdateUpVec();
-
     if (mCollectableComponent->GetIsObtained() && mIsActive) {
         mIsActive = false;
         GetGame()->GetGameProgressState()->SetSceneState("StageClear");

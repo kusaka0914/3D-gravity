@@ -33,8 +33,6 @@ void Boat::Initialize() {
 }
 
 void Boat::UpdateActor(float deltaTime) {
-    UpdateUpVec();
-
     if (!mIsActivePrev && mIsActive)
         OnShown();
 

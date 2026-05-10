@@ -13,7 +13,7 @@
 #include <cmath>
 
 Player::Player(Game* game)
-    : Actor(game)
+    : CharacterActor(game)
     , mKnockBackFrom(0.0f)
     , mRestartPos(0.0f)
     , mCurrentPlanetNum(0)
@@ -25,12 +25,9 @@ Player::Player(Game* game)
     , mAttackStartHeight(0.0f)
     , mDodgeTimer(0.0f)
     , mDodgeCooldown(0.0f)
-    // , mMoveSpeed(3.2f)
     , mMoveSpeed(10.2f)
     , mCameraStickX(0.0f)
     , mCameraStickY(0.0f)
-    , mVelocity(0.0f, 0.0f, 0.0f)
-    , mOnGround(true)
     , mAttack(10.0f)
     , mHp(100.0f)
     , mIsDamaged(false)
@@ -78,14 +75,6 @@ void Player::UpdateActor(float deltaTime)
 {
     UpdateCamera(deltaTime);
 
-    glm::vec3 prevUp = mUpVec;
-    glm::vec3 avgUp = GetAverageNormal();
-
-    if (glm::length(avgUp) > 1e-6f) {
-        mUpVec = avgUp;
-    } else if (mRayCastTimer <= 0.0f) {
-        UpdateUpVec(); // fallback
-    }
     UpdateWorldVec();
 
     UpdateCameraSmoothing(deltaTime);
@@ -103,7 +92,9 @@ void Player::UpdateActor(float deltaTime)
     
     bool isRising = glm::dot(mVelocity, mUpVec) > 0.2f;
     if (mDodgeTimer <= 0.0f && !isRising) 
-        DetermineLanding();
+        mIsJudgeLanding = true;
+    else 
+        mIsJudgeLanding = false;
 
     // 攻撃
     bool canAttack = ((mAttackPressed && !mAttackPressedPrev) || (mWideAttackPressed && !mWideAttackPressedPrev)) && mAttackCooldownRemaining <= 0.0f && mOnGround || mStrongAttackTimer >= 0.0f;
@@ -317,132 +308,97 @@ void Player::Dodge(float deltaTime) {
     mPos = center + glm::normalize(mPos - center) * mDodgeStartHeight;
 }
 
-void Player::DetermineLanding() {
-    bool meshGround = false;
+// glm::vec3 Player::GetAverageNormal()
+// {
+//     PhysicsSystem* physics = GetGame()->GetPhysicsSystem();
+//     btDiscreteDynamicsWorld* bulletWorld = physics ? physics->GetBulletWorld() : nullptr;
+//     if (!bulletWorld)
+//         return mUpVec;
 
-    glm::vec3 rayFromPos = mPos + mUpVec * 0.1f;
-    glm::vec3 rayToPos = mPos - mUpVec * 0.1f;
-    btVector3 rayFrom(rayFromPos.x, rayFromPos.y, rayFromPos.z);
-    btVector3 rayTo(rayToPos.x, rayToPos.y, rayToPos.z);
+//     glm::vec3 up = glm::normalize(mUpVec);
 
-    btCollisionWorld::ClosestRayResultCallback rayCallback(rayFrom, rayTo);
+//     glm::vec3 side = glm::cross(up, glm::vec3(0.0f, 0.0f, 1.0f));
+//     if (glm::length(side) < 0.01f)
+//         side = glm::cross(up, glm::vec3(1.0f, 0.0f, 0.0f));
+//     side = glm::normalize(side);
 
-    PhysicsSystem* physics = GetGame()->GetPhysicsSystem();
-    btDiscreteDynamicsWorld* bulletWorld = physics ? physics->GetBulletWorld() : nullptr;
-    if (!bulletWorld)
-        return;
+//     glm::vec3 forward = glm::normalize(glm::cross(side, up));
 
-    bulletWorld->rayTest(rayFrom, rayTo, rayCallback);
+//     const float footRadius = 0.25f;
+//     const float rayStartOffset = 0.2f;
+//     const float rayLength = 10.0f;
+//     const float minDot = 0.9f;
 
-    if (rayCallback.hasHit())
-    {
-        btVector3 hitPt = rayCallback.m_hitPointWorld;
-        glm::vec3 hitPos(hitPt.x(), hitPt.y(), hitPt.z());
+//     auto castRay = [&](const glm::vec3& offset,
+//         glm::vec3& outNormal,
+//         const btCollisionObject*& outObj) -> bool
+//     {
+//     glm::vec3 fromPos = mPos + offset + up * rayStartOffset;
+//     glm::vec3 toPos   = mPos + offset - up * rayLength;
 
-        mPos = hitPos;
+//     btVector3 rayFrom(fromPos.x, fromPos.y, fromPos.z);
+//     btVector3 rayTo(toPos.x, toPos.y, toPos.z);
 
-        mOnGround = true;
-        mVelocity = glm::vec3(0.0f);
-        meshGround = true;
-    }
+//     btCollisionWorld::ClosestRayResultCallback cb(rayFrom, rayTo);
+//     bulletWorld->rayTest(rayFrom, rayTo, cb);
 
-    if (!meshGround && mOnGround)
-    {
-        mOnGround = false;
-    }
-}
+//     if (!cb.hasHit())
+//     return false;
 
-glm::vec3 Player::GetAverageNormal()
-{
-    PhysicsSystem* physics = GetGame()->GetPhysicsSystem();
-    btDiscreteDynamicsWorld* bulletWorld = physics ? physics->GetBulletWorld() : nullptr;
-    if (!bulletWorld)
-        return mUpVec;
+//     btVector3 hitN = cb.m_hitNormalWorld;
+//     glm::vec3 hitNormal(hitN.x(), hitN.y(), hitN.z());
+//     if (glm::length(hitNormal) < 1e-6f)
+//     return false;
 
-    glm::vec3 up = glm::normalize(mUpVec);
+//     hitNormal = glm::normalize(hitNormal);
 
-    glm::vec3 side = glm::cross(up, glm::vec3(0.0f, 0.0f, 1.0f));
-    if (glm::length(side) < 0.01f)
-        side = glm::cross(up, glm::vec3(1.0f, 0.0f, 0.0f));
-    side = glm::normalize(side);
+//     const float minDotAngle50 = 0.8428f;
+//     if (glm::dot(hitNormal, up) < minDotAngle50)
+//         return false;
 
-    glm::vec3 forward = glm::normalize(glm::cross(side, up));
+//     if (glm::dot(hitNormal, up) < 0.0f)
+//     hitNormal = -hitNormal;
 
-    const float footRadius = 0.25f;
-    const float rayStartOffset = 0.2f;
-    const float rayLength = 10.0f;
-    const float minDot = 0.9f;
+//     outNormal = hitNormal;
+//     outObj = cb.m_collisionObject;
+//     return true;
+//     };
 
-    auto castRay = [&](const glm::vec3& offset,
-        glm::vec3& outNormal,
-        const btCollisionObject*& outObj) -> bool
-    {
-    glm::vec3 fromPos = mPos + offset + up * rayStartOffset;
-    glm::vec3 toPos   = mPos + offset - up * rayLength;
-
-    btVector3 rayFrom(fromPos.x, fromPos.y, fromPos.z);
-    btVector3 rayTo(toPos.x, toPos.y, toPos.z);
-
-    btCollisionWorld::ClosestRayResultCallback cb(rayFrom, rayTo);
-    bulletWorld->rayTest(rayFrom, rayTo, cb);
-
-    if (!cb.hasHit())
-    return false;
-
-    btVector3 hitN = cb.m_hitNormalWorld;
-    glm::vec3 hitNormal(hitN.x(), hitN.y(), hitN.z());
-    if (glm::length(hitNormal) < 1e-6f)
-    return false;
-
-    hitNormal = glm::normalize(hitNormal);
-
-    const float minDotAngle50 = 0.8428f;
-    if (glm::dot(hitNormal, up) < minDotAngle50)
-        return false;
-
-    if (glm::dot(hitNormal, up) < 0.0f)
-    hitNormal = -hitNormal;
-
-    outNormal = hitNormal;
-    outObj = cb.m_collisionObject;
-    return true;
-    };
-
-    glm::vec3 mainNormal;
-    const btCollisionObject* mainObj = nullptr;
-    if (!castRay(glm::vec3(0.0f), mainNormal, mainObj))
-        return glm::vec3(0.0f);
+//     glm::vec3 mainNormal;
+//     const btCollisionObject* mainObj = nullptr;
+//     if (!castRay(glm::vec3(0.0f), mainNormal, mainObj))
+//         return glm::vec3(0.0f);
     
-    mRayCastTimer = 0.5f;
+//     mRayCastTimer = 0.5f;
 
-    glm::vec3 normalSum = mainNormal * 3.0f;
-    float weightSum = 3.0f;
+//     glm::vec3 normalSum = mainNormal * 3.0f;
+//     float weightSum = 3.0f;
 
-    std::vector<glm::vec3> offsets = {
-        forward * footRadius,
-        -forward * footRadius,
-        side * footRadius,
-        -side * footRadius
-    };
+//     std::vector<glm::vec3> offsets = {
+//         forward * footRadius,
+//         -forward * footRadius,
+//         side * footRadius,
+//         -side * footRadius
+//     };
 
-    for (const auto& offset : offsets) {
-        glm::vec3 hitNormal;
-        const btCollisionObject* hitObj = nullptr;
-        if (!castRay(offset, hitNormal, hitObj))
-            continue;
+//     for (const auto& offset : offsets) {
+//         glm::vec3 hitNormal;
+//         const btCollisionObject* hitObj = nullptr;
+//         if (!castRay(offset, hitNormal, hitObj))
+//             continue;
 
-        if (hitObj != mainObj)
-            continue;
+//         if (hitObj != mainObj)
+//             continue;
 
-        if (glm::dot(hitNormal, mainNormal) < minDot)
-            continue;
+//         if (glm::dot(hitNormal, mainNormal) < minDot)
+//             continue;
 
-        normalSum += hitNormal;
-        weightSum += 1.0f;
-    }
+//         normalSum += hitNormal;
+//         weightSum += 1.0f;
+//     }
 
-    return glm::normalize(normalSum / weightSum);
-}
+//     return glm::normalize(normalSum / weightSum);
+// }
 
 void Player::UpdateCameraSmoothing(float deltaTime)
 {

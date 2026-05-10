@@ -15,5 +15,5 @@ Platform::Platform(Game* game)
 
 void Platform::UpdateActor(float deltaTime)
 {
-    UpdateUpVec();
+    
 }

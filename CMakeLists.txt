@@ -12,6 +12,7 @@ add_executable(game
     src/AudioSystem.cpp
     src/Boat.cpp
     src/BoatParts.cpp
+    src/CharacterActor.cpp
     src/CollectableComponent.cpp
     src/Component.cpp
     src/Crystal.cpp
@@ -20,6 +21,7 @@ add_executable(game
     src/FocusComponent
     src/Game.cpp
     src/GameProgressState.cpp
+    src/JudgeLandingComponent.cpp
     src/Key.cpp
     src/Loader.cpp
     src/Main.cpp

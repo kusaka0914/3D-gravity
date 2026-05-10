@@ -13,7 +13,7 @@
 #include <cmath>
 
 NPC::NPC(Game* game)
-    : Actor(game)
+    : CharacterActor(game)
     , mIsActive(true)
     , mCurrentPlanetNum(0)
     , mFacingYaw(0.0f)
@@ -33,8 +33,11 @@ void NPC::ProcessActor()
 
 void NPC::UpdateActor(float deltaTime)
 {
-    UpdateUpVec();
+    mIsJudgeLanding = true;
     UpdateWorldVec();
+    float gravity = 9.8f;
+    mVelocity -= mUpVec * gravity * deltaTime;
+    mPos += mVelocity * deltaTime;
 }
 
 void NPC::UpdateWorldVec() {

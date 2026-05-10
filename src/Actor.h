@@ -17,6 +17,9 @@ public:
     virtual void ProcessActor();
 
     void UpdateUpVec();
+    void UpdateFallbackUpVec();
+    glm::vec3 GetAverageNormal();
+    virtual void OnLanded(const glm::vec3& hitPos) {};
 
     void AddComponent(std::unique_ptr<class Component> component);
     void RemoveComponent(std::unique_ptr<Component> component);
@@ -54,6 +57,7 @@ protected:
     glm::vec3 mPos;
     glm::vec3 mUpVec;
     glm::vec3 mScale;
+    float mRayCastTimer;
 
     std::string mModelPath;
 };

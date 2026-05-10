@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Actor.h"
+#include "CharacterActor.h"
 #include <glm/glm.hpp>
 #include <memory>
 #include <string>
 #include <vector>
 
-class Enemy : public Actor {
+class Enemy : public CharacterActor {
 public:
     Enemy(class Game* game);
     void UpdateActor(float deltaTime) override;
@@ -48,7 +48,6 @@ public:
     bool GetIsCountered() const { return mIsCountered; }
     bool GetIsBoss() const { return mIsBoss; }
     bool GetIsBroken() const { return mIsBroken; }
-    bool GetOnGround() const { return mOnGround; }
     bool GetIsStrongAttacked() const { return mIsStrongAttacked; }
     bool GetIsAttack() const { return mIsAttack; }
 
@@ -94,7 +93,6 @@ private:
     bool mIsCountered;
     bool mIsBoss;
     bool mIsBroken;
-    bool mOnGround;
     bool mIsPreparing;
     bool mIsHit;
     bool mIsStrongAttacked;
@@ -120,8 +118,6 @@ private:
     float mKnockBackTimer;
     float mKnockBackSpeed;
     float mAttackSpeed;
-
-    glm::vec3 mVelocity;
 
     std::vector<struct LoadedMesh>* mMeshes;
 };

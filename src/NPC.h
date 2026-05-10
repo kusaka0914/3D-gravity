@@ -2,12 +2,12 @@
 
 #include "Mesh.h"
 #include "Planet.h"
-#include "Actor.h"
+#include "CharacterActor.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 
-class NPC : public Actor {
+class NPC : public CharacterActor {
 public:
     NPC(class Game* game);
     ~NPC();

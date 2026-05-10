@@ -17,5 +17,5 @@ Crystal::Crystal(Game* game)
 
 void Crystal::UpdateActor(float deltaTime)
 {
-    UpdateUpVec();
+    
 }

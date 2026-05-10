@@ -451,6 +451,12 @@ bool Loader::LoadBoatsFromYaml(const char* path)
             boat->SetPos(pos);
             boat->SetStartPos(pos);
 
+            YAML::Node boatRoot = YAML::LoadFile("../assets/data/boats.yaml");
+            for (auto boatNode : boatRoot["boats"]){
+                std::string modelPath = boatNode["modelPath"] ? boatNode["modelPath"].as<std::string>() : "";
+                boat->SetModelPath(modelPath);
+            }
+
             // Planetsの設定後ではないと初期化不可
             boat->Initialize();
 
@@ -685,7 +691,8 @@ glm::vec3 Loader::CalculatePos(YAML::Node node, Planet* currentPlanet)
         float posX = node["pos"][0].as<float>();
         float posY = node["pos"][1].as<float>();
         float posZ = node["pos"][2].as<float>();
-        return glm::vec3(posX, posY, posZ);
+        glm::vec3 pos = currentPlanet->GetPos() + glm::vec3(posX, posY, posZ);
+        return pos;
     }
     float theta = node["theta"] ? node["theta"].as<float>() : 0.0f;
     float u = node["u"] ? node["u"].as<float>() : 0.0f;
