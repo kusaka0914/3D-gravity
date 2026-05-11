@@ -2,12 +2,12 @@
 #include "Component.h"
 #include "Game.h"
 #include "Planet.h"
+#include "Player.h"
 #include "PhysicsSystem.h"
 #include <btBulletDynamicsCommon.h>
 
 Actor::Actor(Game* game)
 : mGame(game)
-,mYaw(0.0f)
 , mUpVec(0.0f, 1.0f, 0.0f)
 {
     
@@ -31,7 +31,9 @@ void Actor::ProcessActor() {
 
 void Actor::Update(float deltaTime) {
     UpdateUpVec();
+
     UpdateActor(deltaTime);
+
     for (auto& component : mComponents) {
         Component* comp = component.get();
         comp->Update(deltaTime);
@@ -65,8 +67,19 @@ void Actor::UpdateUpVec() {
 
     if (glm::length(avgUpVec) > 1e-6f) {
         mUpVec = avgUpVec;
-    } else {
+        return;
+    }
+    
+    Player* player = dynamic_cast<Player*>(this);
+    if (!player){
         UpdateFallbackUpVec();
+        return;
+    } 
+    
+    if (player->GetRayCastTimer() <= 0.0f) {
+        UpdateFallbackUpVec();
+        player->SetVelocity(glm::vec3(0.0f));
+        player->SetRayCastTimer(0.5f);
     }
 }
 
@@ -76,10 +89,11 @@ void Actor::UpdateFallbackUpVec() {
 
     if (planetShape == normalShape) {
         mUpVec = {0.0f, 1.0f, 0.0f};
-    } else {
-        glm::vec3 planetCenter = mCurrentPlanet->GetPos();
-        mUpVec = glm::normalize(mPos - planetCenter);
+        return;
     }
+
+    glm::vec3 planetCenter = mCurrentPlanet->GetPos();
+    mUpVec = glm::normalize(mPos - planetCenter);
 }
 
 glm::vec3 Actor::GetAverageNormal()
@@ -100,50 +114,84 @@ glm::vec3 Actor::GetAverageNormal()
 
     const float footRadius = 0.25f;
     const float rayStartOffset = 0.2f;
-    const float rayLength = 10.0f;
+    const float rayLength = 30.0f;
     const float minDot = 0.9f;
 
     auto castRay = [&](const glm::vec3& offset,
         glm::vec3& outNormal,
         const btCollisionObject*& outObj) -> bool
-    {
-    glm::vec3 fromPos = mPos + offset + up * rayStartOffset;
-    glm::vec3 toPos   = mPos + offset - up * rayLength;
+        {
+        glm::vec3 downRayFromPos = mPos + offset + up * rayStartOffset;
+        glm::vec3 downRayToPos   = mPos + offset - up * rayLength;
 
-    btVector3 rayFrom(fromPos.x, fromPos.y, fromPos.z);
-    btVector3 rayTo(toPos.x, toPos.y, toPos.z);
+        glm::vec3 upRayFromPos = mPos + offset + up * rayStartOffset;
+        glm::vec3 upRayToPos   = mPos + offset + up * rayLength;
 
-    btCollisionWorld::ClosestRayResultCallback cb(rayFrom, rayTo);
-    bulletWorld->rayTest(rayFrom, rayTo, cb);
+        btVector3 downRayFrom(downRayFromPos.x, downRayFromPos.y, downRayFromPos.z);
+        btVector3 downRayTo(downRayToPos.x, downRayToPos.y, downRayToPos.z);
 
-    if (!cb.hasHit())
-    return false;
+        btVector3 upRayFrom(upRayFromPos.x, upRayFromPos.y, upRayFromPos.z);
+        btVector3 upRayTo(upRayToPos.x, upRayToPos.y, upRayToPos.z);
 
-    btVector3 hitN = cb.m_hitNormalWorld;
-    glm::vec3 hitNormal(hitN.x(), hitN.y(), hitN.z());
-    if (glm::length(hitNormal) < 1e-6f)
-    return false;
+        btCollisionWorld::ClosestRayResultCallback cb(downRayFrom, downRayTo);
+        btCollisionWorld::ClosestRayResultCallback cb2(upRayFrom, upRayTo);
 
-    hitNormal = glm::normalize(hitNormal);
+        bulletWorld->rayTest(downRayFrom, downRayTo, cb);
+        bulletWorld->rayTest(upRayFrom, upRayTo, cb2);
 
-    const float minDotAngle50 = 0.6428f;
-    if (glm::dot(hitNormal, up) < minDotAngle50)
+        if (!cb.hasHit() && !cb2.hasHit())
         return false;
 
-    if (glm::dot(hitNormal, up) < 0.0f)
-    hitNormal = -hitNormal;
+        btVector3 hitN;
+        const btCollisionObject* chosenObj = nullptr;
 
-    outNormal = hitNormal;
-    outObj = cb.m_collisionObject;
-    return true;
-    };
+        if (cb.hasHit() && !cb2.hasHit()) {
+        hitN = cb.m_hitNormalWorld;
+        chosenObj = cb.m_collisionObject;
+        }
+        else if (!cb.hasHit() && cb2.hasHit()) {
+        hitN = cb2.m_hitNormalWorld;
+        chosenObj = cb2.m_collisionObject;
+        }
+        else {
+        glm::vec3 hitPos1(cb.m_hitPointWorld.x(), cb.m_hitPointWorld.y(), cb.m_hitPointWorld.z());
+        glm::vec3 hitPos2(cb2.m_hitPointWorld.x(), cb2.m_hitPointWorld.y(), cb2.m_hitPointWorld.z());
+
+        float dist1 = glm::length(mPos - hitPos1);
+        float dist2 = glm::length(mPos - hitPos2);
+
+        if (dist1 <= dist2) {
+        hitN = cb.m_hitNormalWorld;
+        chosenObj = cb.m_collisionObject;
+        } else {
+        hitN = cb2.m_hitNormalWorld;
+        chosenObj = cb2.m_collisionObject;
+        }
+        }
+
+        glm::vec3 hitNormal(hitN.x(), hitN.y(), hitN.z());
+        if (glm::length(hitNormal) < 1e-6f)
+        return false;
+
+        hitNormal = glm::normalize(hitNormal);
+
+        Player* player = dynamic_cast<Player*>(this);
+        if (player) {
+            player->SetRayCastTimer(0.5f);
+            const float minDotAngle50 = 0.6428f;
+            if (glm::dot(hitNormal, up) < minDotAngle50)
+                return false;
+        }
+
+        outNormal = hitNormal;
+        outObj = chosenObj;
+        return true;
+        };
 
     glm::vec3 mainNormal;
     const btCollisionObject* mainObj = nullptr;
     if (!castRay(glm::vec3(0.0f), mainNormal, mainObj))
         return glm::vec3(0.0f);
-    
-    mRayCastTimer = 0.5f;
 
     glm::vec3 normalSum = mainNormal * 3.0f;
     float weightSum = 3.0f;
@@ -164,23 +212,12 @@ glm::vec3 Actor::GetAverageNormal()
         if (hitObj != mainObj)
             continue;
 
-        if (glm::dot(hitNormal, mainNormal) < minDot)
-            continue;
+        // if (glm::dot(hitNormal, mainNormal) < minDot)
+        //     continue;
 
         normalSum += hitNormal;
         weightSum += 1.0f;
     }
 
     return glm::normalize(normalSum / weightSum);
-}
-
-float Actor::getYawFromDirection(const glm::vec3& up, const glm::vec3& dir) {
-    glm::vec3 worldLeft = glm::cross(mUpVec, glm::vec3(0, 0, 1));
-    if (glm::length(worldLeft) < 0.01f){
-        worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 1, 0)));
-    }
-    else 
-        worldLeft = glm::normalize(worldLeft);
-    glm::vec3 right = glm::cross(worldLeft, mUpVec);
-    return std::atan2(-glm::dot(dir, worldLeft), glm::dot(dir, right));
 }

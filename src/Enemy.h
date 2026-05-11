@@ -41,8 +41,6 @@ public:
     void SetKnockBackSpeed(float knockBackSpeed) { mKnockBackSpeed = knockBackSpeed; }
     void SetAttackSpeed(float attackSpeed) { mAttackSpeed = attackSpeed; }
 
-    void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
-
     bool GetIsAlive() const { return mIsAlive; }
     bool GetIsDamaged() const { return mIsDamaged; }
     bool GetIsCountered() const { return mIsCountered; }
@@ -69,8 +67,6 @@ public:
     float GetKnockBackSpeed() const { return mKnockBackSpeed; }
     float GetAttackSpeed() const { return mAttackSpeed; }
 
-    std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
-
 private:
     void UpdateAlive(float deltaTime);
     void UpdateDying(float deltaTime);
@@ -82,6 +78,7 @@ private:
     void StartDying();
     void ApplyBreak(float deltaTime);
     void LaunchCharacter(float deltaTime);
+    void FinishLaunched();
     void UpdateMotionTimer(float deltaTime, Player* player);
     void ApplyGravity(float deltaTime);
     void FixPlanetSurface();
@@ -118,6 +115,4 @@ private:
     float mKnockBackTimer;
     float mKnockBackSpeed;
     float mAttackSpeed;
-
-    std::vector<struct LoadedMesh>* mMeshes;
 };

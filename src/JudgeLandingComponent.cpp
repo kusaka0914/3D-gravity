@@ -38,6 +38,7 @@ void JudgeLandingComponent::JudgeLanding() {
     bulletWorld->rayTest(rayFrom, rayTo, rayCallback);
 
     CharacterActor* characterActor = dynamic_cast<CharacterActor*>(mOwner);
+    Player* player = dynamic_cast<Player*>(mOwner);
 
     if (rayCallback.hasHit())
     {
@@ -45,6 +46,9 @@ void JudgeLandingComponent::JudgeLanding() {
         glm::vec3 hitPos(hitPt.x(), hitPt.y(), hitPt.z());
     
         characterActor->OnLanded(hitPos);
+        if (player)
+            player->SetCanDodge(true);
+
         meshGround = true;
     }
 

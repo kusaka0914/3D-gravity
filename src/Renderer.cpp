@@ -11,6 +11,7 @@
 #include "VertexArray.h"
 #include "Game.h"
 #include "NPC.h"
+#include "Helper.h"
 #include "Platform.h"
 #include "UIState.h"
 #include "stb_image.h"
@@ -212,7 +213,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
             
             glm::vec3 enemyUp = enemy->GetUpVec();
             glm::vec3 toPlayer = glm::normalize(players[0]->GetPos() - enemy->GetPos());
-            float enemyFacingYaw = players[0]->getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
+            float enemyFacingYaw = mGame->GetHelper()->GetYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
 
             DrawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), enemyUp, enemyFacingYaw, enemy->GetMeshes());
 

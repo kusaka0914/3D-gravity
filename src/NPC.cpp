@@ -18,7 +18,7 @@ NPC::NPC(Game* game)
     , mCurrentPlanetNum(0)
     , mFacingYaw(0.0f)
 {
-    
+    mIsJudgeLanding = true;
 }
 
 NPC::~NPC()
@@ -33,7 +33,6 @@ void NPC::ProcessActor()
 
 void NPC::UpdateActor(float deltaTime)
 {
-    mIsJudgeLanding = true;
     UpdateWorldVec();
     float gravity = 9.8f;
     mVelocity -= mUpVec * gravity * deltaTime;
@@ -53,17 +52,6 @@ void NPC::UpdateWorldVec() {
 
     mFacingForwardVec = glm::normalize(glm::cross(worldLeft, GetUpVec()) * std::cos(mFacingYaw) - std::sin(mFacingYaw) * worldLeft);
     mFacingLeftVec = glm::normalize(glm::cross(GetUpVec(), mFacingForwardVec));
-}
-
-float NPC::getYawFromDirection(const glm::vec3& up, const glm::vec3& dir) {
-    glm::vec3 worldLeft = glm::cross(mUpVec, glm::vec3(0, 0, 1));
-    if (glm::length(worldLeft) < 0.01f){
-        worldLeft = glm::normalize(glm::cross(mUpVec, glm::vec3(0, 1, 0)));
-    }
-    else 
-        worldLeft = glm::normalize(worldLeft);
-    glm::vec3 right = glm::cross(worldLeft, GetUpVec());
-    return std::atan2(-glm::dot(dir, worldLeft), glm::dot(dir, right));
 }
 
 glm::mat4 NPC::getNPCView(float cameraDistance, bool isFixed) {

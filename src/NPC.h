@@ -15,7 +15,6 @@ public:
     void ProcessActor() override;
     void UpdateActor(float deltaTime) override;
     
-    float getYawFromDirection(const glm::vec3& up, const glm::vec3& dir);
     glm::mat4 getNPCView(float cameraDistance, bool isFixed = false);
 
     void SetIsActive(bool isActive) { mIsActive = isActive; }
@@ -24,7 +23,6 @@ public:
     void SetRadius(float radius) { mRadius = radius; }
     void SetName(std::string name) { mName = name; }
     void SetTalkableComponent(class TalkableComponent* talkableComponent) { mTalkableComponent = talkableComponent; }
-    void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
 
     bool GetIsActive() const { return mIsActive; }
     const glm::vec3& GetForwardVec() const { return mForwardVec; }
@@ -37,8 +35,6 @@ public:
     std::string GetName() const { return mName; }
 
     class TalkableComponent* GetTalkableComponent() const { return mTalkableComponent; }
-
-    std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
 
 private:
     void UpdateWorldVec();
@@ -59,6 +55,4 @@ private:
     std::string mName;
 
     class TalkableComponent* mTalkableComponent;
-
-    std::vector<struct LoadedMesh>* mMeshes;
 };

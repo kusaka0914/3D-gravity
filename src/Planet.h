@@ -49,7 +49,6 @@ public:
     void SetColor(glm::vec4 color) { mColor = color; }
     void SetKey(class Key* key) { mKey = key; }
     void SetStar(class Star* star) { mStar = star; }
-    void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
     void SetKeySpawnCondition(std::string keySpawnCondition) { 
         if(keySpawnCondition == "AllEnemiesDead") {
             mKeySpawnCondition = KeySpawnCondition::AllEnemiesDead;
@@ -83,7 +82,6 @@ public:
     class Star* GetStar() const { return mStar; }
     PlanetShape GetPlanetShape() const { return mPlanetShape; }
     const std::unordered_map<std::string, std::vector<struct LoadedMesh>*>& GetEnemyMeshesByPath() const { return mEnemyMeshesByPath; }
-    std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
 
 private:
     class Stage* mCurrentStage;
@@ -105,5 +103,4 @@ private:
     PlanetShape mPlanetShape;
 
     std::unordered_map<std::string, std::vector<struct LoadedMesh>*> mEnemyMeshesByPath;
-    std::vector<struct LoadedMesh>* mMeshes;
 };

@@ -21,6 +21,7 @@ add_executable(game
     src/FocusComponent
     src/Game.cpp
     src/GameProgressState.cpp
+    src/Helper.cpp
     src/JudgeLandingComponent.cpp
     src/Key.cpp
     src/Loader.cpp

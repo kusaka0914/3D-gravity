@@ -8,6 +8,7 @@
 #include "PhysicsSystem.h"
 #include "UIState.h"
 #include "NPC.h"
+#include "Helper.h"
 #include "GameProgressState.h"
 #include <btBulletDynamicsCommon.h>
 #include <cmath>
@@ -51,6 +52,7 @@ Player::Player(Game* game)
     , mComboTimer(-1.0f)
     , mSpecialAttackCooldownRemaining(-1.0f)
     , mRayCastTimer(0.5f)
+    , mCanDodge(true)
 {
     
 }
@@ -91,7 +93,7 @@ void Player::UpdateActor(float deltaTime)
         ApplyGravity(deltaTime);
     
     bool isRising = glm::dot(mVelocity, mUpVec) > 0.2f;
-    if (mDodgeTimer <= 0.0f && !isRising) 
+    if (!isRising) 
         mIsJudgeLanding = true;
     else 
         mIsJudgeLanding = false;
@@ -209,7 +211,7 @@ void Player::ProcessKeyboard() {
     //     if (len > 0.001f)
     //     {
     //         moveDir /= len;
-    //         mFacingYaw = getYawFromDirection(up, moveDir) + 3.14159265f;
+    //         mFacingYaw = GetYawFromDirection(up, moveDir) + 3.14159265f;
     //     }
     // }
     // GetPos() += mForwardVec * mMoveForward * dashSpeed * deltaTime;
@@ -265,7 +267,7 @@ void Player::UpdateWalk(float deltaTime) {
 
 void Player::UpdateDodge(float deltaTime) {
     // 向いている方向へ回避開始
-    if (mDodgePressed && !mDodgePressedPrev && mDodgeCooldown <= 0.0f && mAttackDodgeLockRemaining <= 0.0f)
+    if (mDodgePressed && !mDodgePressedPrev && mDodgeCooldown <= 0.0f && mAttackDodgeLockRemaining <= 0.0f && mCanDodge)
         StartDodge();
     
     // 回避中移動
@@ -284,9 +286,11 @@ void Player::StartDodge() {
     else
         mDodgeCooldown = mDodgeCooldownTime * 3;
     
-    mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetPos());
+    glm::vec3 center = mCurrentPlanet->GetPos();
+    mDodgeStartHeight = glm::length(mPos - center);
     mVelocity = glm::vec3(0.0f);
     GetGame()->GetAudioSystem()->PlaySE("dodgeSE");
+    mCanDodge = false;
 }
 
 void Player::Dodge(float deltaTime) {
@@ -307,98 +311,6 @@ void Player::Dodge(float deltaTime) {
 
     mPos = center + glm::normalize(mPos - center) * mDodgeStartHeight;
 }
-
-// glm::vec3 Player::GetAverageNormal()
-// {
-//     PhysicsSystem* physics = GetGame()->GetPhysicsSystem();
-//     btDiscreteDynamicsWorld* bulletWorld = physics ? physics->GetBulletWorld() : nullptr;
-//     if (!bulletWorld)
-//         return mUpVec;
-
-//     glm::vec3 up = glm::normalize(mUpVec);
-
-//     glm::vec3 side = glm::cross(up, glm::vec3(0.0f, 0.0f, 1.0f));
-//     if (glm::length(side) < 0.01f)
-//         side = glm::cross(up, glm::vec3(1.0f, 0.0f, 0.0f));
-//     side = glm::normalize(side);
-
-//     glm::vec3 forward = glm::normalize(glm::cross(side, up));
-
-//     const float footRadius = 0.25f;
-//     const float rayStartOffset = 0.2f;
-//     const float rayLength = 10.0f;
-//     const float minDot = 0.9f;
-
-//     auto castRay = [&](const glm::vec3& offset,
-//         glm::vec3& outNormal,
-//         const btCollisionObject*& outObj) -> bool
-//     {
-//     glm::vec3 fromPos = mPos + offset + up * rayStartOffset;
-//     glm::vec3 toPos   = mPos + offset - up * rayLength;
-
-//     btVector3 rayFrom(fromPos.x, fromPos.y, fromPos.z);
-//     btVector3 rayTo(toPos.x, toPos.y, toPos.z);
-
-//     btCollisionWorld::ClosestRayResultCallback cb(rayFrom, rayTo);
-//     bulletWorld->rayTest(rayFrom, rayTo, cb);
-
-//     if (!cb.hasHit())
-//     return false;
-
-//     btVector3 hitN = cb.m_hitNormalWorld;
-//     glm::vec3 hitNormal(hitN.x(), hitN.y(), hitN.z());
-//     if (glm::length(hitNormal) < 1e-6f)
-//     return false;
-
-//     hitNormal = glm::normalize(hitNormal);
-
-//     const float minDotAngle50 = 0.8428f;
-//     if (glm::dot(hitNormal, up) < minDotAngle50)
-//         return false;
-
-//     if (glm::dot(hitNormal, up) < 0.0f)
-//     hitNormal = -hitNormal;
-
-//     outNormal = hitNormal;
-//     outObj = cb.m_collisionObject;
-//     return true;
-//     };
-
-//     glm::vec3 mainNormal;
-//     const btCollisionObject* mainObj = nullptr;
-//     if (!castRay(glm::vec3(0.0f), mainNormal, mainObj))
-//         return glm::vec3(0.0f);
-    
-//     mRayCastTimer = 0.5f;
-
-//     glm::vec3 normalSum = mainNormal * 3.0f;
-//     float weightSum = 3.0f;
-
-//     std::vector<glm::vec3> offsets = {
-//         forward * footRadius,
-//         -forward * footRadius,
-//         side * footRadius,
-//         -side * footRadius
-//     };
-
-//     for (const auto& offset : offsets) {
-//         glm::vec3 hitNormal;
-//         const btCollisionObject* hitObj = nullptr;
-//         if (!castRay(offset, hitNormal, hitObj))
-//             continue;
-
-//         if (hitObj != mainObj)
-//             continue;
-
-//         if (glm::dot(hitNormal, mainNormal) < minDot)
-//             continue;
-
-//         normalSum += hitNormal;
-//         weightSum += 1.0f;
-//     }
-
-//     return glm::normalize(normalSum / weightSum);
-// }
 
 void Player::UpdateCameraSmoothing(float deltaTime)
 {
@@ -448,7 +360,7 @@ void Player::ChangeFaceDir() {
         mFacingLeftVec = glm::normalize(glm::cross(mUpVec, mFacingForwardVec));
 
         // 描画用に yaw が必要なら残す
-        mFacingYaw = getYawFromDirection(mUpVec, moveDir) + 3.14159265f;
+        mFacingYaw = mGame->GetHelper()->GetYawFromDirection(mUpVec, moveDir) + 3.14159265f;
     }
 }
 
@@ -516,14 +428,14 @@ void Player::Attack(float deltaTime) {
             mAttackCooldownRemaining = mLastAttackCooldown;
         mAttackIndex++;
         float strongAttackTimerNext = mStrongAttackTimer - deltaTime;
-        if (mStrongAttackTimer >= 0.0f) {
+        if (mIsStrongAttack) {
             for (Enemy* enemy : hitEnemies) {
                 enemy->SetIsStrongAttacked(true);
                 mAttackIndex = 0;
             }
             GetGame()->GetAudioSystem()->PlaySE("attackAirSE");
             mAttackIndex = 0;
-            mStrongAttackTimer = -1.0f;
+            mIsStrongAttack = false;
         }
         if (mAttackIndex == 3)
         {
@@ -581,7 +493,7 @@ void Player::ChargeAttack(float deltaTime) {
         float attackPressTimerPrev = mAttackPressTimer;
         mAttackPressTimer -= deltaTime;
         if (mAttackPressTimer >= 0.0f) {
-            mPos -= mFacingForwardVec * mChargeMoveSpeed * deltaTime;
+            // mPos -= mFacingForwardVec * mChargeMoveSpeed * deltaTime;
             mPos -= -mUpVec * mChargeMoveSpeed * deltaTime;
         } else {
             mAttackPressTimer = 0.0f;
@@ -590,7 +502,9 @@ void Player::ChargeAttack(float deltaTime) {
             GetGame()->GetAudioSystem()->PlaySE("chargedSE");
         }
     } else if (!mAttackPressed && mAttackPressedPrev && mAttackPressTimer <= 0.0f) {
-        mStrongAttackTimer = mDefaultStrongAttackTimer;
+        float pressTime = mDefaultAttackPressTimer - mAttackPressTimer / mDefaultAttackPressTimer;
+        mStrongAttackTimer = mDefaultStrongAttackTimer * pressTime;
+        mIsStrongAttack = true;
     } else if (!mAttackPressed && !mAttackPressedPrev && mAttackPressTimer >= 0.0f) {
         mAttackPressTimer = -1.0f;
     }
@@ -626,7 +540,7 @@ void Player::RideBoat() {
 
             const float boatTouchRadius = 0.9f;
             if (distToBoat >= boatTouchRadius)
-                return;
+                continue;;
             
             boat->SetIsMoving(true);
             mIsActive = false;
@@ -650,6 +564,8 @@ void Player::RideBoat() {
 
             mRestartPos = boatDestPos;
             mRestartPlanetIndex = mCurrentPlanetNum;
+
+            UpdateFallbackUpVec();
         }
     }
 }
@@ -719,7 +635,7 @@ void Player::UpdateTimer(float deltaTime) {
     if (mStrongAttackTimer >= 0.0f)
     {
         mStrongAttackTimer -= deltaTime;
-        mPos = mPos + mFacingForwardVec * mStrongAttackSpeed * deltaTime;
+        // mPos = mPos + mFacingForwardVec * mStrongAttackSpeed * deltaTime;
         mPos = mPos + -mUpVec * mStrongAttackSpeed * deltaTime;
     }
 

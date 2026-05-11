@@ -22,6 +22,7 @@ void Mesh::Initialize() {
     mLoadedMeshes["planet_2"] = loadMeshFromFile("../assets/models/planet_2.obj");
     mLoadedMeshes["planet_3"] = loadMeshFromFile("../assets/models/planet_3.obj");
     mLoadedMeshes["planet7"] = loadMeshFromFile("../assets/models/planet7.obj");
+    mLoadedMeshes["planet9"] = loadMeshFromFile("../assets/models/planet9.obj");
     mLoadedMeshes["house"] = loadMeshFromFile("../assets/models/house.obj");
     mLoadedMeshes["badMotherSlime"] = loadMeshFromFile("../assets/models/badMotherSlime.obj");
     mLoadedMeshes["boat"] = loadMeshFromFile("../assets/models/boat.obj");

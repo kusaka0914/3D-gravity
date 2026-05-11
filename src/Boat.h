@@ -20,7 +20,6 @@ public:
     void SetTransitionTimer(float transitionTimer) { mTransitionTimer = transitionTimer; }
     void SetProgress(float progress) { mProgress = progress; }
     void SetStartPos(const glm::vec3& startPos) { mStartPos = startPos; }
-    void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
 
     bool GetIsMoving() const { return mIsMoving; }
     bool GetIsActive() const { return mIsActive; }
@@ -28,7 +27,6 @@ public:
     float GetProgress() const { return mProgress; }
     const glm::vec3& GetStartPos() const { return mStartPos; }
     const glm::vec3& GetDestPos() const { return mDestPos; }
-    const std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
     class FocusComponent* GetFocusComponent() const { return mFocusComponent; }
 
 private:
@@ -52,6 +50,5 @@ private:
     glm::vec3 mStartPos;
     glm::vec3 mDestPos;
 
-    std::vector<struct LoadedMesh>* mMeshes;
     class FocusComponent* mFocusComponent;
 };

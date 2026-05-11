@@ -48,6 +48,7 @@ public:
     class UIState* GetUIState() const { return mUIState.get(); }
     class Loader* GetLoader() const { return mLoader.get(); }
     class UILoader* GetUILoader() const { return mUILoader.get(); }
+    class Helper* GetHelper() const { return mHelper.get(); }
     class GameProgressState* GetGameProgressState() const { return mGameProgressState.get(); }
     float GetHitStopTimer() const { return mHitStopTimer; }
     float GetFadeInTimer() const { return mFadeInTimer; }
@@ -85,6 +86,7 @@ private:
     std::unique_ptr<class UILoader> mUILoader;
     std::unique_ptr<class Mesh> mMesh;
     std::unique_ptr<class UIState> mUIState;
+    std::unique_ptr<class Helper> mHelper;
     std::unique_ptr<class GameProgressState> mGameProgressState;
 
     Stage* mCurrentStage;

@@ -26,6 +26,7 @@ public:
     void SetIsDamagePrev(bool isDamagePrev) { mIsDamagePrev = isDamagePrev; }
     void SetIsActive(bool isActive) { mIsActive = isActive; }
     void SetCanMove(bool canMove) { mCanMove = canMove; }
+    void SetCanDodge(bool canDodge) { mCanDodge = canDodge; }
 
     void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
     void SetPlayerNum(int playerNum) { mPlayerNum = playerNum; }
@@ -65,11 +66,14 @@ public:
     void SetStrongAttackSpeed(float strongAttackSpeed) { mStrongAttackSpeed = strongAttackSpeed; }
     void SetDefaultStrongAttackTimer(float defaultStrongAttackTimer) { mDefaultStrongAttackTimer = defaultStrongAttackTimer; }
     void SetDefaultAttackMotionTimer(float defaultAttackMotionTimer) { mDefaultAttackMotionTimer = defaultAttackMotionTimer; }
+    void SetRayCastTimer(float rayCastTimer) { mRayCastTimer = rayCastTimer; }
 
-    void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
     void SetKnockBackFrom(const glm::vec3& knockBackFrom) { mKnockBackFrom = knockBackFrom; }
     void SetRestartPos(const glm::vec3& restartPos) { mRestartPos = restartPos; }
     void SetVelocity(const glm::vec3& velocity) { mVelocity = velocity; }
+    void SetCameraTargetPos(const glm::vec3& cameraTargetPos) { mCameraTargetPos = cameraTargetPos; }
+    void SetCameraPos(const glm::vec3& cameraPos) { mCameraPos = cameraPos; }
+    void SetCameraUpVec(const glm::vec3& cameraUpVec) { mCameraUpVec = cameraUpVec; }
 
     void SetTalkingNPC(class NPC* talkingNPC) { mTalkingNPC = talkingNPC; }
 
@@ -120,8 +124,8 @@ public:
     float GetStrongAttack() const { return mStrongAttack; }
     float GetStrongAttackSpeed() const { return mStrongAttackSpeed; }
     float GetDefaultStrongAttackTimer() const { return mDefaultStrongAttackTimer; }
+    float GetRayCastTimer() const { return mRayCastTimer; }
 
-    std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
     const glm::vec3& GetForwardVec() const { return mForwardVec; }
     const glm::vec3& GetLeftVec() const { return mLeftVec; }
     const glm::vec3& GetFacingForwardVec() const { return mFacingForwardVec; }
@@ -129,6 +133,7 @@ public:
     const glm::vec3& GetKnockBackFrom() const { return mKnockBackFrom; }
     const glm::vec3& GetRestartPos() const { return mRestartPos; }
     const glm::vec3& GetCameraPos() const { return mCameraPos; }
+    const glm::vec3& GetCameraTargetPos() const { return mCameraTargetPos; }
     const std::vector<RaySegment>& GetRayCasts() const { return mRayCasts; }
 
     NPC* GetTalkingNPC() const { return mTalkingNPC; }
@@ -169,6 +174,8 @@ private:
     bool mSpecialAttackPressedPrev;
     bool mIsActive;
     bool mCanMove;
+    bool mCanDodge;
+    bool mIsStrongAttack;
 
     int mCurrentPlanetNum;
     int mAttackIndex;
@@ -241,6 +248,4 @@ private:
     glm::vec3 mCameraTargetPos;
 
     class NPC* mTalkingNPC;
-
-    std::vector<struct LoadedMesh>* mMeshes;
 };

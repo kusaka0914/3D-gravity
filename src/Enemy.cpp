@@ -159,8 +159,7 @@ void Enemy::ApplyDamage(Player* player) {
     mIsDamaged = false;
     mHp -= player->GetAttack();
     if (mIsStrongAttacked) {
-        mLaunchedTimer = -1.0f;
-        mBreakCount = mBreakCountMax;
+        FinishLaunched();
         GetGame()->SetHitStopTimer(0.6f);
         mIsStrongAttacked = false;
         mKnockBackTimer = 1.0f;
@@ -210,6 +209,12 @@ void Enemy::LaunchCharacter(float deltaTime) {
     GetGame()->SetHitStopTimer(0.6f);
 }
 
+void Enemy::FinishLaunched() {
+    mBreakCount = mBreakCountMax;
+    mIsJudgeLanding = true;
+    mLaunchedTimer = -1.0f;
+}
+
 void Enemy::UpdateMotionTimer(float deltaTime, Player* player) {
     mAttackMotionTimer -= deltaTime;
 
@@ -242,8 +247,7 @@ void Enemy::ApplyGravity(float deltaTime) {
     } else {
         mLaunchedTimer -= deltaTime;
         if (mLaunchedTimer <= 0.0f) {
-            mBreakCount = mBreakCountMax;
-            mIsJudgeLanding = true;
+            FinishLaunched();
         }
         return;
     }

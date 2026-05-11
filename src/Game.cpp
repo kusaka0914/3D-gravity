@@ -20,6 +20,7 @@
 #include "Platform.h"
 #include "GameProgressState.h"
 #include "Renderer.h"
+#include "Helper.h"
 #include "BoatParts.h"
 #include "PhysicsSystem.h"
 #include "DestructibleComponent.h"
@@ -139,6 +140,7 @@ bool Game::Initialize()
     mUIRenderer = std::make_unique<UIRenderer>(this);
     mRenderer = std::make_unique<Renderer>(this);
     mUIState = std::make_unique<UIState>(this);
+    mHelper = std::make_unique<Helper>();
     mGameProgressState = std::make_unique<GameProgressState>(this);
     // モデルロード（Mesh::Initialize）を行うため、LoadData より先に生成しておく
     mMesh = std::make_unique<Mesh>();
