@@ -1,33 +1,34 @@
 // 学習用にコメントをつけています。
 #include <GL/glew.h>
-#include "Shader3D.h"
-#include "UIShader.h"
-#include "Planet.h"
+#include "gfx/Shader3D.h"
+#include "gfx/UIShader.h"
+#include "actor/Planet.h"
 #include "Stage.h"
-#include "Player.h"
-#include "Enemy.h"
+#include "actor/Player.h"
+#include "actor/Enemy.h"
 #include "VertexArray.h"
-#include "Actor.h"
-#include "AudioSystem.h"
-#include "Mesh.h"
-#include "Loader.h"
-#include "Key.h"
-#include "Boat.h"
-#include "Star.h"
-#include "Crystal.h"
-#include "UIRenderer.h"
-#include "UIState.h"
-#include "Platform.h"
-#include "GameProgressState.h"
-#include "Renderer.h"
-#include "Helper.h"
-#include "BoatParts.h"
-#include "PhysicsSystem.h"
-#include "DestructibleComponent.h"
-#include "TalkableComponent.h"
+#include "actor/Actor.h"
+#include "system/AudioSystem.h"
+#include "system/Mesh.h"
+#include "system/Loader.h"
+#include "actor/Key.h"
+#include "actor/Boat.h"
+#include "actor/Star.h"
+#include "actor/Crystal.h"
+#include "gfx/UIRenderer.h"
+#include "state/UIState.h"
+#include "actor/Platform.h"
+#include "state/GameProgressState.h"
+#include "gfx/Renderer.h"
+#include "system/Helper.h"
+#include "actor/BoatParts.h"
+#include "system/PhysicsSystem.h"
+#include "component/DestructibleComponent.h"
+#include "component/TalkableComponent.h"
+#include "component/CollectableComponent.h"
 #include "Game.h"
-#include "NPC.h"
-#include "UILoader.h"
+#include "actor/NPC.h"
+#include "system/UILoader.h"
 #include <GLFW/glfw3.h>
 #include <SDL.h>
 #include <glm/glm.hpp>
@@ -54,6 +55,7 @@ Game::Game()
     ,mIsPlayer2Joined(false)
     ,mHitStopTimer(-1.0f)
     ,mFadeInTimer(-1.0f)
+    ,mClearTimer(-1.0f)
     ,mIsChangeStage(false)
     ,mCurrentStagePath("../assets/data/stage0.yaml")
 {
@@ -354,6 +356,47 @@ void Game::UpdateGame()
         Actor* actor = actor_unique.get();
         actor->Update(deltaTime);
     }
+
+    std::vector<Boat*> boats = mPlayers[0]->GetCurrentPlanet()->GetBoats();
+    for (auto boat : boats) {
+        bool isChangeStage = boat->GetIsChangeStage();
+        if (!isChangeStage || mCurrentStageNum != 0) continue;
+
+        int destStage = boat->GetDestStage();
+        ChangeStage(destStage);
+        mFadeInTimer = 1.0f;
+        boat->SetIsChangeStage(false);
+    }
+
+    for (auto boat : boats) {
+        bool isArrived = boat->GetIsArrived();
+        if (!isArrived || mUIState->GetIsBattleTutorialShown()) continue;
+            
+        mUIState->SetCurrentTutorialKind("Battle");
+        mGameProgressState->SetSceneState("Talking");
+        mUIState->SetIsBattleTutorialShown(true);
+    }
+
+    Star* star = mPlayers[0]->GetCurrentPlanet()->GetStar();
+    if (star) {
+        bool isObtained = star->GetCollectableComponent()->GetIsObtained();
+        GameProgressState::SceneState sceneState = mGameProgressState->GetSceneState();
+        if (isObtained && sceneState == GameProgressState::SceneState::Playing && mCurrentStageNum != 0) {
+            mGameProgressState->SetSceneState("StageClear");
+            Mix_HaltMusic();
+            mAudioSystem->PlaySE("clearSE");
+            mClearTimer = 12.0f;
+        }
+
+        if (mClearTimer >= 0.0f) {
+            mClearTimer -= deltaTime;
+            if (mClearTimer < 0.0f) {
+                mFadeInTimer = 1.0f;
+                mGameProgressState->SetNextSceneState("Playing");
+            }
+        }
+    }
+        
 
     if (mFadeInTimer >= 0.0f) return;
 

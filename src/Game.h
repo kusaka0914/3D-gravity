@@ -1,5 +1,7 @@
-#include "Actor.h"
-#include "AudioSystem.h"
+#pragma once
+
+#include "actor/Actor.h"
+#include "system/AudioSystem.h"
 #include <map>
 #include <unordered_map>
 #include <GLFW/glfw3.h>
@@ -94,6 +96,7 @@ private:
     int mCurrentStageNum;
     float mHitStopTimer;
     float mFadeInTimer;
+    float mClearTimer;
 
     double mLastTime;
 

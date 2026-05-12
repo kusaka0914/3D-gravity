@@ -1,51 +1,14 @@
-# このプロジェクトをビルドするのに必要なバージョンの最低ラインの設定
 cmake_minimum_required(VERSION 3.10)
-# これを呼ぶとPROJECT_NAMEとかの変数を自動で設定してくれる
 project(game)
 
-# c++20を使いますという指示
 set(CMAKE_CXX_STANDARD 20)
 
-# .cppをコンパイルして、gameという名前の実行ファイルを作成するという指示
-add_executable(game
-    src/Actor.cpp
-    src/AudioSystem.cpp
-    src/Boat.cpp
-    src/BoatParts.cpp
-    src/CharacterActor.cpp
-    src/CollectableComponent.cpp
-    src/Component.cpp
-    src/Crystal.cpp
-    src/DestructibleComponent.cpp
-    src/Enemy.cpp
-    src/FocusComponent
-    src/Game.cpp
-    src/GameProgressState.cpp
-    src/Helper.cpp
-    src/JudgeLandingComponent.cpp
-    src/Key.cpp
-    src/Loader.cpp
-    src/Main.cpp
-    src/Mesh.cpp
-    src/NPC.cpp
-    src/PhysicsSystem.cpp
-    src/Planet.cpp
-    src/Platform.cpp
-    src/Player.cpp
-    src/Renderer.cpp
-    src/Shader.cpp
-    src/Shader3D.cpp
-    src/Stage.cpp
-    src/Star.cpp
-    src/TalkableComponent.cpp
-    src/UILoader.cpp
-    src/UIRenderer.cpp
-    src/UIShader.cpp
-    src/UIState.cpp
-    src/VertexArray.cpp
+file(GLOB_RECURSE GAME_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*/*.cpp"
 )
+add_executable(game ${GAME_SOURCES})
 
-# OpenGLを使うのに必要なヘッダやライブラリを探して見つかったら変数に格納
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
@@ -57,14 +20,14 @@ find_package(SDL2_mixer REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
-# #includeをしてヘッダを指定できるようにする
 target_include_directories(game PRIVATE
     ${OPENGL_INCLUDE_DIR}
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 target_link_directories(game PRIVATE /opt/homebrew/lib)
-# OpenGLなどの関数を呼べるようにするためにリンクする
+
 target_link_libraries(game
     GLEW::GLEW
     glfw
@@ -78,7 +41,6 @@ target_link_libraries(game
     yaml-cpp
 )
 
-# 実行時にプロジェクトルートをカレントにする（shaders を読むため）
 set_target_properties(game PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )

@@ -1,5 +1,7 @@
-#include "Actor.h"
-#include "Mesh.h"
+#pragma once
+
+#include "actor/Actor.h"
+#include "system/Mesh.h"
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>

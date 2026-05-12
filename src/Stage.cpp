@@ -1,5 +1,5 @@
 #include "Stage.h"
-#include "Planet.h"
+#include "actor/Planet.h"
 #include "Game.h"
 #include <cmath>
 

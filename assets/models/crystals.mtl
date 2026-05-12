@@ -1,0 +1,13 @@
+# Blender 5.0.1 MTL File: 'crystal.blend'
+# www.blender.org
+
+newmtl マテリアル
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd ../textures/Crystal_MAT_BaseColor.png
+map_Ns ../textures/Crystal_MAT_Roughness.png
+map_refl ../textures/Crystal_MAT_Metallic.png

@@ -3,7 +3,7 @@ planets:
     scale: [16.0, 16.0, 16.0]
     color: [1.0, 1.0, 1.0, 1.0]
     model: planet9.obj
-    shape : Ellipse
+    shape : Normal
     keySpawnCondition: AllBoatPartsCollected
   # - center: [0.0, 0.0, 0.0]
   #   scale: [8.0, 10.0, 8.0]
