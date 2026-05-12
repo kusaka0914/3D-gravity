@@ -21,7 +21,7 @@ class btKinematicCharacterController;
 
 class Game;
 class Actor;
-class Mesh;
+class MeshLoadSystem;
 
 class PhysicsSystem {
 public:
@@ -66,5 +66,5 @@ private:
     std::vector<std::unique_ptr<btBvhTriangleMeshShape>> mBulletPlanetShapes;
     std::vector<std::unique_ptr<btTriangleMesh>> mBulletPlanetMeshes;
 
-    Mesh* mMeshLoader;
+    MeshLoadSystem* mMeshLoadSystem;
 };

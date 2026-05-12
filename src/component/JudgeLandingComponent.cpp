@@ -1,9 +1,7 @@
 #include "JudgeLandingComponent.h"
 #include "Game.h"
 #include "actor/Actor.h"
-#include "actor/Enemy.h"
 #include "actor/Player.h"
-#include "actor/NPC.h"
 #include "system/PhysicsSystem.h"
 #include <btBulletDynamicsCommon.h>
 
@@ -19,7 +17,7 @@ void JudgeLandingComponent::Update(float deltaTime) {
 }
 
 void JudgeLandingComponent::JudgeLanding() {
-    bool meshGround = false;
+    bool MeshGround = false;
 
     glm::vec3 ownerPos = mOwner->GetPos();
     glm::vec3 ownerUp = mOwner->GetUpVec();
@@ -48,11 +46,11 @@ void JudgeLandingComponent::JudgeLanding() {
         if (player)
             player->SetCanDodge(true);
 
-        meshGround = true;
+        MeshGround = true;
     }
 
     bool onGround = characterActor->GetOnGround();
-    if (!meshGround && onGround)
+    if (!MeshGround && onGround)
     {
         characterActor->NotOnLanded();
     }

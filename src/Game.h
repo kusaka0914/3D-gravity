@@ -46,11 +46,11 @@ public:
     class Shader3D* GetShader3D() const { return mShader3D.get(); }
     class UIShader* GetUIShader() const { return mUIShader.get(); }
     class PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }
-    class Mesh* GetMesh() const { return mMesh.get(); }
+    class MeshLoadSystem* GetMeshLoadSystem() const { return mMeshLoadSystem.get(); }
     class UIState* GetUIState() const { return mUIState.get(); }
-    class Loader* GetLoader() const { return mLoader.get(); }
-    class UILoader* GetUILoader() const { return mUILoader.get(); }
-    class Helper* GetHelper() const { return mHelper.get(); }
+    class ActorLoadSystem* GetActorLoadSystem() const { return mActorLoadSystem.get(); }
+    class UILoadSystem* GetUILoadSystem() const { return mUILoadSystem.get(); }
+    class MathUtils* GetMathUtils() const { return mMathUtils.get(); }
     class GameProgressState* GetGameProgressState() const { return mGameProgressState.get(); }
     float GetHitStopTimer() const { return mHitStopTimer; }
     float GetFadeInTimer() const { return mFadeInTimer; }
@@ -84,11 +84,11 @@ private:
     std::unique_ptr<class Shader3D> mShader3D;
     std::unique_ptr<class UIShader> mUIShader;
     std::unique_ptr<class PhysicsSystem> mPhysicsSystem;
-    std::unique_ptr<class Loader> mLoader;
-    std::unique_ptr<class UILoader> mUILoader;
-    std::unique_ptr<class Mesh> mMesh;
+    std::unique_ptr<class ActorLoadSystem> mActorLoadSystem;
+    std::unique_ptr<class UILoadSystem> mUILoadSystem;
+    std::unique_ptr<class MeshLoadSystem> mMeshLoadSystem;
     std::unique_ptr<class UIState> mUIState;
-    std::unique_ptr<class Helper> mHelper;
+    std::unique_ptr<class MathUtils> mMathUtils;
     std::unique_ptr<class GameProgressState> mGameProgressState;
 
     Stage* mCurrentStage;

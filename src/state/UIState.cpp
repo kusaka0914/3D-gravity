@@ -5,7 +5,7 @@ UIState::UIState(Game* game)
     :mGame(game)
     ,mTalkUIIndex(0)
     ,mIsBattleTutorialShown(false)
-    ,mTalkWith(TalkWith::Opening)
+    ,mCurrentTalkWith(TalkWith::Opening)
     ,mCurrentTutorialKind(TutorialKind::None)
 {
 

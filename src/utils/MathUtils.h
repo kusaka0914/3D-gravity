@@ -1,6 +1,6 @@
 #include <glm/glm.hpp>
 
-class Helper {
+class MathUtils {
 public:
     float GetYawFromDirection(const glm::vec3& up, const glm::vec3& dir);
 private:

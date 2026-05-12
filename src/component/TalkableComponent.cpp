@@ -1,8 +1,8 @@
-#include "Game.h"
 #include "TalkableComponent.h"
+#include "Game.h"
 #include "actor/Player.h"
 #include "actor/NPC.h"
-#include "system/Helper.h"
+#include "utils/MathUtils.h"
 #include <glm/glm.hpp>
 
 TalkableComponent::TalkableComponent(Actor* owner, int updateOrder)
@@ -20,7 +20,7 @@ void TalkableComponent::Update(float deltaTime)
 
         glm::vec3 playerPos = player->GetPos();
         glm::vec3 toNPC = glm::normalize(npc->GetPos() - playerPos);
-        float npcYaw = GetOwner()->GetGame()->GetHelper()->GetYawFromDirection(npc->GetUpVec(), toNPC);
+        float npcYaw = GetOwner()->GetGame()->GetMathUtils()->GetYawFromDirection(npc->GetUpVec(), toNPC);
         npc->SetFacingYaw(npcYaw);
         float talkableDist = 1.0f;
         float toPlayerDist = glm::length(playerPos - npc->GetPos());

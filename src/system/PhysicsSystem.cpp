@@ -1,6 +1,6 @@
 #include "PhysicsSystem.h"
 #include "Game.h"
-#include "system/Mesh.h"
+#include "system/MeshLoadSystem.h"
 #include "Stage.h"
 #include "actor/Planet.h"
 #include "actor/Player.h"
@@ -20,7 +20,7 @@
 PhysicsSystem::PhysicsSystem(Game* game)
     : mGame(game)
     , mBulletInitialized(false)
-    , mMeshLoader(nullptr)
+    , mMeshLoadSystem(nullptr)
 {
     Initialize();
 }
@@ -35,21 +35,14 @@ void PhysicsSystem::ClearBulletWorld()
     if (mBulletWorld)
     {
         if (mBulletCharController)
-        {
             mBulletWorld->removeAction(mBulletCharController.get());
-        }
 
         if (mBulletGhost)
-        {
             mBulletWorld->removeCollisionObject(mBulletGhost.get());
-        }
 
-        for (const auto& body : mBulletPlanetBodies)
-        {
+        for (const auto& body : mBulletPlanetBodies) {
             if (body)
-            {
-                mBulletWorld->removeRigidBody(body.get());
-            }
+                mBulletWorld->removeRigidBody(body.get());   
         }
     }
 
@@ -82,12 +75,12 @@ void PhysicsSystem::Initialize()
 {
     ClearBulletWorld();
 
-    mMeshLoader = mGame->GetMesh();
+    mMeshLoadSystem = mGame->GetMeshLoadSystem();
 
     const auto planets = mGame->GetCurrentStage()->GetPlanets();
     if (planets.empty())
     {
-        std::cerr << "Bullet: planet mesh load failed" << std::endl;
+        std::cerr << "Bullet: planet Mesh load failed" << std::endl;
         mBulletInitialized = false;
         return;
     }
@@ -152,13 +145,13 @@ void PhysicsSystem::CreateStageCollisionBodies() {
 
 void PhysicsSystem::CreateBody(Actor* actor)
 {
-    std::string meshPath = "../assets/models/" + actor->GetModelPath();
+    std::string MeshPath = "../assets/models/" + actor->GetModelPath();
 
     std::vector<float> pos;
     std::vector<unsigned int> idx;
 
-    if (!mMeshLoader->loadMeshPositionsAndIndices(
-            meshPath.c_str(), pos, idx)
+    if (!mMeshLoadSystem->loadMeshPositionsAndIndices(
+            MeshPath.c_str(), pos, idx)
         || pos.size() < 9
         || idx.size() < 3)
     {

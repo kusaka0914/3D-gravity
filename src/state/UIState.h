@@ -1,5 +1,7 @@
 #include <string>
 
+class Game;
+
 class UIState {
 public:
     enum class TalkWith {
@@ -9,6 +11,7 @@ public:
         Doctor,
         NPC
     };
+
     enum class TutorialKind {
         None,
         BoatParts,
@@ -16,52 +19,31 @@ public:
         Battle,
         Break
     };
-    UIState(class Game* game);
-    void SetTalkUIIndex(int talkUIIndex) { mTalkUIIndex = talkUIIndex; }
-    void SetIsTutorialShown(bool isTutorialShown) { mIsTutorialShown = isTutorialShown; }
-    void SetIsBattleTutorialShown(bool isBattleTutorialShown) { mIsBattleTutorialShown = isBattleTutorialShown; }
+
+    UIState(Game* game);
     void IncTalkUIIndex() { mTalkUIIndex++; }
-    void SetTalkWith(std::string talkWith) {
-        if (talkWith == "Mother") {
-            mTalkWith = TalkWith::Mother;
-        } else if (talkWith == "Doctor") {
-            mTalkWith = TalkWith::Doctor;
-        } else if (talkWith == "NPC") {
-            mTalkWith = TalkWith::NPC;
-        } else if (talkWith == "Opening") {
-            mTalkWith = TalkWith::Opening;
-        } else {
-            mTalkWith = TalkWith::None;
-        }
-    }
-    void SetCurrentTutorialKind(std::string currentTutorialKind) {
-        if (currentTutorialKind == "BoatParts") {
-            mCurrentTutorialKind = TutorialKind::BoatParts;
-        } else if (currentTutorialKind == "Crystal") {
-            mCurrentTutorialKind = TutorialKind::Crystal;
-        } else if (currentTutorialKind == "Battle") {
-            mCurrentTutorialKind = TutorialKind::Battle;
-        } else if (currentTutorialKind == "Break") {
-            mCurrentTutorialKind = TutorialKind::Break;
-        } else {
-            mCurrentTutorialKind = TutorialKind::None;
-        }
-    }
+
+    void SetIsBattleTutorialShown(bool isBattleTutorialShown) { mIsBattleTutorialShown = isBattleTutorialShown; }
+
+    void SetTalkUIIndex(int talkUIIndex) { mTalkUIIndex = talkUIIndex; }
+    
+    void SetCurrentTalkWith(TalkWith currentTalkWith) { mCurrentTalkWith = currentTalkWith; }
+    void SetCurrentTutorialKind(TutorialKind currentTutorialKind) { mCurrentTutorialKind = currentTutorialKind; }
+
+    bool GetIsBattleTutorialShown() const { return mIsBattleTutorialShown; }
 
     int GetTalkUIIndex() const { return mTalkUIIndex; }
-    bool GetIsTutorialShown() const { return mIsTutorialShown; }
-    bool GetIsBattleTutorialShown() const { return mIsBattleTutorialShown; }
-    TalkWith GetTalkWith() const { return mTalkWith; }
+    
+    TalkWith GetCurrentTalkWith() const { return mCurrentTalkWith; }
     TutorialKind GetCurrentTutorialKind() const { return mCurrentTutorialKind; }
 
 private:
-    Game* mGame;
-
-    TalkWith mTalkWith;
-    TutorialKind mCurrentTutorialKind;
-
-    bool mIsTutorialShown;
     bool mIsBattleTutorialShown;
 
     int mTalkUIIndex;
+
+    TalkWith mCurrentTalkWith;
+    TutorialKind mCurrentTutorialKind;
+
+    Game* mGame;
 };

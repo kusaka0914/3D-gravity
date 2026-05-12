@@ -6,11 +6,11 @@
 #include "Stage.h"
 #include "actor/Player.h"
 #include "actor/Enemy.h"
-#include "VertexArray.h"
+#include "gfx/VertexArray.h"
 #include "actor/Actor.h"
 #include "system/AudioSystem.h"
-#include "system/Mesh.h"
-#include "system/Loader.h"
+#include "system/MeshLoadSystem.h"
+#include "system/ActorLoadSystem.h"
 #include "actor/Key.h"
 #include "actor/Boat.h"
 #include "actor/Star.h"
@@ -20,7 +20,7 @@
 #include "actor/Platform.h"
 #include "state/GameProgressState.h"
 #include "gfx/Renderer.h"
-#include "system/Helper.h"
+#include "utils/MathUtils.h"
 #include "actor/BoatParts.h"
 #include "system/PhysicsSystem.h"
 #include "component/DestructibleComponent.h"
@@ -28,7 +28,7 @@
 #include "component/CollectableComponent.h"
 #include "Game.h"
 #include "actor/NPC.h"
-#include "system/UILoader.h"
+#include "system/UILoadSystem.h"
 #include <GLFW/glfw3.h>
 #include <SDL.h>
 #include <glm/glm.hpp>
@@ -138,14 +138,14 @@ bool Game::Initialize()
     mAudioSystem = std::make_unique<AudioSystem>(this);
     mShader3D = std::make_unique<Shader3D>();
     mUIShader = std::make_unique<UIShader>();
-    mUILoader = std::make_unique<UILoader>(this); 
+    mUILoadSystem = std::make_unique<UILoadSystem>(this); 
     mUIRenderer = std::make_unique<UIRenderer>(this);
     mRenderer = std::make_unique<Renderer>(this);
     mUIState = std::make_unique<UIState>(this);
-    mHelper = std::make_unique<Helper>();
+    mMathUtils = std::make_unique<MathUtils>();
     mGameProgressState = std::make_unique<GameProgressState>(this);
-    // モデルロード（Mesh::Initialize）を行うため、LoadData より先に生成しておく
-    mMesh = std::make_unique<Mesh>();
+    // モデルロード（MeshLoadSystem::Initialize）を行うため、LoadData より先に生成しておく
+    mMeshLoadSystem = std::make_unique<MeshLoadSystem>();
     if (!mShader3D->GetShaderProgram() || !mUIShader->GetShaderProgram())
     {
         glfwTerminate();
@@ -182,7 +182,7 @@ bool Game::Initialize()
     };
     mVertexArrays["hpBar"] = std::make_unique<VertexArray>(hpBar.data(), 6, nullptr, 0);
 
-    mLoader = std::make_unique<Loader>(this); 
+    mActorLoadSystem = std::make_unique<ActorLoadSystem>(this); 
 
     LoadData(true);
 
@@ -250,7 +250,7 @@ void Game::ProcessInput()
     bool UIreloadPressed = (glfwGetKey(mWindow, GLFW_KEY_U) == GLFW_PRESS);
     if (UIreloadPressed && !mUIReloadKeyPressedPrev)
     {
-        mUILoader->Initialize();
+        mUILoadSystem->Initialize();
     }
     mUIReloadKeyPressedPrev = UIreloadPressed;
 
@@ -266,7 +266,7 @@ void Game::ProcessInput()
         mPlayers.emplace_back(player2_ptr);
 
         // 2Pモデルロード
-        auto playerMeshes = mMesh->GetLoadedMeshes("player");
+        auto playerMeshes = mMeshLoadSystem->GetLoadedMeshes("player");
         mPlayers[1]->SetMeshes(playerMeshes);
     } 
 
@@ -277,7 +277,7 @@ void Game::ProcessInput()
         bool isTalking = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Talking;
         if (isTitle && mFadeInTimer <= -1.0f) {
             mFadeInTimer = 1.0f;
-            mGameProgressState->SetNextSceneState("Opening");
+            mGameProgressState->SetNextSceneState(GameProgressState::SceneState::Opening);
         } 
         if (isTalking || isOpening) {
             mUIState->IncTalkUIIndex();
@@ -287,9 +287,9 @@ void Game::ProcessInput()
             if (!NPC->GetTalkableComponent()) continue;
             bool isTalkable = NPC->GetTalkableComponent()->GetIsTalkable();
             if (isTalkable) {
-                mUIState->SetTalkWith("NPC");
+                mUIState->SetCurrentTalkWith(UIState::TalkWith::NPC);
                 mPlayers[0]->SetTalkingNPC(NPC);
-                mGameProgressState->SetSceneState("Talking");
+                mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
             }
         }
     }
@@ -322,15 +322,15 @@ void Game::UpdateGame()
             switch (nextSceneState)
             {
             case GameProgressState::SceneState::Opening:
-                mGameProgressState->SetSceneState("Opening");
-                mGameProgressState->SetNextSceneState("None");
+                mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Opening);
+                mGameProgressState->SetNextSceneState(GameProgressState::SceneState::None);
                 break;
 
             case GameProgressState::SceneState::Playing:
-                mGameProgressState->SetSceneState("Playing");
-                mGameProgressState->SetNextSceneState("None");
+                mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Playing);
+                mGameProgressState->SetNextSceneState(GameProgressState::SceneState::None);
                 ChangeStage(0);
-                mUIState->SetTalkWith("None");
+                mUIState->SetCurrentTalkWith(UIState::TalkWith::None);
                 break;
             
             default:
@@ -372,8 +372,8 @@ void Game::UpdateGame()
         bool isArrived = boat->GetIsArrived();
         if (!isArrived || mUIState->GetIsBattleTutorialShown()) continue;
             
-        mUIState->SetCurrentTutorialKind("Battle");
-        mGameProgressState->SetSceneState("Talking");
+        mUIState->SetCurrentTutorialKind(UIState::TutorialKind::Battle);
+        mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
         mUIState->SetIsBattleTutorialShown(true);
     }
 
@@ -382,7 +382,7 @@ void Game::UpdateGame()
         bool isObtained = star->GetCollectableComponent()->GetIsObtained();
         GameProgressState::SceneState sceneState = mGameProgressState->GetSceneState();
         if (isObtained && sceneState == GameProgressState::SceneState::Playing && mCurrentStageNum != 0) {
-            mGameProgressState->SetSceneState("StageClear");
+            mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::StageClear);
             Mix_HaltMusic();
             mAudioSystem->PlaySE("clearSE");
             mClearTimer = 12.0f;
@@ -392,7 +392,7 @@ void Game::UpdateGame()
             mClearTimer -= deltaTime;
             if (mClearTimer < 0.0f) {
                 mFadeInTimer = 1.0f;
-                mGameProgressState->SetNextSceneState("Playing");
+                mGameProgressState->SetNextSceneState(GameProgressState::SceneState::Playing);
             }
         }
     }
@@ -437,14 +437,14 @@ void Game::RemoveActor(std::unique_ptr<Actor> actor)
 
 void Game::LoadData(bool isLoadPlayer) {
     RemoveAllActor();
-    mLoader->LoadDataFromYaml(isLoadPlayer);
+    mActorLoadSystem->LoadData(isLoadPlayer);
     LoadModel();
 }
 
 void Game::LoadModel() {
     // プレイヤーモデルをロード
     for (auto player : mPlayers) {
-        auto playerMeshes = mMesh->GetLoadedMeshes("player");
+        auto playerMeshes = mMeshLoadSystem->GetLoadedMeshes("player");
         player->SetMeshes(playerMeshes);
     }
     std::vector<Planet*> planets = mCurrentStage->GetPlanets();
@@ -452,8 +452,8 @@ void Game::LoadModel() {
     for (auto planet : planets)
     {
         auto it = planet->GetModelPath().find(".");
-        std::string meshName = planet->GetModelPath().substr(0, it);
-        auto planetMeshes = mMesh->GetLoadedMeshes(meshName);
+        std::string MeshName = planet->GetModelPath().substr(0, it);
+        auto planetMeshes = mMeshLoadSystem->GetLoadedMeshes(MeshName);
         planet->SetMeshes(planetMeshes);
     }
     // 各惑星のオブジェクトのモデルをロード
@@ -463,8 +463,8 @@ void Game::LoadModel() {
         for (auto NPC : NPCs)
         {
             auto it = NPC->GetModelPath().find(".");
-            std::string meshName = NPC->GetModelPath().substr(0, it);
-            auto NPCMeshes = mMesh->GetLoadedMeshes(meshName);
+            std::string MeshName = NPC->GetModelPath().substr(0, it);
+            auto NPCMeshes = mMeshLoadSystem->GetLoadedMeshes(MeshName);
             NPC->SetMeshes(NPCMeshes);
         }
 
@@ -473,29 +473,29 @@ void Game::LoadModel() {
         for (auto enemy : enemies)
         {
             auto it = enemy->GetModelPath().find(".");
-            std::string meshName = enemy->GetModelPath().substr(0, it);
-            auto enemyMeshes = mMesh->GetLoadedMeshes(meshName);
+            std::string MeshName = enemy->GetModelPath().substr(0, it);
+            auto enemyMeshes = mMeshLoadSystem->GetLoadedMeshes(MeshName);
             enemy->SetMeshes(enemyMeshes);
         }
 
         // 鍵モデルをロード
         Key* key = planet->GetKey();
         if (key) {
-            auto keyMeshes = mMesh->GetLoadedMeshes("key");
+            auto keyMeshes = mMeshLoadSystem->GetLoadedMeshes("key");
             key->SetMeshes(keyMeshes);
         }
 
         // スターモデルをロード
         Star* star = planet->GetStar();
         if (star) {
-            auto starMeshes = mMesh->GetLoadedMeshes("star");
+            auto starMeshes = mMeshLoadSystem->GetLoadedMeshes("star");
             star->SetMeshes(starMeshes);
         }
 
         // ボートモデルをロード
         std::vector<Boat*> boats = planet->GetBoats();
         if (!boats.empty()) {
-            auto boatMeshes = mMesh->GetLoadedMeshes("boat");
+            auto boatMeshes = mMeshLoadSystem->GetLoadedMeshes("boat");
             for (auto boat : boats) {
                 boat->SetMeshes(boatMeshes);
             }
@@ -506,8 +506,8 @@ void Game::LoadModel() {
         if (!boatParts.empty()) {
             for (auto parts : boatParts) {
                 auto it = parts->GetModelPath().find(".");
-                std::string meshName = parts->GetModelPath().substr(0, it);
-                auto boatPartsMeshes = mMesh->GetLoadedMeshes(meshName);
+                std::string MeshName = parts->GetModelPath().substr(0, it);
+                auto boatPartsMeshes = mMeshLoadSystem->GetLoadedMeshes(MeshName);
                 parts->SetMeshes(boatPartsMeshes);
             }
         }
@@ -515,7 +515,7 @@ void Game::LoadModel() {
         // クリスタルモデルをロード
         std::vector<Crystal*> crystals = planet->GetCrystals();
         if (!crystals.empty()) {
-            auto crystalsMeshes = mMesh->GetLoadedMeshes("crystals");
+            auto crystalsMeshes = mMeshLoadSystem->GetLoadedMeshes("crystals");
             for (auto crystal : crystals) {
                 crystal->SetMeshes(crystalsMeshes);
             }
@@ -524,7 +524,7 @@ void Game::LoadModel() {
         // クリスタルモデルをロード
         std::vector<Platform*> platforms = planet->GetPlatforms();
         if (!platforms.empty()) {
-            auto platformMeshes = mMesh->GetLoadedMeshes("platform");
+            auto platformMeshes = mMeshLoadSystem->GetLoadedMeshes("platform");
             for (auto platform : platforms) {
                 platform->SetMeshes(platformMeshes);
             }

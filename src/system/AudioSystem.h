@@ -22,6 +22,9 @@ public:
 
     Game* GetGame() const { return mGame; }
 private:
+    void UpdateBGM();
+    void CreateBGMList();
+    void CreateSEList();
     void AddBGM(std::string path, std::string name);
     void AddSE(std::string path, std::string name);
 

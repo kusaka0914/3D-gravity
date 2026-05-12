@@ -3,4 +3,4 @@ build/
 .vscode/
 
 .DS_Store
-src/stb_image.h
+src/thirdParty/stb_image.h

@@ -1,8 +1,6 @@
 #include "Game.h"
 #include "FocusComponent.h"
 #include "actor/Player.h"
-#include "actor/Boat.h"
-#include "actor/Key.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 FocusComponent::FocusComponent(Actor* owner, int updateOrder)
@@ -14,12 +12,11 @@ FocusComponent::FocusComponent(Actor* owner, int updateOrder)
 
 void FocusComponent::Update(float deltaTime)
 {
-    if (mFocusTimer >= 0.0f) {
-        mFocusTimer -= deltaTime;
-    }
-    if (mIsFocused && mFocusTimer <= 2.0f && mFocusTimer >= 0.0f) {
+    if (mIsFocused && mFocusTimer <= 2.0f && mFocusTimer >= 0.0f)
         mOwner->SetIsActive(true);
-    }
+
+    if (mFocusTimer >= 0.0f) 
+        mFocusTimer -= deltaTime;
 }
 
 glm::mat4 FocusComponent::GetFocusView() {

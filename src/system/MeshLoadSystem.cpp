@@ -1,18 +1,25 @@
-#include "Mesh.h"
+#include "MeshLoadSystem.h"
 #include <assimp/material.h>
 #include <assimp/mesh.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 #include <string>
 #include <vector>
 #include <GL/glew.h>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "thirdParty/stb_image.h"
 
-Mesh::Mesh() {
+MeshLoadSystem::MeshLoadSystem() {
     Initialize();
 }
 
-void Mesh::Initialize() {
+void MeshLoadSystem::Initialize() {
+    CreateLoadedMeshes();
+}
+
+void MeshLoadSystem::CreateLoadedMeshes() {
     mLoadedMeshes["player"] = LoadMeshFromFile("../assets/models/player.obj");
     mLoadedMeshes["enemy"] = LoadMeshFromFile("../assets/models/enemy.obj");
     mLoadedMeshes["key"] = LoadMeshFromFile("../assets/models/key.obj");
@@ -40,7 +47,7 @@ void Mesh::Initialize() {
     mLoadedMeshes["rocket"] = LoadMeshFromFile("../assets/models/rocket.fbx");
 }
 
-std::vector<LoadedMesh> Mesh::LoadMeshFromFile(const char* path) {
+std::vector<LoadedMesh> MeshLoadSystem::LoadMeshFromFile(const char* path) {
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path,
         aiProcess_Triangulate | aiProcess_GenSmoothNormals);
@@ -137,7 +144,7 @@ std::vector<LoadedMesh> Mesh::LoadMeshFromFile(const char* path) {
     return results;
 }
 
-bool Mesh::loadMeshPositionsAndIndices(const char* path,
+bool MeshLoadSystem::loadMeshPositionsAndIndices(const char* path,
     std::vector<float>& outPositions, std::vector<unsigned int>& outIndices) {
     outPositions.clear();
     outIndices.clear();
@@ -169,7 +176,7 @@ bool Mesh::loadMeshPositionsAndIndices(const char* path,
     return true;
 }
 
-unsigned int Mesh::loadTexture(const char* path) {
+unsigned int MeshLoadSystem::loadTexture(const char* path) {
     unsigned int texID;
     glGenTextures(1, &texID);
     glBindTexture(GL_TEXTURE_2D, texID);

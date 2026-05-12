@@ -8,7 +8,7 @@
 #include "system/PhysicsSystem.h"
 #include "state/UIState.h"
 #include "actor/NPC.h"
-#include "system/Helper.h"
+#include "utils/MathUtils.h"
 #include "state/GameProgressState.h"
 #include <btBulletDynamicsCommon.h>
 #include <cmath>
@@ -356,7 +356,7 @@ void Player::ChangeFaceDir() {
         mFacingLeftVec = glm::normalize(glm::cross(mUpVec, mFacingForwardVec));
 
         // 描画用に yaw が必要なら残す
-        mFacingYaw = mGame->GetHelper()->GetYawFromDirection(mUpVec, moveDir) + 3.14159265f;
+        mFacingYaw = mGame->GetMathUtils()->GetYawFromDirection(mUpVec, moveDir) + 3.14159265f;
     }
 }
 

@@ -9,8 +9,8 @@
 #include "actor/NPC.h"
 #include "component/TalkableComponent.h"
 #include "state/GameProgressState.h"
-#include "system/UILoader.h"
-#include "stb_image.h"
+#include "system/UILoadSystem.h"
+#include "thirdParty/stb_image.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <unordered_map>
@@ -21,7 +21,7 @@ UIRenderer::UIRenderer(Game* game)
     , mUIShader(game->GetUIShader())
     , mFont(game->GetFont())
     , mVertexArrays(game->GetVertexArrays())
-    , mUILoader(game->GetUILoader())
+    , mUILoadSystem(game->GetUILoadSystem())
 {
     Initialize();
 }
@@ -79,17 +79,17 @@ void UIRenderer::Draw() {
 }
 
 void UIRenderer::DrawTitle() {
-    auto titleBgTextureInfo = mUILoader->GetTextureInfo("title", "bgTexture");
+    auto titleBgTextureInfo = mUILoadSystem->GetTextureInfo("title", "bgTexture");
     if (titleBgTextureInfo)
         DrawTexture(titleBgTextureInfo->x, titleBgTextureInfo->y, mFbWidth * titleBgTextureInfo->widthRatio, mFbHeight * titleBgTextureInfo->heightRatio, "titleBg");
 
-    auto startTextInfo = mUILoader->GetTextInfo("title", "startText");
+    auto startTextInfo = mUILoadSystem->GetTextInfo("title", "startText");
     if (startTextInfo)
         DrawText(mFbWidth * startTextInfo->xRatio, mFbHeight * startTextInfo->yRatio, startTextInfo->scaleRatio, startTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawOpening() {
-    auto talkWith = GetGame()->GetUIState()->GetTalkWith();
+    auto talkWith = GetGame()->GetUIState()->GetCurrentTalkWith();
 
     switch (talkWith)
     {
@@ -109,8 +109,8 @@ void UIRenderer::DrawOpening() {
 }
 
 void UIRenderer::DrawOpeningIntro() {
-    auto openingBgTextureInfo = mUILoader->GetTextureInfo("opening", "bgTexture");
-    auto openingTalkTextInfo = mUILoader->GetTextInfo("opening", "openingText");
+    auto openingBgTextureInfo = mUILoadSystem->GetTextureInfo("opening", "bgTexture");
+    auto openingTalkTextInfo = mUILoadSystem->GetTextInfo("opening", "openingText");
 
     if (!openingBgTextureInfo || !openingTalkTextInfo) return;
 
@@ -123,12 +123,12 @@ void UIRenderer::DrawOpeningIntro() {
         return;
     }
     
-    GetGame()->GetUIState()->SetTalkWith("Mother");
+    GetGame()->GetUIState()->SetCurrentTalkWith(UIState::TalkWith::Mother);
     GetGame()->GetUIState()->SetTalkUIIndex(0);
 }
 
 void UIRenderer::DrawOpeningTalkWithMother() {
-    auto talkWithMotherTextInfo = mUILoader->GetTextInfo("opening", "talkWithMotherText");
+    auto talkWithMotherTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithMotherText");
     if (!talkWithMotherTextInfo) return;
 
     int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
@@ -140,11 +140,11 @@ void UIRenderer::DrawOpeningTalkWithMother() {
     }
 
     GetGame()->GetUIState()->SetTalkUIIndex(0);
-    GetGame()->GetUIState()->SetTalkWith("Doctor");
+    GetGame()->GetUIState()->SetCurrentTalkWith(UIState::TalkWith::Doctor);
 }
 
 void UIRenderer::DrawOpeningTalkWithDoctor() {
-    auto talkWithDoctorTextInfo = mUILoader->GetTextInfo("opening", "talkWithDoctorText");
+    auto talkWithDoctorTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithDoctorText");
     if (!talkWithDoctorTextInfo) return;
 
     int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
@@ -156,7 +156,7 @@ void UIRenderer::DrawOpeningTalkWithDoctor() {
     else if (talkUIIndex >= static_cast<int>(talkTexts.size())) {
         GetGame()->GetUIState()->SetTalkUIIndex(0);
         GetGame()->SetFadeInTimer(1.0f);
-        GetGame()->GetGameProgressState()->SetNextSceneState("Playing");
+        GetGame()->GetGameProgressState()->SetNextSceneState(GameProgressState::SceneState::Playing);
     }
 }
 
@@ -192,14 +192,14 @@ void UIRenderer::DrawDefaultUI() {
 }
 
 void UIRenderer::DrawOperationSupportUI() {
-    auto operationSupportTextInfo = mUILoader->GetTextInfo("default", "operationSupportText");
+    auto operationSupportTextInfo = mUILoadSystem->GetTextInfo("default", "operationSupportText");
     if (!operationSupportTextInfo) return;
     
     DrawText(operationSupportTextInfo->x, mFbHeight - operationSupportTextInfo->y, mFbWidth * operationSupportTextInfo->scaleRatio, operationSupportTextInfo->texts[0], false);
 }
 
 void UIRenderer::DrawHpUI() {
-    auto hpTextureInfo = mUILoader->GetTextureInfo("default", "hpTexture");
+    auto hpTextureInfo = mUILoadSystem->GetTextureInfo("default", "hpTexture");
     if (!hpTextureInfo) return;
 
     std::vector<Player*> players = mGame->GetPlayers();
@@ -214,26 +214,26 @@ void UIRenderer::DrawHpUI() {
 }
 
 void UIRenderer::DrawSpecialAttackUI() {
-    auto specialAttackTextureInfo = mUILoader->GetTextureInfo("default", "specialAttackTexture");
+    auto specialAttackTextureInfo = mUILoadSystem->GetTextureInfo("default", "specialAttackTexture");
     if (!specialAttackTextureInfo) return;
 
     DrawTexture(mFbWidth * specialAttackTextureInfo->xRatio, mFbWidth * specialAttackTextureInfo->yRatio, mFbWidth * specialAttackTextureInfo->widthRatio, mFbWidth * specialAttackTextureInfo->heightRatio, "special");
 
-    auto specialAttackTextInfo = mUILoader->GetTextInfo("default", "specialAttackText");
+    auto specialAttackTextInfo = mUILoadSystem->GetTextInfo("default", "specialAttackText");
     if (!specialAttackTextInfo) return;
 
     DrawText(mFbWidth * specialAttackTextInfo->xRatio, mFbHeight * specialAttackTextInfo->yRatio, mFbWidth * specialAttackTextInfo->scaleRatio, specialAttackTextInfo->texts[0], false);
 }
 
 void UIRenderer::DrawTalkableUI() {
-    auto talkableTextInfo = mUILoader->GetTextInfo("default", "talkableText");
+    auto talkableTextInfo = mUILoadSystem->GetTextInfo("default", "talkableText");
     if (!talkableTextInfo) return;
 
     DrawText(mFbWidth * talkableTextInfo->xRatio, mFbHeight * talkableTextInfo->yRatio, mFbWidth * talkableTextInfo->scaleRatio, talkableTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawRemainPartsUI() {
-    auto remainPartsTextInfo = mUILoader->GetTextInfo("default", "remainPartsText");
+    auto remainPartsTextInfo = mUILoadSystem->GetTextInfo("default", "remainPartsText");
     if (!remainPartsTextInfo) return;
 
     std::vector<Player*> players = mGame->GetPlayers();
@@ -269,7 +269,7 @@ void UIRenderer::DrawStateUI() {
             break;
     }
 
-    UIState::TalkWith currentTalkWith = GetGame()->GetUIState()->GetTalkWith();
+    UIState::TalkWith currentTalkWith = GetGame()->GetUIState()->GetCurrentTalkWith();
 
     switch (currentTalkWith)
     {
@@ -303,7 +303,7 @@ void UIRenderer::DrawStateUI() {
 }
 
 void UIRenderer::DrawBattleTutorial() {
-    auto battleTutorialTextInfo = mUILoader->GetTextInfo("state", "battleTutorialText");
+    auto battleTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "battleTutorialText");
     if (!battleTutorialTextInfo) return;
 
     std::vector<std::string> battleTutorialTexts = battleTutorialTextInfo->texts;
@@ -315,12 +315,12 @@ void UIRenderer::DrawBattleTutorial() {
     }
 
     GetGame()->GetUIState()->SetTalkUIIndex(0);
-    GetGame()->GetUIState()->SetCurrentTutorialKind("None");
-    GetGame()->GetGameProgressState()->SetSceneState("Playing");
+    GetGame()->GetUIState()->SetCurrentTutorialKind(UIState::TutorialKind::None);
+    GetGame()->GetGameProgressState()->SetCurrentSceneState(GameProgressState::SceneState::Playing);
 }
 
 void UIRenderer::DrawBreakTutorial() {
-    auto breakTutorialTextInfo = mUILoader->GetTextInfo("state", "breakTutorialText");
+    auto breakTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "breakTutorialText");
     if (!breakTutorialTextInfo) return;
 
     std::vector<std::string> breakTutorialTexts = breakTutorialTextInfo->texts;
@@ -332,24 +332,24 @@ void UIRenderer::DrawBreakTutorial() {
     }
 
     GetGame()->GetUIState()->SetTalkUIIndex(0);
-    GetGame()->GetUIState()->SetCurrentTutorialKind("None");
-    GetGame()->GetGameProgressState()->SetSceneState("Playing");
+    GetGame()->GetUIState()->SetCurrentTutorialKind(UIState::TutorialKind::None);
+    GetGame()->GetGameProgressState()->SetCurrentSceneState(GameProgressState::SceneState::Playing);
 }
 
 void UIRenderer::DrawStageClear() {
-    auto stageClearTextInfo = mUILoader->GetTextInfo("state", "stageClearText");
+    auto stageClearTextInfo = mUILoadSystem->GetTextInfo("state", "stageClearText");
     if (!stageClearTextInfo) return;
 
     DrawText(mFbWidth * stageClearTextInfo->xRatio, stageClearTextInfo->y, stageClearTextInfo->scaleRatio, stageClearTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
-    auto talkBgTextureInfo = mUILoader->GetTextureInfo("state", "talkBgTexture");
+    auto talkBgTextureInfo = mUILoadSystem->GetTextureInfo("state", "talkBgTexture");
     if (!talkBgTextureInfo) return;
 
     DrawTexture(talkBgTextureInfo->x, talkBgTextureInfo->y, mFbWidth * talkBgTextureInfo->widthRatio, mFbHeight * talkBgTextureInfo->heightRatio, "textBg");
     
-    auto talkTextInfo = mUILoader->GetTextInfo("state", "talkText");
+    auto talkTextInfo = mUILoadSystem->GetTextInfo("state", "talkText");
     if (!talkTextInfo) return;
 
     glm::vec4 textColor{0.0f, 0.0f, 0.0f, 0.0f};
@@ -366,18 +366,18 @@ void UIRenderer::DrawTalkWithNPC() {
         return;
     } 
 
-    GetGame()->GetUIState()->SetTalkWith("None");
+    GetGame()->GetUIState()->SetCurrentTalkWith(UIState::TalkWith::None);
     GetGame()->GetUIState()->SetTalkUIIndex(0);
-    GetGame()->GetGameProgressState()->SetSceneState("Playing");
+    GetGame()->GetGameProgressState()->SetCurrentSceneState(GameProgressState::SceneState::Playing);
 }
 
 void UIRenderer::DrawLoading() {
-    auto loadingTextInfo = mUILoader->GetTextInfo("state", "loadingText");
+    auto loadingTextInfo = mUILoadSystem->GetTextInfo("state", "loadingText");
     if (!loadingTextInfo) return;
 
     DrawText(loadingTextInfo->x, mFbHeight - loadingTextInfo->y, loadingTextInfo->scaleRatio, loadingTextInfo->texts[0], false);
 
-    auto loadingTextureInfo = mUILoader->GetTextureInfo("state", "loadingTexture");
+    auto loadingTextureInfo = mUILoadSystem->GetTextureInfo("state", "loadingTexture");
     if (!loadingTextureInfo) return;
 
     DrawTexture(loadingTextureInfo->x, mFbHeight - loadingTextureInfo->y, loadingTextureInfo->width, loadingTextureInfo->height, "slime");

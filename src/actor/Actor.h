@@ -37,7 +37,7 @@ public:
     void SetModelPath(const std::string& modelPath) { mModelPath = modelPath; }
 
     void SetCurrentPlanet(Planet* currentPlanet) { mCurrentPlanet = currentPlanet; }
-    void SetMeshes(std::vector<struct LoadedMesh>* meshes) { mMeshes = meshes; }
+    void SetMeshes(std::vector<struct LoadedMesh>* Meshes) { mMeshes = Meshes; }
 
     bool GetIsActive() const { return mIsActive; }
 

@@ -1,6 +1,6 @@
-#include "Helper.h"
+#include "MathUtils.h"
 
-float Helper::GetYawFromDirection(const glm::vec3& up, const glm::vec3& dir) {
+float MathUtils::GetYawFromDirection(const glm::vec3& up, const glm::vec3& dir) {
     glm::vec3 worldLeft = glm::cross(up, glm::vec3(0, 0, 1));
     if (glm::length(worldLeft) < 0.01f){
         worldLeft = glm::normalize(glm::cross(up, glm::vec3(0, 1, 0)));

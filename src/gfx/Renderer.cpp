@@ -11,10 +11,10 @@
 #include "VertexArray.h"
 #include "Game.h"
 #include "actor/NPC.h"
-#include "system/Helper.h"
+#include "utils/MathUtils.h"
 #include "actor/Platform.h"
 #include "state/UIState.h"
-#include "stb_image.h"
+#include "thirdParty/stb_image.h"
 #include "component/FocusComponent.h"
 #include "state/GameProgressState.h"
 #include <glm/glm.hpp>
@@ -210,7 +210,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
             
             glm::vec3 enemyUp = enemy->GetUpVec();
             glm::vec3 toPlayer = glm::normalize(players[0]->GetPos() - enemy->GetPos());
-            float enemyFacingYaw = mGame->GetHelper()->GetYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
+            float enemyFacingYaw = mGame->GetMathUtils()->GetYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
 
             DrawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), enemyUp, enemyFacingYaw, enemy->GetMeshes());
 
@@ -297,7 +297,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
 };
 
 void Renderer::DrawCharacter(const glm::vec3 &pos, glm::vec3 scale, const glm::vec4 &fallbackColor,
-    const glm::vec3 &up, float yaw, const std::vector<struct LoadedMesh> *meshes,
+    const glm::vec3 &up, float yaw, const std::vector<struct LoadedMesh> *Meshes,
     const glm::vec4 *colorOverride) 
 {
     GLint locModel = mShader3D->GetLocModel();
@@ -324,9 +324,9 @@ void Renderer::DrawCharacter(const glm::vec3 &pos, glm::vec3 scale, const glm::v
     glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) * orient * glm::scale(glm::mat4(1.0f), glm::vec3(scale));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
 
-    if (!meshes->empty())
+    if (!Meshes->empty())
     {
-        for (const LoadedMesh &m : *meshes)
+        for (const LoadedMesh &m : *Meshes)
         {
             glBindVertexArray(m.VAO);
             if (m.textureID != 0)
@@ -431,8 +431,8 @@ std::vector<glm::mat4> Renderer::GetViews() {
 
     bool isOpening = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
     if (isOpening) {
-        bool isTalkWithMother = GetGame()->GetUIState()->GetTalkWith() == UIState::TalkWith::Mother;
-        bool isTalkWithDoctor = GetGame()->GetUIState()->GetTalkWith() == UIState::TalkWith::Doctor;
+        bool isTalkWithMother = GetGame()->GetUIState()->GetCurrentTalkWith() == UIState::TalkWith::Mother;
+        bool isTalkWithDoctor = GetGame()->GetUIState()->GetCurrentTalkWith() == UIState::TalkWith::Doctor;
 
         if (isTalkWithMother) {
             glm::mat4 view = glm::lookAt(glm::vec3(-2.0f, 4.0f, -2.0f), glm::vec3(4.0f, 2.0f, 4.0f), glm::vec3(0.0f, 1.0f, 0.0f));

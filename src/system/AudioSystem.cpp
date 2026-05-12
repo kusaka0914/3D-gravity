@@ -19,9 +19,16 @@ void AudioSystem::Initialize() {
     Mix_VolumeMusic(80);
     Mix_Volume(-1, 60);
 
+    CreateBGMList();
+    CreateSEList();
+}
+
+void AudioSystem::CreateBGMList() {
     AddBGM("../assets/audio/normalBGM.wav", "normalBGM");
     AddBGM("../assets/audio/boss.wav", "bossBGM");
+}
 
+void AudioSystem::CreateSEList() {
     AddSE("../assets/audio/attack.wav", "attackSE");
     AddSE("../assets/audio/attack_miss.wav", "attackMissSE");
     AddSE("../assets/audio/attack_pre.wav", "attackPreSE");
@@ -42,6 +49,10 @@ void AudioSystem::Initialize() {
 }
 
 void AudioSystem::Update() {
+    UpdateBGM();
+}
+
+void AudioSystem::UpdateBGM() {
     std::vector<class Player*> players = GetGame()->GetPlayers();
     bool isPlaying = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Playing;
     if (isPlaying && players[0]->GetCurrentPlanetNum() != mCurrentBgmPlanetIndex || GetGame()->GetIsChangeStage())

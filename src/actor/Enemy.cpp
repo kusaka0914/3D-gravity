@@ -193,8 +193,8 @@ void Enemy::ApplyBreak(float deltaTime) {
 void Enemy::LaunchCharacter(float deltaTime) {
     if (!GetGame()->GetGameProgressState()->GetIsFirstBreak()) {
         GetGame()->GetGameProgressState()->SetIsFirstBreak(true);
-        GetGame()->GetUIState()->SetCurrentTutorialKind("Break");
-        GetGame()->GetGameProgressState()->SetSceneState("Talking");
+        GetGame()->GetUIState()->SetCurrentTutorialKind(UIState::TutorialKind::Break);
+        GetGame()->GetGameProgressState()->SetCurrentSceneState(GameProgressState::SceneState::Talking);
     }
     float launchSpeed = 5.0f;
     mVelocity += mUpVec * launchSpeed;

@@ -1,15 +1,14 @@
 #pragma once
 
 #include "component/Component.h"
-#include "system/Mesh.h"
-#include <glm/glm.hpp>
-#include <memory>
 #include <string>
 #include <vector>
 
+class Actor;
+
 class TalkableComponent : public Component {
 public:
-    TalkableComponent(class Actor* owner, int updateOrder = 100);
+    TalkableComponent(Actor* owner, int updateOrder = 100);
     void Update(float deltaTime) override;
 
     void SetIsTalkable(bool isTalkable) { mIsTalkable = isTalkable; }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "system/Mesh.h"
+#include "system/MeshLoadSystem.h"
 #include "actor/Planet.h"
 #include "actor/CharacterActor.h"
 #include <glm/glm.hpp>

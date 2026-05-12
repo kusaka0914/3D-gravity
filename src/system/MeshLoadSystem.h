@@ -2,9 +2,6 @@
 
 #include <iostream>
 #include <vector>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 #include <unordered_map>
 
 
@@ -15,21 +12,24 @@ struct LoadedMesh {
     float diffuseColor[3] = { 1.0f, 1.0f, 1.0f };
 };
 
-class Mesh {
+class MeshLoadSystem {
 public:
-    Mesh();
+    MeshLoadSystem();
+
     void Initialize();
+
     std::vector<LoadedMesh> LoadMeshFromFile(const char* path);
 
     bool loadMeshPositionsAndIndices(const char* path,
         std::vector<float>& outPositions, std::vector<unsigned int>& outIndices);
     
-    std::vector<LoadedMesh>* GetLoadedMeshes(const std::string& meshName) {
-        auto it = mLoadedMeshes.find(meshName);
+    std::vector<LoadedMesh>* GetLoadedMeshes(const std::string& MeshName) {
+        auto it = mLoadedMeshes.find(MeshName);
         return (it != mLoadedMeshes.end()) ? &it->second : nullptr;
     }
 
 private:
+    void CreateLoadedMeshes();
     unsigned int loadTexture(const char* path);
 
 private:

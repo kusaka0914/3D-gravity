@@ -4,7 +4,7 @@
 GameProgressState::GameProgressState(Game* game)
     :mGame(game)
     ,mIsFirstBreak(false)
-    ,mSceneState(SceneState::Playing)
+    ,mCurrentSceneState(SceneState::Playing)
     ,mNextSceneState(SceneState::None)
 {
 

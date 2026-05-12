@@ -1,8 +1,9 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <yaml-cpp/yaml.h>
 
-class UILoader {
+class UILoadSystem {
 public:
     struct TextureInfo {
         float x = 0.0f;
@@ -14,6 +15,7 @@ public:
         float height = 0.0f;
         float heightRatio = 0.0f;
     };
+
     struct TextInfo {
         float x = 0.0f;
         float xRatio = 0.0f;
@@ -23,9 +25,10 @@ public:
         float scaleRatio = 0.0f;
         std::vector<std::string> texts;
     };
-    UILoader(class Game* game);
+
+    UILoadSystem(class Game* game);
+
     void Initialize();
-    void Load(const std::string& path);
     
     const TextureInfo* GetTextureInfo(const std::string& screenName, const std::string& id) const {
         std::string mapId = screenName + "." + id;
@@ -40,6 +43,10 @@ public:
     }
 
 private:
+    void LoadUIInfo(const std::string& path);
+    void AddTextureInfo(std::string screenName, YAML::Node node);
+    void AddTextInfo(std::string screenName, YAML::Node node);
+
     Game* GetGame() const { return mGame; }
 
 private:

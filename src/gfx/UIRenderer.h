@@ -48,7 +48,7 @@ private:
     Game* mGame;
     class UIShader* mUIShader;
     TTF_Font* mFont;
-    class UILoader* mUILoader;
+    class UILoadSystem* mUILoadSystem;
 
     const std::unordered_map<const char*, std::unique_ptr<class VertexArray>>& mVertexArrays;
     std::unordered_map<std::string, GLuint> mTextures;

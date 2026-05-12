@@ -1,7 +1,7 @@
 #pragma once
 
 #include "actor/Actor.h"
-#include "system/Mesh.h"
+#include "system/MeshLoadSystem.h"
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
@@ -12,7 +12,7 @@ public:
     Stage();
     void Initialize();
     void AddPlanet(class Planet* planet) { mPlanets.emplace_back(planet); }
-    void AddPlanetMesh(std::string modelPath, std::vector<struct LoadedMesh>* meshes) { mPlanetMeshesByPath[modelPath] = meshes; }
+    void AddPlanetMesh(std::string modelPath, std::vector<struct LoadedMesh>* Meshes) { mPlanetMeshesByPath[modelPath] = Meshes; }
     void RemoveAllPlanet() { mPlanets.clear(); }
 
     const std::vector<class Planet*>& GetPlanets() const { return mPlanets; }
