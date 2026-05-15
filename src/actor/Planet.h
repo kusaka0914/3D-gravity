@@ -52,7 +52,6 @@ public:
 
     void SetCurrentStage(Stage* currentStage) { mCurrentStage = currentStage; }
     void SetStageNum(int stageNum) { mStageNum = stageNum; }
-    void SetRadius(float radius) { mRadius = radius; }
     void SetColor(glm::vec4 color) { mColor = color; }
     void SetKey(Key* key) { mKey = key; }
     void SetStar(Star* star) { mStar = star; }
@@ -80,7 +79,6 @@ public:
     bool GetIsAllBoatPartsCollected() const { return mIsAllBoatPartsCollected; }
 
     int GetStageNum() const { return mStageNum; }
-    float GetRadius() const { return mRadius; }
     const glm::vec4& GetColor() const { return mColor; }
     const std::vector<Enemy*>& GetEnemies() const { return mEnemies; }
     const std::vector<Boat*>& GetBoats() const { return mBoats; }
@@ -102,8 +100,6 @@ private:
     bool mIsAllBoatPartsCollected;
 
     int mStageNum;
-
-    float mRadius;
 
     glm::vec4 mColor;
 

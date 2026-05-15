@@ -68,31 +68,16 @@ bool ActorLoadSystem::LoadPlayers(const char* path) {
         for (const YAML::Node& node : root["players"]) {
             std::unique_ptr<Player> player = std::make_unique<Player>(mGame);
             playerNum++;
-
-            std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "player.obj";
-            player->SetModelPath(modelPath);
+            player->SetPlayerNum(playerNum);
 
             int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
             player->SetCurrentPlanetNum(currentPlanetNum);
-            player->SetRestartPlanetIndex(currentPlanetNum);
-
-
-            float hp = node["hp"] ? node["hp"].as<float>() : 100.0f;
-            player->SetHp(hp);
-
-            float attack = node["attack"] ? node["attack"].as<float>() : 10.0f;
-            player->SetAttack(attack);
-
-            float cameraPitch = node["camera_pitch"] ? node["camera_pitch"].as<float>() : 0.4f;
-            player->SetCameraPitch(cameraPitch);
-
-            player->SetPlayerNum(playerNum);
 
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
             player->SetCurrentPlanet(currentPlanet);
+
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             player->SetPos(pos);
-            player->SetRestartPos(pos);
 
             YAML::Node playerRoot = YAML::LoadFile("../assets/data/players.yaml");
             for (auto playerNode : playerRoot["players"]){
@@ -174,8 +159,12 @@ bool ActorLoadSystem::LoadPlayers(const char* path) {
 
                 float defaultStrongAttackTimer = playerNode["defaultStrongAttackTimer"] ? playerNode["defaultStrongAttackTimer"].as<float>() : 0.0f;
                 player->SetDefaultStrongAttackTimer(defaultStrongAttackTimer);
+
+                std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "player.obj";
+                player->SetModelPath(modelPath);
             }
 
+            player->Initialize();
             Player* player_ptr = player.get();
             GetGame()->AddActor(std::move(player));
             GetGame()->AddPlayer(player_ptr);
@@ -255,12 +244,7 @@ bool ActorLoadSystem::LoadEnemies(const char* path) {
         for (const YAML::Node& node : root["enemies"]) {
             std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(mGame);
 
-            bool isBoss = node["isBoss"] ? node["isBoss"].as<int>() : false;
-            enemy->SetIsBoss(isBoss);
-
             currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
-            enemy->SetCurrentPlanetNum(currentPlanetNum); 
-
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
             enemy->SetCurrentPlanet(currentPlanet);
 
@@ -284,6 +268,9 @@ bool ActorLoadSystem::LoadEnemies(const char* path) {
 
                     float defaultLaunchedTimer = enemyNode["defaultLaunchedTimer"] ? enemyNode["defaultLaunchedTimer"].as<float>() : 0.0f;
                     enemy->SetDefaultLaunchedTimer(defaultLaunchedTimer);
+
+                    float detectionRange = enemyNode["detectionRange"] ? enemyNode["detectionRange"].as<float>() : 0.0f;
+                    enemy->SetDetectionRange(detectionRange);
                     continue;
                 }
 
@@ -298,7 +285,7 @@ bool ActorLoadSystem::LoadEnemies(const char* path) {
                 enemy->SetScale(glm::vec3(scale));
 
                 float speed = enemyNode["speed"] ? enemyNode["speed"].as<float>() : 1.0f;
-                enemy->SetSpeed(speed);
+                enemy->SetMoveSpeed(speed);
 
                 float attack = enemyNode["attack"] ? enemyNode["attack"].as<float>() : 5.0f;
                 enemy->SetAttack(attack);
@@ -433,7 +420,6 @@ bool ActorLoadSystem::LoadBoats(const char* path)
 
             glm::vec3 pos = CalculatePos(node, currentPlanet);
             boat->SetPos(pos);
-            boat->SetStartPos(pos);
 
             YAML::Node boatRoot = YAML::LoadFile("../assets/data/boats.yaml");
             for (auto boatNode : boatRoot["boats"]){

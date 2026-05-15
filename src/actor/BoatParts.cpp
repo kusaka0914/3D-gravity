@@ -22,5 +22,5 @@ void BoatParts::UpdateActor(float deltaTime) {
 
 void BoatParts::OnObtained() {
     mIsActive = false;
-    GetGame()->GetAudioSystem()->PlaySE("pickUpSE");
+    mGame->GetAudioSystem()->PlaySE("pickUpSE");
 }

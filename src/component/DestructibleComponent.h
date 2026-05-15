@@ -3,25 +3,26 @@
 #include "Component.h"
 
 class Actor;
+class Player;
 
 class DestructibleComponent : public Component {
 public:
     DestructibleComponent(Actor* owner, int updateOrder = 100);
     void Update(float deltaTime) override;
 
-    void SetIsDestroyed(bool isDestroyed) { mIsDestroyed = isDestroyed; }
     void SetDestroyHp(int destroyHp) { mDestroyHp = destroyHp; }
 
     bool GetIsDestroyed() const { return mIsDestroyed; }
 
 private:
-    void TryDestroyed();
-    void OnDamaged(const float attack);
-    void OnDestroyed();
+    void TryApplyDamage();
+    void ApplyDamage(const float attack);
+
+    bool IsPlayerInHitRange(Player* player) const;
 
 private:
     bool mIsDestroyed;
-    bool mIsAttackedPrev;
+    bool mIsHitCurrentAttack;
 
     float mDestroyHp;
 };

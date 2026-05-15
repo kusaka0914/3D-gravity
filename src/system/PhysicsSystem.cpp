@@ -316,7 +316,7 @@ glm::vec3 PhysicsSystem::CheckCollision(glm::vec3 moveDelta, glm::vec3 desiredPo
     // 敵との当たり判定
     for (auto* enemy : enemies)
     {
-        if (!enemy->GetIsAlive())
+        if (enemy->GetIsDead())
             continue;
         glm::vec3 ePos = enemy->GetPos();
         glm::vec3 toDesired = desiredPos - ePos;

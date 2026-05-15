@@ -6,113 +6,113 @@
 #include <string>
 #include <vector>
 
+class Game;
+class Player;
+
 class Enemy : public CharacterActor {
 public:
-    Enemy(class Game* game);
+    enum class LifeState {
+        Alive,
+        Dying,
+        Dead
+    };
+
+    enum class ActionState {
+        Idle,
+        Tracking,
+        PreparingAttack,
+        Attacking,
+        KnockedBack,
+    };
+
+    Enemy(Game* game);
     void UpdateActor(float deltaTime) override;
 
-    virtual bool IsBoss() const { return false; }
+    void ApplyDamage(float damage);
+    void ApplyBreak(float deltaTime);
 
-    
-    void SetIsAttack(bool isAttack) { mIsAttack = isAttack; }
-    void SetIsAlive(bool isAlive) { mIsAlive = isAlive; }
-    void SetIsDamaged(bool isDamaged) { mIsDamaged = isDamaged; }
-    void SetIsCountered(bool isCountered) { mIsCountered = isCountered; }
     void SetIsBoss(bool isBoss) { mIsBoss = isBoss; }
-    void SetIsBroken(bool isLaunched) { mIsBroken = isLaunched; }
     void SetIsStrongAttacked(bool isStrongAttacked) { mIsStrongAttacked = isStrongAttacked; }
 
-    void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
     void SetBreakCount(int breakCount) { mBreakCount = breakCount; }
     void SetBreakCountMax(int breakCountMax) { mBreakCountMax = breakCountMax; }
 
     void SetHp(float hp) { mHp = hp; }
     void SetMaxHp(float maxHp) { mMaxHp = maxHp; }
-    void SetDeathTimer(float damageTimer) { mDeathTimer = damageTimer; }
-    void SetLaunchedTimer(float launchedTimer) { mLaunchedTimer = launchedTimer; }
     void SetDefaultLaunchedTimer(float defaultLaunchedTimer) { mDefaultLaunchedTimer = defaultLaunchedTimer; }
-    void SetRadius(float radius) { mRadius = radius; }
-    void SetSpeed(float speed) { mSpeed = speed; }
+    void SetMoveSpeed(float moveSpeed) { mMoveSpeed = moveSpeed; }
     void SetAttack(float attack) { mAttack = attack; }
     void SetDefaultAttackMotionTimer(float defaultAttackMotionTimer) { mDefaultAttackMotionTimer = defaultAttackMotionTimer; }
-    void SetStandByAttackTimer(float standByAttackTimer) { mStandByAttackTimer = standByAttackTimer; }
     void SetDefaultStandByAttackTimer(float defaultStandByAttackTimer) { mDefaultStandByAttackTimer = defaultStandByAttackTimer; }
-    void SetSensing(float sensing) { mSensing = sensing; }
+    void SetDetectionRange(float detectionRange) { mDetectionRange = detectionRange; }
     void SetKnockBackSpeed(float knockBackSpeed) { mKnockBackSpeed = knockBackSpeed; }
     void SetAttackSpeed(float attackSpeed) { mAttackSpeed = attackSpeed; }
 
-    bool GetIsAlive() const { return mIsAlive; }
-    bool GetIsDamaged() const { return mIsDamaged; }
-    bool GetIsCountered() const { return mIsCountered; }
-    bool GetIsBoss() const { return mIsBoss; }
-    bool GetIsBroken() const { return mIsBroken; }
-    bool GetIsStrongAttacked() const { return mIsStrongAttacked; }
-    bool GetIsAttack() const { return mIsAttack; }
+    bool GetIsDead() const { return mLifeState == LifeState::Dead; }
 
-    int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
     int GetBreakCount() const { return mBreakCount; }
     
     float GetHp() const { return mHp; }
     float GetMaxHp() const { return mMaxHp; }
-    float GetDeathTimer() const { return mDeathTimer; }
-    float GetRadius() const { return mRadius; }
-    float GetSpeed() const { return mSpeed; }
-    float GetAttack() const { return mAttack; }
-    float GetDefaultAttackMotionTimer() const { return mDefaultAttackMotionTimer; }
-    float GetStandByAttackTimer() const { return mStandByAttackTimer; }
-    float GetDefaultStandByAttackTimer() const { return mDefaultStandByAttackTimer; }
-    float GetLaunchedTimer() const { return mLaunchedTimer; }
-    float GetDefaultLaunchedTimer() const { return mDefaultLaunchedTimer; }
-    float GetSensing() const { return mSensing; }
-    float GetKnockBackSpeed() const { return mKnockBackSpeed; }
-    float GetAttackSpeed() const { return mAttackSpeed; }
 
 private:
     void UpdateAlive(float deltaTime);
     void UpdateDying(float deltaTime);
 
-    void UpdateKnockBack(float deltaTime, class Player* player);
     void UpdateBehavior(float deltaTime, Player* player);
-    void ApplyDamage(Player* player);
-    void ApplyCounter(Player* player);
+    void UpdateIdle(Player* player);
+    void UpdateTracking(float deltaTime, Player* player);
+    void UpdatePreparingAttack(float deltaTime);
+    void UpdateAttacking(float deltaTime, Player* player);
+    void UpdateKnockedBack(float deltaTime, Player* player);
+
+    void StartIdle();
+    void StartTracking();
+    void StartPreparingAttack();
+    void StartAttacking();
+    void StartKnockedBack(float knockBackTimer);
     void StartDying();
-    void ApplyBreak(float deltaTime);
-    void LaunchCharacter(float deltaTime);
+    
     void FinishLaunched();
-    void UpdateMotionTimer(float deltaTime, Player* player);
-    void ApplyGravity(float deltaTime);
-    void FixPlanetSurface();
     void FinishDying();
 
+    bool IsPlayerInRange(float range, Player* player);
+    bool IsJustBeforeAttack();
+
+    void MoveToPlayer(float deltaTime, Player* player);
+    void MoveDuringAttacking(float deltaTime, Player* player);
+    void MoveDuringKnockBack(float deltaTime, Player* player);
+    void LaunchIntoAir(float deltaTime);
+    void ApplyCounter(Player* player);
+    void ApplyGravity(float deltaTime);
+
 private:
-    bool mIsAlive;
-    bool mIsDamaged;
+    LifeState mLifeState;
+    ActionState mActionState;
+
     bool mIsCountered;
     bool mIsBoss;
-    bool mIsBroken;
-    bool mIsPreparing;
     bool mIsHit;
     bool mIsStrongAttacked;
-    bool mIsAttack;
+    bool mIsJustBeforeAttack;
 
-    int mCurrentPlanetNum;
     int mBreakCount;
     int mBreakCountMax;
 
-    float mRadius;
-    float mSpeed;
     float mAttack;
     float mHp;
     float mMaxHp;
-    float mSensing;
+    float mDetectionRange;
+    float mMoveSpeed;
+    float mKnockBackSpeed;
+    float mAttackSpeed;
+
     float mStandByAttackTimer;
     float mDefaultStandByAttackTimer;
     float mLaunchedTimer;
     float mDefaultLaunchedTimer;
     float mAttackMotionTimer;
     float mDefaultAttackMotionTimer;
-    float mDeathTimer;
+    float mDyingTimer;
     float mKnockBackTimer;
-    float mKnockBackSpeed;
-    float mAttackSpeed;
 };

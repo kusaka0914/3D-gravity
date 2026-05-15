@@ -32,7 +32,7 @@ void Key::UpdateActor(float deltaTime)
     bool isAllEnemiesDead = mCurrentPlanet->GetIsAllEnemiesDead();
     bool isFocused = mFocusComponent->GetIsFocused();
     if (isAllEnemiesDead && !isFocused)
-        OnFocused();
+        mFocusComponent->StartFocus();
 
     if (!mIsActivePrev && mIsActive) 
         OnShown();
@@ -40,11 +40,6 @@ void Key::UpdateActor(float deltaTime)
     bool isObtained = mCollectableComponent->GetIsObtained();
     if (isObtained && mIsActive)
         OnObtained();
-}
-
-void Key::OnFocused() {
-    mFocusComponent->SetFocusTimer(3.0f);
-    mFocusComponent->SetIsFocused(true);
 }
 
 void Key::OnShown() {
@@ -57,6 +52,6 @@ void Key::OnObtained() {
 
     std::vector<Boat*> boats = mCurrentPlanet->GetBoats();
     for (auto boat : boats) {
-        boat->OnFocused();
+        boat->GetFocusComponent()->StartFocus();
     }
 }

@@ -13,7 +13,7 @@ public:
     bool GetIsObtained() const { return mIsObtained; }
 
 private:
-    void TryCollect();
+    bool IsCollectablePlayerInPickUpRadius() const;
 
 private:
     bool mIsObtained;

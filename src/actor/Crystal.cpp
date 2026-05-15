@@ -4,7 +4,6 @@
 
 Crystal::Crystal(Game* game)
     : Actor(game)
-    , mRadius(1.0f)
 {
     AddDestructibleComponent();
 }

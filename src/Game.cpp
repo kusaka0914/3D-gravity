@@ -9,6 +9,7 @@
 #include "gfx/VertexArray.h"
 #include "actor/Actor.h"
 #include "system/AudioSystem.h"
+#include "system/CameraSystem.h"
 #include "system/MeshLoadSystem.h"
 #include "system/ActorLoadSystem.h"
 #include "actor/Key.h"
@@ -111,14 +112,7 @@ bool Game::Initialize()
         // SDL_ttfの初期化
         if (TTF_Init() != 0)
             std::cerr << "TTF_Init failed: " << TTF_GetError() << std::endl;
-        // コントローラー接続
-        for (int i = 0; i < SDL_NumJoysticks(); ++i)
-        {
-            if (SDL_IsGameController(i))
-            {
-                mSdlController = SDL_GameControllerOpen(i);
-            }
-        }
+        CheckGameControllerConnected();
     }
 
     // フォント
@@ -144,7 +138,7 @@ bool Game::Initialize()
     mUIState = std::make_unique<UIState>(this);
     mMathUtils = std::make_unique<MathUtils>();
     mGameProgressState = std::make_unique<GameProgressState>(this);
-    // モデルロード（MeshLoadSystem::Initialize）を行うため、LoadData より先に生成しておく
+    mCameraSystem = std::make_unique<CameraSystem>(this);
     mMeshLoadSystem = std::make_unique<MeshLoadSystem>();
     if (!mShader3D->GetShaderProgram() || !mUIShader->GetShaderProgram())
     {
@@ -238,6 +232,8 @@ void Game::ProcessInput()
         actor->ProcessInput();
     }
 
+    mCameraSystem->ProcessInput();
+
     // データのホットリロード
     bool reloadPressed = (glfwGetKey(mWindow, GLFW_KEY_R) == GLFW_PRESS);
     if (reloadPressed && !mReloadKeyPressedPrev)
@@ -302,18 +298,12 @@ void Game::ProcessInput()
 
 void Game::UpdateGame()
 {
-    for (int i = 0; i < SDL_NumJoysticks(); ++i)
-    {
-        
-        if (SDL_IsGameController(i))
-        {
-            mSdlController = SDL_GameControllerOpen(i);
-        }
-    }
+    CheckGameControllerConnected();
 
     double currentTime = glfwGetTime(); 
     float deltaTime = std::min(0.04f, static_cast<float>(currentTime - mLastTime));
     mLastTime = currentTime;
+
     if (mFadeInTimer > -1.0f) {
         float prevFadeInTimer = mFadeInTimer;
         mFadeInTimer -= deltaTime;
@@ -357,46 +347,15 @@ void Game::UpdateGame()
         actor->Update(deltaTime);
     }
 
-    std::vector<Boat*> boats = mPlayers[0]->GetCurrentPlanet()->GetBoats();
-    for (auto boat : boats) {
-        bool isChangeStage = boat->GetIsChangeStage();
-        if (!isChangeStage || mCurrentStageNum != 0) continue;
+    mCameraSystem->Update(deltaTime);
 
-        int destStage = boat->GetDestStage();
-        ChangeStage(destStage);
-        mFadeInTimer = 1.0f;
-        boat->SetIsChangeStage(false);
-    }
-
-    for (auto boat : boats) {
-        bool isArrived = boat->GetIsArrived();
-        if (!isArrived || mUIState->GetIsBattleTutorialShown()) continue;
-            
-        mUIState->SetCurrentTutorialKind(UIState::TutorialKind::Battle);
-        mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
-        mUIState->SetIsBattleTutorialShown(true);
-    }
-
-    Star* star = mPlayers[0]->GetCurrentPlanet()->GetStar();
-    if (star) {
-        bool isObtained = star->GetCollectableComponent()->GetIsObtained();
-        GameProgressState::SceneState sceneState = mGameProgressState->GetSceneState();
-        if (isObtained && sceneState == GameProgressState::SceneState::Playing && mCurrentStageNum != 0) {
-            mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::StageClear);
-            Mix_HaltMusic();
-            mAudioSystem->PlaySE("clearSE");
-            mClearTimer = 12.0f;
+    if (mClearTimer >= 0.0f) {
+        mClearTimer -= deltaTime;
+        if (mClearTimer < 0.0f) {
+            mFadeInTimer = 1.0f;
+            mGameProgressState->SetNextSceneState(GameProgressState::SceneState::Playing);
         }
-
-        if (mClearTimer >= 0.0f) {
-            mClearTimer -= deltaTime;
-            if (mClearTimer < 0.0f) {
-                mFadeInTimer = 1.0f;
-                mGameProgressState->SetNextSceneState(GameProgressState::SceneState::Playing);
-            }
-        }
-    }
-        
+    }   
 
     if (mFadeInTimer >= 0.0f) return;
 
@@ -421,7 +380,6 @@ void Game::GenerateOutput()
 {
     mRenderer->Draw();
     mUIRenderer->Draw();
-    // バッファーを入れ替える
     glfwSwapBuffers(mWindow);
 }
 
@@ -539,4 +497,43 @@ void Game::ChangeStage(int stageNum) {
 
     std::string stagePath = "../assets/data/stage" + std::to_string(stageNum) + ".yaml";
     mCurrentStagePath = stagePath;
+}
+
+void Game::CheckGameControllerConnected() {
+    for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+        if (SDL_IsGameController(i))
+            mSdlController = SDL_GameControllerOpen(i);
+    }
+}
+
+void Game::OnBoatStageChangeRequested(int destStage) {
+    if (mCurrentStageNum != 0) return;
+
+    ChangeStage(destStage);
+    mFadeInTimer = 1.0f;
+}
+
+void Game::OnBoatArrived(Boat* boat) {
+    mPlayers[0]->OnBoatArrived(boat);
+
+    if (mUIState->GetIsBattleTutorialShown()) return;
+            
+    mUIState->SetCurrentTutorialKind(UIState::TutorialKind::Battle);
+    mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
+    mUIState->SetIsBattleTutorialShown(true);
+}
+
+void Game::OnStarObtained() {
+    mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::StageClear);
+    Mix_HaltMusic();
+    mAudioSystem->PlaySE("clearSE");
+    mClearTimer = 12.0f;
+}
+
+void Game::OnEnemyLaunched() {
+    if (mGameProgressState->GetIsFirstBreak()) return;
+    
+    mGameProgressState->SetIsFirstBreak(true);
+    mUIState->SetCurrentTutorialKind(UIState::TutorialKind::Break);
+    mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
 }

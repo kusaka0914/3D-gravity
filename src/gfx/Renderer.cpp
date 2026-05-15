@@ -4,6 +4,7 @@
 #include "Stage.h"
 #include "actor/Enemy.h"
 #include "actor/Boat.h"
+#include "actor/Planet.h"
 #include "actor/BoatParts.h"
 #include "actor/Key.h"
 #include "actor/Crystal.h"
@@ -14,6 +15,7 @@
 #include "utils/MathUtils.h"
 #include "actor/Platform.h"
 #include "state/UIState.h"
+#include "system/CameraSystem.h"
 #include "thirdParty/stb_image.h"
 #include "component/FocusComponent.h"
 #include "state/GameProgressState.h"
@@ -88,7 +90,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
     glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(viewMat));
     glUniformMatrix4fv(locProj, 1, GL_FALSE, glm::value_ptr(projMat));
     std::vector<Player*> players = mGame->GetPlayers();
-    glm::vec3 cameraPos = players[0]->GetCameraPos();
+    glm::vec3 cameraPos = mGame->GetCameraSystem()->GetCameraPos();
     glUniform3f(locLightPos, cameraPos.x,cameraPos.y, cameraPos.z);
     glUniform3f(locLightColor, 0.5f, 0.5f, 0.5f);
     glUniform3f(locViewPos, cameraPos.x, cameraPos.y, cameraPos.z);
@@ -205,7 +207,7 @@ void Renderer::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
     if (!enemies.empty()) {
         for (auto enemy : enemies)
         {
-            if (!enemy->GetIsAlive())
+            if (enemy->GetIsDead())
                 continue;
             
             glm::vec3 enemyUp = enemy->GetUpVec();
@@ -457,7 +459,6 @@ std::vector<glm::mat4> Renderer::GetViews() {
                 
             glm::mat4 view = boat->GetFocusComponent()->GetFocusView();
             views.emplace_back(view);
-            players[0]->SetCanMove(false);
         }
     }
 
@@ -466,26 +467,24 @@ std::vector<glm::mat4> Renderer::GetViews() {
         if (key->GetFocusComponent()->GetFocusTimer() >= 0.0f) {
             glm::mat4 view = key->GetFocusComponent()->GetFocusView();
             views.emplace_back(view);
-            players[0]->SetCanMove(false);
         }
     }
     
     bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
     if (isStageClear) {
-        glm::mat4 view = players[0]->getPlayerView(4.0f, true);
+        glm::mat4 view = mGame->GetCameraSystem()->GetPlayerView(4.0f, true);
         views.emplace_back(view);
     }
 
     if (views.empty()) {
-        glm::mat4 view = players[0]->getPlayerView(10.0f);
+        glm::mat4 view = mGame->GetCameraSystem()->GetPlayerView(10.0f);
         views.emplace_back(view);
-        players[0]->SetCanMove(true);
     }    
 
     bool isPlayer2Joined = mGame->GetIsPlayer2Joined();
     if (isPlayer2Joined) {
-        glm::mat4 view2 = players[1]->getPlayerView(4.0f, true);
-        views.emplace_back(view2);
+        glm::mat4 view = mGame->GetCameraSystem()->GetPlayerView(4.0f, true);
+        views.emplace_back(view);
     }
 
     return views;

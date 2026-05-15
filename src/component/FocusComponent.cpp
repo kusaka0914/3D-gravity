@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "FocusComponent.h"
 #include "actor/Player.h"
+#include "actor/Planet.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 FocusComponent::FocusComponent(Actor* owner, int updateOrder)
@@ -17,6 +18,11 @@ void FocusComponent::Update(float deltaTime)
 
     if (mFocusTimer >= 0.0f) 
         mFocusTimer -= deltaTime;
+}
+
+void FocusComponent::StartFocus() {
+    mFocusTimer = 3.0f;
+    mIsFocused = true;
 }
 
 glm::mat4 FocusComponent::GetFocusView() {

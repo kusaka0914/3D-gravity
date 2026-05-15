@@ -10,6 +10,7 @@ Actor::Actor(Game* game)
 : mGame(game)
 , mUpVec(0.0f, 1.0f, 0.0f)
 ,mIsActive(true)
+,mRadius(1.0f)
 {
     
 }

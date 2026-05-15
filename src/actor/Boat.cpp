@@ -7,14 +7,12 @@ Boat::Boat(Game* game)
     : Actor(game)
     , mDestStage(0)
     , mIsMoving(false)
-    , mIsArrived(false)
-    , mIsChangeStage(false)
     , mIsActivePrev(false)
     , mTransitionTimer(0.0f)
     , mProgress(0.0f)
     , mDestPos(0.0f)
 {
-    int currentStage = mGame->GetCurrentStageNum();
+    const int currentStage = mGame->GetCurrentStageNum();
     if (currentStage == 0)
         mIsActive = true;
     else 
@@ -31,23 +29,26 @@ void Boat::AddFocusComponent() {
 
 void Boat::Initialize() {
     mStartPos = mPos;
-    InitDestPos();
+    mDestPos = CalculateDestPos();
 }
 
-void Boat::InitDestPos() {
+glm::vec3 Boat::CalculateDestPos() {
     glm::vec3 destPlanetCenter = mDestPlanet->GetPos();
     glm::vec3 toDestPlanet = glm::normalize(destPlanetCenter - mPos);
-    float destPlanetRadius = mDestPlanet->GetRadius();
-    mDestPos = destPlanetCenter - toDestPlanet * (destPlanetRadius + 3.0f);
+    const float destPlanetRadius = mDestPlanet->GetRadius();
+
+    glm::vec3 destPos = destPlanetCenter - toDestPlanet * (destPlanetRadius + 3.0f);
+    return destPos;
 }
 
 void Boat::UpdateActor(float deltaTime) {
     bool isAllBoatPartsCollected = mCurrentPlanet->GetIsAllBoatPartsCollected();
     bool isFocused = mFocusComponent->GetIsFocused();
     if (isAllBoatPartsCollected && !isFocused)
-        OnFocused();
+        mFocusComponent->StartFocus();
 
-    if (!mIsActivePrev && mIsActive)
+    const int currentStageNum = GetGame()->GetCurrentStageNum();
+    if (currentStageNum != 0 && !mIsActivePrev && mIsActive)
         OnShown();
 
     if (mIsMoving)
@@ -56,38 +57,40 @@ void Boat::UpdateActor(float deltaTime) {
     mIsActivePrev = mIsActive;
 }
 
-void Boat::OnFocused() {
-    mFocusComponent->SetFocusTimer(3.0f);
-    mFocusComponent->SetIsFocused(true);
-}
-
 void Boat::OnShown() {
-    int currentStageNum = GetGame()->GetCurrentStageNum();
-    if (currentStageNum == 0) return;
-
-    GetGame()->GetAudioSystem()->PlaySE("showBoatSE");
+    mGame->GetAudioSystem()->PlaySE("showBoatSE");
 }
 
 void Boat::UpdateMoving(float deltaTime) {
     if (mProgress < 1.0f) {
-        HandleMoving(deltaTime);
+        UpdateMovement(deltaTime);
         return;
     }
-    HandleArrived();
+    FinishMoving();
 }
 
-void Boat::HandleMoving(float deltaTime) {
+void Boat::UpdateMovement(float deltaTime) {
     mTransitionTimer += deltaTime;
 
-    float transitionDuration = 3.0f;
-    float t = glm::min(1.0f, mTransitionTimer / transitionDuration);
+    constexpr float transitionDuration = 3.0f;
+    const float t = glm::min(1.0f, mTransitionTimer / transitionDuration);
     mProgress = t * t * (3.0f - 2.0f * t);
 
     mPos = mStartPos + (mDestPos - mStartPos) * mProgress;
 }
 
-void Boat::HandleArrived() {
+void Boat::FinishMoving() {
     mPos = mDestPos;
     mIsMoving = false;
-    mIsArrived = true;
+
+    mGame->OnBoatArrived(this);
+}
+
+void Boat::StartTravel() {
+    if (mGame->GetCurrentStageNum() == 0) {
+        mGame->OnBoatStageChangeRequested(mDestStage);
+        return;
+    }
+
+    mIsMoving = true;
 }

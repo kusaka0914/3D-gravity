@@ -30,6 +30,8 @@ public:
 
     void SetIsActive(bool isActive) { mIsActive = isActive; }
 
+    void SetRadius(float radius) { mRadius = radius; }
+
     void SetPos(const glm::vec3& pos) { mPos = pos; }
     void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
     void SetScale(const glm::vec3& scale) { mScale = scale; }
@@ -40,6 +42,8 @@ public:
     void SetMeshes(std::vector<struct LoadedMesh>* Meshes) { mMeshes = Meshes; }
 
     bool GetIsActive() const { return mIsActive; }
+
+    bool GetRadius() const { return mRadius; }
 
     const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
@@ -53,6 +57,8 @@ public:
 
 protected:
     bool mIsActive;
+
+    float mRadius;
 
     glm::vec3 mPos;
     glm::vec3 mUpVec;

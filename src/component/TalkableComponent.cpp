@@ -14,18 +14,13 @@ TalkableComponent::TalkableComponent(Actor* owner, int updateOrder)
 void TalkableComponent::Update(float deltaTime)
 {
     std::vector<Player*> players = mOwner->GetGame()->GetPlayers();
-    for (auto player : players) {
-        NPC* npc = dynamic_cast<NPC*>(mOwner);
-        if (npc == nullptr) return;
+    if (players.empty()) return;
 
-        glm::vec3 playerPos = player->GetPos();
-        glm::vec3 toNPC = glm::normalize(npc->GetPos() - playerPos);
-        float npcYaw = GetOwner()->GetGame()->GetMathUtils()->GetYawFromDirection(npc->GetUpVec(), toNPC);
-        npc->SetFacingYaw(npcYaw);
-        float talkableDist = 1.0f;
-        float toPlayerDist = glm::length(playerPos - npc->GetPos());
-        
-        if (toPlayerDist <= talkableDist) {
+    NPC* npc = dynamic_cast<NPC*>(mOwner);
+    if (npc == nullptr) return;
+
+    for (auto player : players) {
+        if (IsPlayerInTalkableRange(player)) {
             mIsTalkable = true;
             player->SetTalkingNPC(npc);
         } else {
@@ -33,4 +28,17 @@ void TalkableComponent::Update(float deltaTime)
             player->SetTalkingNPC(nullptr);
         }
     }
+}
+
+bool TalkableComponent::IsPlayerInTalkableRange(Player* player) {
+    NPC* npc = dynamic_cast<NPC*>(mOwner);
+    if (npc == nullptr) return false;
+
+    float toPlayerDist = glm::length(player->GetPos() - npc->GetPos());
+    constexpr float talkableDist = 1.0f;
+    
+    if (toPlayerDist <= talkableDist)
+        return true;
+    
+    return false;
 }

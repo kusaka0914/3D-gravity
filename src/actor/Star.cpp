@@ -26,4 +26,5 @@ void Star::UpdateActor(float deltaTime)
 
 void Star::OnObtained() {
     mIsActive = false;
+    mGame->OnStarObtained();
 }

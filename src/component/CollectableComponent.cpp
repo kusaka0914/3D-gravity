@@ -9,23 +9,23 @@ CollectableComponent::CollectableComponent(Actor* owner, int updateOrder)
 }
 
 void CollectableComponent::Update(float deltaTime) {
-    if (!mIsObtained)
-        TryCollect();
+    if (!mIsObtained && IsCollectablePlayerInPickUpRadius())
+        mIsObtained = true;
 }
 
-void CollectableComponent::TryCollect() {
+bool CollectableComponent::IsCollectablePlayerInPickUpRadius() const {
+    const std::vector<Player*>& players = mOwner->GetGame()->GetPlayers();
+    if (players.empty()) return false;
+
     glm::vec3 ownerPos = mOwner->GetPos();
-    const float pickupRadius = 0.8f;
+    constexpr float pickupRadius = 0.8f;
 
-    std::vector<Player*> players = mOwner->GetGame()->GetPlayers();
     for (auto player : players) {
-        glm::vec3 playerPos = player->GetPos();
-        float distTo = glm::length(playerPos - ownerPos);
-        
-        float attackMotionTimer = player->GetAttackMotionTimer();
-        if (distTo >= pickupRadius || attackMotionTimer >= 0.0f) continue;
+        if (player->GetActionState() == Player::ActionState::Attacking) continue;
 
-        mIsObtained = true;
-        break;   
+        const float distTo = glm::length(player->GetPos() - ownerPos);    
+        if (distTo <= pickupRadius)
+            return true;
     }
+    return false;
 }

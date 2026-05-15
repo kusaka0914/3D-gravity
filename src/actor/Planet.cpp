@@ -5,7 +5,6 @@
 
 Planet::Planet(Game* game)
     : Actor(game)
-    , mRadius(8.0f)
     , mColor(1.0f)
     , mKey(nullptr)
     , mIsAllEnemiesDead(false)
@@ -46,10 +45,10 @@ void Planet::CheckKeySpawnCondition() {
 void Planet::CheckIsAllEnemiesDead() {
     mIsAllEnemiesDead = true;
     for (auto enemy : mEnemies) {
-        if (!enemy->GetIsAlive()) continue;
+        if (enemy->GetIsDead()) continue;
 
         mIsAllEnemiesDead = false;
-        break;
+        return;
     }
 }
 
@@ -59,6 +58,6 @@ void Planet::CheckIsAllBoatPartsCollected() {
         if (!parts->GetIsActive()) continue;
 
         mIsAllBoatPartsCollected = false;
-        break;
+        return;
     }
 }

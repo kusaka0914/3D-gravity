@@ -6,50 +6,47 @@
 DestructibleComponent::DestructibleComponent(Actor* owner, int updateOrder)
     : Component(owner, updateOrder)
     , mIsDestroyed(false)
-    , mIsAttackedPrev(false)
+    , mIsHitCurrentAttack(false)
     , mDestroyHp(0.0f)
 {
+
 }
 
 void DestructibleComponent::Update(float deltaTime) {
-    if (!mIsDestroyed) 
-        TryDestroyed();
+    if (!mIsDestroyed)
+        TryApplyDamage();
 }
 
-void DestructibleComponent::TryDestroyed() {
-    glm::vec3 ownerPos = mOwner->GetPos();
-    Crystal* ownerCrystal = dynamic_cast<Crystal*>(mOwner);
-    float ownerRadius = ownerCrystal->GetRadius();
-    
-    std::vector<Player*> players = mOwner->GetGame()->GetPlayers();
+void DestructibleComponent::TryApplyDamage() {
+    const std::vector<Player*>& players = GetOwner()->GetGame()->GetPlayers();
+
     for (auto player : players) {
-        float attackMotionTimer = player->GetAttackMotionTimer();
-        if (attackMotionTimer < 0.0f) {
-            mIsAttackedPrev = false;
+        const Player::ActionState playerActionState = player->GetActionState();
+        const bool isPlayerAttacking = playerActionState == Player::ActionState::StrongAttacking || playerActionState == Player::ActionState::Attacking;
+
+        if (!isPlayerAttacking) {
+            mIsHitCurrentAttack = false;
+            continue;
         }
-        
-        glm::vec3 playerPos = player->GetPos();
-        float distTo = glm::length(playerPos - ownerPos); 
-        
-        float strongAttackTimer = player->GetStrongAttackTimer();
-        float attack = player->GetAttack();
 
-        if (distTo >= ownerRadius + 2.0f) return;
+        if (!IsPlayerInHitRange(player) || mIsHitCurrentAttack) continue;
 
-        if (strongAttackTimer >= 0.0f || (attackMotionTimer >= 0.0f && !mIsAttackedPrev))
-            OnDamaged(attack);
-        
-        if (mDestroyHp <= 0.0f)
-            OnDestroyed();
+        ApplyDamage(player->GetAttack());
     }
 }
 
-void DestructibleComponent::OnDamaged(const float attack) {
-    mDestroyHp -= attack;
-    mIsAttackedPrev = true;
+bool DestructibleComponent::IsPlayerInHitRange(Player* player) const {
+    constexpr float hitRangeMargin = 2.0f;
+    const float hitRange = mOwner->GetRadius() + hitRangeMargin;
+
+    const float distTo = glm::length(player->GetPos() - mOwner->GetPos()); 
+    return distTo <= hitRange;
 }
 
-void DestructibleComponent::OnDestroyed() {
-    mDestroyHp = 0.0f;
-    mIsDestroyed = true;
+void DestructibleComponent::ApplyDamage(float attack) {
+    mIsHitCurrentAttack = true;
+    mDestroyHp -= attack;
+
+    if (mDestroyHp <= 0.0f)
+        mIsDestroyed = true;
 }

@@ -17,7 +17,6 @@ public:
 private:
     void AddCollectableComponent();
     void AddFocusComponent();
-    void OnFocused();
     void OnShown();
     void OnObtained();
 
