@@ -21,7 +21,6 @@ Player::Player(Game* game)
     , mCurrentPlanetNum(0)
     , mCameraYaw(0.0f)
     , mCameraPitch(0.4f)
-    , mFacingYaw(0.0f)
     , mMoveForward(0.0f)
     , mMoveLeft(0.0f)
     , mAttackStartHeight(0.0f)
@@ -140,7 +139,6 @@ void Player::ProcessKeyboard() {
     //     if (len > 0.001f)
     //     {
     //         moveDir /= len;
-    //         mFacingYaw = GetYawFromDirection(up, moveDir) + 3.14159265f;
     //     }
     // }
     // GetPos() += mForwardVec * mMoveForward * dashSpeed * deltaTime;

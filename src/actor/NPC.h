@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 
 class Game;
-class TalkableComponent;
+class Player;
 
 class NPC : public CharacterActor {
 public:
@@ -13,26 +13,24 @@ public:
 
     void UpdateActor(float deltaTime) override;
 
-    void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
-    void SetFacingYaw(float facingYaw) { mFacingYaw = facingYaw; }
+    void AddTalkTexts(const std::string& talkTexts) { mTalkTexts.emplace_back(talkTexts); }
+
     void SetName(std::string name) { mName = name; }
-    void SetTalkableComponent(TalkableComponent* talkableComponent) { mTalkableComponent = talkableComponent; }
 
-    int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
-    float GetFacingYaw() const { return mFacingYaw; }
+    bool GetIsTalkable() const { return mIsTalkable; }
     std::string GetName() const { return mName; }
-
-    TalkableComponent* GetTalkableComponent() const { return mTalkableComponent; }
+    const std::vector<std::string>& GetTalkTexts() const { return mTalkTexts; }
 
 private:
+    void LookNearestPlayer();
+    void CheckTalkable();
     void ApplyGravity(float deltaTime);
 
+    Player* FindNearestPlayer();
+    bool IsPlayerInTalkableRange(Player* player) const;
+
 private:
-    int mCurrentPlanetNum;
-
-    float mFacingYaw;
-
+    bool mIsTalkable;
     std::string mName;
-
-    TalkableComponent* mTalkableComponent;
+    std::vector<std::string> mTalkTexts;
 };

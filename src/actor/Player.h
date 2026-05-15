@@ -82,7 +82,6 @@ public:
 
     int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
 
-    float GetFacingYaw() const { return mFacingYaw; }
     float GetAttack() const { return mAttack; }
     float GetHp() const { return mHp; }
     float GetAttackMotionTimer() const { return mAttackMotionTimer; }
@@ -169,7 +168,6 @@ private:
 
     float mCameraYaw;
     float mCameraPitch;
-    float mFacingYaw;
     float mMoveForward;
     float mMoveLeft;
     float mAttackStartHeight;

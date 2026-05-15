@@ -23,9 +23,6 @@ void CameraSystem::ProcessInput() {
         mCameraStickY = 0.0f;
     if (std::abs(mCameraStickX) < deadZone)
         mCameraStickX = 0.0f;
-
-    std::cout << mCameraStickX << std::endl;
-    // std::cout << mCameraStickY << std::endl;
 }
 
 void CameraSystem::Update(float deltaTime) {

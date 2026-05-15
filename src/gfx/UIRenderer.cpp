@@ -7,7 +7,6 @@
 #include "actor/BoatParts.h"
 #include "state/UIState.h"
 #include "actor/NPC.h"
-#include "component/TalkableComponent.h"
 #include "state/GameProgressState.h"
 #include "system/UILoadSystem.h"
 #include "thirdParty/stb_image.h"
@@ -169,8 +168,7 @@ void UIRenderer::DrawDefaultUI() {
 
     if (!NPCs.empty()) {
         for (auto NPC : NPCs) {
-            if (!NPC->GetTalkableComponent()) continue;
-            if (NPC->GetTalkableComponent()->GetIsTalkable())
+            if (NPC->GetIsTalkable())
                 DrawTalkableUI();  
         }  
     }  
@@ -358,7 +356,7 @@ void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
 
 void UIRenderer::DrawTalkWithNPC() {
     NPC* talkingNPC = GetGame()->GetPlayers()[0]->GetTalkingNPC();
-    std::vector<std::string> talkTexts = talkingNPC->GetTalkableComponent()->GetTalkTexts();
+    std::vector<std::string> talkTexts = talkingNPC->GetTalkTexts();
     int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
 
     if (talkUIIndex < talkTexts.size()) {

@@ -1,6 +1,7 @@
 #include "Crystal.h"
 #include "Game.h"
 #include "component/DestructibleComponent.h"
+#include <iostream>
 
 Crystal::Crystal(Game* game)
     : Actor(game)

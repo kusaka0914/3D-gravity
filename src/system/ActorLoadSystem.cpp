@@ -11,7 +11,6 @@
 #include "actor/Star.h"
 #include "actor/NPC.h"
 #include "actor/Platform.h"
-#include "component/TalkableComponent.h"
 #include "component/DestructibleComponent.h"
 #include <glm/glm.hpp>
 #include <iostream>
@@ -199,18 +198,13 @@ bool ActorLoadSystem::LoadNPCs(const char* path) {
             npc->SetName(name);
 
             if (node["talkTexts"]) {
-                std::unique_ptr<TalkableComponent> talkableComponent = std::make_unique<TalkableComponent>(npc.get(), 100);
-                npc->SetTalkableComponent(talkableComponent.get());
-                npc->AddComponent(std::move(talkableComponent));
                 for (auto talkTextNode : node["talkTexts"]) {
                     std::string talkText = talkTextNode.as<std::string>();
-                    npc->GetTalkableComponent()->AddTalkTexts(talkText);
+                    npc->AddTalkTexts(talkText);
                 }
             }
 
             int currentPlanetNum = node["currentPlanetNum"] ? node["currentPlanetNum"].as<int>() : 0;
-            npc->SetCurrentPlanetNum(currentPlanetNum);
-
             Planet* currentPlanet = GetGame()->GetCurrentStage()->GetPlanets()[currentPlanetNum];
             npc->SetCurrentPlanet(currentPlanet);
             glm::vec3 pos = CalculatePos(node, currentPlanet);

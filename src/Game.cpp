@@ -25,7 +25,6 @@
 #include "actor/BoatParts.h"
 #include "system/PhysicsSystem.h"
 #include "component/DestructibleComponent.h"
-#include "component/TalkableComponent.h"
 #include "component/CollectableComponent.h"
 #include "Game.h"
 #include "actor/NPC.h"
@@ -280,8 +279,7 @@ void Game::ProcessInput()
         }
         std::vector<NPC*> NPCs = mPlayers[0]->GetCurrentPlanet()->GetNPCs();
         for (auto NPC : NPCs) {
-            if (!NPC->GetTalkableComponent()) continue;
-            bool isTalkable = NPC->GetTalkableComponent()->GetIsTalkable();
+            bool isTalkable = NPC->GetIsTalkable();
             if (isTalkable) {
                 mUIState->SetCurrentTalkWith(UIState::TalkWith::NPC);
                 mPlayers[0]->SetTalkingNPC(NPC);
