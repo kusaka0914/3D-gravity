@@ -43,7 +43,7 @@ public:
 
     bool GetIsActive() const { return mIsActive; }
 
-    bool GetRadius() const { return mRadius; }
+    float GetRadius() const { return mRadius; }
 
     const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
