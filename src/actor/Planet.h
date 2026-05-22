@@ -1,0 +1,123 @@
+#pragma once
+
+#include "actor/Actor.h"
+#include <glm/glm.hpp>
+#include <string>
+#include <vector>
+
+class Game;
+class Enemy;
+class Boat;
+class BoatParts;
+class Crystal;
+class NPC;
+class Platform;
+class Stage;
+class Key;
+class Star;
+
+class Planet : public Actor {
+public:
+    enum class KeySpawnCondition {
+        AllEnemiesDead,
+        AllBoatPartsCollected,
+        None
+    };
+
+    enum class PlanetShape {
+        Normal,
+        Sphere,
+        Ellipse
+    };
+
+    Planet(Game* game);
+    void Initialize() override;
+    void UpdateActor(float deltaTime) override;
+
+    void AddEnemy(Enemy* enemy) { mEnemies.emplace_back(enemy); }
+    void AddBoat(Boat* boat) { mBoats.emplace_back(boat); }
+    void AddBoatParts(BoatParts* boatParts) { mBoatParts.emplace_back(boatParts); }
+    void AddCrystal(Crystal* crystal) { mCrystals.emplace_back(crystal); }
+    void AddNPC(NPC* NPC) { mNPCs.emplace_back(NPC); }
+    void AddPlatform(Platform* platform) { mPlatforms.emplace_back(platform); }
+
+    void RemoveAllEnemy() { mEnemies.clear(); }
+    void RemoveAllBoat() { mBoats.clear(); }
+    void RemoveAllBoatParts() { mBoatParts.clear(); }
+    void RemoveAllCrystals() { mCrystals.clear(); }
+    void RemoveAllNPCs() { mNPCs.clear(); }
+    void RemoveAllPlatforms() { mPlatforms.clear(); }
+    void RemoveKey() { mKey = nullptr; }
+    void RemoveStar() { mStar = nullptr; }
+
+    void SetCurrentStage(Stage* currentStage) { mCurrentStage = currentStage; }
+    void SetStageNum(int stageNum) { mStageNum = stageNum; }
+    void SetColor(glm::vec4 color) { mColor = color; }
+    void SetKey(Key* key) { mKey = key; }
+    void SetStar(Star* star) { mStar = star; }
+    void SetKeySpawnCondition(std::string keySpawnCondition) { 
+        if(keySpawnCondition == "AllEnemiesDead") {
+            mKeySpawnCondition = KeySpawnCondition::AllEnemiesDead;
+        }else if(keySpawnCondition == "AllBoatPartsCollected") {
+            mKeySpawnCondition = KeySpawnCondition::AllBoatPartsCollected;
+        }else {
+            mKeySpawnCondition = KeySpawnCondition::None;
+        }
+    }
+    void SetPlanetShape(std::string PlanetShape) { 
+        if(PlanetShape == "Normal") {
+            mPlanetShape = PlanetShape::Normal;
+        }else if (PlanetShape == "Sphere") {
+            mPlanetShape = PlanetShape::Sphere;
+        }else if (PlanetShape == "Ellipse") {
+            mPlanetShape = PlanetShape::Ellipse;
+        }
+    }
+
+    Stage* GetCurrentStage() const { return mCurrentStage; }
+    bool GetIsAllEnemiesDead() const { return mIsAllEnemiesDead; }
+    bool GetIsAllBoatPartsCollected() const { return mIsAllBoatPartsCollected; }
+
+    int GetStageNum() const { return mStageNum; }
+    int GetRemainBoatPartsCount() const { return mRemainBoatPartsCount; }
+
+    const glm::vec4& GetColor() const { return mColor; }
+    const std::vector<Enemy*>& GetEnemies() const { return mEnemies; }
+    const std::vector<Boat*>& GetBoats() const { return mBoats; }
+    const std::vector<BoatParts*>& GetBoatParts() const { return mBoatParts; }
+    const std::vector<Crystal*>& GetCrystals() const { return mCrystals; }
+    const std::vector<NPC*>& GetNPCs() const { return mNPCs; }
+    const std::vector<Platform*>& GetPlatforms() const { return mPlatforms; }
+    Key* GetKey() const { return mKey; }
+    Star* GetStar() const { return mStar; }
+    PlanetShape GetPlanetShape() const { return mPlanetShape; }
+
+private:
+    void UpdateRemainBoatPartsCount();
+    void CheckKeySpawnCondition();
+    void CheckIsAllEnemiesDead();
+    void CheckIsAllBoatPartsCollected();
+
+private:
+    bool mIsAllEnemiesDead;
+    bool mIsAllBoatPartsCollected;
+
+    int mStageNum;
+    int mRemainBoatPartsCount;
+
+    glm::vec4 mColor;
+
+    std::vector<Enemy*> mEnemies;
+    std::vector<Boat*> mBoats;
+    std::vector<BoatParts*> mBoatParts;
+    std::vector<Crystal*> mCrystals;
+    std::vector<NPC*> mNPCs;
+    std::vector<Platform*> mPlatforms;
+
+    Key* mKey;
+    Star* mStar;
+    Stage* mCurrentStage;
+
+    KeySpawnCondition mKeySpawnCondition;
+    PlanetShape mPlanetShape;
+};

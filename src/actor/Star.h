@@ -1,0 +1,22 @@
+#pragma once
+
+#include "actor/Actor.h"
+#include <glm/glm.hpp>
+
+class Game;
+class CollectableComponent;
+
+class Star : public Actor {
+public:
+    Star(Game* game);
+    void UpdateActor(float deltaTime) override;
+
+    CollectableComponent* GetCollectableComponent() const { return mCollectableComponent; }
+
+private:
+    void AddCollectableComponent();
+    void OnObtained();
+
+private:
+    CollectableComponent* mCollectableComponent;
+};

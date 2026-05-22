@@ -9,6 +9,7 @@ enemies:
     defaultAttackMotionTimer: 3.0
     attackSpeed: 1.5
     defaultLaunchedTimer: 4.0
+    detectionRange: 6.0
 
   - type: normal
     hp: 80

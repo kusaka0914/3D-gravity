@@ -1,30 +1,30 @@
 planets:
   - center: [0.0, 0.0, 0.0]
-    scale: [8.0, 8.0, 8.0]
+    scale: [10.0, 10.0, 10.0]
     color: [1.0, 1.0, 1.0, 1.0]
+    shape: Ellipse
     model: selectField.obj
   
-platforms:
-  - type: normal
-    pos: [0.0, 2.0, 0.0]
-    currentPlanetNum: 0
-  
 boats:
-  - pos: [-10.0, 1.0, 0.0]
+  - pos: [0.0, 10.0, -9.5]
     destStage: 1
-  - pos: [-5.0, 1.0, -5.0]
-    destStage: 2
+  # - pos: [-5.0, 1.0, -5.0]
+  #   destStage: 2
 
 players:
-  - pos: [0.0, 1.0, 10.0]
+  - pos: [0.0, 2.5, 4.0]
     currentPlanetNum: 0
   
 NPCs:
-  - pos: [-8.5, 1.0, 0.0]
+  - pos: [-1.0, 10.5, -8.0]
     modelPath: spaceSlime.obj
     name: BoatPartsNPC
-    talkTexts: [こちらステージ1行きロケット〜まもなく発射します〜。\nお乗りの方はお急ぎください〜。]
-  - pos: [-3.5, 1.0, -5.0]
+    talkTexts: [こちら惑星マルッコイ行きロケット〜まもなく発射します〜。\nお乗りの方はお急ぎください〜。]
+  - pos: [-3.0, 2.0, 0.0]
     modelPath: spaceSlime.obj
-    name: CrystalNPC
-    talkTexts: [こちらステージ2行きロケット〜まもなく発射します〜。\nお乗りの方はお急ぎください〜。]
+    name: BoatPartsNPC
+    talkTexts: [ここはロケット発着所！\n他の惑星に行きたいならこの上のロケット乗り場からどうぞ！]
+  - pos: [0.0, -2.5, 0.0]
+    modelPath: spaceSlime.obj
+    name: BoatPartsNPC
+    talkTexts: [ムッ！よくぞ私に気がついた。\n今日から君も裏側のスライムだ。]

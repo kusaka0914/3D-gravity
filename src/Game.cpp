@@ -1,87 +1,69 @@
-// 学習用にコメントをつけています。
 #include <GL/glew.h>
-#include "Shader3D.h"
-#include "UIShader.h"
-#include "Planet.h"
-#include "Stage.h"
-#include "Player.h"
-#include "Enemy.h"
-#include "VertexArray.h"
-#include "Actor.h"
-#include "AudioSystem.h"
-#include "Mesh.h"
-#include "Loader.h"
-#include "Key.h"
-#include "Boat.h"
-#include "Star.h"
-#include "Crystal.h"
-#include "UIRenderer.h"
-#include "UIState.h"
-#include "Platform.h"
-#include "GameProgressState.h"
-#include "Renderer.h"
-#include "BoatParts.h"
-#include "PhysicsSystem.h"
-#include "DestructibleComponent.h"
-#include "TalkableComponent.h"
 #include "Game.h"
-#include "NPC.h"
-#include "UILoader.h"
-#include <GLFW/glfw3.h>
-#include <SDL.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <SDL_mixer.h>
-#include <SDL_ttf.h>
-#include <iostream>
-#include <memory>
-#include <unordered_map>
-#include <string>
-#include <cmath>
-#include <vector>
-#include <fstream>
-#include <sstream>
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
-#include <BulletDynamics/Character/btKinematicCharacterController.h>
+#include "Stage.h"
+#include "actor/Planet.h"
+#include "actor/Player.h"
+#include "actor/Actor.h"
+#include "actor/NPC.h"
+#include "system/AudioSystem.h"
+#include "system/CameraSystem.h"
+#include "system/MeshLoadSystem.h"
+#include "system/ActorLoadSystem.h"
+#include "system/PhysicsSystem.h"
+#include "system/UILoadSystem.h"
+#include "gfx/UIRenderer.h"
+#include "gfx/Renderer3D.h"
+#include "state/UIState.h"
+#include "state/GameProgressState.h"
+#include "utils/MathUtils.h"
 
 Game::Game()
     :mReloadKeyPressedPrev(false)
-    ,mUIReloadKeyPressedPrev(false)
-    ,mCurrentStageNum(0) 
-    ,mIsPlayer2Joined(false)
-    ,mHitStopTimer(-1.0f)
-    ,mFadeInTimer(-1.0f)
-    ,mIsChangeStage(false)
-    ,mCurrentStagePath("../assets/data/stage0.yaml")
+    , mUIReloadKeyPressedPrev(false)
+    , mCurrentStageNum(0) 
+    , mIsPlayer2Joined(false)
+    , mHitStopTimer(-1.0f)
+    , mFadeInTimer(-1.0f)
+    , mClearTimer(-1.0f)
+    , mIsChangeStage(false)
+    , mCurrentStageYamlPath("../assets/data/stage0.yaml")
 {
     
 }
 
 Game::~Game() = default;
 
-bool Game::Initialize()
-{
-    // glfwの初期化
+bool Game::Initialize() {
+    if (!InitializeGLFW()) return false;
+
+    InitializeGameController();
+    CreateGameSystems();
+
+    constexpr int stageCount = 5;
+    CreateStages(stageCount);
+
+    ReloadCurrentStage();
+
+    mLastTime = glfwGetTime();
+    glEnable(GL_DEPTH_TEST);
+
+    return true;
+}
+
+bool Game::InitializeGLFW() {
     if (!glfwInit())
     {
         std::cerr << "Failed to init GLFW" << std::endl;
         return false;
     }
 
-    // OpenGLのバージョンを3.3に設定
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // OpenGLのプロファイルをCoreプロファイルにする
-    // 学習用・・・プロファイルは2種類ある（CompatibilityがglBeginなどの古い処理も使える,Coreはシェーダー必須で古いのは使えない）
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // メインのモニタを取得
     GLFWmonitor *monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
-    // ゲーム用のウィンドウを作成する
     // mWindow = glfwCreateWindow(mode->width, mode->height, "Engine", monitor, nullptr);
     mWindow = glfwCreateWindow(800, 450, "Engine", nullptr, nullptr);
     if (!mWindow)
@@ -92,7 +74,6 @@ bool Game::Initialize()
     }
     glfwMakeContextCurrent(mWindow);
 
-    // glewの初期化（これがないとOpenGLのシェーダー周りなどの関数が使えない）
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK)
     {
@@ -101,105 +82,49 @@ bool Game::Initialize()
         glfwTerminate();
         return false;
     }
+    return true;
+}
 
-    // SDLのゲームパッド用サブシステムを有効にする
+void Game::InitializeGameController() {
     if (SDL_Init(SDL_INIT_GAMECONTROLLER) == 0)
-    {
-        // SDL_ttfの初期化
-        if (TTF_Init() != 0)
-            std::cerr << "TTF_Init failed: " << TTF_GetError() << std::endl;
-        // コントローラー接続
-        for (int i = 0; i < SDL_NumJoysticks(); ++i)
-        {
-            if (SDL_IsGameController(i))
-            {
-                mSdlController = SDL_GameControllerOpen(i);
-            }
-        }
-    }
+        CheckGameControllerConnected();
+}
 
-    // フォント
-    const char *fontPaths[] = {
-        "../assets/fonts/NotoSansJP-Black.ttf",
-        "/System/Library/Fonts/Supplemental/Arial.ttf",
-    };
-    // 最初に見つかったフォントを用いる
-    for (const char *path : fontPaths)
-    {
-        mFont = TTF_OpenFont(path, 72);
-        if (mFont){
-            break;
-        }
-    }
-
+void Game::CreateGameSystems() {
     mAudioSystem = std::make_unique<AudioSystem>(this);
-    mShader3D = std::make_unique<Shader3D>();
-    mUIShader = std::make_unique<UIShader>();
-    mUILoader = std::make_unique<UILoader>(this); 
     mUIRenderer = std::make_unique<UIRenderer>(this);
-    mRenderer = std::make_unique<Renderer>(this);
+    mRenderer3D = std::make_unique<Renderer3D>(this);
     mUIState = std::make_unique<UIState>(this);
+    mMathUtils = std::make_unique<MathUtils>();
     mGameProgressState = std::make_unique<GameProgressState>(this);
-    // モデルロード（Mesh::Initialize）を行うため、LoadData より先に生成しておく
-    mMesh = std::make_unique<Mesh>();
-    if (!mShader3D->GetShaderProgram() || !mUIShader->GetShaderProgram())
-    {
-        glfwTerminate();
-        return false;
-    }
+    mCameraSystem = std::make_unique<CameraSystem>(this);
+    mMeshLoadSystem = std::make_unique<MeshLoadSystem>(this);
+    mActorLoadSystem = std::make_unique<ActorLoadSystem>(this);
+    mPhysicsSystem = std::make_unique<PhysicsSystem>(this);
+}
 
-    for (int i = 0; i< 5; i++) {
-        // ステージ作成
+void Game::CreateStages(int stageCount) {
+    for (int i = 0; i < stageCount; i++) {
         auto stageUnique = std::make_unique<Stage>();
         Stage* stage = stageUnique.get();
         mStagesUnique.emplace_back(std::move(stageUnique));
         mStages.emplace_back(stage);
+        if (i == 0)
+            mCurrentStage = stage;
     }
+}
 
-    mCurrentStage = mStages[0];
-
-    std::vector<float> textLabel = {
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-    };
-    mVertexArrays["text"] = std::make_unique<VertexArray>(textLabel.data(), 6, nullptr, 0);
-
-    std::vector<float> hpBar = {
-        0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-    };
-    mVertexArrays["hpBar"] = std::make_unique<VertexArray>(hpBar.data(), 6, nullptr, 0);
-
-    mLoader = std::make_unique<Loader>(this); 
-
+void Game::ReloadCurrentStage() {
     LoadData(true);
-
-    // 惑星/プレイヤー生成後に行う
-    mPhysicsSystem = std::make_unique<PhysicsSystem>(this);
-
-    // 時間情報
-    mLastTime = glfwGetTime();
-
-    // 深度テストをONにして奥行きに応じて描画できるようにする（描画順ではなく、手前にあるものが上書きされて描画される）
-    glEnable(GL_DEPTH_TEST);
-
-    return true;
+    mPhysicsSystem->Initialize();
+    mAudioSystem->TryChangeBGM();
 }
 
 void Game::RunLoop()
 {
-    // ゲームループ
     while (!glfwWindowShouldClose(mWindow))
     {
-        glfwPollEvents(); // 入力などのイベントを処理する
+        glfwPollEvents();
         ProcessInput();
         UpdateGame();
         GenerateOutput();
@@ -209,12 +134,8 @@ void Game::RunLoop()
 void Game::Shutdown()
 {
     if (mSdlController)
-    {
         SDL_GameControllerClose(mSdlController);
-    }
 
-    if (mFont) TTF_CloseFont(mFont);
-    TTF_Quit();
     SDL_Quit();
 
     mAudioSystem->Shutdown();
@@ -225,44 +146,36 @@ void Game::Shutdown()
 
 void Game::ProcessInput()
 {
-    // 入力をSDLに取り込む
     SDL_PumpEvents();
-    // ゲームパッド対応
     SDL_GameControllerUpdate();
-    for (const auto& actor_unique : mActors) {
-        Actor* actor = actor_unique.get();
-        actor->ProcessInput();
-    }
+    
+    ProcessGameInput();
+    ProcessActorsInput();
+    mCameraSystem->ProcessInput();
+}
 
-    // データのホットリロード
+void Game::ProcessGameInput() {
     bool reloadPressed = (glfwGetKey(mWindow, GLFW_KEY_R) == GLFW_PRESS);
-    if (reloadPressed && !mReloadKeyPressedPrev)
-    {
-        LoadData(true);
-        mPhysicsSystem->Initialize();
+    if (reloadPressed && !mReloadKeyPressedPrev) {
+        ReloadCurrentStage();
     }
     mReloadKeyPressedPrev = reloadPressed;
 
     bool UIreloadPressed = (glfwGetKey(mWindow, GLFW_KEY_U) == GLFW_PRESS);
-    if (UIreloadPressed && !mUIReloadKeyPressedPrev)
-    {
-        mUILoader->Initialize();
+    if (UIreloadPressed && !mUIReloadKeyPressedPrev) {
+        mUIRenderer->GetUILoadSystem()->Initialize();
     }
     mUIReloadKeyPressedPrev = UIreloadPressed;
 
-    // 2P参加
     bool pKeyNow = (glfwGetKey(mWindow, GLFW_KEY_P) == GLFW_PRESS);
-    if (pKeyNow && !mIsPlayer2Joined)
-    {
-        // 2P作成
+    if (pKeyNow && !mIsPlayer2Joined) {
         mIsPlayer2Joined = true;
         std::unique_ptr<Player> player2 =std::make_unique<Player>(this);
         Player* player2_ptr = player2.get();
         mActors.emplace_back(std::move(player2));
         mPlayers.emplace_back(player2_ptr);
 
-        // 2Pモデルロード
-        auto playerMeshes = mMesh->GetLoadedMeshes("player");
+        auto playerMeshes = mMeshLoadSystem->GetLoadedMeshes("player");
         mPlayers[1]->SetMeshes(playerMeshes);
     } 
 
@@ -273,43 +186,46 @@ void Game::ProcessInput()
         bool isTalking = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Talking;
         if (isTitle && mFadeInTimer <= -1.0f) {
             mFadeInTimer = 1.0f;
-            mGameProgressState->SetNextSceneState("Opening");
+            mGameProgressState->SetNextSceneState(GameProgressState::SceneState::Opening);
         } 
         if (isTalking || isOpening) {
             mUIState->IncTalkUIIndex();
         }
         std::vector<NPC*> NPCs = mPlayers[0]->GetCurrentPlanet()->GetNPCs();
         for (auto NPC : NPCs) {
-            if (!NPC->GetTalkableComponent()) continue;
-            bool isTalkable = NPC->GetTalkableComponent()->GetIsTalkable();
+            bool isTalkable = NPC->GetIsTalkable();
             if (isTalkable) {
-                mUIState->SetTalkWith("NPC");
+                mUIState->SetCurrentTalkWith(UIState::TalkWith::NPC);
                 mPlayers[0]->SetTalkingNPC(NPC);
-                mGameProgressState->SetSceneState("Talking");
+                mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
             }
         }
     }
 
-    // ゲーム終了
     if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS || (mSdlController && SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_BACK)))
         glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
+    
     mAPressedPrev = aPressed;
+}
+
+void Game::ProcessActorsInput() {
+    bool isPlaying = mGameProgressState->GetSceneState() == GameProgressState::SceneState::Playing;
+    if(!isPlaying) return;
+    
+    for (const auto& actor_unique : mActors) {
+        Actor* actor = actor_unique.get();
+        actor->ProcessInput();
+    }
 }
 
 void Game::UpdateGame()
 {
-    for (int i = 0; i < SDL_NumJoysticks(); ++i)
-    {
-        
-        if (SDL_IsGameController(i))
-        {
-            mSdlController = SDL_GameControllerOpen(i);
-        }
-    }
+    CheckGameControllerConnected();
 
     double currentTime = glfwGetTime(); 
     float deltaTime = std::min(0.04f, static_cast<float>(currentTime - mLastTime));
     mLastTime = currentTime;
+
     if (mFadeInTimer > -1.0f) {
         float prevFadeInTimer = mFadeInTimer;
         mFadeInTimer -= deltaTime;
@@ -318,15 +234,15 @@ void Game::UpdateGame()
             switch (nextSceneState)
             {
             case GameProgressState::SceneState::Opening:
-                mGameProgressState->SetSceneState("Opening");
-                mGameProgressState->SetNextSceneState("None");
+                mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Opening);
+                mGameProgressState->SetNextSceneState(GameProgressState::SceneState::None);
                 break;
 
             case GameProgressState::SceneState::Playing:
-                mGameProgressState->SetSceneState("Playing");
-                mGameProgressState->SetNextSceneState("None");
+                mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Playing);
+                mGameProgressState->SetNextSceneState(GameProgressState::SceneState::None);
                 ChangeStage(0);
-                mUIState->SetTalkWith("None");
+                mUIState->SetCurrentTalkWith(UIState::TalkWith::None);
                 break;
             
             default:
@@ -348,36 +264,55 @@ void Game::UpdateGame()
     if (isTitle || isTalking || isShowUI)
         return;
 
-    for (const auto& actor_unique : mActors) {
-        Actor* actor = actor_unique.get();
-        actor->Update(deltaTime);
-    }
+    UpdateActors(deltaTime);
+
+    mCameraSystem->Update(deltaTime);
+
+    if (mClearTimer >= 0.0f) {
+        mClearTimer -= deltaTime;
+        if (mClearTimer < 0.0f) {
+            mFadeInTimer = 1.0f;
+            mGameProgressState->SetNextSceneState(GameProgressState::SceneState::Playing);
+        }
+    }   
 
     if (mFadeInTimer >= 0.0f) return;
 
     if (mIsChangeStage) {
         Mix_HaltMusic();
-        LoadData(true);
-        mPhysicsSystem->Initialize();
+        ReloadCurrentStage();
+        mIsChangeStage = false;
     }
 
     AudioSystem* audioSystem = mAudioSystem.get();
     audioSystem->Update();
+}
 
-    mIsChangeStage = false;
-
-    if (mPhysicsSystem)
-    {
-        mPhysicsSystem->Update();
+void Game::UpdateActors(float deltaTime) {
+    for (const auto& actor_unique : mActors) {
+        Actor* actor = actor_unique.get();
+        actor->Update(deltaTime);
     }
 }
 
-void Game::GenerateOutput()
-{
-    mRenderer->Draw();
+void Game::GenerateOutput() {
+    glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    mUIRenderer->DrawSkyBox();
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    
+    mRenderer3D->Draw();
     mUIRenderer->Draw();
-    // バッファーを入れ替える
+
     glfwSwapBuffers(mWindow);
+}
+
+void Game::AddActor(std::unique_ptr<Actor> actor) { 
+    mActors.emplace_back(std::move(actor)); 
 }
 
 void Game::RemoveActor(std::unique_ptr<Actor> actor)
@@ -390,108 +325,78 @@ void Game::RemoveActor(std::unique_ptr<Actor> actor)
     }
 }
 
-void Game::LoadData(bool isLoadPlayer) {
-    RemoveAllActor();
-    mLoader->LoadDataFromYaml(isLoadPlayer);
-    LoadModel();
+void Game::RemoveAllActor() {
+    mPlayers.clear();
+    mActors.clear();
 }
 
-void Game::LoadModel() {
-    // プレイヤーモデルをロード
-    for (auto player : mPlayers) {
-        auto playerMeshes = mMesh->GetLoadedMeshes("player");
-        player->SetMeshes(playerMeshes);
-    }
-    std::vector<Planet*> planets = mCurrentStage->GetPlanets();
-    // 惑星モデルをロード
-    for (auto planet : planets)
-    {
-        auto it = planet->GetModelPath().find(".");
-        std::string meshName = planet->GetModelPath().substr(0, it);
-        auto planetMeshes = mMesh->GetLoadedMeshes(meshName);
-        planet->SetMeshes(planetMeshes);
-    }
-    // 各惑星のオブジェクトのモデルをロード
-    for (auto planet : planets) {
-        // NPCモデルをロード
-        std::vector<NPC*> NPCs = planet->GetNPCs();
-        for (auto NPC : NPCs)
-        {
-            auto it = NPC->GetModelPath().find(".");
-            std::string meshName = NPC->GetModelPath().substr(0, it);
-            auto NPCMeshes = mMesh->GetLoadedMeshes(meshName);
-            NPC->SetMeshes(NPCMeshes);
-        }
-
-        // 敵モデルをロード
-        std::vector<Enemy*> enemies = planet->GetEnemies();
-        for (auto enemy : enemies)
-        {
-            auto it = enemy->GetModelPath().find(".");
-            std::string meshName = enemy->GetModelPath().substr(0, it);
-            auto enemyMeshes = mMesh->GetLoadedMeshes(meshName);
-            enemy->SetMeshes(enemyMeshes);
-        }
-
-        // 鍵モデルをロード
-        Key* key = planet->GetKey();
-        if (key) {
-            auto keyMeshes = mMesh->GetLoadedMeshes("key");
-            key->SetMeshes(keyMeshes);
-        }
-
-        // スターモデルをロード
-        Star* star = planet->GetStar();
-        if (star) {
-            auto starMeshes = mMesh->GetLoadedMeshes("star");
-            star->SetMeshes(starMeshes);
-        }
-
-        // ボートモデルをロード
-        std::vector<Boat*> boats = planet->GetBoats();
-        if (!boats.empty()) {
-            auto boatMeshes = mMesh->GetLoadedMeshes("boat");
-            for (auto boat : boats) {
-                boat->SetMeshes(boatMeshes);
-            }
-        }
-
-        // ボートのかけらモデルをロード
-        std::vector<BoatParts*> boatParts = planet->GetBoatParts();
-        if (!boatParts.empty()) {
-            for (auto parts : boatParts) {
-                auto it = parts->GetModelPath().find(".");
-                std::string meshName = parts->GetModelPath().substr(0, it);
-                auto boatPartsMeshes = mMesh->GetLoadedMeshes(meshName);
-                parts->SetMeshes(boatPartsMeshes);
-            }
-        }
-
-        // クリスタルモデルをロード
-        std::vector<Crystal*> crystals = planet->GetCrystals();
-        if (!crystals.empty()) {
-            auto crystalsMeshes = mMesh->GetLoadedMeshes("crystals");
-            for (auto crystal : crystals) {
-                crystal->SetMeshes(crystalsMeshes);
-            }
-        }
-
-        // クリスタルモデルをロード
-        std::vector<Platform*> platforms = planet->GetPlatforms();
-        if (!platforms.empty()) {
-            auto platformMeshes = mMesh->GetLoadedMeshes("platform");
-            for (auto platform : platforms) {
-                platform->SetMeshes(platformMeshes);
-            }
-        }
-    }
+void Game::LoadData(bool isLoadPlayer) {
+    RemoveAllActor();
+    mActorLoadSystem->LoadData(isLoadPlayer);
+    mMeshLoadSystem->LoadModel();
 }
 
 void Game::ChangeStage(int stageNum) {
     mCurrentStage = mStages[stageNum];
     mCurrentStageNum = stageNum;
     mIsChangeStage = true;
+    mCurrentStageYamlPath = "../assets/data/stage" + std::to_string(stageNum) + ".yaml";
+}
 
-    std::string stagePath = "../assets/data/stage" + std::to_string(stageNum) + ".yaml";
-    mCurrentStagePath = stagePath;
+void Game::CheckGameControllerConnected() {
+    for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+        if (SDL_IsGameController(i))
+            mSdlController = SDL_GameControllerOpen(i);
+    }
+}
+
+void Game::OnBoatStageChangeRequested(int destStage) {
+    if (mCurrentStageNum != 0) return;
+
+    ChangeStage(destStage);
+    mFadeInTimer = 1.0f;
+}
+
+void Game::OnBoatArrived(Boat* boat) {
+    std::vector<Planet*> planets = mCurrentStage->GetPlanets();
+
+    for (auto player : mPlayers) {
+        player->SetCurrentPlanet(planets[player->GetCurrentPlanetNum() + 1]);
+        player->OnBoatArrived(boat);
+    }
+
+    if (mUIState->GetIsBattleTutorialShown()) return;
+            
+    mUIState->SetCurrentTutorialKind(UIState::TutorialKind::Battle);
+    mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
+    mUIState->SetIsBattleTutorialShown(true);
+}
+
+void Game::OnStarObtained() {
+    mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::StageClear);
+    Mix_HaltMusic();
+    mAudioSystem->PlaySE("clearSE");
+    mClearTimer = 12.0f;
+}
+
+void Game::OnEnemyLaunched() {
+    if (mGameProgressState->GetIsFirstBreak()) return;
+    
+    mGameProgressState->SetIsFirstBreak(true);
+    mUIState->SetCurrentTutorialKind(UIState::TutorialKind::Break);
+    mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
+}
+
+void Game::StartPlayingScene() {
+    mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Playing);
+}
+
+void Game::StartFocusingScene() {
+    mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Focusing);
+}
+
+void Game::StartFadeIn() {
+    mFadeInTimer = 1.0f;
+    mGameProgressState->SetNextSceneState(GameProgressState::SceneState::Playing);
+    mUIState->OnFadeIn();
 }

@@ -1,14 +1,7 @@
 #include "Stage.h"
-#include "Planet.h"
-#include "Game.h"
-#include <cmath>
+#include "actor/Planet.h"
 
 Stage::Stage()
 {
     
-}
-
-void Stage::Initialize()
-{
-
 }

@@ -1,0 +1,494 @@
+#include "UIRenderer.h"
+#include "gfx/UIShader.h"
+#include "VertexArray.h"
+#include "Game.h"
+#include "actor/Player.h"
+#include "actor/Planet.h"
+#include "state/UIState.h"
+#include "actor/NPC.h"
+#include "state/GameProgressState.h"
+#include "system/UILoadSystem.h"
+#include <glm/gtc/type_ptr.hpp>
+
+UIRenderer::UIRenderer(Game* game)
+    : Renderer(game)
+{
+    Initialize();
+}
+
+UIRenderer::~UIRenderer() = default;
+
+void UIRenderer::Initialize() {
+    mUIShaderUnique = std::make_unique<UIShader>();
+    mUIShader = mUIShaderUnique.get();
+
+    mUILoadSystemUnique = std::make_unique<UILoadSystem>();
+    mUILoadSystem = mUILoadSystemUnique.get();
+
+    if (!mUIShader->GetShaderProgram()) {
+        glfwTerminate();
+        return;
+    }
+
+    RegisterUITextures();
+}
+
+void UIRenderer::RegisterUITextures() {
+    RegisterTexture("../assets/textures/titleBg.png", "titleBg");
+    RegisterTexture("../assets/textures/opening.png", "opening");
+    RegisterTexture("../assets/textures/textBg.png", "textBg");
+    RegisterTexture("../assets/textures/slime.png", "slime");
+    RegisterTexture("../assets/textures/hp.png", "hp");
+    RegisterTexture("../assets/textures/special.png", "special");
+    RegisterTexture("../assets/textures/skyBox.png", "skyBox");
+}
+
+void UIRenderer::Draw() {
+    glfwGetFramebufferSize(mGame->GetWindow(), &mFbWidth, &mFbHeight);
+
+    glUseProgram(mUIShader->GetShaderProgram());
+
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+
+    bool isTitle = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Title;
+    if (isTitle)
+        DrawTitle();
+
+    bool isOpening = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
+    if (isOpening)
+        DrawOpening();
+
+    bool isPlaying = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Playing;
+    if (isPlaying)
+        DrawDefaultUI();
+
+    DrawStateUI();
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+}
+
+void UIRenderer::DrawTitle() {
+    auto titleBgTextureInfo = mUILoadSystem->GetTextureInfo("title", "bgTexture");
+    if (titleBgTextureInfo)
+        DrawTexture(titleBgTextureInfo->x, titleBgTextureInfo->y, mFbWidth * titleBgTextureInfo->widthRatio, mFbHeight * titleBgTextureInfo->heightRatio, "titleBg");
+
+    auto startTextInfo = mUILoadSystem->GetTextInfo("title", "startText");
+    if (startTextInfo)
+        DrawText(mFbWidth * startTextInfo->xRatio, mFbHeight * startTextInfo->yRatio, startTextInfo->scaleRatio, startTextInfo->texts[0], true);
+}
+
+void UIRenderer::DrawOpening() {
+    auto talkWith = mGame->GetUIState()->GetCurrentTalkWith();
+
+    switch (talkWith)
+    {
+        case UIState::TalkWith::Opening: {
+            DrawOpeningIntro();
+            break;
+        }
+        case UIState::TalkWith::Mother: {
+            DrawOpeningTalkWithMother();
+            break;
+        }
+        case UIState::TalkWith::Doctor: {
+            DrawOpeningTalkWithDoctor();
+            break;
+        }
+    }
+}
+
+void UIRenderer::DrawOpeningIntro() {
+    auto openingBgTextureInfo = mUILoadSystem->GetTextureInfo("opening", "bgTexture");
+    auto openingTalkTextInfo = mUILoadSystem->GetTextInfo("opening", "openingText");
+
+    if (!openingBgTextureInfo || !openingTalkTextInfo) return;
+
+    const int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    const std::vector<std::string>& talkTexts = openingTalkTextInfo->texts;
+
+    if (talkUIIndex < talkTexts.size()) {
+        DrawTexture(openingBgTextureInfo->x, openingBgTextureInfo->y, mFbWidth * openingBgTextureInfo->widthRatio, mFbHeight * openingBgTextureInfo->heightRatio, "opening");
+        DrawTalkUI(talkTexts, talkUIIndex);
+        return;
+    }
+    
+    mGame->GetUIState()->StartTalkWith(UIState::TalkWith::Mother);
+}
+
+void UIRenderer::DrawOpeningTalkWithMother() {
+    auto talkWithMotherTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithMotherText");
+    if (!talkWithMotherTextInfo) return;
+
+    const int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    const std::vector<std::string>& talkTexts = talkWithMotherTextInfo->texts;
+
+    if (talkUIIndex < talkTexts.size()) {
+        DrawTalkUI(talkTexts, talkUIIndex);
+        return;
+    }
+
+    mGame->GetUIState()->StartTalkWith(UIState::TalkWith::Doctor);
+}
+
+void UIRenderer::DrawOpeningTalkWithDoctor() {
+    auto talkWithDoctorTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithDoctorText");
+    if (!talkWithDoctorTextInfo) return;
+
+    const int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    const std::vector<std::string>& talkTexts = talkWithDoctorTextInfo->texts;
+
+    if (talkUIIndex >= 0 && talkUIIndex < static_cast<int>(talkTexts.size())) {
+        DrawTalkUI(talkTexts, talkUIIndex);
+        return;
+    }
+
+    if (talkUIIndex >= static_cast<int>(talkTexts.size()))
+        mGame->StartFadeIn();
+}
+
+void UIRenderer::DrawDefaultUI() {
+    DrawOperationSupportUI();
+
+    const std::vector<Player*>& players = mGame->GetPlayers();
+    NPC* npc = players[0]->GetTalkingNPC();
+    if (npc) {
+        if (npc->GetIsTalkable())
+            DrawTalkableUI();  
+    }
+    
+    if (mGame->GetCurrentStageNum() == 0) return;
+
+    DrawHpUI();
+
+    float specialAttackCooldownRemaining = players[0]->GetSpecialAttackCooldownRemaining();
+    if (specialAttackCooldownRemaining <= 0.0f)
+        DrawSpecialAttackUI();
+    
+    Planet* currentPlanet = players[0]->GetCurrentPlanet();
+    if (!currentPlanet->GetBoatParts().empty())
+        DrawRemainPartsUI(); 
+}
+
+void UIRenderer::DrawOperationSupportUI() {
+    auto operationSupportTextInfo = mUILoadSystem->GetTextInfo("default", "operationSupportText");
+    if (!operationSupportTextInfo) return;
+    
+    DrawText(operationSupportTextInfo->x, mFbHeight - operationSupportTextInfo->y, mFbWidth * operationSupportTextInfo->scaleRatio, operationSupportTextInfo->texts[0], false);
+}
+
+void UIRenderer::DrawHpUI() {
+    auto hpTextureInfo = mUILoadSystem->GetTextureInfo("default", "hpTexture");
+    if (!hpTextureInfo) return;
+
+    int hp = mGame->GetPlayers()[0]->GetHp() / 10;
+
+    float hpX = mFbWidth * hpTextureInfo->xRatio;
+    while (hp > 0) {
+        DrawTexture(hpX, mFbWidth * hpTextureInfo->yRatio, mFbWidth * hpTextureInfo->widthRatio, mFbWidth * hpTextureInfo->heightRatio, "hp");
+        hpX += mFbWidth / 28;
+        hp--;
+    }
+}
+
+void UIRenderer::DrawSpecialAttackUI() {
+    auto specialAttackTextureInfo = mUILoadSystem->GetTextureInfo("default", "specialAttackTexture");
+    if (!specialAttackTextureInfo) return;
+
+    DrawTexture(mFbWidth * specialAttackTextureInfo->xRatio, mFbWidth * specialAttackTextureInfo->yRatio, mFbWidth * specialAttackTextureInfo->widthRatio, mFbWidth * specialAttackTextureInfo->heightRatio, "special");
+
+    auto specialAttackTextInfo = mUILoadSystem->GetTextInfo("default", "specialAttackText");
+    if (!specialAttackTextInfo) return;
+
+    DrawText(mFbWidth * specialAttackTextInfo->xRatio, mFbHeight * specialAttackTextInfo->yRatio, mFbWidth * specialAttackTextInfo->scaleRatio, specialAttackTextInfo->texts[0], false);
+}
+
+void UIRenderer::DrawTalkableUI() {
+    auto talkableTextInfo = mUILoadSystem->GetTextInfo("default", "talkableText");
+    if (!talkableTextInfo) return;
+
+    DrawText(mFbWidth * talkableTextInfo->xRatio, mFbHeight * talkableTextInfo->yRatio, mFbWidth * talkableTextInfo->scaleRatio, talkableTextInfo->texts[0], true);
+}
+
+void UIRenderer::DrawRemainPartsUI() {
+    auto remainPartsTextInfo = mUILoadSystem->GetTextInfo("default", "remainPartsText");
+    if (!remainPartsTextInfo) return;
+
+    Planet* currentPlanet = mGame->GetPlayers()[0]->GetCurrentPlanet();
+    const int remainBoatPartsCount = currentPlanet->GetRemainBoatPartsCount();
+    if (remainBoatPartsCount == 0) return;
+
+    std::string remainText = remainPartsTextInfo->texts[0] + std::to_string(remainBoatPartsCount);
+    DrawText(mFbWidth - mFbWidth * remainPartsTextInfo->xRatio, mFbWidth * remainPartsTextInfo->yRatio, mFbWidth * remainPartsTextInfo->scaleRatio, remainText, false);
+}
+
+void UIRenderer::DrawStateUI() {
+    UIState::TutorialKind currentTutorialKind = mGame->GetUIState()->GetCurrentTutorialKind();
+
+    switch (currentTutorialKind)
+    {
+        case UIState::TutorialKind::Battle:
+            DrawBattleTutorial();
+            break;
+        
+        case UIState::TutorialKind::Break:
+            DrawBreakTutorial();
+            break; 
+
+        default:
+            break;
+    }
+
+    UIState::TalkWith currentTalkWith = mGame->GetUIState()->GetCurrentTalkWith();
+
+    switch (currentTalkWith)
+    {
+        case UIState::TalkWith::NPC: 
+            DrawTalkWithNPC();
+            break;
+
+        default:
+            break;
+    }
+
+    bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
+    if (isStageClear) 
+        DrawStageClear();
+
+    float fadeInTimer = mGame->GetFadeInTimer();
+    float alpha;
+
+    if (fadeInTimer >= 0.0f) 
+        alpha = 1.0f - fadeInTimer;
+    else 
+        alpha = 1.0f + fadeInTimer;
+
+    if (alpha > 0.0f) 
+        DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {0.0f, 0.0f, 0.0f, alpha});
+
+    // ローディング描画はフェードイン背景より後に描画する必要があるため以下動かさない
+    bool isLoading = mGame->GetIsChangeStage() && mGame->GetFadeInTimer() <= 0.1f;
+    if (isLoading) 
+        DrawLoading();
+}
+
+void UIRenderer::DrawBattleTutorial() {
+    auto battleTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "battleTutorialText");
+    if (!battleTutorialTextInfo) return;
+
+    std::vector<std::string> battleTutorialTexts = battleTutorialTextInfo->texts;
+    int tutorialUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+
+    if (tutorialUIIndex < battleTutorialTexts.size()) {
+        DrawTalkUI(battleTutorialTexts, tutorialUIIndex);
+        return;
+    }
+
+    mGame->GetUIState()->FinishTutorial();
+    mGame->StartPlayingScene();
+}
+
+void UIRenderer::DrawBreakTutorial() {
+    auto breakTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "breakTutorialText");
+    if (!breakTutorialTextInfo) return;
+
+    std::vector<std::string> breakTutorialTexts = breakTutorialTextInfo->texts;
+    int tutorialUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+
+    if (tutorialUIIndex < breakTutorialTexts.size()) {
+        DrawTalkUI(breakTutorialTexts, tutorialUIIndex);
+        return;
+    }
+
+    mGame->GetUIState()->FinishTutorial();
+    mGame->StartPlayingScene();
+}
+
+void UIRenderer::DrawStageClear() {
+    auto stageClearTextInfo = mUILoadSystem->GetTextInfo("state", "stageClearText");
+    if (!stageClearTextInfo) return;
+
+    DrawText(mFbWidth * stageClearTextInfo->xRatio, stageClearTextInfo->y, stageClearTextInfo->scaleRatio, stageClearTextInfo->texts[0], true);
+}
+
+void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
+    auto talkBgTextureInfo = mUILoadSystem->GetTextureInfo("state", "talkBgTexture");
+    if (!talkBgTextureInfo) return;
+
+    DrawTexture(talkBgTextureInfo->x, talkBgTextureInfo->y, mFbWidth * talkBgTextureInfo->widthRatio, mFbHeight * talkBgTextureInfo->heightRatio, "textBg");
+    
+    auto talkTextInfo = mUILoadSystem->GetTextInfo("state", "talkText");
+    if (!talkTextInfo) return;
+
+    glm::vec4 textColor{0.0f, 0.0f, 0.0f, 0.0f};
+    DrawText(mFbWidth * talkTextInfo->xRatio, mFbHeight * talkTextInfo->yRatio, mFbWidth * talkTextInfo->scaleRatio, texts[index], false, textColor);
+}
+
+void UIRenderer::DrawTalkWithNPC() {
+    NPC* talkingNPC = mGame->GetPlayers()[0]->GetTalkingNPC();
+    std::vector<std::string> talkTexts = talkingNPC->GetTalkTexts();
+    int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+
+    if (talkUIIndex < talkTexts.size()) {
+        DrawTalkUI(talkTexts, talkUIIndex);
+        return;
+    } 
+
+    mGame->GetUIState()->FinishTalkWith();
+    mGame->StartPlayingScene();
+}
+
+void UIRenderer::DrawLoading() {
+    auto loadingTextInfo = mUILoadSystem->GetTextInfo("state", "loadingText");
+    if (!loadingTextInfo) return;
+
+    DrawText(loadingTextInfo->x, mFbHeight - loadingTextInfo->y, loadingTextInfo->scaleRatio, loadingTextInfo->texts[0], false);
+
+    auto loadingTextureInfo = mUILoadSystem->GetTextureInfo("state", "loadingTexture");
+    if (!loadingTextureInfo) return;
+
+    DrawTexture(loadingTextureInfo->x, mFbHeight - loadingTextureInfo->y, loadingTextureInfo->width, loadingTextureInfo->height, "slime");
+}
+
+void UIRenderer::DrawSkyBox() {
+    DrawTexture(0.0f, 0.0f, mFbWidth, mFbHeight, "skyBox");
+}
+
+void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color)
+{
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x + width * 0.5f, y + height * 0.5f, 0.0f))
+                * glm::scale(glm::mat4(1.0f), glm::vec3(width, height, 1.0f));
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 proj = glm::ortho(0.0f, (float)mFbWidth, (float)mFbHeight, 0.0f, -1.0f, 1.0f);
+    glUniformMatrix4fv(mUIShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(mUIShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(mUIShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
+    glUniform1i(mUIShader->GetLocUseTexture(), 0);
+    glUniform4fv(mUIShader->GetLocObjectColor(), 1, color.data());
+    mVertexArrays.at("text")->SetActive();
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void UIRenderer::DrawText(float x, float y, float scale, std::string message, bool isCenterBase, glm::vec4 color) {
+    std::string message1 = message;
+    std::string message2 = "";
+    int newline = message.find("\n");
+    bool isNewLine = newline != std::string::npos;
+    if (isNewLine) {
+        message1 = message.substr(0, newline);
+        message2 = message.substr(newline + 1);
+    } else {
+        newline = message.find("\\n");
+        isNewLine = newline != std::string::npos;
+        if (isNewLine) {
+            message1 = message.substr(0, newline);
+            message2 = message.substr(newline + 2);
+        }
+    }
+    
+    SDL_Color textColor{static_cast<Uint8>(color.x), static_cast<Uint8>(color.y), static_cast<Uint8>(color.z), static_cast<Uint8>(color.w)};
+    SDL_Surface* surf = TTF_RenderUTF8_Blended(mFont, message1.c_str(), textColor);
+
+    if (!surf) return;
+    SDL_Surface* rgba = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
+    SDL_FreeSurface(surf);
+    if (!rgba) return;
+
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgba->w, rgba->h, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    float textWidth = (float)rgba->w * scale, textHeight = (float)rgba->h * scale;
+    SDL_FreeSurface(rgba);
+
+    glm::mat4 model;
+    if (isCenterBase) {
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f))
+                    * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
+    } else if (isNewLine) {
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f - 20.0f, 0.0f))
+                    * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
+    } else {
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f, 0.0f))
+                    * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
+    }
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 proj = glm::ortho(0.0f, (float)mFbWidth, (float)mFbHeight, 0.0f, -1.0f, 1.0f);
+    glUniformMatrix4fv(mUIShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(mUIShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(mUIShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
+    glUniform1i(mUIShader->GetLocDiffuseTexture(), 0);
+    glUniform1i(mUIShader->GetLocUseTexture(), 1);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    mVertexArrays.at("text")->SetActive();
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    if (isNewLine) {
+        surf = TTF_RenderUTF8_Blended(mFont, message2.c_str(), textColor);
+            if (!surf) return;
+        rgba = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
+        SDL_FreeSurface(surf);
+        if (!rgba) return;
+
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgba->w, rgba->h, 0,
+                    GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        textWidth = (float)rgba->w * scale, textHeight = (float)rgba->h * scale;
+        SDL_FreeSurface(rgba);
+
+        if (isCenterBase) {
+            model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y + 40.0f, 0.0f))
+                        * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
+        }else{
+            model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f + 40.0f, 0.0f))
+                        * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
+        }
+        view = glm::mat4(1.0f);
+        proj = glm::ortho(0.0f, (float)mFbWidth, (float)mFbHeight, 0.0f, -1.0f, 1.0f);
+        glUniformMatrix4fv(mUIShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(mUIShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(mUIShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
+        glUniform1i(mUIShader->GetLocDiffuseTexture(), 0);
+        glUniform1i(mUIShader->GetLocUseTexture(), 1);
+
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+}
+
+void UIRenderer::DrawTexture(float x, float y, float width, float height, std::string textureName) {
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x + width * 0.5f, y + height * 0.5f, 0.0f))
+                    * glm::scale(glm::mat4(1.0f), glm::vec3(width, height, 1.0f));
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 proj = glm::ortho(0.0f, (float)mFbWidth, (float)mFbHeight, 0.0f, -1.0f, 1.0f);
+    glUniformMatrix4fv(mUIShader->GetLocModel(), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(mUIShader->GetLocView(), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(mUIShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
+    glUniform1i(mUIShader->GetLocDiffuseTexture(), 0);
+    glUniform1i(mUIShader->GetLocUseTexture(), 1);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glActiveTexture(GL_TEXTURE0);
+    GLuint tex = mTextures.at(textureName);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    mVertexArrays.at("text")->SetActive();
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
