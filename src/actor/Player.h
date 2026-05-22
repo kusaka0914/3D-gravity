@@ -41,6 +41,7 @@ public:
 
     void ApplyDamage(float damage, glm::vec3 knockBackFrom);
     void OnBoatArrived(Boat* boat);
+    void Respawn();
 
     void SetCanDodge(bool canDodge) { mCanDodge = canDodge; }
 
@@ -48,6 +49,7 @@ public:
     void SetPlayerNum(int playerNum) { mPlayerNum = playerNum; }
 
     void SetCameraPitch(float cameraPitch) { mCameraPitch = cameraPitch; }
+    void SetCameraYaw(float cameraYaw) { mCameraYaw = cameraYaw; }
     void SetAttack(float attack) { mAttack = attack; }
     void SetMoveSpeed(float moveSpeed) { mMoveSpeed = moveSpeed; }
     void SetAttackSpeed(float attackSpeed) { mAttackSpeed = attackSpeed; }
@@ -94,7 +96,6 @@ public:
     ActionState GetActionState() const { return mActionState; }
 
     const glm::vec3& GetForwardVec() const { return mForwardVec; }
-    const glm::vec3& GetFacingForwardVec() const { return mFacingForwardVec; }
     const std::vector<RaySegment>& GetRayCasts() const { return mRayCasts; }
 
     NPC* GetTalkingNPC() const { return mTalkingNPC; }
@@ -122,20 +123,20 @@ private:
     void StartDodging();
     void StartAttacking(float deltaTime);
     void StartCharging(float deltaTime);
-    void StartStrongAttacking();
+    void StartStrongAttacking(float deltaTime);
     void StartRidingBoat(Boat* boat);
     void StartJumping(float deltaTime);
     
     void FinishCharging();
 
-    void ApplyGravity(float deltaTime);
     void ChangeFaceDir();
-    void Respawn();
+    void Recover();
     void MoveDuringDodging(float deltaTime);
     void MoveDuringAttacking(float deltaTime);
     void MoveDuringCharging(float deltaTime);
     void MoveDuringStrongAttacking(float deltaTime);
     void Attack(float deltaTime);
+    void StartAfterAttackReaction();
     void WideAttack(float deltaTime);
     void StrongAttack(float deltaTime);
     void MoveDuringKnockBack(float deltaTime);
@@ -145,6 +146,7 @@ private:
 
     bool IsAlive() const { return mHp >= 0.0f; };
     bool IsTouchingBoat(Boat* boat);
+    bool IsFallIntoPlanetInside();
     bool IsEnemyHitByAttack(float dist, float dot, float effectiveRange);
     bool CanWalk() const { return mAttackMoveLockRemaining <= 0.0f; }
     std::vector<Enemy*> FindHitEnemies();
@@ -155,14 +157,18 @@ private:
     AttackKind mAttackKind;
 
     bool mDodgePressed;
+    bool mDodgePressedPrev;
     bool mJumpPressed;
-    bool mAttackPressed; 
+    bool mAttackPressed;
+    bool mAttackPressedPrev;
     bool mWideAttackPressed;
+    bool mWideAttackPressedPrev;
     bool mSpecialAttackPressed;
     bool mCanDodge;
+    bool mIsStrongAttackHit;
 
     int mCurrentPlanetNum;
-    int mAttackIndex;
+    int mAttackComboIndex;
     int mRestartPlanetIndex;
     int mPlayerNum;
 
@@ -200,7 +206,7 @@ private:
     float mDefaultAttackPressTimer;
     float mStrongAttackTimer;
     float mDefaultStrongAttackTimer;
-    float mComboTimer;
+    float mComboKeepTimer;
     float mInvincibleTimer;
     float mDefaultInvincibleTimer;
     float mAttackRange;
@@ -218,7 +224,6 @@ private:
 
     glm::vec3 mForwardVec;
     glm::vec3 mLeftVec;
-    glm::vec3 mFacingForwardVec;
     glm::vec3 mKnockBackFrom;
     glm::vec3 mRestartPos;
     glm::vec3 mDodgeDir;

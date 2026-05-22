@@ -4,6 +4,7 @@ public:
     ~VertexArray();
 
     void SetActive();
+    
 private:
     unsigned int mNumVerts;
     unsigned int mNumIndices;

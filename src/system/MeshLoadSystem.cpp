@@ -1,4 +1,19 @@
+#include <GL/glew.h>
 #include "MeshLoadSystem.h"
+#include "actor/Actor.h"
+#include "actor/Player.h"
+#include "actor/Planet.h"
+#include "actor/Boat.h"
+#include "actor/BoatParts.h"
+#include "actor/Star.h"
+#include "actor/Crystal.h"
+#include "actor/Enemy.h"
+#include "actor/Key.h"
+#include "actor/Platform.h"
+#include "actor/NPC.h"
+#include "Game.h"
+#include "Stage.h"
+
 #include <assimp/material.h>
 #include <assimp/mesh.h>
 #include <assimp/Importer.hpp>
@@ -6,12 +21,13 @@
 #include <assimp/postprocess.h>
 #include <string>
 #include <vector>
-#include <GL/glew.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "thirdParty/stb_image.h"
 
-MeshLoadSystem::MeshLoadSystem() {
+MeshLoadSystem::MeshLoadSystem(Game* game) 
+    : mGame(game)
+{
     Initialize();
 }
 
@@ -45,6 +61,66 @@ void MeshLoadSystem::CreateLoadedMeshes() {
     mLoadedMeshes["enemy"] = LoadMeshFromFile("../assets/models/enemy.obj");
     mLoadedMeshes["platform"] = LoadMeshFromFile("../assets/models/platform.obj");
     mLoadedMeshes["rocket"] = LoadMeshFromFile("../assets/models/rocket.fbx");
+    mLoadedMeshes["skyBox"] = LoadMeshFromFile("../assets/models/skyBox.obj");
+}
+
+void MeshLoadSystem::LoadModel() {
+    auto players = mGame->GetPlayers();
+    for (auto player : players) {
+        SetActorMesh(player);
+    }
+
+    std::vector<Planet*> planets = mGame->GetCurrentStage()->GetPlanets();
+    for (auto planet : planets)
+    {
+        SetActorMesh(planet);
+
+        std::vector<NPC*> NPCs = planet->GetNPCs();
+        for (auto NPC : NPCs)
+            SetActorMesh(NPC);
+
+        std::vector<Enemy*> enemies = planet->GetEnemies();
+        for (auto enemy : enemies)
+            SetActorMesh(enemy);
+
+        Key* key = planet->GetKey();
+        if (key) 
+            SetActorMesh(key);
+
+        Star* star = planet->GetStar();
+        if (star) 
+            SetActorMesh(star);
+
+        std::vector<Boat*> boats = planet->GetBoats();
+        if (!boats.empty()) {
+            for (auto boat : boats)
+                SetActorMesh(boat);
+        }
+
+        std::vector<BoatParts*> boatParts = planet->GetBoatParts();
+        if (!boatParts.empty()) {
+            for (auto parts : boatParts)
+                SetActorMesh(parts);
+        }
+
+        std::vector<Crystal*> crystals = planet->GetCrystals();
+        if (!crystals.empty()) {
+            for (auto crystal : crystals)
+                SetActorMesh(crystal);
+        }
+
+        std::vector<Platform*> platforms = planet->GetPlatforms();
+        if (!platforms.empty()) {
+            for (auto platform : platforms)
+                SetActorMesh(platform);
+        }
+    }
+}
+
+void MeshLoadSystem::SetActorMesh(Actor* actor) {
+    auto it = actor->GetModelPath().find(".");
+    std::string meshName = actor->GetModelPath().substr(0, it);
+    actor->SetMeshes(GetLoadedMeshes(meshName));
 }
 
 std::vector<LoadedMesh> MeshLoadSystem::LoadMeshFromFile(const char* path) {
@@ -144,7 +220,7 @@ std::vector<LoadedMesh> MeshLoadSystem::LoadMeshFromFile(const char* path) {
     return results;
 }
 
-bool MeshLoadSystem::loadMeshPositionsAndIndices(const char* path,
+bool MeshLoadSystem::LoadMeshPositionsAndIndices(const char* path,
     std::vector<float>& outPositions, std::vector<unsigned int>& outIndices) {
     outPositions.clear();
     outIndices.clear();

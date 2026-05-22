@@ -60,6 +60,7 @@ private:
     void UpdateDying(float deltaTime);
 
     void UpdateBehavior(float deltaTime, Player* player);
+    void UpdateFacingVec();
     void UpdateIdle(Player* player);
     void UpdateTracking(float deltaTime, Player* player);
     void UpdatePreparingAttack(float deltaTime);
@@ -84,7 +85,7 @@ private:
     void MoveDuringKnockBack(float deltaTime, Player* player);
     void LaunchIntoAir(float deltaTime);
     void ApplyCounter(Player* player);
-    void ApplyGravity(float deltaTime);
+    void UpdateInAir(float deltaTime);
 
 private:
     LifeState mLifeState;

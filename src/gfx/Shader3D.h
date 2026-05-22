@@ -1,13 +1,13 @@
 #pragma once
 
 #include "Shader.h"
-#include <iostream>
-#include <string>
 
 class Shader3D : public Shader {
 public:
     Shader3D();
     ~Shader3D();
+
+    void Initialize();
 
     int GetLocLightPos() const { return mLocLightPos; }
     int GetLocLightColor() const { return mLocLightColor; }

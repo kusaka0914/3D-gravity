@@ -1,6 +1,5 @@
 #pragma once
 
-#include <vector>
 #include <unordered_map>
 #include <string>
 #include <SDL_mixer.h>
@@ -17,12 +16,11 @@ public:
 
     void Shutdown();
 
+    void AdjustVolume(int volumeBGM, int volumeSE);
+    void TryChangeBGM();
     void PlayBGM(std::string name);
     void PlaySE(std::string name);
-
-    Game* GetGame() const { return mGame; }
 private:
-    void UpdateBGM();
     void CreateBGMList();
     void CreateSEList();
     void AddBGM(std::string path, std::string name);
@@ -33,6 +31,4 @@ private:
     
     std::unordered_map<std::string, Mix_Music*> mBGMList;
     std::unordered_map<std::string, Mix_Chunk*> mSEList;
-    
-    int mCurrentBgmPlanetIndex;
 };

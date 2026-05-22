@@ -22,6 +22,10 @@ public:
 
     UIState(Game* game);
     void IncTalkUIIndex() { mTalkUIIndex++; }
+    void StartTalkWith(TalkWith talkWith);
+    void FinishTutorial();
+    void FinishTalkWith();
+    void OnFadeIn();
 
     void SetIsBattleTutorialShown(bool isBattleTutorialShown) { mIsBattleTutorialShown = isBattleTutorialShown; }
 

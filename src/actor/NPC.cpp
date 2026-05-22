@@ -17,6 +17,7 @@ NPC::~NPC()
 
 void NPC::UpdateActor(float deltaTime)
 {
+    CharacterActor::UpdateActor(deltaTime);
     LookNearestPlayer();
     CheckTalkable();
 
@@ -28,6 +29,7 @@ void NPC::LookNearestPlayer() {
     Player* nearestPlayer = FindNearestPlayer();
 
     glm::vec3 toNearestPlayer = glm::normalize(nearestPlayer->GetPos() - mPos);
+    mFacingForwardVec = toNearestPlayer;
     mFacingYaw = mGame->GetMathUtils()->GetYawFromDirection(mUpVec, toNearestPlayer) + 3.14159265f;
 }
 
@@ -68,10 +70,4 @@ bool NPC::IsPlayerInTalkableRange(Player* player) const {
     const float talkableRange = mRadius + talkableRangeMargin;
         
     return toPlayerDist <= talkableRange;
-}
-
-void NPC::ApplyGravity(float deltaTime) {
-    constexpr float gravity = 9.8f;
-    mVelocity -= mUpVec * gravity * deltaTime;
-    mPos += mVelocity * deltaTime;
 }

@@ -2,9 +2,11 @@
 
 #include "actor/Actor.h"
 
+class Game;
+
 class Platform : public Actor {
 public:
-    Platform(class Game* game);
+    Platform(Game* game);
     void UpdateActor(float deltaTime) override;
 
 private:

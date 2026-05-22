@@ -24,7 +24,6 @@ public:
 private:
     void LookNearestPlayer();
     void CheckTalkable();
-    void ApplyGravity(float deltaTime);
 
     Player* FindNearestPlayer();
     bool IsPlayerInTalkableRange(Player* player) const;

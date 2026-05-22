@@ -19,8 +19,20 @@ void Planet::Initialize()
     
 }
 
-void Planet::UpdateActor(float deltaTime) {    
+void Planet::UpdateActor(float deltaTime) {  
+    UpdateRemainBoatPartsCount();  
     CheckKeySpawnCondition();
+}
+
+void Planet::UpdateRemainBoatPartsCount() {
+    if (mBoatParts.empty()) return;
+
+    mRemainBoatPartsCount = 0;
+    for (auto parts : mBoatParts) {
+        if (!parts->GetIsActive()) continue;
+
+        mRemainBoatPartsCount++;
+    }
 }
 
 void Planet::CheckKeySpawnCondition() {

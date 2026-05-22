@@ -1,6 +1,7 @@
 #include "Shader.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include <GL/glew.h>
 
 Shader::Shader()
@@ -13,36 +14,29 @@ Shader::~Shader()
     glDeleteProgram(mShaderProgram);
 }
 
-std::string Shader::readFile(const std::string& path) {
-	// ファイルの読み口があるfileを用意（fileはstringにできない）
+std::string Shader::GetShaderSrcFromFile(const std::string& path) {
     std::ifstream file(path);
-    // ファイルが開けるか検証
+    
     if (!file.is_open()) {
         std::cerr << "Cannot open file: " << path << std::endl;
         return "";
     }
-    // fileの中身を流し込むためのbufを用意
+    
     std::stringstream buf;
-    // fileの中身をbufに流し込む（stringにするため）
     buf << file.rdbuf();
-    // bufをstringに変換して返す
     return buf.str();
 }
 
-unsigned int Shader::compileShader(unsigned int type, const std::string& source) {
-	// シェーダを作りますよと教えてGPU側に空のオブジェクトを作ってそのidを返す
+unsigned int Shader::CompileShader(unsigned int type, const std::string& source) {
     unsigned int id = glCreateShader(type);
-    // c_str()でsourceの先頭アドレスを取り出す
     const char* src = source.c_str();
-    // シェーダーのソースコードをsrcにする
+
     glShaderSource(id, 1, &src, nullptr);
-    // 上で設定したソースコードを、GPU用の機械語にコンパイルする
     glCompileShader(id);
-    // コンパイル結果を格納する変数
+
     int success;
-    // idのシェーダーのコンパイルが成功したらsuccessに1を、失敗したら0を格納する
     glGetShaderiv(id, GL_COMPILE_STATUS, &success);
-    // コンパイルの失敗処理
+
     if (!success) {
         char log[512];
         glGetShaderInfoLog(id, 512, nullptr, log);
@@ -54,27 +48,24 @@ unsigned int Shader::compileShader(unsigned int type, const std::string& source)
     return id;
 }
 
-unsigned int Shader::createShaderProgram(const std::string& vertexPath, const std::string& fragmentPath) {
-	// それぞれのパスからファイルを読み、中身のソースコードを格納する
-    std::string vsrc = readFile(vertexPath);
-    std::string fsrc = readFile(fragmentPath);
-    if (vsrc.empty() || fsrc.empty()) return 0;
+unsigned int Shader::CreateShaderProgram(const std::string& vertexPath, const std::string& fragmentPath) {
+    std::string vertexSrc = GetShaderSrcFromFile(vertexPath);
+    std::string fragmentSrc = GetShaderSrcFromFile(fragmentPath);
+
+    if (vertexSrc.empty() || fragmentSrc.empty()) return 0;
 		
-	// ソースコードからシェーダーをコンパイルしてそのシェーダーのIDを格納する
-    unsigned int vert = compileShader(GL_VERTEX_SHADER, vsrc);
-    unsigned int frag = compileShader(GL_FRAGMENT_SHADER, fsrc);
-    if (!vert || !frag) return 0;
+    unsigned int vertexId = CompileShader(GL_VERTEX_SHADER, vertexSrc);
+    unsigned int fragmentId = CompileShader(GL_FRAGMENT_SHADER, fragmentSrc);
+
+    if (!vertexId || !fragmentId) return 0;
 		
-	// 頂点シェーダーとフラグメントシェーダーをくっつけるためのオブジェクトを作りIDを格納する
     unsigned int program = glCreateProgram();
-    // それぞれのシェーダーをprogramにくっつけている（くっつけただけで1つになってない）
-    glAttachShader(program, vert);
-    glAttachShader(program, frag);
-    // くっつけたものをリンクさせて1つのプログラムにする
+    glAttachShader(program, vertexId);
+    glAttachShader(program, fragmentId);
     glLinkProgram(program);
-    // メモリリークを防ぐために不要になったシェーダーを削除する
-    glDeleteShader(vert);
-    glDeleteShader(frag);
+    
+    glDeleteShader(vertexId);
+    glDeleteShader(fragmentId);
 
     int success;
     glGetProgramiv(program, GL_LINK_STATUS, &success);

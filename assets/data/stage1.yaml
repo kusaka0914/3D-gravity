@@ -154,9 +154,9 @@ crystals:
     height : 1.0
 
 boats:
-  - theta : 0.0
+  - theta : 0.5
     u : 0.0
-    height : 0.05
+    height : 0.45
     startPlanet : 0
     destPlanet : 1
   - theta : 0.0
@@ -209,6 +209,7 @@ players:
   
 star:
   - currentPlanetNum : 2
+    modelPath: star.obj
 
 NPCs:
   - theta : 2.7

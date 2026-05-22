@@ -1,5 +1,6 @@
 #include "Key.h"
 #include "Game.h"
+#include "system/AudioSystem.h"
 #include "actor/Boat.h"
 #include "actor/Planet.h"
 #include "component/FocusComponent.h"

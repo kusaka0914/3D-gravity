@@ -1,6 +1,7 @@
 #include "Boat.h"
 #include "actor/Planet.h"
 #include "Game.h"
+#include "system/AudioSystem.h"
 #include "component/FocusComponent.h"
 
 Boat::Boat(Game* game)
@@ -47,7 +48,7 @@ void Boat::UpdateActor(float deltaTime) {
     if (isAllBoatPartsCollected && !isFocused)
         mFocusComponent->StartFocus();
 
-    const int currentStageNum = GetGame()->GetCurrentStageNum();
+    const int currentStageNum = mGame->GetCurrentStageNum();
     if (currentStageNum != 0 && !mIsActivePrev && mIsActive)
         OnShown();
 

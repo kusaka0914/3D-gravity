@@ -1,5 +1,6 @@
 #include "BoatParts.h"
 #include "Game.h"
+#include "system/AudioSystem.h"
 #include "component/CollectableComponent.h"
 
 BoatParts::BoatParts(Game* game)

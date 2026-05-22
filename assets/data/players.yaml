@@ -6,6 +6,7 @@ players:
     attack: 10
     attackSpeed: 5.0
     camera_pitch: 0.4
+    modelPath: player.obj
     
     moveSpeed: 4.0
     # moveSpeed: 10.2
@@ -29,4 +30,4 @@ players:
     lastAttackCooldown: 1.0
     defaultAttackPressTimer: 0.5
     chargeMoveSpeed: 6.0
-    defaultStrongAttackTimer: 0.03
+    defaultStrongAttackTimer: 0.06

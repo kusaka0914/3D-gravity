@@ -4,66 +4,58 @@
 #include "Game.h"
 #include "actor/Player.h"
 #include "actor/Planet.h"
-#include "actor/BoatParts.h"
 #include "state/UIState.h"
 #include "actor/NPC.h"
 #include "state/GameProgressState.h"
 #include "system/UILoadSystem.h"
-#include "thirdParty/stb_image.h"
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <unordered_map>
-#include <memory>
 
 UIRenderer::UIRenderer(Game* game)
-    : mGame(game)
-    , mUIShader(game->GetUIShader())
-    , mFont(game->GetFont())
-    , mVertexArrays(game->GetVertexArrays())
-    , mUILoadSystem(game->GetUILoadSystem())
+    : Renderer(game)
 {
     Initialize();
 }
 
+UIRenderer::~UIRenderer() = default;
+
 void UIRenderer::Initialize() {
-    AddImgInfo("../assets/textures/titleBg.png", "titleBg");
-    AddImgInfo("../assets/textures/opening.png", "opening");
-    AddImgInfo("../assets/textures/textBg.png", "textBg");
-    AddImgInfo("../assets/textures/slime.png", "slime");
-    AddImgInfo("../assets/textures/hp.png", "hp");
-    AddImgInfo("../assets/textures/special.png", "special");
+    mUIShaderUnique = std::make_unique<UIShader>();
+    mUIShader = mUIShaderUnique.get();
+
+    mUILoadSystemUnique = std::make_unique<UILoadSystem>();
+    mUILoadSystem = mUILoadSystemUnique.get();
+
+    if (!mUIShader->GetShaderProgram()) {
+        glfwTerminate();
+        return;
+    }
+
+    RegisterUITextures();
 }
 
-void UIRenderer::AddImgInfo(std::string path, std::string name) {
-    int imgWidth, imgHeight, imgChannels;
-    unsigned char* imageData = stbi_load(path.c_str(), &imgWidth, &imgHeight, &imgChannels, STBI_rgb_alpha);
-
-    GLuint tex;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imgWidth, imgHeight, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-    stbi_image_free(imageData);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    mTextures[name] = tex;
+void UIRenderer::RegisterUITextures() {
+    RegisterTexture("../assets/textures/titleBg.png", "titleBg");
+    RegisterTexture("../assets/textures/opening.png", "opening");
+    RegisterTexture("../assets/textures/textBg.png", "textBg");
+    RegisterTexture("../assets/textures/slime.png", "slime");
+    RegisterTexture("../assets/textures/hp.png", "hp");
+    RegisterTexture("../assets/textures/special.png", "special");
+    RegisterTexture("../assets/textures/skyBox.png", "skyBox");
 }
 
 void UIRenderer::Draw() {
-    GLFWwindow* window = mGame->GetWindow();
-    glfwGetFramebufferSize(window, &mFbWidth, &mFbHeight);
+    glfwGetFramebufferSize(mGame->GetWindow(), &mFbWidth, &mFbHeight);
 
     glUseProgram(mUIShader->GetShaderProgram());
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
 
-    bool isTitle = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Title;
+    bool isTitle = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Title;
     if (isTitle)
         DrawTitle();
 
-    bool isOpening = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
+    bool isOpening = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
     if (isOpening)
         DrawOpening();
 
@@ -88,7 +80,7 @@ void UIRenderer::DrawTitle() {
 }
 
 void UIRenderer::DrawOpening() {
-    auto talkWith = GetGame()->GetUIState()->GetCurrentTalkWith();
+    auto talkWith = mGame->GetUIState()->GetCurrentTalkWith();
 
     switch (talkWith)
     {
@@ -113,8 +105,8 @@ void UIRenderer::DrawOpeningIntro() {
 
     if (!openingBgTextureInfo || !openingTalkTextInfo) return;
 
-    int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
-    std::vector<std::string> talkTexts = openingTalkTextInfo->texts;
+    const int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    const std::vector<std::string>& talkTexts = openingTalkTextInfo->texts;
 
     if (talkUIIndex < talkTexts.size()) {
         DrawTexture(openingBgTextureInfo->x, openingBgTextureInfo->y, mFbWidth * openingBgTextureInfo->widthRatio, mFbHeight * openingBgTextureInfo->heightRatio, "opening");
@@ -122,70 +114,60 @@ void UIRenderer::DrawOpeningIntro() {
         return;
     }
     
-    GetGame()->GetUIState()->SetCurrentTalkWith(UIState::TalkWith::Mother);
-    GetGame()->GetUIState()->SetTalkUIIndex(0);
+    mGame->GetUIState()->StartTalkWith(UIState::TalkWith::Mother);
 }
 
 void UIRenderer::DrawOpeningTalkWithMother() {
     auto talkWithMotherTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithMotherText");
     if (!talkWithMotherTextInfo) return;
 
-    int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
-    std::vector<std::string> talkTexts = talkWithMotherTextInfo->texts;
+    const int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    const std::vector<std::string>& talkTexts = talkWithMotherTextInfo->texts;
 
     if (talkUIIndex < talkTexts.size()) {
         DrawTalkUI(talkTexts, talkUIIndex);
         return;
     }
 
-    GetGame()->GetUIState()->SetTalkUIIndex(0);
-    GetGame()->GetUIState()->SetCurrentTalkWith(UIState::TalkWith::Doctor);
+    mGame->GetUIState()->StartTalkWith(UIState::TalkWith::Doctor);
 }
 
 void UIRenderer::DrawOpeningTalkWithDoctor() {
     auto talkWithDoctorTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithDoctorText");
     if (!talkWithDoctorTextInfo) return;
 
-    int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
-    std::vector<std::string> talkTexts = talkWithDoctorTextInfo->texts;
+    const int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    const std::vector<std::string>& talkTexts = talkWithDoctorTextInfo->texts;
 
-    if (talkUIIndex < talkTexts.size() && talkUIIndex >= 0) {
+    if (talkUIIndex >= 0 && talkUIIndex < static_cast<int>(talkTexts.size())) {
         DrawTalkUI(talkTexts, talkUIIndex);
+        return;
     }
-    else if (talkUIIndex >= static_cast<int>(talkTexts.size())) {
-        GetGame()->GetUIState()->SetTalkUIIndex(0);
-        GetGame()->SetFadeInTimer(1.0f);
-        GetGame()->GetGameProgressState()->SetNextSceneState(GameProgressState::SceneState::Playing);
-    }
+
+    if (talkUIIndex >= static_cast<int>(talkTexts.size()))
+        mGame->StartFadeIn();
 }
 
 void UIRenderer::DrawDefaultUI() {
     DrawOperationSupportUI();
 
-    std::vector<Player*> players = mGame->GetPlayers();
-    Planet* currentPlanet = players[0]->GetCurrentPlanet();
-    std::vector<NPC*> NPCs = currentPlanet->GetNPCs();
-
-    if (!NPCs.empty()) {
-        for (auto NPC : NPCs) {
-            if (NPC->GetIsTalkable())
-                DrawTalkableUI();  
-        }  
-    }  
+    const std::vector<Player*>& players = mGame->GetPlayers();
+    NPC* npc = players[0]->GetTalkingNPC();
+    if (npc) {
+        if (npc->GetIsTalkable())
+            DrawTalkableUI();  
+    }
     
-    int currentStageNum = GetGame()->GetCurrentStageNum();
-    if (currentStageNum == 0) return;
+    if (mGame->GetCurrentStageNum() == 0) return;
 
     DrawHpUI();
 
     float specialAttackCooldownRemaining = players[0]->GetSpecialAttackCooldownRemaining();
-
     if (specialAttackCooldownRemaining <= 0.0f)
         DrawSpecialAttackUI();
     
-    std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
-
-    if (!boatParts.empty())
+    Planet* currentPlanet = players[0]->GetCurrentPlanet();
+    if (!currentPlanet->GetBoatParts().empty())
         DrawRemainPartsUI(); 
 }
 
@@ -200,8 +182,7 @@ void UIRenderer::DrawHpUI() {
     auto hpTextureInfo = mUILoadSystem->GetTextureInfo("default", "hpTexture");
     if (!hpTextureInfo) return;
 
-    std::vector<Player*> players = mGame->GetPlayers();
-    int hp = players[0]->GetHp() / 10;
+    int hp = mGame->GetPlayers()[0]->GetHp() / 10;
 
     float hpX = mFbWidth * hpTextureInfo->xRatio;
     while (hp > 0) {
@@ -234,24 +215,16 @@ void UIRenderer::DrawRemainPartsUI() {
     auto remainPartsTextInfo = mUILoadSystem->GetTextInfo("default", "remainPartsText");
     if (!remainPartsTextInfo) return;
 
-    std::vector<Player*> players = mGame->GetPlayers();
-    Planet* currentPlanet = players[0]->GetCurrentPlanet();
-    std::vector<BoatParts*> boatParts = currentPlanet->GetBoatParts();
-    
-    int remainBoatParts = 0;
-    for(auto parts : boatParts) {
-        if (!parts->GetIsActive()) continue;
-        remainBoatParts++;
-    }
+    Planet* currentPlanet = mGame->GetPlayers()[0]->GetCurrentPlanet();
+    const int remainBoatPartsCount = currentPlanet->GetRemainBoatPartsCount();
+    if (remainBoatPartsCount == 0) return;
 
-    if (remainBoatParts == 0) return;
-
-    std::string remainText = remainPartsTextInfo->texts[0] + std::to_string(remainBoatParts);
+    std::string remainText = remainPartsTextInfo->texts[0] + std::to_string(remainBoatPartsCount);
     DrawText(mFbWidth - mFbWidth * remainPartsTextInfo->xRatio, mFbWidth * remainPartsTextInfo->yRatio, mFbWidth * remainPartsTextInfo->scaleRatio, remainText, false);
 }
 
 void UIRenderer::DrawStateUI() {
-    UIState::TutorialKind currentTutorialKind = GetGame()->GetUIState()->GetCurrentTutorialKind();
+    UIState::TutorialKind currentTutorialKind = mGame->GetUIState()->GetCurrentTutorialKind();
 
     switch (currentTutorialKind)
     {
@@ -267,7 +240,7 @@ void UIRenderer::DrawStateUI() {
             break;
     }
 
-    UIState::TalkWith currentTalkWith = GetGame()->GetUIState()->GetCurrentTalkWith();
+    UIState::TalkWith currentTalkWith = mGame->GetUIState()->GetCurrentTalkWith();
 
     switch (currentTalkWith)
     {
@@ -283,7 +256,7 @@ void UIRenderer::DrawStateUI() {
     if (isStageClear) 
         DrawStageClear();
 
-    float fadeInTimer = GetGame()->GetFadeInTimer();
+    float fadeInTimer = mGame->GetFadeInTimer();
     float alpha;
 
     if (fadeInTimer >= 0.0f) 
@@ -295,7 +268,7 @@ void UIRenderer::DrawStateUI() {
         DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {0.0f, 0.0f, 0.0f, alpha});
 
     // ローディング描画はフェードイン背景より後に描画する必要があるため以下動かさない
-    bool isLoading = GetGame()->GetIsChangeStage() && GetGame()->GetFadeInTimer() <= 0.1f;
+    bool isLoading = mGame->GetIsChangeStage() && mGame->GetFadeInTimer() <= 0.1f;
     if (isLoading) 
         DrawLoading();
 }
@@ -305,16 +278,15 @@ void UIRenderer::DrawBattleTutorial() {
     if (!battleTutorialTextInfo) return;
 
     std::vector<std::string> battleTutorialTexts = battleTutorialTextInfo->texts;
-    int tutorialUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+    int tutorialUIIndex = mGame->GetUIState()->GetTalkUIIndex();
 
     if (tutorialUIIndex < battleTutorialTexts.size()) {
         DrawTalkUI(battleTutorialTexts, tutorialUIIndex);
         return;
     }
 
-    GetGame()->GetUIState()->SetTalkUIIndex(0);
-    GetGame()->GetUIState()->SetCurrentTutorialKind(UIState::TutorialKind::None);
-    GetGame()->GetGameProgressState()->SetCurrentSceneState(GameProgressState::SceneState::Playing);
+    mGame->GetUIState()->FinishTutorial();
+    mGame->StartPlayingScene();
 }
 
 void UIRenderer::DrawBreakTutorial() {
@@ -322,16 +294,15 @@ void UIRenderer::DrawBreakTutorial() {
     if (!breakTutorialTextInfo) return;
 
     std::vector<std::string> breakTutorialTexts = breakTutorialTextInfo->texts;
-    int tutorialUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+    int tutorialUIIndex = mGame->GetUIState()->GetTalkUIIndex();
 
     if (tutorialUIIndex < breakTutorialTexts.size()) {
         DrawTalkUI(breakTutorialTexts, tutorialUIIndex);
         return;
     }
 
-    GetGame()->GetUIState()->SetTalkUIIndex(0);
-    GetGame()->GetUIState()->SetCurrentTutorialKind(UIState::TutorialKind::None);
-    GetGame()->GetGameProgressState()->SetCurrentSceneState(GameProgressState::SceneState::Playing);
+    mGame->GetUIState()->FinishTutorial();
+    mGame->StartPlayingScene();
 }
 
 void UIRenderer::DrawStageClear() {
@@ -355,18 +326,17 @@ void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
 }
 
 void UIRenderer::DrawTalkWithNPC() {
-    NPC* talkingNPC = GetGame()->GetPlayers()[0]->GetTalkingNPC();
+    NPC* talkingNPC = mGame->GetPlayers()[0]->GetTalkingNPC();
     std::vector<std::string> talkTexts = talkingNPC->GetTalkTexts();
-    int talkUIIndex = GetGame()->GetUIState()->GetTalkUIIndex();
+    int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
 
     if (talkUIIndex < talkTexts.size()) {
         DrawTalkUI(talkTexts, talkUIIndex);
         return;
     } 
 
-    GetGame()->GetUIState()->SetCurrentTalkWith(UIState::TalkWith::None);
-    GetGame()->GetUIState()->SetTalkUIIndex(0);
-    GetGame()->GetGameProgressState()->SetCurrentSceneState(GameProgressState::SceneState::Playing);
+    mGame->GetUIState()->FinishTalkWith();
+    mGame->StartPlayingScene();
 }
 
 void UIRenderer::DrawLoading() {
@@ -381,9 +351,12 @@ void UIRenderer::DrawLoading() {
     DrawTexture(loadingTextureInfo->x, mFbHeight - loadingTextureInfo->y, loadingTextureInfo->width, loadingTextureInfo->height, "slime");
 }
 
+void UIRenderer::DrawSkyBox() {
+    DrawTexture(0.0f, 0.0f, mFbWidth, mFbHeight, "skyBox");
+}
+
 void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color)
 {
-    // 背景の描画
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x + width * 0.5f, y + height * 0.5f, 0.0f))
                 * glm::scale(glm::mat4(1.0f), glm::vec3(width, height, 1.0f));
     glm::mat4 view = glm::mat4(1.0f);
@@ -397,8 +370,7 @@ void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void UIRenderer::DrawText(float x, float y, float scale, std::string message, bool isCenterBase, glm::vec4 color)
-{
+void UIRenderer::DrawText(float x, float y, float scale, std::string message, bool isCenterBase, glm::vec4 color) {
     std::string message1 = message;
     std::string message2 = "";
     int newline = message.find("\n");
@@ -438,9 +410,6 @@ void UIRenderer::DrawText(float x, float y, float scale, std::string message, bo
     glm::mat4 model;
     if (isCenterBase) {
         model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f))
-                    * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
-    } else if (isNewLine && isCenterBase) {
-        model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y - 20, 0.0f))
                     * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
     } else if (isNewLine) {
         model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f - 20.0f, 0.0f))

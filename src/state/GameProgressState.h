@@ -10,6 +10,7 @@ public:
         Opening,
         Talking,
         Playing,
+        Focusing,
         ShowUI,
         StageClear,
         GameOver,

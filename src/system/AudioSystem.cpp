@@ -1,12 +1,10 @@
 #include "AudioSystem.h"
 #include "Game.h"
 #include "actor/Player.h"
-#include "state/GameProgressState.h"
 #include <iostream>
 
 AudioSystem::AudioSystem(Game* game)
     : mGame(game)
-    , mCurrentBgmPlanetIndex(-1)
 {
     Initialize();
 }
@@ -17,11 +15,15 @@ void AudioSystem::Initialize() {
         return;
     }
 
-    Mix_VolumeMusic(80);
-    Mix_Volume(-1, 60);
+    AdjustVolume(80, 60);
 
     CreateBGMList();
     CreateSEList();
+}
+
+void AudioSystem::AdjustVolume(int volumeBGM, int volumeSE) {
+    Mix_VolumeMusic(volumeBGM);
+    Mix_Volume(-1, volumeSE);
 }
 
 void AudioSystem::CreateBGMList() {
@@ -50,22 +52,17 @@ void AudioSystem::CreateSEList() {
 }
 
 void AudioSystem::Update() {
-    UpdateBGM();
+    
 }
 
-void AudioSystem::UpdateBGM() {
-    std::vector<class Player*> players = GetGame()->GetPlayers();
-    bool isPlaying = GetGame()->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Playing;
-    if (isPlaying && players[0]->GetCurrentPlanetNum() != mCurrentBgmPlanetIndex || GetGame()->GetIsChangeStage())
-    {
-        if (players[0]->GetCurrentPlanetNum() == 0) {
-            PlayBGM("normalBGM");
-        }
-        mCurrentBgmPlanetIndex = players[0]->GetCurrentPlanetNum();
-        if (mCurrentBgmPlanetIndex == 2) {
-            PlayBGM("bossBGM");
-        }
-    }
+void AudioSystem::TryChangeBGM() {
+    std::vector<Player*> players = mGame->GetPlayers();
+    int currentPlanetNum = players[0]->GetCurrentPlanetNum();
+    if (currentPlanetNum == 0)
+        PlayBGM("normalBGM");
+
+    if (currentPlanetNum == 2)
+        PlayBGM("bossBGM");
 }
 
 void AudioSystem::Shutdown() {

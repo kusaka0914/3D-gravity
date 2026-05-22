@@ -1,30 +1,28 @@
 #pragma once
 
-#include "actor/Planet.h"
-#include "actor/Enemy.h"
 #include <glm/glm.hpp>
 #include <yaml-cpp/yaml.h>
-#include <vector>
-#include <unordered_map>
+
+class Game;
+class Planet;
 
 class ActorLoadSystem {
 public:
-    ActorLoadSystem(class Game* game);
+    ActorLoadSystem(Game* game);
 
     void LoadData(bool isLoadPlayer);
-    
-    Game* GetGame() const { return mGame; }
+
 private:
-    bool LoadPlayers(const char* path);
-    bool LoadNPCs(const char* path);
-    bool LoadEnemies(const char* path);
-    bool LoadPlanets(const char* path);
-    bool LoadBoats(const char* path);
-    bool LoadBoatParts(const char* path);
-    bool LoadKeys(const char* path);
-    bool LoadCrystals(const char* path);
-    bool LoadStar(const char* path);
-    bool LoadPlatforms(const char* path);
+    void LoadPlayers(const char* path);
+    void LoadNPCs(const char* path);
+    void LoadEnemies(const char* path);
+    void LoadPlanets(const char* path);
+    void LoadBoats(const char* path);
+    void LoadBoatParts(const char* path);
+    void LoadKeys(const char* path);
+    void LoadCrystals(const char* path);
+    void LoadStar(const char* path);
+    void LoadPlatforms(const char* path);
 
     glm::vec3 CalculatePos(YAML::Node node, Planet* currentPlanet);
 

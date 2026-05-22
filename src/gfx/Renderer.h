@@ -1,29 +1,29 @@
+#pragma once
+
 #include <GL/glew.h>
 #include <vector>
 #include <unordered_map>
 #include <SDL_ttf.h>
-#include <glm/glm.hpp>
+
+class Game;
+class VertexArray;
 
 class Renderer {
 public:
-    Renderer(class Game* game);
+    Renderer(Game* game);
+    ~Renderer();
+
+protected:
+    void RegisterTexture(std::string path, std::string name);
+
+private:
     void Initialize();
-    void Draw();
+    void InitializeFont();
+    void InitializeVertexArrays();
 
-    Game* GetGame() const { return mGame; }
-private:
-    void DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat);
-    void DrawCharacter(const glm::vec3 &pos, glm::vec3 scale, const glm::vec4 &fallbackColor,
-        const glm::vec3 &up, float yaw, const std::vector<struct LoadedMesh> *Meshes,
-        const glm::vec4 *colorOverride = nullptr);
-    void DrawGuard(glm::mat4 viewMat, class Enemy* enemy);
-    std::vector<glm::mat4> GetViews();
-    void AddImgInfo(std::string path, std::string name);
-
-private:
+protected:
     Game* mGame;
-    class Shader3D* mShader3D;
     TTF_Font* mFont;
-    const std::unordered_map<const char*, std::unique_ptr<class VertexArray>>& mVertexArrays;
+    std::unordered_map<const char*, std::unique_ptr<VertexArray>> mVertexArrays;
     std::unordered_map<std::string, GLuint> mTextures;
 };

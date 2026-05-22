@@ -1,7 +1,6 @@
 #include "DestructibleComponent.h"
 #include "Game.h"
 #include "actor/Player.h"
-#include "actor/Crystal.h"
 
 DestructibleComponent::DestructibleComponent(Actor* owner, int updateOrder)
     : Component(owner, updateOrder)
@@ -18,7 +17,7 @@ void DestructibleComponent::Update(float deltaTime) {
 }
 
 void DestructibleComponent::TryApplyDamage() {
-    const std::vector<Player*>& players = GetOwner()->GetGame()->GetPlayers();
+    const std::vector<Player*>& players = mOwner->GetGame()->GetPlayers();
 
     for (auto player : players) {
         const Player::ActionState playerActionState = player->GetActionState();

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+#include <btBulletDynamicsCommon.h>
 
 class Game;
 class Component;
@@ -22,8 +23,6 @@ public:
 
     void UpdateUpVec();
     void UpdateFallbackUpVec();
-    glm::vec3 GetAverageNormal();
-    virtual void OnLanded(const glm::vec3& hitPos) {};
 
     void AddComponent(std::unique_ptr<Component> component);
     void RemoveComponent(std::unique_ptr<Component> component);
@@ -54,6 +53,10 @@ public:
     Game* GetGame() const { return mGame; }
     Planet* GetCurrentPlanet() const { return mCurrentPlanet; }
     std::vector<struct LoadedMesh>* GetMeshes() const { return mMeshes; }
+
+private:
+    glm::vec3 GetAverageNormal();
+    bool CastRay(const glm::vec3& offset, glm::vec3& outNormal, const btCollisionObject*& outObj);
 
 protected:
     bool mIsActive;

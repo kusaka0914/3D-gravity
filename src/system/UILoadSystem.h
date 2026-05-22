@@ -1,5 +1,4 @@
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <yaml-cpp/yaml.h>
 
@@ -26,7 +25,7 @@ public:
         std::vector<std::string> texts;
     };
 
-    UILoadSystem(class Game* game);
+    UILoadSystem();
 
     void Initialize();
     
@@ -44,13 +43,10 @@ public:
 
 private:
     void LoadUIInfo(const std::string& path);
-    void AddTextureInfo(std::string screenName, YAML::Node node);
-    void AddTextInfo(std::string screenName, YAML::Node node);
-
-    Game* GetGame() const { return mGame; }
+    void LoadTextureInfo(const std::string& screenName, YAML::Node& node);
+    void LoadTextInfo(const std::string& screenName, YAML::Node& node);
 
 private:
-    Game* mGame;
     std::unordered_map<std::string, TextureInfo> mTextureInfo;
     std::unordered_map<std::string, TextInfo> mTextInfo;
 };

@@ -79,6 +79,8 @@ public:
     bool GetIsAllBoatPartsCollected() const { return mIsAllBoatPartsCollected; }
 
     int GetStageNum() const { return mStageNum; }
+    int GetRemainBoatPartsCount() const { return mRemainBoatPartsCount; }
+
     const glm::vec4& GetColor() const { return mColor; }
     const std::vector<Enemy*>& GetEnemies() const { return mEnemies; }
     const std::vector<Boat*>& GetBoats() const { return mBoats; }
@@ -91,6 +93,7 @@ public:
     PlanetShape GetPlanetShape() const { return mPlanetShape; }
 
 private:
+    void UpdateRemainBoatPartsCount();
     void CheckKeySpawnCondition();
     void CheckIsAllEnemiesDead();
     void CheckIsAllBoatPartsCollected();
@@ -100,6 +103,7 @@ private:
     bool mIsAllBoatPartsCollected;
 
     int mStageNum;
+    int mRemainBoatPartsCount;
 
     glm::vec4 mColor;
 

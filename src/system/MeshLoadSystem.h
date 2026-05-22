@@ -12,15 +12,19 @@ struct LoadedMesh {
     float diffuseColor[3] = { 1.0f, 1.0f, 1.0f };
 };
 
+class Actor;
+class Game;
+
 class MeshLoadSystem {
 public:
-    MeshLoadSystem();
+    MeshLoadSystem(Game* game);
 
     void Initialize();
+    void LoadModel();
 
     std::vector<LoadedMesh> LoadMeshFromFile(const char* path);
 
-    bool loadMeshPositionsAndIndices(const char* path,
+    bool LoadMeshPositionsAndIndices(const char* path,
         std::vector<float>& outPositions, std::vector<unsigned int>& outIndices);
     
     std::vector<LoadedMesh>* GetLoadedMeshes(const std::string& MeshName) {
@@ -29,9 +33,11 @@ public:
     }
 
 private:
+    void SetActorMesh(Actor* actor);
     void CreateLoadedMeshes();
     unsigned int loadTexture(const char* path);
 
 private:
+    Game* mGame;
     std::unordered_map<std::string, std::vector<LoadedMesh>> mLoadedMeshes;
 };

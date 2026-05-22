@@ -1,6 +1,7 @@
 #include <glm/glm.hpp>
 
 class Game;
+class Actor;
 
 class CameraSystem {
 public:
@@ -11,9 +12,8 @@ public:
     void Update(float deltaTime);
 
     glm::mat4 GetPlayerView(float cameraDistance, bool isFixed = false);
+    glm::mat4 GetFocusView(Actor* focusActor);
     glm::vec3 GetCameraPos() const { return mCameraPos; }
-
-    // glm::mat4 GetView(float cameraDistance, bool isFixed);
 
 private:
     void UpdateCamera(float deltaTime);

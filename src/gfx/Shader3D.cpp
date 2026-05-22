@@ -1,12 +1,19 @@
 #include "Shader3D.h"
-#include <fstream>
-#include <sstream>
 #include <GL/glew.h>
 
 Shader3D::Shader3D()
     :Shader()
 {
-    mShaderProgram = createShaderProgram("../shaders/vertex.glsl", "../shaders/fragment.glsl");
+    Initialize();
+}
+
+Shader3D::~Shader3D()
+{
+    
+}
+
+void Shader3D::Initialize() {
+    mShaderProgram = CreateShaderProgram("../shaders/vertex.glsl", "../shaders/fragment.glsl");
     mLocModel = glGetUniformLocation(mShaderProgram, "model");
     mLocView = glGetUniformLocation(mShaderProgram, "view");
     mLocProj = glGetUniformLocation(mShaderProgram, "projection");
@@ -21,9 +28,4 @@ Shader3D::Shader3D()
     mLocToonStrength = glGetUniformLocation(mShaderProgram, "toonStrength");
     mLocRimStrength = glGetUniformLocation(mShaderProgram, "rimStrength");
     mLocRimPower = glGetUniformLocation(mShaderProgram, "rimPower");
-}
-
-Shader3D::~Shader3D()
-{
-    
 }

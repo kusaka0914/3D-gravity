@@ -1,17 +1,27 @@
+#include "Renderer.h"
 #include <GL/glew.h>
 #include <vector>
 #include <unordered_map>
 #include <glm/glm.hpp>
 #include <SDL_ttf.h>
 
-class UIRenderer {
+class Game;
+class UIShader;
+class UILoadSystem;
+class VertexArray;
+
+class UIRenderer : public Renderer {
 public:
-    UIRenderer(class Game* game);
-    void Initialize();
+    UIRenderer(Game* game);
+    ~UIRenderer();
     void Draw();
+    void DrawSkyBox();
+
+    UILoadSystem* GetUILoadSystem() const { return mUILoadSystem; }
 
 private:
-    void AddImgInfo(std::string path, std::string name);
+    void Initialize();
+    void RegisterUITextures();
 
     void DrawTitle();
 
@@ -42,16 +52,11 @@ private:
     void DrawText(float x, float y, float scale, std::string message, bool isCenterBase, glm::vec4 color =  {255, 255, 255, 255});
     void DrawTexture(float x, float y, float width, float height, std::string textureName);
 
-    Game* GetGame() const { return mGame; }
-
 private:
-    Game* mGame;
-    class UIShader* mUIShader;
-    TTF_Font* mFont;
-    class UILoadSystem* mUILoadSystem;
-
-    const std::unordered_map<const char*, std::unique_ptr<class VertexArray>>& mVertexArrays;
-    std::unordered_map<std::string, GLuint> mTextures;
+    std::unique_ptr<UIShader> mUIShaderUnique;
+    UIShader* mUIShader;
+    std::unique_ptr<UILoadSystem> mUILoadSystemUnique;
+    UILoadSystem* mUILoadSystem;
 
     int mFbWidth;
     int mFbHeight;

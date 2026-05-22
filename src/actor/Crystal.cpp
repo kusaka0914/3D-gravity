@@ -1,5 +1,6 @@
 #include "Crystal.h"
 #include "Game.h"
+#include "system/AudioSystem.h"
 #include "component/DestructibleComponent.h"
 #include <iostream>
 
