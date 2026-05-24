@@ -81,7 +81,7 @@ default:
     type: text
     pos: [20.0, 60.0]
     scaleRatio: [0.00025, 1.0]
-    text: ["A:ジャンプ B:回避 X:攻撃 Y:広範囲攻撃 空中でX長押し→離す:溜め攻撃"]
+    text: ["A:ジャンプ B:回避 X:強攻撃 Y:弱攻撃 空中でX長押し→離す:溜め攻撃"]
   
   - id: hpTexture
     type: texture
@@ -92,12 +92,6 @@ default:
     type: texture
     posRatio: [0.015, 0.06]
     scaleRatio: [0.1, 0.1]
-  
-  - id: specialAttackText
-    type: text
-    posRatio: [0.02, 0.28]
-    scaleRatio: [0.00025, 1.0]
-    text: ["Lを押して！"]
   
   - id: talkableText
     type: text

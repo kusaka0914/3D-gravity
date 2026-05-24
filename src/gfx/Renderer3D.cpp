@@ -243,7 +243,7 @@ void Renderer3D::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
             if (boat->GetIsActive())
             {
                 glm::vec3 boatScale = glm::vec3(0.8f);
-                DrawCharacter(boat->GetPos(), boatScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), boat->GetUpVec(), 0.0f, boat->GetMeshes());
+                DrawCharacter(boat->GetPos(), boatScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), boat->GetUpVec(), boat->GetFacingYaw(), boat->GetMeshes());
             }
         }
     }

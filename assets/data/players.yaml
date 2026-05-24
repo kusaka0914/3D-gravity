@@ -2,7 +2,7 @@
 # theta: 周方向 [rad], u: 高さ, currentPlanetNum: 惑星番号
 # hp: 体力, attack: 攻撃力, camera_pitch: カメラのピッチ
 players:
-  - hp: 5
+  - hp: 100
     attack: 10
     attackSpeed: 5.0
     camera_pitch: 0.4

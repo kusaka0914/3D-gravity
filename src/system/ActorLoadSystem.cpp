@@ -366,6 +366,9 @@ void ActorLoadSystem::LoadBoats(const char* path)
         int destStage = node["destStage"] ? node["destStage"].as<int>() : 0;
         boat->SetDestStage(destStage);
 
+        float facingYaw = node["facingYaw"] ? node["facingYaw"].as<float>() : 0.0f;
+        boat->SetFacingYaw(facingYaw);
+
         glm::vec3 pos = CalculatePos(node, currentPlanet);
         boat->SetPos(pos);
 

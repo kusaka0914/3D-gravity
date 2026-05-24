@@ -554,7 +554,13 @@ void Player::StartAfterAttackReaction() {
         mAttackMotionTimer = mDefaultAttackMotionTimer;
 
     mAttackComboIndex++;
-    if (mAttackComboIndex == 3) {
+
+    if (mAttackKind == AttackKind::Normal && mAttackComboIndex != 3) {
+        mAttackComboIndex = 0;
+        return;
+    }
+
+    if (mAttackKind == AttackKind::Wide && mAttackComboIndex == 3) {
         mAttackCooldownRemaining = mLastAttackCooldown;
     }
 }
