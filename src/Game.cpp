@@ -376,6 +376,16 @@ void Game::OnEnemyLaunched()
     mSceneSystem->OnEnemyLaunched();
 }
 
+void Game::OnStrongAttacked()
+{
+    mSceneSystem->OnStrongAttacked();
+}
+
+void Game::OnLanded()
+{
+    mSceneSystem->OnLanded();
+}
+
 void Game::StartPlayingScene()
 {
     mSceneSystem->StartPlayingScene();

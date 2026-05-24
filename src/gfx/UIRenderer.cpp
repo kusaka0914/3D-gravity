@@ -235,7 +235,11 @@ void UIRenderer::DrawStateUI() {
         
         case UIState::TutorialKind::Break:
             DrawBreakTutorial();
-            break; 
+            break;
+
+        case UIState::TutorialKind::SpecialAttack:
+            DrawSpecialAttackTutorial();
+            break;
 
         default:
             break;
@@ -299,6 +303,22 @@ void UIRenderer::DrawBreakTutorial() {
 
     if (tutorialUIIndex < breakTutorialTexts.size()) {
         DrawTalkUI(breakTutorialTexts, tutorialUIIndex);
+        return;
+    }
+
+    mGame->StartPlayingScene();
+    mGame->GetSceneSystem()->GetUIState()->FinishTutorial();
+}
+
+void UIRenderer::DrawSpecialAttackTutorial() {
+    auto specialAttackTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "specialAttackTutorialText");
+    if (!specialAttackTutorialTextInfo) return;
+
+    std::vector<std::string> specialAttackTutorialTexts = specialAttackTutorialTextInfo->texts;
+    int tutorialUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
+
+    if (tutorialUIIndex < specialAttackTutorialTexts.size()) {
+        DrawTalkUI(specialAttackTutorialTexts, tutorialUIIndex);
         return;
     }
 

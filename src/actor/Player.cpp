@@ -642,4 +642,5 @@ void Player::OnBoatArrived(Boat* boat) {
 
 void Player::OnLanded() {
     mIsDodged = false;
+    mGame->OnLanded();
 }

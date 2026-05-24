@@ -309,6 +309,7 @@ void Enemy::ApplyDamage(float damage, Player* player) {
 
         mIsStrongAttacked = false;
         FinishLaunched();
+        mGame->OnStrongAttacked();
     }
 }
 

@@ -43,6 +43,7 @@ private:
    
     void DrawBattleTutorial();
     void DrawBreakTutorial();
+    void DrawSpecialAttackTutorial();
     void DrawTalkWithNPC();
     void DrawStageClear();
     void DrawTalkUI(const std::vector<std::string>& texts, int index);

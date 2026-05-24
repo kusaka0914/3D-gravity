@@ -168,6 +168,24 @@ void SceneSystem::OnEnemyLaunched()
     mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
 }
 
+void SceneSystem::OnStrongAttacked() {
+    if (!mGameProgressState->GetIsFirstBreak() || mGameProgressState->GetIsFirstStrongAttack()) {
+        return;
+    }
+
+    mGameProgressState->SetIsFirstStrongAttack(true);
+}
+
+void SceneSystem::OnLanded() {
+    if (!mGameProgressState->GetIsFirstStrongAttack() || mUIState->GetIsSpecialAttackTutorialShown()) {
+        return;
+    }
+
+    mUIState->SetIsSpecialAttackTutorialShown(true);
+    mUIState->SetCurrentTutorialKind(UIState::TutorialKind::SpecialAttack);
+    mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
+}
+
 void SceneSystem::UpdateFade(float deltaTime)
 {
     if (mFadeTimer > -1.0f) {

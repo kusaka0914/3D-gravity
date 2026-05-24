@@ -28,6 +28,8 @@ public:
     void OnBoatArrived(Boat* boat);
     void OnStageClear();
     void OnEnemyLaunched();
+    void OnStrongAttacked();
+    void OnLanded();
 
     bool CanUpdateWorld() const { return IsPlaying() || IsFocusing(); };
     bool IsTitle() const { return mGameProgressState->GetSceneState() == GameProgressState::SceneState::Title; }
@@ -35,6 +37,7 @@ public:
     bool IsPlaying() const { return mGameProgressState->GetSceneState() == GameProgressState::SceneState::Playing; }
     bool IsFocusing() const { return mGameProgressState->GetSceneState() == GameProgressState::SceneState::Focusing; }
     bool IsStageClear() const { return mGameProgressState->GetSceneState() == GameProgressState::SceneState::StageClear; }
+    bool IsGameOver() const { return mGameProgressState->GetSceneState() == GameProgressState::SceneState::GameOver; }
     bool IsTalkWithMother() const { return mUIState->GetCurrentTalkWith() == UIState::TalkWith::Mother; }
     bool IsTalkWithDoctor() const { return mUIState->GetCurrentTalkWith() == UIState::TalkWith::Doctor; }
     bool IsTalkWithNPC() const { return mUIState->GetCurrentTalkWith() == UIState::TalkWith::NPC; }

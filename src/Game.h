@@ -37,6 +37,8 @@ public:
     void OnBoatArrived(Boat* boat);
     void OnStarObtained();
     void OnEnemyLaunched();
+    void OnStrongAttacked();
+    void OnLanded();
 
     void StartPlayingScene();
     void StartFocusingScene();
