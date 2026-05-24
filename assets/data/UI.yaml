@@ -60,6 +60,21 @@ opening:
       "スライム: ママを助けられるのは僕しかいない！",
       "そういうとスライムはすぐに家を飛び出し、\nロケットに乗り込んで宇宙へと旅立ちました。"
     ]
+  
+gameOver:
+  - id: gameOverText
+    type: text
+    pos: [0.0, 400.0]
+    posRatio: [0.5, 0.0]
+    scaleRatio: [1.0, 1.0]
+    text: ["ゲームオーバー！"]
+
+  - id: restartText
+    type: text
+    pos: [0.0, 550.0]
+    posRatio: [0.5, 0.0]
+    scaleRatio: [0.5, 0.5]
+    text: ["直前からリスタート: A"]
 
 default:
   - id: operationSupportText

@@ -17,6 +17,7 @@ public:
 
     void OnConfirmPressed();
 
+    void RestartGame();
     void StartOpening();
     void StartPlayingScene();
     void StartFocusingScene();
@@ -30,6 +31,7 @@ public:
     void OnEnemyLaunched();
     void OnStrongAttacked();
     void OnLanded();
+    void OnPlayerDied();
 
     bool CanUpdateWorld() const { return IsPlaying() || IsFocusing(); };
     bool IsTitle() const { return mGameProgressState->GetSceneState() == GameProgressState::SceneState::Title; }

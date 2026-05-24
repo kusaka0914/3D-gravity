@@ -61,6 +61,9 @@ void SceneSystem::OnConfirmPressed()
             TryStartTalkWithNPC();
             break;
 
+        case GameProgressState::SceneState::GameOver:
+            RestartGame();
+
         default:
             break;
     }
@@ -71,6 +74,11 @@ void SceneSystem::StartOpening()
     mFadeTimer = 1.0f;
     mIsFadeOut = false;
     mGameProgressState->SetNextSceneState(GameProgressState::SceneState::Opening);
+}
+
+void SceneSystem::RestartGame() {
+    StartPlayingScene();
+    mGame->RestartGame();
 }
 
 void SceneSystem::StartPlayingScene()
@@ -184,6 +192,10 @@ void SceneSystem::OnLanded() {
     mUIState->SetIsSpecialAttackTutorialShown(true);
     mUIState->SetCurrentTutorialKind(UIState::TutorialKind::SpecialAttack);
     mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
+}
+
+void SceneSystem::OnPlayerDied() {
+    mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::GameOver);
 }
 
 void SceneSystem::UpdateFade(float deltaTime)

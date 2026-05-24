@@ -39,7 +39,9 @@ public:
     void OnEnemyLaunched();
     void OnStrongAttacked();
     void OnLanded();
+    void OnPlayerDied();
 
+    void RestartGame();
     void StartPlayingScene();
     void StartFocusingScene();
 

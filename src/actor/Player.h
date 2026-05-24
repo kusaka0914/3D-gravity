@@ -41,7 +41,7 @@ public:
 
     void ApplyDamage(float damage, glm::vec3 knockBackFrom);
     void OnBoatArrived(Boat* boat);
-    void Respawn();
+    void Restart();
 
     void SetIsDodged(bool isDodged) { mIsDodged = isDodged; }
 
@@ -107,6 +107,8 @@ private:
 
     void UpdateAlive(float deltaTime);
     void Die();
+    void Recover();
+    void Respawn();
 
     void UpdateWorldVec();
     void UpdateIdle(float deltaTime);
@@ -132,7 +134,6 @@ private:
     void FinishCharging();
 
     void ChangeFaceDir();
-    void Recover();
     void MoveDuringDodging(float deltaTime);
     void MoveDuringAttacking(float deltaTime);
     void MoveDuringCharging(float deltaTime);
@@ -147,7 +148,7 @@ private:
     void FixPlanetSurface();
     void OnLanded() override;
 
-    bool IsAlive() const { return mHp >= 0.0f; };
+    bool IsAlive() const { return mHp > 0.0f; };
     bool IsTouchingBoat(Boat* boat);
     bool IsFallIntoPlanetInside();
     bool IsEnemyHitByAttack(float dist, float dot, float effectiveRange);

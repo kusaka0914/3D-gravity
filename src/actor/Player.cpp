@@ -160,6 +160,11 @@ void Player::UpdateAlive(float deltaTime) {
 }
 
 void Player::Die() {
+    mGame->OnPlayerDied();
+}
+
+void Player::Restart() {
+    StartIdle();
     Recover();
     Respawn();
 }
@@ -170,7 +175,6 @@ void Player::Recover() {
 
 void Player::Respawn() {
     mPos = mRestartPos;
-    mOnGround = true;
 }
 
 void Player::UpdateWorldVec() {

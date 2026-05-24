@@ -386,6 +386,16 @@ void Game::OnLanded()
     mSceneSystem->OnLanded();
 }
 
+void Game::OnPlayerDied() {
+    mSceneSystem->OnPlayerDied();
+}
+
+void Game::RestartGame() {
+    for (auto player : mPlayers) {
+        player->Restart();
+    }
+}
+
 void Game::StartPlayingScene()
 {
     mSceneSystem->StartPlayingScene();

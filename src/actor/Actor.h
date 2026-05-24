@@ -30,6 +30,7 @@ public:
     void SetIsActive(bool isActive) { mIsActive = isActive; }
 
     void SetRadius(float radius) { mRadius = radius; }
+    void SetFacingYaw(float facingYaw) { mFacingYaw = facingYaw; }
 
     void SetPos(const glm::vec3& pos) { mPos = pos; }
     void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
@@ -43,6 +44,7 @@ public:
     bool GetIsActive() const { return mIsActive; }
 
     float GetRadius() const { return mRadius; }
+    float GetFacingYaw() const { return mFacingYaw; }
 
     const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
@@ -62,6 +64,7 @@ protected:
     bool mIsActive;
 
     float mRadius;
+    float mFacingYaw;
 
     glm::vec3 mPos;
     glm::vec3 mUpVec;

@@ -204,7 +204,7 @@ players:
   # - theta : 1.7
   #   u : 9.5
   #   currentPlanetNum: 0
-  - pos: [3.0, 9.5, 0.0]
+  - pos: [3.0, 7.5, 0.0]
     currentPlanetNum: 0
   
 star:

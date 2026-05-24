@@ -19,12 +19,8 @@ public:
     void Land(const glm::vec3& hitPos);
     void NotLand();
 
-    void SetFacingYaw(float facingYaw) { mFacingYaw = facingYaw; }
-
     bool GetOnGround() const { return mOnGround; }
     bool GetIsJudgeLanding() const { return mIsJudgeLanding; }
-
-    float GetFacingYaw() const { return mFacingYaw; }
 
     const glm::vec3& GetFacingForwardVec() const { return mFacingForwardVec; }
 
@@ -40,8 +36,6 @@ private:
 protected:
     bool mOnGround;
     bool mIsJudgeLanding;
-
-    float mFacingYaw;
 
     glm::vec3 mVelocity;
     glm::vec3 mFacingForwardVec;

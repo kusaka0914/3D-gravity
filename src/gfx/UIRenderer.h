@@ -24,8 +24,8 @@ private:
     void RegisterUITextures();
 
     void DrawTitle();
-
     void DrawOpening();
+    void DrawGameOver();
 
     void DrawOpeningIntro();
     void DrawOpeningTalkWithMother();

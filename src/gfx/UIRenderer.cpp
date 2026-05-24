@@ -58,6 +58,10 @@ void UIRenderer::Draw() {
     bool isOpening = mGame->GetSceneSystem()->IsOpening();
     if (isOpening)
         DrawOpening();
+    
+    bool isGameOver = mGame->GetSceneSystem()->IsGameOver();
+    if (isGameOver)
+        DrawGameOver();
 
     bool isPlaying = mGame->GetSceneSystem()->IsPlaying();
     if (isPlaying)
@@ -97,6 +101,20 @@ void UIRenderer::DrawOpening() {
             break;
         }
     }
+}
+
+void UIRenderer::DrawGameOver() {
+    DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {0.0f, 0.0f, 0.0f, 0.5f});
+
+    auto gameOverTextInfo = mUILoadSystem->GetTextInfo("gameOver", "gameOverText");
+    if (!gameOverTextInfo) return;
+
+    DrawText(mFbWidth * gameOverTextInfo->xRatio, gameOverTextInfo->y, gameOverTextInfo->scaleRatio, gameOverTextInfo->texts[0], true);
+
+    auto restartTextInfo = mUILoadSystem->GetTextInfo("gameOver", "restartText");
+    if (!restartTextInfo) return;
+
+    DrawText(mFbWidth * restartTextInfo->xRatio, restartTextInfo->y, restartTextInfo->scaleRatio, restartTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawOpeningIntro() {
@@ -387,6 +405,10 @@ void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector
     glUniformMatrix4fv(mUIShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
     glUniform1i(mUIShader->GetLocUseTexture(), 0);
     glUniform4fv(mUIShader->GetLocObjectColor(), 1, color.data());
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     mVertexArrays.at("text")->SetActive();
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
