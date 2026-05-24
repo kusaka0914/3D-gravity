@@ -84,13 +84,14 @@ public:
     void SetTalkableNPC(NPC* talkableNPC) { mTalkableNPC = talkableNPC; }
 
     int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
+    int GetJewel() const { return mJewel; }
 
     float GetAttack() const { return mAttack; }
     float GetHp() const { return mHp; }
     float GetAttackMotionTimer() const { return mAttackMotionTimer; }
     float GetStrongAttackTimer() const { return mStrongAttackTimer; }
     float GetInvincibleTimer() const { return mInvincibleTimer; }
-    float GetSpecialAttackCooldownRemaining() const { return mSpecialAttackCooldownRemaining; }
+    float GetSpecialAttackCooldownRemaining() const { return mJewelTimer; }
     float GetAttackRange() const { return mAttackRange; }
     float GetRayCastTimer() const { return mRayCastTimer; }
 
@@ -119,6 +120,7 @@ private:
     void UpdateKnockedBack(float deltaTime);
     void UpdateTimer(float deltaTime);
 
+    void UpdateJewelTimer(float deltaTime);
     void UpdateComboKeepTimer(float deltaTime);
     void UpdateWalk(float deltaTime);
     void UpdateBoatRide();
@@ -130,6 +132,7 @@ private:
     void StartStrongAttacking(float deltaTime);
     void StartRidingBoat(Boat* boat);
     void StartJumping(float deltaTime);
+    void StartJewelTimer();
     
     void FinishCharging();
 
@@ -168,6 +171,9 @@ private:
     bool mWideAttackPressed;
     bool mWideAttackPressedPrev;
     bool mSpecialAttackPressed;
+    bool mSpecialAttackPressedPrev;
+    bool mRecoverPressed;
+    bool mRecoverPressedPrev;
     bool mIsDodged;
     bool mIsStrongAttackHit;
 
@@ -175,6 +181,7 @@ private:
     int mAttackComboIndex;
     int mRestartPlanetIndex;
     int mPlayerNum;
+    int mJewel;
 
     float mCameraYaw;
     float mCameraPitch;
@@ -204,7 +211,7 @@ private:
     float mAttackDodgeLockRemaining;
     float mAttackMotionTimer;
     float mDefaultAttackMotionTimer;
-    float mSpecialAttackCooldownRemaining;
+    float mJewelTimer;
     float mSpecialAttackCooldown;
     float mAttackPressTimer;
     float mDefaultAttackPressTimer;

@@ -41,6 +41,7 @@ void UIRenderer::RegisterUITextures() {
     RegisterTexture("../assets/textures/hp.png", "hp");
     RegisterTexture("../assets/textures/special.png", "special");
     RegisterTexture("../assets/textures/skyBox.png", "skyBox");
+    RegisterTexture("../assets/textures/jewel.png", "jewel");
 }
 
 void UIRenderer::Draw() {
@@ -180,10 +181,7 @@ void UIRenderer::DrawDefaultUI() {
     if (mGame->GetCurrentStageNum() == 0) return;
 
     DrawHpUI();
-
-    float specialAttackCooldownRemaining = players[0]->GetSpecialAttackCooldownRemaining();
-    if (specialAttackCooldownRemaining <= 0.0f)
-        DrawSpecialAttackUI();
+    DrawJewelUI();
     
     Planet* currentPlanet = players[0]->GetCurrentPlanet();
     if (!currentPlanet->GetBoatParts().empty())
@@ -201,26 +199,30 @@ void UIRenderer::DrawHpUI() {
     auto hpTextureInfo = mUILoadSystem->GetTextureInfo("default", "hpTexture");
     if (!hpTextureInfo) return;
 
-    int hp = mGame->GetPlayers()[0]->GetHp() / 10;
+    int hp = mGame->GetPlayers()[0]->GetHp();
 
     float hpX = mFbWidth * hpTextureInfo->xRatio;
+    float hpY = mFbWidth * hpTextureInfo->yRatio;
     while (hp > 0) {
-        DrawTexture(hpX, mFbWidth * hpTextureInfo->yRatio, mFbWidth * hpTextureInfo->widthRatio, mFbWidth * hpTextureInfo->heightRatio, "hp");
-        hpX += mFbWidth / 28;
         hp--;
+        DrawTexture(hpX, hpY, mFbWidth * hpTextureInfo->widthRatio, mFbWidth * hpTextureInfo->heightRatio, "hp");
+        hpX += mFbWidth / 28;
     }
 }
 
-void UIRenderer::DrawSpecialAttackUI() {
-    auto specialAttackTextureInfo = mUILoadSystem->GetTextureInfo("default", "specialAttackTexture");
-    if (!specialAttackTextureInfo) return;
+void UIRenderer::DrawJewelUI() {
+    float jewel = mGame->GetPlayers()[0]->GetJewel();
+    if (jewel <= 0) return;
 
-    DrawTexture(mFbWidth * specialAttackTextureInfo->xRatio, mFbWidth * specialAttackTextureInfo->yRatio, mFbWidth * specialAttackTextureInfo->widthRatio, mFbWidth * specialAttackTextureInfo->heightRatio, "special");
+    auto jewelTextureInfo = mUILoadSystem->GetTextureInfo("default", "jewelTexture");
+    if (!jewelTextureInfo) return;
 
-    auto specialAttackTextInfo = mUILoadSystem->GetTextInfo("default", "specialAttackText");
-    if (!specialAttackTextInfo) return;
-
-    DrawText(mFbWidth * specialAttackTextInfo->xRatio, mFbHeight * specialAttackTextInfo->yRatio, mFbWidth * specialAttackTextInfo->scaleRatio, specialAttackTextInfo->texts[0], false);
+    float jewelX = mFbWidth * jewelTextureInfo->xRatio;
+    while(jewel > 0) {
+        DrawTexture(jewelX, mFbWidth * jewelTextureInfo->yRatio, mFbWidth * jewelTextureInfo->widthRatio, mFbWidth * jewelTextureInfo->heightRatio, "jewel");
+        jewelX += mFbWidth / 20;
+        jewel--;
+    }
 }
 
 void UIRenderer::DrawTalkableUI() {

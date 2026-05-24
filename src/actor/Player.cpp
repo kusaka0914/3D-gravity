@@ -41,11 +41,12 @@ Player::Player(Game* game)
     , mStrongAttackTimer(-1.0f)
     , mInvincibleTimer(-1.0f)
     , mComboKeepTimer(-1.0f)
-    , mSpecialAttackCooldownRemaining(-1.0f)
+    , mJewelTimer(-1.0f)
     , mRayCastTimer(0.5f)
     , mIsDodged(true)
     , mActionState(ActionState::Idle)
     , mInputAvailableTimer(-1.0f)
+    , mJewel(2)
 {
 
 }
@@ -88,6 +89,7 @@ void Player::ProcessGameController() {
     mWideAttackPressed = SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_Y);
     mDodgePressed = SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_B);
     mSpecialAttackPressed = SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
+    mRecoverPressed = SDL_GameControllerGetButton(sdlController, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
 }
 
 void Player::ProcessKeyboard() {
@@ -124,6 +126,9 @@ void Player::UpdateActor(float deltaTime) {
 
 void Player::UpdateAlive(float deltaTime) {
     UpdateWorldVec();
+    if (mJewel < 2 && mJewelTimer <= 0.0f) {
+        StartJewelTimer();
+    }
 
     switch (mActionState)
     {
@@ -157,6 +162,8 @@ void Player::UpdateAlive(float deltaTime) {
     mDodgePressedPrev = mDodgePressed;
     mAttackPressedPrev = mAttackPressed;
     mWideAttackPressedPrev = mWideAttackPressed;
+    mSpecialAttackPressedPrev = mSpecialAttackPressed;
+    mRecoverPressedPrev = mRecoverPressed;
 }
 
 void Player::Die() {
@@ -165,12 +172,8 @@ void Player::Die() {
 
 void Player::Restart() {
     StartIdle();
-    Recover();
-    Respawn();
-}
-
-void Player::Recover() {
     mHp = mMaxHp;
+    Respawn();
 }
 
 void Player::Respawn() {
@@ -226,10 +229,15 @@ void Player::UpdateIdle(float deltaTime) {
         return;
     }
 
-    bool canSpecialAttack = mSpecialAttackPressed && mSpecialAttackCooldownRemaining <= 0.0f;
+    bool canSpecialAttack = mSpecialAttackPressed && !mSpecialAttackPressedPrev && mJewel > 0;
     if (canSpecialAttack) {
         SpecialAttack(deltaTime);
         return;
+    }
+
+    bool canRecover = mRecoverPressed && !mRecoverPressedPrev && mJewel > 0 && mHp != mMaxHp;
+    if (canRecover) {
+        Recover();
     }
 
     bool isMoving = std::abs(mMoveForward) > 0.01f || std::abs(mMoveLeft) > 0.01f;
@@ -322,8 +330,9 @@ void Player::UpdateTimer(float deltaTime) {
     if (mDodgeCooldown > 0.0f)
         mDodgeCooldown -= deltaTime;
 
-    if (mSpecialAttackCooldownRemaining >= 0.0f)
-        mSpecialAttackCooldownRemaining -= deltaTime;
+    if (mJewelTimer >= 0.0f) {
+        UpdateJewelTimer(deltaTime);
+    }
 
     if (mAttackCooldownRemaining >= 0.0f)
         mAttackCooldownRemaining -= deltaTime;
@@ -349,6 +358,13 @@ void Player::UpdateTimer(float deltaTime) {
     }
 }
 
+void Player::UpdateJewelTimer(float deltaTime) {
+    mJewelTimer -= deltaTime;
+    if (mJewelTimer >= 0.0f) return;
+
+    mJewel++;
+}
+
 void Player::UpdateComboKeepTimer(float deltaTime) {
     mComboKeepTimer -= deltaTime;
     if (mComboKeepTimer >= 0.0f) return;
@@ -362,6 +378,10 @@ void Player::UpdateWalk(float deltaTime) {
 
     desiredPos = mGame->GetPhysicsSystem()->CheckCollision(this, moveDelta, desiredPos);
     mPos = desiredPos;
+}
+
+void Player::StartJewelTimer() {
+    mJewelTimer = 30.0f;
 }
 
 void Player::UpdateBoatRide() {
@@ -596,6 +616,8 @@ bool Player::IsEnemyHitByAttack(float dist, float dot, float effectiveRange) {
 }
 
 void Player::SpecialAttack(float deltaTime) {
+    mJewel--;
+
     std::vector<Enemy*> enemies = mCurrentPlanet->GetEnemies();
     for (auto& enemy : enemies) {
         if (enemy->GetIsDead())
@@ -606,8 +628,15 @@ void Player::SpecialAttack(float deltaTime) {
         
         if (enemy->GetOnGround()) 
             enemy->ApplyBreak(deltaTime);
+    }
+}
 
-        mSpecialAttackCooldownRemaining = mSpecialAttackCooldown;
+void Player::Recover() {
+    mJewel--;
+    mHp += 1;
+
+    if (mHp >= mMaxHp) {
+        mHp = mMaxHp;
     }
 }
 

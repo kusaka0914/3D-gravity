@@ -35,7 +35,7 @@ private:
 
     void DrawOperationSupportUI();
     void DrawHpUI();
-    void DrawSpecialAttackUI();
+    void DrawJewelUI();
     void DrawTalkableUI();
     void DrawRemainPartsUI();
 
