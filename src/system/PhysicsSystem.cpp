@@ -64,12 +64,14 @@ void PhysicsSystem::ClearBulletWorld()
     mBulletCollisionConfig.reset();
 }
 
-void PhysicsSystem::CreateWorld() {
+void PhysicsSystem::CreateWorld() 
+{
     CreateStageCollisionBodies();
     CreatePlayerShape();
 }
 
-void PhysicsSystem::CreateStageCollisionBodies() {
+void PhysicsSystem::CreateStageCollisionBodies() 
+{
     const std::vector<Planet*> planets = mGame->GetCurrentStage()->GetPlanets();
     for (auto planet : planets) {
         CreateStaticMeshBody(planet);
@@ -80,12 +82,14 @@ void PhysicsSystem::CreateStageCollisionBodies() {
     }
 }
 
-void PhysicsSystem::CreatePlayerShape() {
+void PhysicsSystem::CreatePlayerShape() 
+{
     constexpr float playerRadius = 0.6f;
     mPlayerShape = std::make_unique<btSphereShape>(playerRadius);
 }
 
-void PhysicsSystem::CreateStaticMeshBody(Actor* actor) {
+void PhysicsSystem::CreateStaticMeshBody(Actor* actor) 
+{
     std::string actorModelPath = "../assets/models/" + actor->GetModelPath();
 
     std::vector<float> pos;
@@ -119,7 +123,8 @@ void PhysicsSystem::CreateStaticMeshBody(Actor* actor) {
     mBulletWorld->addRigidBody(mBulletRigidBodies.back().get(), static_cast<short>(btBroadphaseProxy::DefaultFilter), static_cast<short>(-1));
 }
 
-std::unique_ptr<btTriangleMesh> PhysicsSystem::CreateTriangleMesh(const glm::vec3& actorScale, const std::vector<float>& pos, const std::vector<unsigned int>& idx) {
+std::unique_ptr<btTriangleMesh> PhysicsSystem::CreateTriangleMesh(const glm::vec3& actorScale, const std::vector<float>& pos, const std::vector<unsigned int>& idx) 
+{
     auto triangleMesh = std::make_unique<btTriangleMesh>();
     for (size_t i = 0; i + 2 < idx.size(); i += 3) {
         const unsigned int idx0 = idx[i];
@@ -138,7 +143,8 @@ std::unique_ptr<btTriangleMesh> PhysicsSystem::CreateTriangleMesh(const glm::vec
     return triangleMesh;
 }
 
-glm::vec3 PhysicsSystem::CheckCollision(Player* player, const glm::vec3& moveDelta, const glm::vec3& desiredPos) {
+glm::vec3 PhysicsSystem::CheckCollision(Player* player, const glm::vec3& moveDelta, const glm::vec3& desiredPos) 
+{
     if (auto conflictPos = CheckConflictActors(player, desiredPos))
         return *conflictPos;
 
@@ -150,11 +156,13 @@ glm::vec3 PhysicsSystem::CheckCollision(Player* player, const glm::vec3& moveDel
     return desiredPos;
 }
 
-std::optional<glm::vec3> PhysicsSystem::CheckConflictActors(Player* player, const glm::vec3& desiredPos) {
+std::optional<glm::vec3> PhysicsSystem::CheckConflictActors(Player* player, const glm::vec3& desiredPos)
+{
     std::vector<Enemy*> enemies = player->GetCurrentPlanet()->GetEnemies();
     for (Enemy* enemy : enemies) {
-        if (auto conflictPos = CheckConflictActor(enemy, desiredPos))
+        if (auto conflictPos = CheckConflictActor(enemy, desiredPos)) {
             return *conflictPos;
+        }
     }
 
     std::vector<Crystal*> crystals = player->GetCurrentPlanet()->GetCrystals();
@@ -172,9 +180,11 @@ std::optional<glm::vec3> PhysicsSystem::CheckConflictActors(Player* player, cons
     return std::nullopt;
 }
 
-std::optional<glm::vec3> PhysicsSystem::CheckConflictActor(Actor* actor, const glm::vec3& desiredPos) {
-    if (!actor->GetIsActive())
+std::optional<glm::vec3> PhysicsSystem::CheckConflictActor(Actor* actor, const glm::vec3& desiredPos) 
+{
+    if (!actor->GetIsActive()) {
         return std::nullopt;
+    }
 
     const glm::vec3 actorPos = actor->GetPos();
     const glm::vec3 toDesired = desiredPos - actorPos;
@@ -188,7 +198,8 @@ std::optional<glm::vec3> PhysicsSystem::CheckConflictActor(Actor* actor, const g
     return std::nullopt;
 }
 
-std::optional<glm::vec3> PhysicsSystem::CheckConflictWall(Player* player, const glm::vec3& moveDelta, const glm::vec3& desiredPos) {
+std::optional<glm::vec3> PhysicsSystem::CheckConflictWall(Player* player, const glm::vec3& moveDelta, const glm::vec3& desiredPos)
+{
     glm::vec3 currentPos = player->GetPos();
     glm::vec3 playerUpVec = player->GetUpVec();
     constexpr float playerUpMargin = 0.7f;

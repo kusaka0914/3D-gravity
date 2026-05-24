@@ -44,8 +44,9 @@ glm::vec3 Boat::CalculateDestPos() {
 
 void Boat::UpdateActor(float deltaTime) {
     bool isAllBoatPartsCollected = mCurrentPlanet->GetIsAllBoatPartsCollected();
+    bool isAllEnemiesDead = mCurrentPlanet->GetIsAllEnemiesDead();
     bool isFocused = mFocusComponent->GetIsFocused();
-    if (isAllBoatPartsCollected && !isFocused)
+    if ((isAllBoatPartsCollected || isAllEnemiesDead) && !isFocused)
         mFocusComponent->StartFocus();
 
     const int currentStageNum = mGame->GetCurrentStageNum();

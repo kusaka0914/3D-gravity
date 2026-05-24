@@ -57,7 +57,7 @@ void NPC::CheckTalkable() {
     for (auto player : players) {
         if (IsPlayerInTalkableRange(player)) {
             mIsTalkable = true;
-            player->SetTalkingNPC(this);
+            player->SetTalkableNPC(this);
         } else {
             mIsTalkable = false;
         }

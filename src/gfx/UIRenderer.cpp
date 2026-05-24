@@ -5,8 +5,8 @@
 #include "actor/Player.h"
 #include "actor/Planet.h"
 #include "state/UIState.h"
+#include "system/SceneSystem.h"
 #include "actor/NPC.h"
-#include "state/GameProgressState.h"
 #include "system/UILoadSystem.h"
 #include <glm/gtc/type_ptr.hpp>
 
@@ -51,15 +51,15 @@ void UIRenderer::Draw() {
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
 
-    bool isTitle = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Title;
+    bool isTitle = mGame->GetSceneSystem()->IsTitle();
     if (isTitle)
         DrawTitle();
 
-    bool isOpening = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
+    bool isOpening = mGame->GetSceneSystem()->IsOpening();
     if (isOpening)
         DrawOpening();
 
-    bool isPlaying = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Playing;
+    bool isPlaying = mGame->GetSceneSystem()->IsPlaying();
     if (isPlaying)
         DrawDefaultUI();
 
@@ -80,9 +80,9 @@ void UIRenderer::DrawTitle() {
 }
 
 void UIRenderer::DrawOpening() {
-    auto talkWith = mGame->GetUIState()->GetCurrentTalkWith();
+    auto currentTalkWith = mGame->GetSceneSystem()->GetCurrentTalkWith();
 
-    switch (talkWith)
+    switch (currentTalkWith)
     {
         case UIState::TalkWith::Opening: {
             DrawOpeningIntro();
@@ -105,7 +105,7 @@ void UIRenderer::DrawOpeningIntro() {
 
     if (!openingBgTextureInfo || !openingTalkTextInfo) return;
 
-    const int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    const int talkUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
     const std::vector<std::string>& talkTexts = openingTalkTextInfo->texts;
 
     if (talkUIIndex < talkTexts.size()) {
@@ -114,14 +114,14 @@ void UIRenderer::DrawOpeningIntro() {
         return;
     }
     
-    mGame->GetUIState()->StartTalkWith(UIState::TalkWith::Mother);
+    mGame->GetSceneSystem()->GetUIState()->StartTalkWith(UIState::TalkWith::Mother);
 }
 
 void UIRenderer::DrawOpeningTalkWithMother() {
     auto talkWithMotherTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithMotherText");
     if (!talkWithMotherTextInfo) return;
 
-    const int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    const int talkUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
     const std::vector<std::string>& talkTexts = talkWithMotherTextInfo->texts;
 
     if (talkUIIndex < talkTexts.size()) {
@@ -129,14 +129,14 @@ void UIRenderer::DrawOpeningTalkWithMother() {
         return;
     }
 
-    mGame->GetUIState()->StartTalkWith(UIState::TalkWith::Doctor);
+    mGame->GetSceneSystem()->GetUIState()->StartTalkWith(UIState::TalkWith::Doctor);
 }
 
 void UIRenderer::DrawOpeningTalkWithDoctor() {
     auto talkWithDoctorTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithDoctorText");
     if (!talkWithDoctorTextInfo) return;
 
-    const int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    const int talkUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
     const std::vector<std::string>& talkTexts = talkWithDoctorTextInfo->texts;
 
     if (talkUIIndex >= 0 && talkUIIndex < static_cast<int>(talkTexts.size())) {
@@ -144,17 +144,18 @@ void UIRenderer::DrawOpeningTalkWithDoctor() {
         return;
     }
 
-    if (talkUIIndex >= static_cast<int>(talkTexts.size()))
-        mGame->StartFadeIn();
+    if (talkUIIndex >= static_cast<int>(talkTexts.size())) {
+        mGame->GetSceneSystem()->StartFadeIn();
+    }
 }
 
 void UIRenderer::DrawDefaultUI() {
     DrawOperationSupportUI();
 
     const std::vector<Player*>& players = mGame->GetPlayers();
-    NPC* npc = players[0]->GetTalkingNPC();
-    if (npc) {
-        if (npc->GetIsTalkable())
+    NPC* talkableNPC = players[0]->GetTalkableNPC();
+    if (talkableNPC) {
+        if (talkableNPC->GetIsTalkable())
             DrawTalkableUI();  
     }
     
@@ -224,7 +225,7 @@ void UIRenderer::DrawRemainPartsUI() {
 }
 
 void UIRenderer::DrawStateUI() {
-    UIState::TutorialKind currentTutorialKind = mGame->GetUIState()->GetCurrentTutorialKind();
+    UIState::TutorialKind currentTutorialKind = mGame->GetSceneSystem()->GetCurrentTutorialKind();
 
     switch (currentTutorialKind)
     {
@@ -240,7 +241,7 @@ void UIRenderer::DrawStateUI() {
             break;
     }
 
-    UIState::TalkWith currentTalkWith = mGame->GetUIState()->GetCurrentTalkWith();
+    UIState::TalkWith currentTalkWith = mGame->GetSceneSystem()->GetCurrentTalkWith();
 
     switch (currentTalkWith)
     {
@@ -252,11 +253,11 @@ void UIRenderer::DrawStateUI() {
             break;
     }
 
-    bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
+    bool isStageClear = mGame->GetSceneSystem()->IsStageClear();
     if (isStageClear) 
         DrawStageClear();
 
-    float fadeInTimer = mGame->GetFadeInTimer();
+    float fadeInTimer = mGame->GetSceneSystem()->GetFadeTimer();
     float alpha;
 
     if (fadeInTimer >= 0.0f) 
@@ -268,7 +269,7 @@ void UIRenderer::DrawStateUI() {
         DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {0.0f, 0.0f, 0.0f, alpha});
 
     // ローディング描画はフェードイン背景より後に描画する必要があるため以下動かさない
-    bool isLoading = mGame->GetIsChangeStage() && mGame->GetFadeInTimer() <= 0.1f;
+    bool isLoading = mGame->GetSceneSystem()->GetHasPendingStageChange() && mGame->GetSceneSystem()->GetFadeTimer() <= 0.1f;
     if (isLoading) 
         DrawLoading();
 }
@@ -278,15 +279,15 @@ void UIRenderer::DrawBattleTutorial() {
     if (!battleTutorialTextInfo) return;
 
     std::vector<std::string> battleTutorialTexts = battleTutorialTextInfo->texts;
-    int tutorialUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    int tutorialUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
 
     if (tutorialUIIndex < battleTutorialTexts.size()) {
         DrawTalkUI(battleTutorialTexts, tutorialUIIndex);
         return;
     }
 
-    mGame->GetUIState()->FinishTutorial();
     mGame->StartPlayingScene();
+    mGame->GetSceneSystem()->GetUIState()->FinishTutorial();
 }
 
 void UIRenderer::DrawBreakTutorial() {
@@ -294,15 +295,15 @@ void UIRenderer::DrawBreakTutorial() {
     if (!breakTutorialTextInfo) return;
 
     std::vector<std::string> breakTutorialTexts = breakTutorialTextInfo->texts;
-    int tutorialUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    int tutorialUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
 
     if (tutorialUIIndex < breakTutorialTexts.size()) {
         DrawTalkUI(breakTutorialTexts, tutorialUIIndex);
         return;
     }
 
-    mGame->GetUIState()->FinishTutorial();
     mGame->StartPlayingScene();
+    mGame->GetSceneSystem()->GetUIState()->FinishTutorial();
 }
 
 void UIRenderer::DrawStageClear() {
@@ -326,17 +327,17 @@ void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
 }
 
 void UIRenderer::DrawTalkWithNPC() {
-    NPC* talkingNPC = mGame->GetPlayers()[0]->GetTalkingNPC();
-    std::vector<std::string> talkTexts = talkingNPC->GetTalkTexts();
-    int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    NPC* talkableNPC = mGame->GetPlayers()[0]->GetTalkableNPC();
+    std::vector<std::string> talkTexts = talkableNPC->GetTalkTexts();
+    int talkUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
 
     if (talkUIIndex < talkTexts.size()) {
         DrawTalkUI(talkTexts, talkUIIndex);
         return;
     } 
 
-    mGame->GetUIState()->FinishTalkWith();
     mGame->StartPlayingScene();
+    mGame->GetSceneSystem()->GetUIState()->FinishTalkWith();
 }
 
 void UIRenderer::DrawLoading() {

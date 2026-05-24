@@ -64,7 +64,7 @@ bool CharacterActor::TryLandByRay(const glm::vec3& rayOffset, const glm::vec3& h
     const btVector3 hitPt = rayCallback.m_hitPointWorld;
     glm::vec3 hitPos(hitPt.x(), hitPt.y(), hitPt.z());
 
-    OnLanded(hitPos + hitPosCorrection);
+    Land(hitPos + hitPosCorrection);
     return true;
 }
 
@@ -84,13 +84,14 @@ CharacterActor::RayInfo CharacterActor::CreateRayInfo(const glm::vec3& rayOffset
     return { rayFrom, rayTo, rayCallback };
 }
 
-void CharacterActor::OnLanded(const glm::vec3& hitPos) {
+void CharacterActor::Land(const glm::vec3& hitPos) {
     mPos = hitPos;
     mOnGround = true;
     mVelocity = glm::vec3(0.0f);
+    OnLanded();
 }
 
-void CharacterActor::NotOnLanded() {
+void CharacterActor::NotLand() {
     mOnGround = false;
 }
 

@@ -6,7 +6,7 @@
 #include "system/PhysicsSystem.h"
 #include "actor/Planet.h"
 #include "utils/MathUtils.h"
-#include "state/GameProgressState.h"
+#include "system/SceneSystem.h"
 #include <btBulletDynamicsCommon.h>
 #include <cmath>
 
@@ -43,8 +43,9 @@ Player::Player(Game* game)
     , mComboKeepTimer(-1.0f)
     , mSpecialAttackCooldownRemaining(-1.0f)
     , mRayCastTimer(0.5f)
-    , mCanDodge(true)
+    , mIsDodged(true)
     , mActionState(ActionState::Idle)
+    , mInputAvailableTimer(-1.0f)
 {
 
 }
@@ -59,7 +60,9 @@ void Player::Initialize() {
     mRestartPos = mPos;
 }
 
-void Player::ProcessActor() {   
+void Player::ProcessActor() {  
+    if (mInputAvailableTimer >= 0.0f) return;
+    
     ProcessGameController();
     ProcessKeyboard();
 }
@@ -110,7 +113,7 @@ void Player::ProcessKeyboard() {
 void Player::UpdateActor(float deltaTime) {
     CharacterActor::UpdateActor(deltaTime);
 
-    bool isPlaying = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Playing;
+    bool isPlaying = mGame->GetSceneSystem()->IsPlaying();
     if(!isPlaying) return;
     
     if (IsAlive())
@@ -201,7 +204,7 @@ void Player::UpdateIdle(float deltaTime) {
 
     ApplyGravity(deltaTime);
 
-    bool canStartDodging = mDodgeCooldown <= 0.0f && mAttackDodgeLockRemaining <= 0.0f && mCanDodge && mDodgePressed && !mDodgePressedPrev;
+    bool canStartDodging = mDodgeCooldown <= 0.0f && mAttackDodgeLockRemaining <= 0.0f && !mIsDodged && mDodgePressed && !mDodgePressedPrev;
     if (canStartDodging) {
         StartDodging();
         return;
@@ -332,13 +335,21 @@ void Player::UpdateTimer(float deltaTime) {
 
     if (mRayCastTimer >= 0.0f)
         mRayCastTimer -= deltaTime;
+    
+    if (mInputAvailableTimer >= 0.0f) {
+        mInputAvailableTimer -= deltaTime;
+    }
 
     if (mComboKeepTimer > 0.0f) {
-        mComboKeepTimer -= deltaTime;
-        if (mComboKeepTimer >= 0.0f) return;
-        
-        mAttackComboIndex = 0;
+        UpdateComboKeepTimer(deltaTime);
     }
+}
+
+void Player::UpdateComboKeepTimer(float deltaTime) {
+    mComboKeepTimer -= deltaTime;
+    if (mComboKeepTimer >= 0.0f) return;
+    
+    mAttackComboIndex = 0;
 }
 
 void Player::UpdateWalk(float deltaTime) {
@@ -386,6 +397,7 @@ void Player::StartDodging() {
     mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetPos());
     mVelocity = glm::vec3(0.0f);
     mGame->GetAudioSystem()->PlaySE("dodgeSE");
+    mIsDodged = true;
 }
 
 void Player::StartAttacking(float deltaTime) {
@@ -454,11 +466,17 @@ void Player::MoveDuringDodging(float deltaTime) {
 }
 
 void Player::MoveDuringCharging(float deltaTime) {
-    mPos += -mFacingForwardVec * mChargeMoveSpeed * deltaTime;
+    const glm::vec3 moveDelta = -mFacingForwardVec * mChargeMoveSpeed * deltaTime;
+    glm::vec3 desiredPos = mPos + moveDelta;
+    desiredPos = mGame->GetPhysicsSystem()->CheckCollision(this, moveDelta, desiredPos);
+    mPos = desiredPos;
 }
 
 void Player::MoveDuringStrongAttacking(float deltaTime) {
-    mPos += mFacingForwardVec * mStrongAttackSpeed * deltaTime;
+    const glm::vec3 moveDelta = mFacingForwardVec * mStrongAttackSpeed * deltaTime;
+    glm::vec3 desiredPos = mPos + moveDelta;
+    desiredPos = mGame->GetPhysicsSystem()->CheckCollision(this, moveDelta, desiredPos);
+    mPos = desiredPos;
 }
 
 void Player::MoveDuringAttacking(float deltaTime) {
@@ -501,7 +519,7 @@ void Player::Attack(float deltaTime) {
     if (mAttackKind != AttackKind::Strong) {
         StartAfterAttackReaction();
         for (Enemy* enemy : hitEnemies)
-                enemy->ApplyDamage(mAttack);
+                enemy->ApplyDamage(mAttack, this);
 
         if (mAttackComboIndex != 3) {
             mGame->GetAudioSystem()->PlaySE("attackSE");
@@ -519,7 +537,7 @@ void Player::Attack(float deltaTime) {
     GetGame()->GetAudioSystem()->PlaySE("attackAirSE");
     for (Enemy* enemy : hitEnemies) {
         enemy->SetIsStrongAttacked(true);
-        enemy->ApplyDamage(mAttack);
+        enemy->ApplyDamage(mAttack, this);
         mIsStrongAttackHit = true;
     }
 }
@@ -574,7 +592,7 @@ void Player::SpecialAttack(float deltaTime) {
             continue;
 
         mAttack = mNormalAttack;
-        enemy->ApplyDamage(mAttack);
+        enemy->ApplyDamage(mAttack, this);
         
         if (enemy->GetOnGround()) 
             enemy->ApplyBreak(deltaTime);
@@ -620,4 +638,8 @@ void Player::OnBoatArrived(Boat* boat) {
     mIsActive = true;
 
     UpdateFallbackUpVec();
+}
+
+void Player::OnLanded() {
+    mIsDodged = false;
 }

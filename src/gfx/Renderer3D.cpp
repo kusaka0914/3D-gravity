@@ -14,11 +14,10 @@
 #include "actor/NPC.h"
 #include "utils/MathUtils.h"
 #include "actor/Platform.h"
-#include "state/UIState.h"
+#include "system/SceneSystem.h"
 #include "system/CameraSystem.h"
 #include "thirdParty/stb_image.h"
 #include "component/FocusComponent.h"
-#include "state/GameProgressState.h"
 #include "system/MeshLoadSystem.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -48,7 +47,7 @@ void Renderer3D::Initialize() {
 }
 
 void Renderer3D::Draw() {
-    bool isTitle = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Title;
+    bool isTitle = mGame->GetSceneSystem()->IsTitle();
     if (isTitle) return;
 
     GLFWwindow* window = mGame->GetWindow();
@@ -421,10 +420,10 @@ void Renderer3D::DrawGuard(glm::mat4 viewMat, Enemy* enemy) {
 std::vector<glm::mat4> Renderer3D::GetViews() {
     std::vector<glm::mat4> views;
 
-    bool isOpening = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
+    bool isOpening = mGame->GetSceneSystem()->IsOpening();
     if (isOpening) {
-        bool isTalkWithMother = mGame->GetUIState()->GetCurrentTalkWith() == UIState::TalkWith::Mother;
-        bool isTalkWithDoctor = mGame->GetUIState()->GetCurrentTalkWith() == UIState::TalkWith::Doctor;
+        bool isTalkWithMother = mGame->GetSceneSystem()->IsTalkWithMother();
+        bool isTalkWithDoctor = mGame->GetSceneSystem()->IsTalkWithDoctor();
 
         if (isTalkWithMother) {
             glm::mat4 view = glm::lookAt(glm::vec3(-2.0f, 4.0f, -2.0f), glm::vec3(4.0f, 2.0f, 4.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -460,7 +459,7 @@ std::vector<glm::mat4> Renderer3D::GetViews() {
         }
     }
     
-    bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
+    bool isStageClear = mGame->GetSceneSystem()->IsStageClear();
     if (isStageClear) {
         glm::mat4 view = mGame->GetCameraSystem()->GetPlayerView(4.0f, true);
         views.emplace_back(view);

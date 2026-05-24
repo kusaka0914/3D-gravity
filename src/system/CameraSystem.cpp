@@ -6,7 +6,7 @@
 
 CameraSystem::CameraSystem(Game* game) 
     :mGame(game)
-    , mCameraPitch(0.4f)
+    , mCameraPitch(-1.2f)
     , mCameraYaw(0.0f)
 {
 
@@ -17,7 +17,6 @@ void CameraSystem::ProcessInput() {
     constexpr float deadZone = 0.25f;
     constexpr float scale = 1.0f / 32767.0f; // SDL_GameControllerGetAxisの範囲が32767までで、scaleをかけて1.0f以内に抑えるため
     
-    mCameraStickY = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_RIGHTY) * scale;
     mCameraStickX = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_RIGHTX) * scale;
 
     if (std::abs(mCameraStickY) < deadZone)
@@ -37,9 +36,6 @@ void CameraSystem::UpdateCamera(float deltaTime) {
 
     Player* player = mGame->GetPlayers()[0];
     player->SetCameraYaw(yawDelta);
-
-    mCameraPitch -= mCameraStickY * cameraSensitivity * deltaTime;
-    mCameraPitch = glm::clamp(mCameraPitch, -1.2f, -0.2f);
 
     const float upSmooth = 1.0f - std::exp(-8.0f * deltaTime);
     mCameraUpVec = glm::normalize(glm::mix(mCameraUpVec, player->GetUpVec(), upSmooth));

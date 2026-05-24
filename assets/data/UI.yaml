@@ -94,7 +94,7 @@ default:
     type: text
     posRatio: [0.2, 0.015]
     scaleRatio: [0.0003125, 1.0]
-    text: ["残りのかけら数: "]
+    text: ["残りのパーツ数: "]
 state:
   - id: battleTutorialText
     type: text

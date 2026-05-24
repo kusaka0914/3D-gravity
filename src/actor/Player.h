@@ -43,7 +43,7 @@ public:
     void OnBoatArrived(Boat* boat);
     void Respawn();
 
-    void SetCanDodge(bool canDodge) { mCanDodge = canDodge; }
+    void SetIsDodged(bool isDodged) { mIsDodged = isDodged; }
 
     void SetCurrentPlanetNum(int currentPlanetNum) { mCurrentPlanetNum = currentPlanetNum; }
     void SetPlayerNum(int playerNum) { mPlayerNum = playerNum; }
@@ -77,10 +77,11 @@ public:
     void SetDefaultStrongAttackTimer(float defaultStrongAttackTimer) { mDefaultStrongAttackTimer = defaultStrongAttackTimer; }
     void SetDefaultAttackMotionTimer(float defaultAttackMotionTimer) { mDefaultAttackMotionTimer = defaultAttackMotionTimer; }
     void SetRayCastTimer(float rayCastTimer) { mRayCastTimer = rayCastTimer; }
+    void SetInputAvailableTimer(float inputAvailableTimer) { mInputAvailableTimer = inputAvailableTimer; }
 
     void SetVelocity(const glm::vec3& velocity) { mVelocity = velocity; }
 
-    void SetTalkingNPC(NPC* talkingNPC) { mTalkingNPC = talkingNPC; }
+    void SetTalkableNPC(NPC* talkableNPC) { mTalkableNPC = talkableNPC; }
 
     int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
 
@@ -88,7 +89,7 @@ public:
     float GetHp() const { return mHp; }
     float GetAttackMotionTimer() const { return mAttackMotionTimer; }
     float GetStrongAttackTimer() const { return mStrongAttackTimer; }
-    float GetInvincibleTimer() const { return mDefaultInvincibleTimer; }
+    float GetInvincibleTimer() const { return mInvincibleTimer; }
     float GetSpecialAttackCooldownRemaining() const { return mSpecialAttackCooldownRemaining; }
     float GetAttackRange() const { return mAttackRange; }
     float GetRayCastTimer() const { return mRayCastTimer; }
@@ -98,7 +99,7 @@ public:
     const glm::vec3& GetForwardVec() const { return mForwardVec; }
     const std::vector<RaySegment>& GetRayCasts() const { return mRayCasts; }
 
-    NPC* GetTalkingNPC() const { return mTalkingNPC; }
+    NPC* GetTalkableNPC() const { return mTalkableNPC; }
 
 private:
     void ProcessGameController();
@@ -116,6 +117,7 @@ private:
     void UpdateKnockedBack(float deltaTime);
     void UpdateTimer(float deltaTime);
 
+    void UpdateComboKeepTimer(float deltaTime);
     void UpdateWalk(float deltaTime);
     void UpdateBoatRide();
 
@@ -143,6 +145,7 @@ private:
     void SpecialAttack(float deltaTime);
     void FollowMovingBoat(Boat* boat);
     void FixPlanetSurface();
+    void OnLanded() override;
 
     bool IsAlive() const { return mHp >= 0.0f; };
     bool IsTouchingBoat(Boat* boat);
@@ -164,7 +167,7 @@ private:
     bool mWideAttackPressed;
     bool mWideAttackPressedPrev;
     bool mSpecialAttackPressed;
-    bool mCanDodge;
+    bool mIsDodged;
     bool mIsStrongAttackHit;
 
     int mCurrentPlanetNum;
@@ -221,6 +224,7 @@ private:
     float mStrongAttack;
     float mStrongAttackSpeed;
     float mRayCastTimer;
+    float mInputAvailableTimer;
 
     glm::vec3 mForwardVec;
     glm::vec3 mLeftVec;
@@ -229,5 +233,5 @@ private:
     glm::vec3 mDodgeDir;
     std::vector<RaySegment> mRayCasts;
 
-    NPC* mTalkingNPC;
+    NPC* mTalkableNPC;
 };
