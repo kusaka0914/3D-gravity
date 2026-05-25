@@ -33,7 +33,7 @@ Game::Game()
     , mUIReloadKeyPressedPrev(false)
     , mAPressedPrev(false)
     , mIsPlayer2Joined(false)
-    , mCurrentStageYamlPath("../assets/data/stage0.yaml")
+    , mCurrentStageYamlPath("../assets/data/house.yaml")
 {
 }
 
@@ -209,8 +209,15 @@ void Game::ProcessGameInput()
         SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_BACK);
 
     if (escapePressed || backPressed) {
-        glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
+        FinishGame();
     }
+
+    const bool startPressed= mSdlController &&
+        SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_START);
+    if (startPressed && !mStartPressedPrev) {
+        mSceneSystem->OnStartPressed();
+    }
+    mStartPressedPrev = startPressed;
 }
 
 void Game::ProcessActorsInput()
@@ -373,6 +380,7 @@ void Game::OnStarObtained()
 
 void Game::OnEnemyLaunched()
 {
+    mAudioSystem->PlaySE("breakSE");
     mSceneSystem->OnEnemyLaunched();
 }
 
@@ -388,6 +396,10 @@ void Game::OnLanded()
 
 void Game::OnPlayerDied() {
     mSceneSystem->OnPlayerDied();
+}
+
+void Game::FinishGame() {
+    glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
 }
 
 void Game::RestartGame() {

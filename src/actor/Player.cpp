@@ -9,6 +9,7 @@
 #include "system/SceneSystem.h"
 #include <btBulletDynamicsCommon.h>
 #include <cmath>
+#include <iostream>
 
 
 Player::Player(Game* game)
@@ -114,6 +115,7 @@ void Player::ProcessKeyboard() {
 
 void Player::UpdateActor(float deltaTime) {
     CharacterActor::UpdateActor(deltaTime);
+    // std::cout << mPos.x  << " " << mPos.y << " " << mPos.z << std::endl;
 
     bool isPlaying = mGame->GetSceneSystem()->IsPlaying();
     if(!isPlaying) return;
@@ -126,6 +128,7 @@ void Player::UpdateActor(float deltaTime) {
 
 void Player::UpdateAlive(float deltaTime) {
     UpdateWorldVec();
+    UpdateBoatRide();
     if (mJewel < 2 && mJewelTimer <= 0.0f) {
         StartJewelTimer();
     }
@@ -199,8 +202,6 @@ void Player::UpdateWorldVec() {
 }
 
 void Player::UpdateIdle(float deltaTime) {
-    UpdateBoatRide();
-
     if (!mIsActive) return;
 
     bool canStartCharging = !mOnGround && mAttackPressed;
@@ -417,6 +418,7 @@ void Player::StartDodging() {
 
     mDodgeTimer = mDodgeDuration;
     mDodgeCooldown = mDodgeCooldownTime;
+    mInvincibleTimer = mDodgeDuration;
     
     mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetPos());
     mVelocity = glm::vec3(0.0f);
@@ -455,6 +457,7 @@ void Player::StartStrongAttacking(float deltaTime) {
     mActionState = ActionState::StrongAttacking;
     mAttackKind = AttackKind::Strong;
     mAttackRange = mStrongAttackRange;
+    mAttackAngle = mNormalAttackAngle;
     mAttackCooldownRemaining = mLastAttackCooldown;
     mAttack = mStrongAttack;
 
@@ -551,9 +554,11 @@ void Player::Attack(float deltaTime) {
         }
 
         mAttackComboIndex = 0;
+        mGame->GetAudioSystem()->PlaySE("destroySE");
         for (Enemy* enemy : hitEnemies) {
-            if (enemy->GetOnGround()) 
+            if (enemy->GetOnGround()) {
                 enemy->ApplyBreak(deltaTime);
+            }
         }
         return;
     }
@@ -625,8 +630,10 @@ void Player::SpecialAttack(float deltaTime) {
         mAttack = mNormalAttack;
         enemy->ApplyDamage(mAttack, this);
         
-        if (enemy->GetOnGround()) 
+        if (enemy->GetOnGround()) {
             enemy->ApplyBreak(deltaTime);
+            mGame->GetAudioSystem()->PlaySE("destroySE");
+        }
     }
 }
 
@@ -660,6 +667,8 @@ bool Player::IsTouchingBoat(Boat* boat) {
 }
 
 void Player::StartRidingBoat(Boat* boat) {
+    if (!mIsActive) return;
+
     boat->StartTravel();
     mIsActive = false;
 }
@@ -672,8 +681,6 @@ void Player::OnBoatArrived(Boat* boat) {
     mRestartPlanetIndex = mCurrentPlanetNum;
 
     mVelocity = glm::vec3(0.0f);
-
-    mOnGround = true;
     mIsActive = true;
 
     UpdateFallbackUpVec();

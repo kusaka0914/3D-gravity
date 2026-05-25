@@ -7,7 +7,7 @@ title:
   - id: startText
     type: text
     posRatio: [0.5, 0.75]
-    scaleRatio: [1.0, 1.0]
+    scaleRatio: [0.000625, 1.0]
     text: ["START: A"]
   
 opening:
@@ -64,24 +64,28 @@ opening:
 gameOver:
   - id: gameOverText
     type: text
-    pos: [0.0, 400.0]
-    posRatio: [0.5, 0.0]
-    scaleRatio: [1.0, 1.0]
+    posRatio: [0.5, 0.444]
+    scaleRatio: [0.000625, 1.0]
     text: ["ゲームオーバー！"]
 
   - id: restartText
     type: text
-    pos: [0.0, 550.0]
-    posRatio: [0.5, 0.0]
-    scaleRatio: [0.5, 0.5]
+    posRatio: [0.5, 0.6111]
+    scaleRatio: [0.0003125, 1.0]
     text: ["直前からリスタート: A"]
 
 default:
   - id: operationSupportText
     type: text
-    pos: [20.0, 60.0]
-    scaleRatio: [0.00025, 1.0]
-    text: ["A:ジャンプ B:回避 X:強攻撃 Y:弱攻撃 L:スペシャル攻撃 R:回復 空中でX長押し→離す:溜め攻撃"]
+    posRatio: [0.0125, 0.0666]
+    scaleRatio: [0.0002, 1.0]
+    text: ["+:操作ガイド非表示 A:ジャンプ B:回避 X:強攻撃 Y:弱攻撃 L:スペシャル攻撃 R:回復 空中でX長押し→離す:溜め攻撃"]
+  
+  - id: operationSupportHiddenText
+    type: text
+    posRatio: [0.0125, 0.0666]
+    scaleRatio: [0.0002, 1.0]
+    text: ["+:操作ガイド表示"]
   
   - id: hpTexture
     type: texture
@@ -112,10 +116,10 @@ state:
     text: 
     [
       "この惑星は敵が多そうですね...\nということで敵の倒し方を伝授します！",
-      "まずそれぞれの敵はガードというものを持っています。",
-      "連続して3回、敵に攻撃を当てることで\nガードを1つ破壊できます！",
-      "全てのガードを破壊すると敵がブレイク状態になり、\n有利に戦闘を進められますよ！",
-      "まずは1度ブレイクしてみましょう！",
+      "戦闘の基本としては敵に近づいてYまたはXで攻撃します！",
+      "Yは弱攻撃で攻撃力が低いですが、\n一定方向に連続して攻撃することができます！",
+      "Xは強攻撃で攻撃力が高く、\n攻撃後の隙が大きいですが全方向に攻撃することができます！",
+      "まずはY→Y→YまたはY→Y→Xのコンボを使って、\n敵に3回攻撃してみましょう！",
     ]
 
   - id: breakTutorialText
@@ -124,10 +128,12 @@ state:
     scaleRatio: [0.5, 1.0]
     text: 
     [
-      "ナイスブレイク！\nブレイクすると敵が空中に打ち上げられます！",
-      "空中の敵を攻撃するには空中溜め攻撃です！",
+      "3回攻撃できましたね！\n敵の頭上にあったガードがなくなったことに気づきましたか？",
+      "というのも、敵に3回攻撃を当てると\nガードを1個破壊することができるのです！",
+      "全てのガードを破壊することで\n敵を空中に打ち上げることができます！",
+      "空中の敵を攻撃する時は空中溜め攻撃を使います！",
       "覚えてますか？\n大きなクリスタルを破壊するときに使うアレです！",
-      "非常に強い技なのでブレイクして空中溜め攻撃で\nサクサク敵を倒していきましょう！",
+      "非常に強い技なのでガードを全破壊して空中溜め攻撃で\nサクサク敵を倒していきましょう！",
     ]
   - id: specialAttackTutorialText
     type: text
@@ -144,27 +150,33 @@ state:
       "それではこれまで学んだことを活かして\n全ての敵を倒してみましょう！"
     ]
   
+  # - id: stageClearText
+  #   type: text
+  #   pos: [0.0, 300.0]
+  #   posRatio: [0.5, 0.0]
+  #   scaleRatio: [1.0, 1.0]
+  #   text: ["ステージクリア！"]
+
   - id: stageClearText
     type: text
-    pos: [0.0, 300.0]
-    posRatio: [0.5, 0.0]
-    scaleRatio: [1.0, 1.0]
-    text: ["ステージクリア！"]
+    posRatio: [0.5, 0.333]
+    scaleRatio: [0.000625, 1.0]
+    text: ["Thank You For Playing！"]
 
   - id: loadingText
     type: text
-    pos: [30.0, 70.0]
-    scaleRatio: [0.5, 1.0]
+    posRatio: [0.01875, 0.0777]
+    scaleRatio: [0.0003125, 1.0]
     text: ["Loading..."]
   
   - id: loadingTexture
     type: texture
-    pos: [30.0, 130.0]
-    scale: [100.0, 68.0]
+    posRatio: [0.01875, 0.1444]
+    scaleRatio: [0.0625, 0.0755]
 
   - id: talkBgTexture
     type: texture
-    pos: [60.0, 50.0]
+    posRatio: [0.0375, 0.0555]
     scaleRatio: [0.75, 0.25]
 
   - id: talkText

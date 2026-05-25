@@ -146,7 +146,8 @@ void Enemy::UpdateAttacking(float deltaTime, Player* player) {
 
     constexpr float hitRangeMargin = 0.2f;
     const float hitRange = mRadius + hitRangeMargin;
-    if (IsPlayerInRange(hitRange, player) && !mIsHit && player->GetInvincibleTimer() <= 0.0f) {
+    const float wrapTime = mDefaultAttackMotionTimer / 2;
+    if (IsPlayerInRange(hitRange, player) && !mIsHit && player->GetInvincibleTimer() <= 0.0f && mAttackMotionTimer >= wrapTime) {
         player->ApplyDamage(mAttack, mPos);
         mIsHit = true;
     }
@@ -301,7 +302,6 @@ void Enemy::LaunchIntoAir(float deltaTime) {
     mStandByAttackTimer = -1.0f;
     mAttackMotionTimer = -1.0f;
     mIsJudgeLanding = false;
-    mGame->GetAudioSystem()->PlaySE("breakSE");
     mGame->SetHitStopTimer(0.3f);
 
     StartIdle();
@@ -334,6 +334,4 @@ void Enemy::ApplyBreak(float deltaTime) {
         LaunchIntoAir(deltaTime);
         return;
     }
-
-    mGame->GetAudioSystem()->PlaySE("destroySE");
 }

@@ -8,6 +8,7 @@ UIState::UIState(Game* game)
     , mIsSpecialAttackTutorialShown(false)
     , mCurrentTalkWith(TalkWith::Opening)
     , mCurrentTutorialKind(TutorialKind::None)
+    , mIsOperationUIShow(true)
 {
 
 }

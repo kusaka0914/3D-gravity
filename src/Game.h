@@ -41,6 +41,7 @@ public:
     void OnLanded();
     void OnPlayerDied();
 
+    void FinishGame();
     void RestartGame();
     void StartPlayingScene();
     void StartFocusingScene();
@@ -125,6 +126,7 @@ private:
     bool mReloadKeyPressedPrev = false;
     bool mUIReloadKeyPressedPrev = false;
     bool mAPressedPrev = false;
+    bool mStartPressedPrev = false;
     bool mIsPlayer2Joined = false;
 
     std::string mCurrentStageYamlPath;

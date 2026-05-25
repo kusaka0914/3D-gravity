@@ -40,7 +40,7 @@ private:
     void DrawRemainPartsUI();
 
     void DrawStateUI();
-   
+    
     void DrawBattleTutorial();
     void DrawBreakTutorial();
     void DrawSpecialAttackTutorial();

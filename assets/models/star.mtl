@@ -1,12 +1,14 @@
-# Blender 5.0.1 MTL File: 'None'
+# Blender 5.0.1 MTL File: 'star.blend'
 # www.blender.org
 
-newmtl マテリアル.001
-Ns 250.000000
+newmtl Star
 Ka 1.000000 1.000000 1.000000
-Kd 0.320828 0.015902 0.800023
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
+map_Kd ../textures/gold star_Star_BaseColor.png
+map_Ns ../textures/gold star_Star_Roughness.png
+map_refl ../textures/gold star_Star_Metallic.png
+map_Bump -bm 1.000000 ../textures/gold star_Star_Normal.png

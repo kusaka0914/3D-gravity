@@ -35,11 +35,16 @@ void DestructibleComponent::TryApplyDamage() {
 }
 
 bool DestructibleComponent::IsPlayerInHitRange(Player* player) const {
+    const glm::vec3 toOwner = glm::normalize(mOwner->GetPos() - player->GetPos());
+    const float distTo = glm::length(toOwner); 
+
     constexpr float hitRangeMargin = 2.0f;
     const float hitRange = mOwner->GetRadius() + hitRangeMargin;
 
-    const float distTo = glm::length(player->GetPos() - mOwner->GetPos()); 
-    return distTo <= hitRange;
+    const float dot = glm::dot(player->GetFacingForwardVec(), toOwner);
+    float threshold = std::cos(player->GetAttackAngle() * 0.5f);
+
+    return distTo <= hitRange && dot >= threshold;
 }
 
 void DestructibleComponent::ApplyDamage(float attack) {

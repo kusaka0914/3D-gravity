@@ -81,7 +81,7 @@ void UIRenderer::DrawTitle() {
 
     auto startTextInfo = mUILoadSystem->GetTextInfo("title", "startText");
     if (startTextInfo)
-        DrawText(mFbWidth * startTextInfo->xRatio, mFbHeight * startTextInfo->yRatio, startTextInfo->scaleRatio, startTextInfo->texts[0], true);
+        DrawText(mFbWidth * startTextInfo->xRatio, mFbHeight * startTextInfo->yRatio, mFbWidth * startTextInfo->scaleRatio, startTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawOpening() {
@@ -110,12 +110,12 @@ void UIRenderer::DrawGameOver() {
     auto gameOverTextInfo = mUILoadSystem->GetTextInfo("gameOver", "gameOverText");
     if (!gameOverTextInfo) return;
 
-    DrawText(mFbWidth * gameOverTextInfo->xRatio, gameOverTextInfo->y, gameOverTextInfo->scaleRatio, gameOverTextInfo->texts[0], true);
+    DrawText(mFbWidth * gameOverTextInfo->xRatio, mFbHeight * gameOverTextInfo->yRatio, mFbWidth * gameOverTextInfo->scaleRatio, gameOverTextInfo->texts[0], true);
 
     auto restartTextInfo = mUILoadSystem->GetTextInfo("gameOver", "restartText");
     if (!restartTextInfo) return;
 
-    DrawText(mFbWidth * restartTextInfo->xRatio, restartTextInfo->y, restartTextInfo->scaleRatio, restartTextInfo->texts[0], true);
+    DrawText(mFbWidth * restartTextInfo->xRatio, mFbHeight * restartTextInfo->yRatio, mFbWidth * restartTextInfo->scaleRatio, restartTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawOpeningIntro() {
@@ -189,10 +189,19 @@ void UIRenderer::DrawDefaultUI() {
 }
 
 void UIRenderer::DrawOperationSupportUI() {
-    auto operationSupportTextInfo = mUILoadSystem->GetTextInfo("default", "operationSupportText");
-    if (!operationSupportTextInfo) return;
+    bool isOperationUIShow = mGame->GetSceneSystem()->GetUIState()->GetIsOperationUIShow();
+    if (isOperationUIShow) {
+        auto operationSupportTextInfo = mUILoadSystem->GetTextInfo("default", "operationSupportText");
+        if (!operationSupportTextInfo) return;
+        
+        DrawText(mFbWidth * operationSupportTextInfo->xRatio, mFbHeight - mFbHeight * operationSupportTextInfo->yRatio, mFbWidth * operationSupportTextInfo->scaleRatio, operationSupportTextInfo->texts[0], false);
+        return;
+    }
+
+    auto operationSupportHiddenTextInfo = mUILoadSystem->GetTextInfo("default", "operationSupportHiddenText");
+    if (!operationSupportHiddenTextInfo) return;
     
-    DrawText(operationSupportTextInfo->x, mFbHeight - operationSupportTextInfo->y, mFbWidth * operationSupportTextInfo->scaleRatio, operationSupportTextInfo->texts[0], false);
+    DrawText(mFbWidth * operationSupportHiddenTextInfo->xRatio, mFbHeight - mFbHeight * operationSupportHiddenTextInfo->yRatio, mFbWidth * operationSupportHiddenTextInfo->scaleRatio, operationSupportHiddenTextInfo->texts[0], false);
 }
 
 void UIRenderer::DrawHpUI() {
@@ -359,14 +368,14 @@ void UIRenderer::DrawStageClear() {
     auto stageClearTextInfo = mUILoadSystem->GetTextInfo("state", "stageClearText");
     if (!stageClearTextInfo) return;
 
-    DrawText(mFbWidth * stageClearTextInfo->xRatio, stageClearTextInfo->y, stageClearTextInfo->scaleRatio, stageClearTextInfo->texts[0], true);
+    DrawText(mFbWidth * stageClearTextInfo->xRatio, mFbHeight * stageClearTextInfo->yRatio, mFbWidth * stageClearTextInfo->scaleRatio, stageClearTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
     auto talkBgTextureInfo = mUILoadSystem->GetTextureInfo("state", "talkBgTexture");
     if (!talkBgTextureInfo) return;
 
-    DrawTexture(talkBgTextureInfo->x, talkBgTextureInfo->y, mFbWidth * talkBgTextureInfo->widthRatio, mFbHeight * talkBgTextureInfo->heightRatio, "textBg");
+    DrawTexture(mFbWidth * talkBgTextureInfo->xRatio, mFbHeight * talkBgTextureInfo->yRatio, mFbWidth * talkBgTextureInfo->widthRatio, mFbHeight * talkBgTextureInfo->heightRatio, "textBg");
     
     auto talkTextInfo = mUILoadSystem->GetTextInfo("state", "talkText");
     if (!talkTextInfo) return;
@@ -393,12 +402,12 @@ void UIRenderer::DrawLoading() {
     auto loadingTextInfo = mUILoadSystem->GetTextInfo("state", "loadingText");
     if (!loadingTextInfo) return;
 
-    DrawText(loadingTextInfo->x, mFbHeight - loadingTextInfo->y, loadingTextInfo->scaleRatio, loadingTextInfo->texts[0], false);
+    DrawText(mFbWidth * loadingTextInfo->xRatio, mFbHeight - mFbHeight * loadingTextInfo->yRatio, mFbWidth * loadingTextInfo->scaleRatio, loadingTextInfo->texts[0], false);
 
     auto loadingTextureInfo = mUILoadSystem->GetTextureInfo("state", "loadingTexture");
     if (!loadingTextureInfo) return;
 
-    DrawTexture(loadingTextureInfo->x, mFbHeight - loadingTextureInfo->y, loadingTextureInfo->width, loadingTextureInfo->height, "slime");
+    DrawTexture(mFbWidth * loadingTextureInfo->xRatio, mFbHeight - mFbHeight * loadingTextureInfo->yRatio, mFbWidth * loadingTextureInfo->widthRatio, mFbHeight * loadingTextureInfo->heightRatio, "slime");
 }
 
 void UIRenderer::DrawSkyBox() {
@@ -466,7 +475,7 @@ void UIRenderer::DrawText(float x, float y, float scale, std::string message, bo
         model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f))
                     * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
     } else if (isNewLine) {
-        model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f - 20.0f, 0.0f))
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f - mFbHeight * 0.0222f, 0.0f))
                     * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
     } else {
         model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f, 0.0f))
@@ -507,10 +516,10 @@ void UIRenderer::DrawText(float x, float y, float scale, std::string message, bo
         SDL_FreeSurface(rgba);
 
         if (isCenterBase) {
-            model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y + 40.0f, 0.0f))
+            model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y + mFbHeight * 0.0444f, 0.0f))
                         * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
         }else{
-            model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f + 40.0f, 0.0f))
+            model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f + mFbHeight * 0.0444f, 0.0f))
                         * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
         }
         view = glm::mat4(1.0f);

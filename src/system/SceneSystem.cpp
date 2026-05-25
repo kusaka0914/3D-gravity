@@ -51,10 +51,12 @@ void SceneSystem::OnConfirmPressed()
 
         case GameProgressState::SceneState::Opening:
             mUIState->IncTalkUIIndex();
+            mGame->GetAudioSystem()->PlaySE("messageSE");
             break;
 
         case GameProgressState::SceneState::Talking:
             mUIState->IncTalkUIIndex();
+            mGame->GetAudioSystem()->PlaySE("messageSE");
             break;
 
         case GameProgressState::SceneState::Playing:
@@ -67,6 +69,11 @@ void SceneSystem::OnConfirmPressed()
         default:
             break;
     }
+}
+
+void SceneSystem::OnStartPressed() {
+    bool operationUIShow = mUIState->GetIsOperationUIShow();
+    mUIState->SetIsOperationUIShow(!operationUIShow);
 }
 
 void SceneSystem::StartOpening()
@@ -99,6 +106,7 @@ void SceneSystem::StartTalkWithNPC()
 {
     mUIState->SetCurrentTalkWith(UIState::TalkWith::NPC);
     mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
+    mGame->GetAudioSystem()->PlaySE("messageSE");
 }
 
 void SceneSystem::StartFadeIn()
@@ -114,11 +122,6 @@ void SceneSystem::RequestStageChange(int stageNum)
 {
     mNextStageNum = stageNum;
     mHasPendingStageChange = true;
-
-    if (mNextStageNum >= 0) {
-        mGame->ChangeStage(mNextStageNum);
-        mNextStageNum = -1;
-    }
 
     mFadeTimer = 1.0f;
     mIsFadeOut = false;
@@ -222,7 +225,8 @@ void SceneSystem::UpdateClearTimer(float deltaTime)
     mClearTimer -= deltaTime;
 
     if (mClearTimer < 0.0f) {
-        StartFadeIn();
+        // StartFadeIn();
+        mGame->FinishGame();
     }
 }
 
@@ -251,8 +255,13 @@ void SceneSystem::ApplySceneChange()
             break;
     }
 
+    mGame->GetAudioSystem()->TryChangeBGM();
+
     if (mHasPendingStageChange) {
         mHasPendingStageChange = false;
+
+        mGame->ChangeStage(mNextStageNum);
+        mNextStageNum = -1;
 
         Mix_HaltMusic();
         mGame->ReloadCurrentStage();

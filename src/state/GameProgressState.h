@@ -16,6 +16,7 @@ public:
         ShowUI,
         StageClear,
         GameOver,
+        GameClear
     };
 
     GameProgressState(Game* game);

@@ -1,6 +1,7 @@
 #include "AudioSystem.h"
 #include "Game.h"
 #include "actor/Player.h"
+#include "system/SceneSystem.h"
 #include <iostream>
 
 AudioSystem::AudioSystem(Game* game)
@@ -29,6 +30,9 @@ void AudioSystem::AdjustVolume(int volumeBGM, int volumeSE) {
 void AudioSystem::CreateBGMList() {
     AddBGM("../assets/audio/normalBGM.wav", "normalBGM");
     AddBGM("../assets/audio/boss.wav", "bossBGM");
+    AddBGM("../assets/audio/title.wav", "titleBGM");
+    AddBGM("../assets/audio/opening.wav", "openingBGM");
+    AddBGM("../assets/audio/base.wav", "baseBGM");
 }
 
 void AudioSystem::CreateSEList() {
@@ -50,6 +54,7 @@ void AudioSystem::CreateSEList() {
     AddSE("../assets/audio/Jump.wav", "jumpSE");
     AddSE("../assets/audio/Charging.wav", "chargingSE");
     AddSE("../assets/audio/recover.wav", "recoverSE");
+    AddSE("../assets/audio/message.wav", "messageSE");
 }
 
 void AudioSystem::Update() {
@@ -57,13 +62,39 @@ void AudioSystem::Update() {
 }
 
 void AudioSystem::TryChangeBGM() {
-    std::vector<Player*> players = mGame->GetPlayers();
-    int currentPlanetNum = players[0]->GetCurrentPlanetNum();
-    if (currentPlanetNum == 0)
-        PlayBGM("normalBGM");
+    bool isTitle = mGame->GetSceneSystem()->IsTitle();
+    if (isTitle) {
+        Mix_HaltMusic();
+        PlayBGM("titleBGM");
+        return;
+    }
 
-    if (currentPlanetNum == 2)
+    bool isOpening = mGame->GetSceneSystem()->IsOpening();
+    if (isOpening) {
+        Mix_HaltMusic();
+        PlayBGM("openingBGM");
+        return;
+    }
+
+    int currentStageNum = mGame->GetCurrentStageNum();
+    if (currentStageNum == 0) {
+        Mix_HaltMusic();
+        PlayBGM("baseBGM");
+        return;
+    }
+
+    int currentPlanetNum = mGame->GetPlayers()[0]->GetCurrentPlanetNum();
+    if (currentPlanetNum == 0) {
+        Mix_HaltMusic();
+        PlayBGM("normalBGM");
+        return;
+    }
+
+    if (currentPlanetNum == 2) {
+        Mix_HaltMusic();
         PlayBGM("bossBGM");
+        return;
+    }
 }
 
 void AudioSystem::Shutdown() {
