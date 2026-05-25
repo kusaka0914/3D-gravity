@@ -225,12 +225,6 @@ void ActorLoadSystem::LoadEnemies(const char* path) {
                 float knockBackSpeed = enemyNode["knockBackSpeed"] ? enemyNode["knockBackSpeed"].as<float>() : 0.0f;
                 enemy->SetKnockBackSpeed(knockBackSpeed);
 
-                float defaultAttackMotionTimer = enemyNode["defaultAttackMotionTimer"] ? enemyNode["defaultAttackMotionTimer"].as<float>() : 0.0f;
-                enemy->SetDefaultAttackMotionTimer(defaultAttackMotionTimer);
-
-                float attackSpeed = enemyNode["attackSpeed"] ? enemyNode["attackSpeed"].as<float>() : 0.0f;
-                enemy->SetAttackSpeed(attackSpeed);
-
                 float defaultLaunchedTimer = enemyNode["defaultLaunchedTimer"] ? enemyNode["defaultLaunchedTimer"].as<float>() : 0.0f;
                 enemy->SetDefaultLaunchedTimer(defaultLaunchedTimer);
 
@@ -267,6 +261,12 @@ void ActorLoadSystem::LoadEnemies(const char* path) {
 
             float defaultStandByAttackTimer = enemyNode["defaultStandByAttackTimer"] ? enemyNode["defaultStandByAttackTimer"].as<float>() : 0.0f;
             enemy->SetDefaultStandByAttackTimer(defaultStandByAttackTimer);
+
+            float defaultAttackMotionTimer = enemyNode["defaultAttackMotionTimer"] ? enemyNode["defaultAttackMotionTimer"].as<float>() : 0.0f;
+            enemy->SetDefaultAttackMotionTimer(defaultAttackMotionTimer);
+
+            float attackSpeed = enemyNode["attackSpeed"] ? enemyNode["attackSpeed"].as<float>() : 0.0f;
+            enemy->SetAttackSpeed(attackSpeed);
         }
 
         Enemy* enemy_ptr = enemy.get();

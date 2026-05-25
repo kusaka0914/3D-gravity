@@ -49,6 +49,7 @@ void AudioSystem::CreateSEList() {
     AddSE("../assets/audio/Dodge.wav", "dodgeSE");
     AddSE("../assets/audio/Jump.wav", "jumpSE");
     AddSE("../assets/audio/Charging.wav", "chargingSE");
+    AddSE("../assets/audio/recover.wav", "recoverSE");
 }
 
 void AudioSystem::Update() {

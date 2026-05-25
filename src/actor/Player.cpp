@@ -504,11 +504,11 @@ void Player::MoveDuringStrongAttacking(float deltaTime) {
 }
 
 void Player::MoveDuringAttacking(float deltaTime) {
-    const float wrapTime = mDefaultAttackMotionTimer / 2.0f;
-    if (mAttackMotionTimer >= wrapTime)
-        mPos += mFacingForwardVec * mAttackSpeed * deltaTime;
-    else 
-        mPos -= mFacingForwardVec * mAttackSpeed * deltaTime;
+    glm::vec3 moveDelta = mFacingForwardVec * mAttackSpeed * deltaTime;
+    glm::vec3 desiredPos = mPos + moveDelta;
+
+    desiredPos = mGame->GetPhysicsSystem()->CheckCollision(this, moveDelta, desiredPos);
+    mPos = desiredPos;
 }
 
 void Player::MoveDuringKnockBack(float deltaTime) {
@@ -609,10 +609,9 @@ std::vector<Enemy*> Player::FindHitEnemies() {
 }
 
 bool Player::IsEnemyHitByAttack(float dist, float dot, float effectiveRange) {
-    if (mAttackKind == AttackKind::Wide)
-        return dist <= effectiveRange && dot >= mAttackAngle;
+    float threshold = std::cos(mAttackAngle * 0.5f);
 
-    return dist <= effectiveRange;
+    return dist <= effectiveRange && dot >= threshold;
 }
 
 void Player::SpecialAttack(float deltaTime) {
@@ -634,6 +633,7 @@ void Player::SpecialAttack(float deltaTime) {
 void Player::Recover() {
     mJewel--;
     mHp += 1;
+    mGame->GetAudioSystem()->PlaySE("recoverSE");
 
     if (mHp >= mMaxHp) {
         mHp = mMaxHp;

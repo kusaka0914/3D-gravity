@@ -143,38 +143,44 @@ std::unique_ptr<btTriangleMesh> PhysicsSystem::CreateTriangleMesh(const glm::vec
     return triangleMesh;
 }
 
-glm::vec3 PhysicsSystem::CheckCollision(Player* player, const glm::vec3& moveDelta, const glm::vec3& desiredPos) 
+glm::vec3 PhysicsSystem::CheckCollision(Actor* actor, const glm::vec3& moveDelta, const glm::vec3& desiredPos) 
 {
-    if (auto conflictPos = CheckConflictActors(player, desiredPos))
+    if (auto conflictPos = CheckConflictActors(actor, desiredPos))
         return *conflictPos;
 
     if (!mBulletWorld || !mPlayerShape) return desiredPos;
     
-    if (auto conflictPos = CheckConflictWall(player, moveDelta, desiredPos))
+    if (auto conflictPos = CheckConflictWall(actor, moveDelta, desiredPos))
         return *conflictPos;
 
     return desiredPos;
 }
 
-std::optional<glm::vec3> PhysicsSystem::CheckConflictActors(Player* player, const glm::vec3& desiredPos)
+std::optional<glm::vec3> PhysicsSystem::CheckConflictActors(Actor* actor, const glm::vec3& desiredPos)
 {
-    std::vector<Enemy*> enemies = player->GetCurrentPlanet()->GetEnemies();
-    for (Enemy* enemy : enemies) {
-        if (auto conflictPos = CheckConflictActor(enemy, desiredPos)) {
-            return *conflictPos;
+    Enemy* enemy = dynamic_cast<Enemy*>(actor);
+    if (!enemy) {
+        std::vector<Enemy*> enemies = actor->GetCurrentPlanet()->GetEnemies();
+        for (Enemy* enemy : enemies) {
+            if (auto conflictPos = CheckConflictActor(enemy, desiredPos)) {
+                return *conflictPos;
+            }
         }
     }
 
-    std::vector<Crystal*> crystals = player->GetCurrentPlanet()->GetCrystals();
+    std::vector<Crystal*> crystals = actor->GetCurrentPlanet()->GetCrystals();
     for (Crystal* crystal : crystals) {
         if (auto conflictPos = CheckConflictActor(crystal, desiredPos))
             return *conflictPos;
     }
 
-    std::vector<NPC*> npcs = player->GetCurrentPlanet()->GetNPCs();
-    for (NPC* npc : npcs) {
-        if (auto conflictPos = CheckConflictActor(npc, desiredPos))
-            return *conflictPos;
+    NPC* npc = dynamic_cast<NPC*>(actor);
+    if (!npc) {
+        std::vector<NPC*> npcs = actor->GetCurrentPlanet()->GetNPCs();
+        for (NPC* npc : npcs) {
+            if (auto conflictPos = CheckConflictActor(npc, desiredPos))
+                return *conflictPos;
+        }
     }
 
     return std::nullopt;
@@ -198,13 +204,13 @@ std::optional<glm::vec3> PhysicsSystem::CheckConflictActor(Actor* actor, const g
     return std::nullopt;
 }
 
-std::optional<glm::vec3> PhysicsSystem::CheckConflictWall(Player* player, const glm::vec3& moveDelta, const glm::vec3& desiredPos)
+std::optional<glm::vec3> PhysicsSystem::CheckConflictWall(Actor* actor, const glm::vec3& moveDelta, const glm::vec3& desiredPos)
 {
-    glm::vec3 currentPos = player->GetPos();
-    glm::vec3 playerUpVec = player->GetUpVec();
-    constexpr float playerUpMargin = 0.7f;
-    glm::vec3 sweepFrom = currentPos + playerUpVec * playerUpMargin;
-    glm::vec3 sweepTo = desiredPos + playerUpVec * playerUpMargin;
+    glm::vec3 currentPos = actor->GetPos();
+    glm::vec3 actorUpVec = actor->GetUpVec();
+    constexpr float actorUpMargin = 0.7f;
+    glm::vec3 sweepFrom = currentPos + actorUpVec * actorUpMargin;
+    glm::vec3 sweepTo = desiredPos + actorUpVec * actorUpMargin;
 
     btTransform fromTransform, toTransform;
     fromTransform.setIdentity();
@@ -226,7 +232,7 @@ std::optional<glm::vec3> PhysicsSystem::CheckConflictWall(Player* player, const 
     const float slideEps = 1e-4f;
     if (glm::length(slideVec) > slideEps)
     {
-        glm::vec3 slideFrom = posAfterHit + playerUpVec * playerUpMargin;
+        glm::vec3 slideFrom = posAfterHit + actorUpVec * actorUpMargin;
         glm::vec3 slideTo = slideFrom + slideVec;
 
         btTransform slideFromTransition, slideToTransition;

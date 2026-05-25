@@ -202,6 +202,10 @@ bool Actor::CastRay(const glm::vec3& offset, glm::vec3& outNormal, const btColli
     Player* player = dynamic_cast<Player*>(this);
     if (player) {
         player->SetRayCastTimer(0.5f);
+    }
+
+    CharacterActor* characterActor = dynamic_cast<CharacterActor*>(this);
+    if (characterActor) {
         const float minDotAngle50 = 0.6428f;
         const float minDotAngleMinus50 = -0.6428f;
         if (glm::dot(hitNormal, up) < minDotAngle50 && glm::dot(hitNormal, up) > minDotAngleMinus50)

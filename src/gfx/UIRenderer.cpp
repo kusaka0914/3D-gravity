@@ -200,6 +200,15 @@ void UIRenderer::DrawHpUI() {
     if (!hpTextureInfo) return;
 
     int hp = mGame->GetPlayers()[0]->GetHp();
+    if (hp == 3) {
+        DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {1.0f, 0.0f, 0.0f, 0.05f});
+    }
+    if (hp == 2) {
+        DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {1.0f, 0.0f, 0.0f, 0.1f});
+    }
+    if (hp == 1) {
+        DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {1.0f, 0.0f, 0.0f, 0.2f});
+    }
 
     float hpX = mFbWidth * hpTextureInfo->xRatio;
     float hpY = mFbWidth * hpTextureInfo->yRatio;

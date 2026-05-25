@@ -231,15 +231,27 @@ bool Enemy::IsJustBeforeAttack() {
 }
 
 void Enemy::MoveToPlayer(float deltaTime, Player* player) {
-    mPos += mFacingForwardVec * mMoveSpeed * deltaTime;
+    glm::vec3 moveDelta = mFacingForwardVec * mMoveSpeed * deltaTime;
+    glm::vec3 desiredPos = mPos + moveDelta;
+
+    desiredPos = mGame->GetPhysicsSystem()->CheckCollision(this, moveDelta, desiredPos);
+    mPos = desiredPos;
 }
 
 void Enemy::MoveDuringAttacking(float deltaTime, Player* player) {
     const float wrapTime = mDefaultAttackMotionTimer / 2;
-    if (mAttackMotionTimer >= wrapTime) 
-        mPos += mFacingForwardVec * mAttackSpeed * deltaTime;
-    else 
-        mPos -= mFacingForwardVec * mAttackSpeed * deltaTime;
+    glm::vec3 moveDelta;
+    if (mAttackMotionTimer >= wrapTime) {
+        moveDelta = mFacingForwardVec * mAttackSpeed * deltaTime;
+    }
+    else {
+        moveDelta = -mFacingForwardVec * mAttackSpeed * deltaTime;
+    }
+
+    glm::vec3 desiredPos = mPos + moveDelta;
+
+    desiredPos = mGame->GetPhysicsSystem()->CheckCollision(this, moveDelta, desiredPos);
+    mPos = desiredPos;
 }
 
 void Enemy::MoveDuringKnockBack(float deltaTime, Player* player) {

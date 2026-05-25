@@ -93,6 +93,7 @@ public:
     float GetInvincibleTimer() const { return mInvincibleTimer; }
     float GetSpecialAttackCooldownRemaining() const { return mJewelTimer; }
     float GetAttackRange() const { return mAttackRange; }
+    float GetAttackAngle() const { return mAttackAngle; }
     float GetRayCastTimer() const { return mRayCastTimer; }
 
     ActionState GetActionState() const { return mActionState; }
