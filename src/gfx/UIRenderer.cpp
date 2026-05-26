@@ -7,7 +7,6 @@
 #include "state/UIState.h"
 #include "system/SceneSystem.h"
 #include "actor/NPC.h"
-#include "system/UILoadSystem.h"
 #include <glm/gtc/type_ptr.hpp>
 
 UIRenderer::UIRenderer(Game* game)
@@ -65,7 +64,8 @@ void UIRenderer::Draw() {
         DrawGameOver();
 
     bool isPlaying = mGame->GetSceneSystem()->IsPlaying();
-    if (isPlaying)
+    UIState::TutorialKind currentTutorialKind = mGame->GetSceneSystem()->GetCurrentTutorialKind();
+    if (isPlaying || currentTutorialKind == UIState::TutorialKind::Jewel)
         DrawDefaultUI();
 
     DrawStateUI();
@@ -101,6 +101,7 @@ void UIRenderer::DrawOpening() {
             DrawOpeningTalkWithDoctor();
             break;
         }
+        default:
     }
 }
 
@@ -120,7 +121,7 @@ void UIRenderer::DrawGameOver() {
 
 void UIRenderer::DrawOpeningIntro() {
     auto openingBgTextureInfo = mUILoadSystem->GetTextureInfo("opening", "bgTexture");
-    auto openingTalkTextInfo = mUILoadSystem->GetTextInfo("opening", "openingText");
+    const UILoadSystem::TextInfo* openingTalkTextInfo = mUILoadSystem->GetTextInfo("opening", "openingText");
 
     if (!openingBgTextureInfo || !openingTalkTextInfo) return;
 
@@ -129,7 +130,7 @@ void UIRenderer::DrawOpeningIntro() {
 
     if (talkUIIndex < talkTexts.size()) {
         DrawTexture(openingBgTextureInfo->x, openingBgTextureInfo->y, mFbWidth * openingBgTextureInfo->widthRatio, mFbHeight * openingBgTextureInfo->heightRatio, "opening");
-        DrawTalkUI(talkTexts, talkUIIndex);
+        DrawTalkUI(openingTalkTextInfo, talkUIIndex);
         return;
     }
     
@@ -137,14 +138,14 @@ void UIRenderer::DrawOpeningIntro() {
 }
 
 void UIRenderer::DrawOpeningTalkWithMother() {
-    auto talkWithMotherTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithMotherText");
+    const UILoadSystem::TextInfo* talkWithMotherTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithMotherText");
     if (!talkWithMotherTextInfo) return;
 
     const int talkUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
     const std::vector<std::string>& talkTexts = talkWithMotherTextInfo->texts;
 
     if (talkUIIndex < talkTexts.size()) {
-        DrawTalkUI(talkTexts, talkUIIndex);
+        DrawTalkUI(talkWithMotherTextInfo, talkUIIndex);
         return;
     }
 
@@ -152,14 +153,14 @@ void UIRenderer::DrawOpeningTalkWithMother() {
 }
 
 void UIRenderer::DrawOpeningTalkWithDoctor() {
-    auto talkWithDoctorTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithDoctorText");
+    const UILoadSystem::TextInfo* talkWithDoctorTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithDoctorText");
     if (!talkWithDoctorTextInfo) return;
 
     const int talkUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
     const std::vector<std::string>& talkTexts = talkWithDoctorTextInfo->texts;
 
     if (talkUIIndex >= 0 && talkUIIndex < static_cast<int>(talkTexts.size())) {
-        DrawTalkUI(talkTexts, talkUIIndex);
+        DrawTalkUI(talkWithDoctorTextInfo, talkUIIndex);
         return;
     }
 
@@ -275,8 +276,8 @@ void UIRenderer::DrawStateUI() {
             DrawBreakTutorial();
             break;
 
-        case UIState::TutorialKind::SpecialAttack:
-            DrawSpecialAttackTutorial();
+        case UIState::TutorialKind::Jewel:
+            DrawJewelTutorial();
             break;
 
         default:
@@ -317,14 +318,14 @@ void UIRenderer::DrawStateUI() {
 }
 
 void UIRenderer::DrawBattleTutorial() {
-    auto battleTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "battleTutorialText");
+    const UILoadSystem::TextInfo* battleTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "battleTutorialText");
     if (!battleTutorialTextInfo) return;
 
     std::vector<std::string> battleTutorialTexts = battleTutorialTextInfo->texts;
     int tutorialUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
 
     if (tutorialUIIndex < battleTutorialTexts.size()) {
-        DrawTalkUI(battleTutorialTexts, tutorialUIIndex);
+        DrawTalkUI(battleTutorialTextInfo, tutorialUIIndex);
         return;
     }
 
@@ -333,14 +334,14 @@ void UIRenderer::DrawBattleTutorial() {
 }
 
 void UIRenderer::DrawBreakTutorial() {
-    auto breakTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "breakTutorialText");
+    const UILoadSystem::TextInfo* breakTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "breakTutorialText");
     if (!breakTutorialTextInfo) return;
 
     std::vector<std::string> breakTutorialTexts = breakTutorialTextInfo->texts;
     int tutorialUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
 
     if (tutorialUIIndex < breakTutorialTexts.size()) {
-        DrawTalkUI(breakTutorialTexts, tutorialUIIndex);
+        DrawTalkUI(breakTutorialTextInfo, tutorialUIIndex);
         return;
     }
 
@@ -348,15 +349,15 @@ void UIRenderer::DrawBreakTutorial() {
     mGame->GetSceneSystem()->GetUIState()->FinishTutorial();
 }
 
-void UIRenderer::DrawSpecialAttackTutorial() {
-    auto specialAttackTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "specialAttackTutorialText");
-    if (!specialAttackTutorialTextInfo) return;
+void UIRenderer::DrawJewelTutorial() {
+    const UILoadSystem::TextInfo* jewelTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "jewelTutorialText");
+    if (!jewelTutorialTextInfo) return;
 
-    std::vector<std::string> specialAttackTutorialTexts = specialAttackTutorialTextInfo->texts;
+    std::vector<std::string> jewelTutorialTexts = jewelTutorialTextInfo->texts;
     int tutorialUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
 
-    if (tutorialUIIndex < specialAttackTutorialTexts.size()) {
-        DrawTalkUI(specialAttackTutorialTexts, tutorialUIIndex);
+    if (tutorialUIIndex < jewelTutorialTexts.size()) {
+        DrawTalkUI(jewelTutorialTextInfo, tutorialUIIndex);
         return;
     }
 
@@ -382,6 +383,18 @@ void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
 
     glm::vec4 textColor{0.0f, 0.0f, 0.0f, 0.0f};
     DrawText(mFbWidth * talkTextInfo->xRatio, mFbHeight * talkTextInfo->yRatio, mFbWidth * talkTextInfo->scaleRatio, texts[index], false, textColor);
+}
+
+void UIRenderer::DrawTalkUI(const UILoadSystem::TextInfo* textInfo, int index) {
+    auto talkBgTextureInfo = mUILoadSystem->GetTextureInfo("state", "talkBgTexture");
+    if (!talkBgTextureInfo) return;
+
+    float textureMarginX = 0.0275f;
+    float textureMarginY = 0.0845f;
+    DrawTexture(mFbWidth * (textInfo->xRatio - textureMarginX), mFbHeight * (textInfo->yRatio - textureMarginY), mFbWidth * talkBgTextureInfo->widthRatio, mFbHeight * talkBgTextureInfo->heightRatio, "textBg");
+
+    glm::vec4 textColor{0.0f, 0.0f, 0.0f, 0.0f};
+    DrawText(mFbWidth * textInfo->xRatio, mFbHeight * textInfo->yRatio, mFbWidth * textInfo->scaleRatio, textInfo->texts[index], false, textColor);
 }
 
 void UIRenderer::DrawTalkWithNPC() {

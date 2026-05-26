@@ -4,12 +4,14 @@
 #include "actor/Planet.h"
 #include "actor/Player.h"
 #include "system/PhysicsSystem.h"
+#include <iostream>
 
 Actor::Actor(Game* game)
 : mGame(game)
 , mUpVec(0.0f, 1.0f, 0.0f)
 , mIsActive(true)
 , mRadius(1.0f)
+, mIsUpVecInitialized(false)
 {
     
 }
@@ -64,19 +66,37 @@ void Actor::RemoveComponent(std::unique_ptr<Component> component) {
 }
 
 void Actor::UpdateUpVec() {
+    CharacterActor* characterActor = dynamic_cast<CharacterActor*>(this);
+
+    if (!characterActor && mIsUpVecInitialized) {
+        return;
+    }
+
     glm::vec3 avgUpVec = GetAverageNormal();
+
+    if (!characterActor) {
+        if (glm::length(avgUpVec) > 1e-6f) {
+            mUpVec = avgUpVec;
+        } else {
+            UpdateFallbackUpVec();
+        }
+
+        mIsUpVecInitialized = true;
+        return;
+    }
 
     if (glm::length(avgUpVec) > 1e-6f) {
         mUpVec = avgUpVec;
+        mIsUpVecInitialized = true;
         return;
     }
-    
+
     Player* player = dynamic_cast<Player*>(this);
-    if (!player){
+    if (!player) {
         UpdateFallbackUpVec();
         return;
-    } 
-    
+    }
+
     if (player->GetRayCastTimer() <= 0.0f) {
         UpdateFallbackUpVec();
         player->SetVelocity(glm::vec3(0.0f));
@@ -99,8 +119,9 @@ void Actor::UpdateFallbackUpVec() {
 glm::vec3 Actor::GetAverageNormal() {
     glm::vec3 mainNormal;
     const btCollisionObject* mainObj = nullptr;
-    if (!CastRay(glm::vec3(0.0f), mainNormal, mainObj))
+    if (!CastRay(glm::vec3(0.0f), mainNormal, mainObj)) {
         return glm::vec3(0.0f);
+    }
 
     constexpr float mainWeight = 3.0f;
     glm::vec3 normalSum = mainNormal * mainWeight;
@@ -146,52 +167,58 @@ bool Actor::CastRay(const glm::vec3& offset, glm::vec3& outNormal, const btColli
     glm::vec3 downRayFromPos = mPos + offset + up * rayStartOffset;
     glm::vec3 downRayToPos   = mPos + offset - up * rayLength;
 
-    glm::vec3 upRayFromPos = mPos + offset + up * rayStartOffset;
-    glm::vec3 upRayToPos   = mPos + offset + up * rayLength;
+    // glm::vec3 upRayFromPos = mPos + offset + up * rayStartOffset;
+    // glm::vec3 upRayToPos   = mPos + offset + up * rayLength;
 
     btVector3 downRayFrom(downRayFromPos.x, downRayFromPos.y, downRayFromPos.z);
     btVector3 downRayTo(downRayToPos.x, downRayToPos.y, downRayToPos.z);
 
-    btVector3 upRayFrom(upRayFromPos.x, upRayFromPos.y, upRayFromPos.z);
-    btVector3 upRayTo(upRayToPos.x, upRayToPos.y, upRayToPos.z);
+    // btVector3 upRayFrom(upRayFromPos.x, upRayFromPos.y, upRayFromPos.z);
+    // btVector3 upRayTo(upRayToPos.x, upRayToPos.y, upRayToPos.z);
 
     btCollisionWorld::ClosestRayResultCallback cb(downRayFrom, downRayTo);
-    btCollisionWorld::ClosestRayResultCallback cb2(upRayFrom, upRayTo);
+    // btCollisionWorld::ClosestRayResultCallback cb2(upRayFrom, upRayTo);
 
     btDiscreteDynamicsWorld* bulletWorld = mGame->GetPhysicsSystem()->GetBulletWorld();
 
     bulletWorld->rayTest(downRayFrom, downRayTo, cb);
-    bulletWorld->rayTest(upRayFrom, upRayTo, cb2);
+    // bulletWorld->rayTest(upRayFrom, upRayTo, cb2);
 
-    if (!cb.hasHit() && !cb2.hasHit())
+    if (!cb.hasHit()
+    // && !cb2.hasHit()
+    ) {
+        std::cout << mModelPath << std::endl;
         return false;
+    }
 
     btVector3 hitN;
     const btCollisionObject* chosenObj = nullptr;
 
-    if (cb.hasHit() && !cb2.hasHit()) {
+    if (cb.hasHit()
+    // && !cb2.hasHit()
+    ) {
         hitN = cb.m_hitNormalWorld;
         chosenObj = cb.m_collisionObject;
     }
-    else if (!cb.hasHit() && cb2.hasHit()) {
-        hitN = cb2.m_hitNormalWorld;
-        chosenObj = cb2.m_collisionObject;
-    }
-    else {
-        glm::vec3 hitPos1(cb.m_hitPointWorld.x(), cb.m_hitPointWorld.y(), cb.m_hitPointWorld.z());
-        glm::vec3 hitPos2(cb2.m_hitPointWorld.x(), cb2.m_hitPointWorld.y(), cb2.m_hitPointWorld.z());
+    // else if (!cb.hasHit() && cb2.hasHit()) {
+    //     hitN = cb2.m_hitNormalWorld;
+    //     chosenObj = cb2.m_collisionObject;
+    // }
+    // else {
+    //     glm::vec3 hitPos1(cb.m_hitPointWorld.x(), cb.m_hitPointWorld.y(), cb.m_hitPointWorld.z());
+    //     glm::vec3 hitPos2(cb2.m_hitPointWorld.x(), cb2.m_hitPointWorld.y(), cb2.m_hitPointWorld.z());
 
-        float dist1 = glm::length(mPos - hitPos1);
-        float dist2 = glm::length(mPos - hitPos2);
+    //     float dist1 = glm::length(mPos - hitPos1);
+    //     float dist2 = glm::length(mPos - hitPos2);
 
-        if (dist1 <= dist2) {
-            hitN = cb.m_hitNormalWorld;
-            chosenObj = cb.m_collisionObject;
-        } else {
-            hitN = cb2.m_hitNormalWorld;
-            chosenObj = cb2.m_collisionObject;
-        }
-    }
+    //     if (dist1 <= dist2) {
+    //         hitN = cb.m_hitNormalWorld;
+    //         chosenObj = cb.m_collisionObject;
+    //     } else {
+    //         hitN = cb2.m_hitNormalWorld;
+    //         chosenObj = cb2.m_collisionObject;
+    //     }
+    // }
 
     glm::vec3 hitNormal(hitN.x(), hitN.y(), hitN.z());
     if (glm::length(hitNormal) < 1e-6f)

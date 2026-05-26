@@ -62,6 +62,7 @@ private:
 
 protected:
     bool mIsActive;
+    bool mIsUpVecInitialized;
 
     float mRadius;
     float mFacingYaw;

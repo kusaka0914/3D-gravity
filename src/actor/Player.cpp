@@ -48,6 +48,7 @@ Player::Player(Game* game)
     , mActionState(ActionState::Idle)
     , mInputAvailableTimer(-1.0f)
     , mJewel(2)
+    , mIsStrongAttacked(false)
 {
 
 }
@@ -204,7 +205,7 @@ void Player::UpdateWorldVec() {
 void Player::UpdateIdle(float deltaTime) {
     if (!mIsActive) return;
 
-    bool canStartCharging = !mOnGround && mAttackPressed;
+    bool canStartCharging = !mOnGround && mAttackPressed && !mIsStrongAttacked;
     if (canStartCharging) {
         StartCharging(deltaTime);
         return;
@@ -312,6 +313,12 @@ void Player::UpdateStrongAttacking(float deltaTime) {
     if (mStrongAttackTimer >= 0.0f) return;
 
     StartIdle();
+
+    if (!mIsCharged) return;
+    
+    if (!mIsStrongAttackHit){
+        Attack(deltaTime);
+    }
 
     if (mIsStrongAttackHit){
         mGame->SetHitStopTimer(0.3f);
@@ -463,7 +470,7 @@ void Player::StartStrongAttacking(float deltaTime) {
 
     float pressTime = std::min(1.0f, mDefaultAttackPressTimer - mAttackPressTimer / mDefaultAttackPressTimer);
     mStrongAttackTimer = mDefaultStrongAttackTimer * pressTime;
-    Attack(deltaTime);
+    mIsStrongAttacked = true;
 }
 
 void Player::StartJumping(float deltaTime) {
@@ -477,6 +484,7 @@ void Player::StartJumping(float deltaTime) {
 
 void Player::FinishCharging() {
     mGame->GetAudioSystem()->PlaySE("chargedSE");
+    mIsCharged = true;
 }
 
 void Player::MoveDuringDodging(float deltaTime) {
@@ -688,5 +696,7 @@ void Player::OnBoatArrived(Boat* boat) {
 
 void Player::OnLanded() {
     mIsDodged = false;
+    mIsStrongAttacked = false;
+    mIsCharged = false;
     mGame->OnLanded();
 }

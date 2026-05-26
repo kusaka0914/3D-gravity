@@ -177,6 +177,8 @@ private:
     bool mRecoverPressedPrev;
     bool mIsDodged;
     bool mIsStrongAttackHit;
+    bool mIsStrongAttacked;
+    bool mIsCharged;
 
     int mCurrentPlanetNum;
     int mAttackComboIndex;

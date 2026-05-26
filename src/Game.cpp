@@ -33,7 +33,7 @@ Game::Game()
     , mUIReloadKeyPressedPrev(false)
     , mAPressedPrev(false)
     , mIsPlayer2Joined(false)
-    , mCurrentStageYamlPath("../assets/data/house.yaml")
+    , mCurrentStageYamlPath("../assets/data/stage0.yaml")
 {
 }
 

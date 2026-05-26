@@ -18,6 +18,8 @@ opening:
 
   - id: openingText
     type: text
+    posRatio: [0.065, 0.14]
+    scaleRatio: [0.000333333, 1.0]
     text: 
     [
       "ある草原のど真ん中\nスライムはママと仲良く暮らしていました。",
@@ -27,6 +29,8 @@ opening:
 
   - id: talkWithMotherText
     type: text
+    posRatio: [0.065, 0.14]
+    scaleRatio: [0.000333333, 1.0]
     text: 
     [
       "スライム: ママ、いってらっしゃい！",
@@ -39,6 +43,8 @@ opening:
 
   - id: talkWithDoctorText
     type: text
+    posRatio: [0.065, 0.14]
+    scaleRatio: [0.000333333, 1.0]
     text: 
     [
       "スライムは急いでドクターを呼びました。",
@@ -111,8 +117,8 @@ default:
 state:
   - id: battleTutorialText
     type: text
-    pos: [20.0, 60.0]
-    scaleRatio: [0.5, 1.0]
+    posRatio: [0.065, 0.14]
+    scaleRatio: [0.000333333, 1.0]
     text: 
     [
       "この惑星は敵が多そうですね...\nということで敵の倒し方を伝授します！",
@@ -124,8 +130,8 @@ state:
 
   - id: breakTutorialText
     type: text
-    pos: [20.0, 60.0]
-    scaleRatio: [0.5, 1.0]
+    posRatio: [0.065, 0.14]
+    scaleRatio: [0.000333333, 1.0]
     text: 
     [
       "3回攻撃できましたね！\n敵の頭上にあったガードがなくなったことに気づきましたか？",
@@ -135,10 +141,10 @@ state:
       "覚えてますか？\n大きなクリスタルを破壊するときに使うアレです！",
       "非常に強い技なのでガードを全破壊して空中溜め攻撃で\nサクサク敵を倒していきましょう！",
     ]
-  - id: specialAttackTutorialText
+  - id: jewelTutorialText
     type: text
-    pos: [20.0, 60.0]
-    scaleRatio: [0.5, 1.0]
+    posRatio: [0.065, 0.74]
+    scaleRatio: [0.000333333, 1.0]
     text: 
     [
       "ちょっと失礼！左上の青いジュエル、\n何に使うんだろうとお困りではないですか？",

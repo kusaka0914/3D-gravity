@@ -18,7 +18,7 @@ public:
         None,
         Battle,
         Break,
-        SpecialAttack
+        Jewel
     };
 
     UIState(Game* game);

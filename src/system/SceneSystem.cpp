@@ -193,7 +193,7 @@ void SceneSystem::OnLanded() {
     }
 
     mUIState->SetIsSpecialAttackTutorialShown(true);
-    mUIState->SetCurrentTutorialKind(UIState::TutorialKind::SpecialAttack);
+    mUIState->SetCurrentTutorialKind(UIState::TutorialKind::Jewel);
     mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
 }
 
