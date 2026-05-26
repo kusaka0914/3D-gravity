@@ -1,10 +1,10 @@
 #pragma once
 
-#include <unordered_map>
 #include <memory>
 #include <vector>
-#include <SDL_ttf.h>
+#include <string>
 #include <GLFW/glfw3.h>
+#include <SDL.h>
 
 class Actor;
 class Player;
@@ -12,85 +12,94 @@ class Boat;
 class Stage;
 class PhysicsSystem;
 class MeshLoadSystem;
-class UIState;
 class ActorLoadSystem;
 class CameraSystem;
 class MathUtils;
-class GameProgressState;
 class Renderer3D;
 class UIRenderer;
 class AudioSystem;
+class SceneSystem;
 
 class Game {
 public:
     Game();
     ~Game();
+
     bool Initialize();
     void RunLoop();
     void Shutdown();
 
     void LoadData(bool isLoadPlayer);
+    void ReloadCurrentStage();
+    void ChangeStage(int stageNum);
+
     void OnBoatStageChangeRequested(int destStage);
     void OnBoatArrived(Boat* boat);
     void OnStarObtained();
     void OnEnemyLaunched();
+    void OnStrongAttacked();
+    void OnLanded();
+    void OnPlayerDied();
+
+    void FinishGame();
+    void RestartGame();
     void StartPlayingScene();
     void StartFocusingScene();
-    void StartFadeIn();
 
     void AddActor(std::unique_ptr<Actor> actor);
-	void RemoveActor(std::unique_ptr<Actor> actor);
+    void RemoveActor(Actor* actor);
     void RemoveAllActor();
-    void AddPlayer(Player* player) { mPlayers.emplace_back(player); };
+
+    void AddPlayer(Player* player) { mPlayers.emplace_back(player); }
     void RemoveAllPlayer() { mPlayers.clear(); }
+
     void SetHitStopTimer(float hitStopTimer) { mHitStopTimer = hitStopTimer; }
-    void SetFadeInTimer(float fadeInTimer) { mFadeInTimer = fadeInTimer; }
-    void SetCurrentStage(Stage* currentStage) { mCurrentStage = currentStage; }
-    void SetCurrentStageNum(int currentStageNum) { mCurrentStageNum = currentStageNum; }
-    void SetIsChangeStage(bool isChangeStage) { mIsChangeStage = isChangeStage; }
 
     GLFWwindow* GetWindow() const { return mWindow; }
-    SDL_GameController* GetSdlController() const { return mSdlController;}
+    SDL_GameController* GetSdlController() const { return mSdlController; }
+
     const std::vector<Player*>& GetPlayers() const { return mPlayers; }
+    Player* GetMainPlayer() const {
+        return mPlayers.empty() ? nullptr : mPlayers[0];
+    }
+
     const std::vector<Stage*>& GetStages() const { return mStages; }
+    Stage* GetCurrentStage() const { return mCurrentStage; }
+    int GetCurrentStageNum() const { return mCurrentStageNum; }
+    std::string GetCurrentStageYamlPath() const { return mCurrentStageYamlPath; }
+
     AudioSystem* GetAudioSystem() const { return mAudioSystem.get(); }
     PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }
     MeshLoadSystem* GetMeshLoadSystem() const { return mMeshLoadSystem.get(); }
-    UIState* GetUIState() const { return mUIState.get(); }
+    SceneSystem* GetSceneSystem() const { return mSceneSystem.get(); }
     ActorLoadSystem* GetActorLoadSystem() const { return mActorLoadSystem.get(); }
     CameraSystem* GetCameraSystem() const { return mCameraSystem.get(); }
     MathUtils* GetMathUtils() const { return mMathUtils.get(); }
-    GameProgressState* GetGameProgressState() const { return mGameProgressState.get(); }
-    float GetHitStopTimer() const { return mHitStopTimer; }
-    float GetFadeInTimer() const { return mFadeInTimer; }
 
-    Stage* GetCurrentStage() const { return mCurrentStage; }
-    int GetCurrentStageNum() const { return mCurrentStageNum; }
-    bool GetIsChangeStage() const { return mIsChangeStage; }
+    float GetHitStopTimer() const { return mHitStopTimer; }
     bool GetIsPlayer2Joined() const { return mIsPlayer2Joined; }
-    std::string GetCurrentStageYamlPath() const { return mCurrentStageYamlPath; }
 
 private:
     bool InitializeGLFW();
     void InitializeGameController();
     void CreateGameSystems();
     void CreateStages(int stageCount);
-    void ReloadCurrentStage();
 
     void ProcessInput();
-    void UpdateGame();
-    void GenerateOutput();
-
     void ProcessGameInput();
     void ProcessActorsInput();
+
+    void UpdateGame();
     void UpdateActors(float deltaTime);
 
-    void ChangeStage(int stageNum);
+    void GenerateOutput();
+
+    void CreatePlayer2();
     void CheckGameControllerConnected();
 
 private:
-    GLFWwindow* mWindow;
-    SDL_GameController* mSdlController;
+    GLFWwindow* mWindow = nullptr;
+    SDL_GameController* mSdlController = nullptr;
 
     std::vector<Player*> mPlayers;
     std::vector<std::unique_ptr<Actor>> mActors;
@@ -104,23 +113,21 @@ private:
     std::unique_ptr<CameraSystem> mCameraSystem;
     std::unique_ptr<ActorLoadSystem> mActorLoadSystem;
     std::unique_ptr<MeshLoadSystem> mMeshLoadSystem;
-    std::unique_ptr<UIState> mUIState;
     std::unique_ptr<MathUtils> mMathUtils;
-    std::unique_ptr<GameProgressState> mGameProgressState;
+    std::unique_ptr<SceneSystem> mSceneSystem;
 
-    Stage* mCurrentStage;
+    Stage* mCurrentStage = nullptr;
 
-    int mCurrentStageNum;
-    float mHitStopTimer;
-    float mFadeInTimer;
-    float mClearTimer;
+    int mCurrentStageNum = 0;
+    float mHitStopTimer = -1.0f;
 
-    double mLastTime;
+    double mLastTime = 0.0;
 
-    bool mReloadKeyPressedPrev;
-    bool mUIReloadKeyPressedPrev;
-    bool mAPressedPrev;
-    bool mIsPlayer2Joined;
-    bool mIsChangeStage;
+    bool mReloadKeyPressedPrev = false;
+    bool mUIReloadKeyPressedPrev = false;
+    bool mAPressedPrev = false;
+    bool mStartPressedPrev = false;
+    bool mIsPlayer2Joined = false;
+
     std::string mCurrentStageYamlPath;
 };

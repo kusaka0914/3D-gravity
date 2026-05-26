@@ -28,7 +28,7 @@ public:
     Enemy(Game* game);
     void UpdateActor(float deltaTime) override;
 
-    void ApplyDamage(float damage);
+    void ApplyDamage(float damage, Player* player);
     void ApplyBreak(float deltaTime);
 
     void SetIsBoss(bool isBoss) { mIsBoss = isBoss; }
@@ -71,8 +71,8 @@ private:
     void StartTracking();
     void StartPreparingAttack();
     void StartAttacking();
-    void StartKnockedBack(float knockBackTimer);
-    void StartDying();
+    void StartKnockedBack(float knockBackTimer, Player* player);
+    void StartDying(Player* player);
     
     void FinishLaunched();
     void FinishDying();
@@ -116,4 +116,6 @@ private:
     float mDefaultAttackMotionTimer;
     float mDyingTimer;
     float mKnockBackTimer;
+
+    glm::vec3 mKnockBackFrom;
 };

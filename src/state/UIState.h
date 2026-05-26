@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 
 class Game;
@@ -14,10 +16,9 @@ public:
 
     enum class TutorialKind {
         None,
-        BoatParts,
-        Crystal,
         Battle,
-        Break
+        Break,
+        Jewel
     };
 
     UIState(Game* game);
@@ -28,6 +29,8 @@ public:
     void OnFadeIn();
 
     void SetIsBattleTutorialShown(bool isBattleTutorialShown) { mIsBattleTutorialShown = isBattleTutorialShown; }
+    void SetIsSpecialAttackTutorialShown(bool isSpecialAttackTutorialShown) { mIsSpecialAttackTutorialShown = isSpecialAttackTutorialShown; }
+    void SetIsOperationUIShow(bool isOperationUIShow) { mIsOperationUIShow = isOperationUIShow; }
 
     void SetTalkUIIndex(int talkUIIndex) { mTalkUIIndex = talkUIIndex; }
     
@@ -35,6 +38,8 @@ public:
     void SetCurrentTutorialKind(TutorialKind currentTutorialKind) { mCurrentTutorialKind = currentTutorialKind; }
 
     bool GetIsBattleTutorialShown() const { return mIsBattleTutorialShown; }
+    bool GetIsSpecialAttackTutorialShown() const { return mIsSpecialAttackTutorialShown; }
+    bool GetIsOperationUIShow() const { return mIsOperationUIShow; }
 
     int GetTalkUIIndex() const { return mTalkUIIndex; }
     
@@ -43,6 +48,8 @@ public:
 
 private:
     bool mIsBattleTutorialShown;
+    bool mIsSpecialAttackTutorialShown;
+    bool mIsOperationUIShow;
 
     int mTalkUIIndex;
 

@@ -1,6 +1,5 @@
 #include "Star.h"
 #include "Game.h"
-#include "state/GameProgressState.h"
 #include "component/CollectableComponent.h"
 
 Star::Star(Game* game)

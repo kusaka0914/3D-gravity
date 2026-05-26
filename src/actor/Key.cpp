@@ -30,10 +30,10 @@ void Key::AddFocusComponent() {
 
 void Key::UpdateActor(float deltaTime)
 {
-    bool isAllEnemiesDead = mCurrentPlanet->GetIsAllEnemiesDead();
-    bool isFocused = mFocusComponent->GetIsFocused();
-    if (isAllEnemiesDead && !isFocused)
-        mFocusComponent->StartFocus();
+    // bool isAllEnemiesDead = mCurrentPlanet->GetIsAllEnemiesDead();
+    // bool isFocused = mFocusComponent->GetIsFocused();
+    // if (isAllEnemiesDead && !isFocused)
+    //     mFocusComponent->StartFocus();
 
     if (!mIsActivePrev && mIsActive) 
         OnShown();

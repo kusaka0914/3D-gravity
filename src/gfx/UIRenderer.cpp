@@ -5,9 +5,8 @@
 #include "actor/Player.h"
 #include "actor/Planet.h"
 #include "state/UIState.h"
+#include "system/SceneSystem.h"
 #include "actor/NPC.h"
-#include "state/GameProgressState.h"
-#include "system/UILoadSystem.h"
 #include <glm/gtc/type_ptr.hpp>
 
 UIRenderer::UIRenderer(Game* game)
@@ -41,6 +40,7 @@ void UIRenderer::RegisterUITextures() {
     RegisterTexture("../assets/textures/hp.png", "hp");
     RegisterTexture("../assets/textures/special.png", "special");
     RegisterTexture("../assets/textures/skyBox.png", "skyBox");
+    RegisterTexture("../assets/textures/jewel.png", "jewel");
 }
 
 void UIRenderer::Draw() {
@@ -51,16 +51,21 @@ void UIRenderer::Draw() {
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
 
-    bool isTitle = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Title;
+    bool isTitle = mGame->GetSceneSystem()->IsTitle();
     if (isTitle)
         DrawTitle();
 
-    bool isOpening = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
+    bool isOpening = mGame->GetSceneSystem()->IsOpening();
     if (isOpening)
         DrawOpening();
+    
+    bool isGameOver = mGame->GetSceneSystem()->IsGameOver();
+    if (isGameOver)
+        DrawGameOver();
 
-    bool isPlaying = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Playing;
-    if (isPlaying)
+    bool isPlaying = mGame->GetSceneSystem()->IsPlaying();
+    UIState::TutorialKind currentTutorialKind = mGame->GetSceneSystem()->GetCurrentTutorialKind();
+    if (isPlaying || currentTutorialKind == UIState::TutorialKind::Jewel)
         DrawDefaultUI();
 
     DrawStateUI();
@@ -76,13 +81,13 @@ void UIRenderer::DrawTitle() {
 
     auto startTextInfo = mUILoadSystem->GetTextInfo("title", "startText");
     if (startTextInfo)
-        DrawText(mFbWidth * startTextInfo->xRatio, mFbHeight * startTextInfo->yRatio, startTextInfo->scaleRatio, startTextInfo->texts[0], true);
+        DrawText(mFbWidth * startTextInfo->xRatio, mFbHeight * startTextInfo->yRatio, mFbWidth * startTextInfo->scaleRatio, startTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawOpening() {
-    auto talkWith = mGame->GetUIState()->GetCurrentTalkWith();
+    auto currentTalkWith = mGame->GetSceneSystem()->GetCurrentTalkWith();
 
-    switch (talkWith)
+    switch (currentTalkWith)
     {
         case UIState::TalkWith::Opening: {
             DrawOpeningIntro();
@@ -96,75 +101,88 @@ void UIRenderer::DrawOpening() {
             DrawOpeningTalkWithDoctor();
             break;
         }
+        default:
     }
+}
+
+void UIRenderer::DrawGameOver() {
+    DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {0.0f, 0.0f, 0.0f, 0.5f});
+
+    auto gameOverTextInfo = mUILoadSystem->GetTextInfo("gameOver", "gameOverText");
+    if (!gameOverTextInfo) return;
+
+    DrawText(mFbWidth * gameOverTextInfo->xRatio, mFbHeight * gameOverTextInfo->yRatio, mFbWidth * gameOverTextInfo->scaleRatio, gameOverTextInfo->texts[0], true);
+
+    auto restartTextInfo = mUILoadSystem->GetTextInfo("gameOver", "restartText");
+    if (!restartTextInfo) return;
+
+    DrawText(mFbWidth * restartTextInfo->xRatio, mFbHeight * restartTextInfo->yRatio, mFbWidth * restartTextInfo->scaleRatio, restartTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawOpeningIntro() {
     auto openingBgTextureInfo = mUILoadSystem->GetTextureInfo("opening", "bgTexture");
-    auto openingTalkTextInfo = mUILoadSystem->GetTextInfo("opening", "openingText");
+    const UILoadSystem::TextInfo* openingTalkTextInfo = mUILoadSystem->GetTextInfo("opening", "openingText");
 
     if (!openingBgTextureInfo || !openingTalkTextInfo) return;
 
-    const int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    const int talkUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
     const std::vector<std::string>& talkTexts = openingTalkTextInfo->texts;
 
     if (talkUIIndex < talkTexts.size()) {
         DrawTexture(openingBgTextureInfo->x, openingBgTextureInfo->y, mFbWidth * openingBgTextureInfo->widthRatio, mFbHeight * openingBgTextureInfo->heightRatio, "opening");
-        DrawTalkUI(talkTexts, talkUIIndex);
+        DrawTalkUI(openingTalkTextInfo, talkUIIndex);
         return;
     }
     
-    mGame->GetUIState()->StartTalkWith(UIState::TalkWith::Mother);
+    mGame->GetSceneSystem()->GetUIState()->StartTalkWith(UIState::TalkWith::Mother);
 }
 
 void UIRenderer::DrawOpeningTalkWithMother() {
-    auto talkWithMotherTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithMotherText");
+    const UILoadSystem::TextInfo* talkWithMotherTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithMotherText");
     if (!talkWithMotherTextInfo) return;
 
-    const int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    const int talkUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
     const std::vector<std::string>& talkTexts = talkWithMotherTextInfo->texts;
 
     if (talkUIIndex < talkTexts.size()) {
-        DrawTalkUI(talkTexts, talkUIIndex);
+        DrawTalkUI(talkWithMotherTextInfo, talkUIIndex);
         return;
     }
 
-    mGame->GetUIState()->StartTalkWith(UIState::TalkWith::Doctor);
+    mGame->GetSceneSystem()->GetUIState()->StartTalkWith(UIState::TalkWith::Doctor);
 }
 
 void UIRenderer::DrawOpeningTalkWithDoctor() {
-    auto talkWithDoctorTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithDoctorText");
+    const UILoadSystem::TextInfo* talkWithDoctorTextInfo = mUILoadSystem->GetTextInfo("opening", "talkWithDoctorText");
     if (!talkWithDoctorTextInfo) return;
 
-    const int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    const int talkUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
     const std::vector<std::string>& talkTexts = talkWithDoctorTextInfo->texts;
 
     if (talkUIIndex >= 0 && talkUIIndex < static_cast<int>(talkTexts.size())) {
-        DrawTalkUI(talkTexts, talkUIIndex);
+        DrawTalkUI(talkWithDoctorTextInfo, talkUIIndex);
         return;
     }
 
-    if (talkUIIndex >= static_cast<int>(talkTexts.size()))
-        mGame->StartFadeIn();
+    if (talkUIIndex >= static_cast<int>(talkTexts.size())) {
+        mGame->GetSceneSystem()->StartFadeIn();
+    }
 }
 
 void UIRenderer::DrawDefaultUI() {
     DrawOperationSupportUI();
 
     const std::vector<Player*>& players = mGame->GetPlayers();
-    NPC* npc = players[0]->GetTalkingNPC();
-    if (npc) {
-        if (npc->GetIsTalkable())
+    NPC* talkableNPC = players[0]->GetTalkableNPC();
+    if (talkableNPC) {
+        if (talkableNPC->GetIsTalkable())
             DrawTalkableUI();  
     }
     
     if (mGame->GetCurrentStageNum() == 0) return;
 
     DrawHpUI();
-
-    float specialAttackCooldownRemaining = players[0]->GetSpecialAttackCooldownRemaining();
-    if (specialAttackCooldownRemaining <= 0.0f)
-        DrawSpecialAttackUI();
+    DrawJewelUI();
     
     Planet* currentPlanet = players[0]->GetCurrentPlanet();
     if (!currentPlanet->GetBoatParts().empty())
@@ -172,36 +190,58 @@ void UIRenderer::DrawDefaultUI() {
 }
 
 void UIRenderer::DrawOperationSupportUI() {
-    auto operationSupportTextInfo = mUILoadSystem->GetTextInfo("default", "operationSupportText");
-    if (!operationSupportTextInfo) return;
+    bool isOperationUIShow = mGame->GetSceneSystem()->GetUIState()->GetIsOperationUIShow();
+    if (isOperationUIShow) {
+        auto operationSupportTextInfo = mUILoadSystem->GetTextInfo("default", "operationSupportText");
+        if (!operationSupportTextInfo) return;
+        
+        DrawText(mFbWidth * operationSupportTextInfo->xRatio, mFbHeight - mFbHeight * operationSupportTextInfo->yRatio, mFbWidth * operationSupportTextInfo->scaleRatio, operationSupportTextInfo->texts[0], false);
+        return;
+    }
+
+    auto operationSupportHiddenTextInfo = mUILoadSystem->GetTextInfo("default", "operationSupportHiddenText");
+    if (!operationSupportHiddenTextInfo) return;
     
-    DrawText(operationSupportTextInfo->x, mFbHeight - operationSupportTextInfo->y, mFbWidth * operationSupportTextInfo->scaleRatio, operationSupportTextInfo->texts[0], false);
+    DrawText(mFbWidth * operationSupportHiddenTextInfo->xRatio, mFbHeight - mFbHeight * operationSupportHiddenTextInfo->yRatio, mFbWidth * operationSupportHiddenTextInfo->scaleRatio, operationSupportHiddenTextInfo->texts[0], false);
 }
 
 void UIRenderer::DrawHpUI() {
     auto hpTextureInfo = mUILoadSystem->GetTextureInfo("default", "hpTexture");
     if (!hpTextureInfo) return;
 
-    int hp = mGame->GetPlayers()[0]->GetHp() / 10;
+    int hp = mGame->GetPlayers()[0]->GetHp();
+    if (hp == 3) {
+        DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {1.0f, 0.0f, 0.0f, 0.05f});
+    }
+    if (hp == 2) {
+        DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {1.0f, 0.0f, 0.0f, 0.1f});
+    }
+    if (hp == 1) {
+        DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {1.0f, 0.0f, 0.0f, 0.2f});
+    }
 
     float hpX = mFbWidth * hpTextureInfo->xRatio;
+    float hpY = mFbWidth * hpTextureInfo->yRatio;
     while (hp > 0) {
-        DrawTexture(hpX, mFbWidth * hpTextureInfo->yRatio, mFbWidth * hpTextureInfo->widthRatio, mFbWidth * hpTextureInfo->heightRatio, "hp");
-        hpX += mFbWidth / 28;
         hp--;
+        DrawTexture(hpX, hpY, mFbWidth * hpTextureInfo->widthRatio, mFbWidth * hpTextureInfo->heightRatio, "hp");
+        hpX += mFbWidth / 28;
     }
 }
 
-void UIRenderer::DrawSpecialAttackUI() {
-    auto specialAttackTextureInfo = mUILoadSystem->GetTextureInfo("default", "specialAttackTexture");
-    if (!specialAttackTextureInfo) return;
+void UIRenderer::DrawJewelUI() {
+    float jewel = mGame->GetPlayers()[0]->GetJewel();
+    if (jewel <= 0) return;
 
-    DrawTexture(mFbWidth * specialAttackTextureInfo->xRatio, mFbWidth * specialAttackTextureInfo->yRatio, mFbWidth * specialAttackTextureInfo->widthRatio, mFbWidth * specialAttackTextureInfo->heightRatio, "special");
+    auto jewelTextureInfo = mUILoadSystem->GetTextureInfo("default", "jewelTexture");
+    if (!jewelTextureInfo) return;
 
-    auto specialAttackTextInfo = mUILoadSystem->GetTextInfo("default", "specialAttackText");
-    if (!specialAttackTextInfo) return;
-
-    DrawText(mFbWidth * specialAttackTextInfo->xRatio, mFbHeight * specialAttackTextInfo->yRatio, mFbWidth * specialAttackTextInfo->scaleRatio, specialAttackTextInfo->texts[0], false);
+    float jewelX = mFbWidth * jewelTextureInfo->xRatio;
+    while(jewel > 0) {
+        DrawTexture(jewelX, mFbWidth * jewelTextureInfo->yRatio, mFbWidth * jewelTextureInfo->widthRatio, mFbWidth * jewelTextureInfo->heightRatio, "jewel");
+        jewelX += mFbWidth / 20;
+        jewel--;
+    }
 }
 
 void UIRenderer::DrawTalkableUI() {
@@ -224,7 +264,7 @@ void UIRenderer::DrawRemainPartsUI() {
 }
 
 void UIRenderer::DrawStateUI() {
-    UIState::TutorialKind currentTutorialKind = mGame->GetUIState()->GetCurrentTutorialKind();
+    UIState::TutorialKind currentTutorialKind = mGame->GetSceneSystem()->GetCurrentTutorialKind();
 
     switch (currentTutorialKind)
     {
@@ -234,13 +274,17 @@ void UIRenderer::DrawStateUI() {
         
         case UIState::TutorialKind::Break:
             DrawBreakTutorial();
-            break; 
+            break;
+
+        case UIState::TutorialKind::Jewel:
+            DrawJewelTutorial();
+            break;
 
         default:
             break;
     }
 
-    UIState::TalkWith currentTalkWith = mGame->GetUIState()->GetCurrentTalkWith();
+    UIState::TalkWith currentTalkWith = mGame->GetSceneSystem()->GetCurrentTalkWith();
 
     switch (currentTalkWith)
     {
@@ -252,11 +296,11 @@ void UIRenderer::DrawStateUI() {
             break;
     }
 
-    bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
+    bool isStageClear = mGame->GetSceneSystem()->IsStageClear();
     if (isStageClear) 
         DrawStageClear();
 
-    float fadeInTimer = mGame->GetFadeInTimer();
+    float fadeInTimer = mGame->GetSceneSystem()->GetFadeTimer();
     float alpha;
 
     if (fadeInTimer >= 0.0f) 
@@ -268,55 +312,71 @@ void UIRenderer::DrawStateUI() {
         DrawBG(mFbWidth, mFbHeight, 0.0f, 0.0f, {0.0f, 0.0f, 0.0f, alpha});
 
     // ローディング描画はフェードイン背景より後に描画する必要があるため以下動かさない
-    bool isLoading = mGame->GetIsChangeStage() && mGame->GetFadeInTimer() <= 0.1f;
+    bool isLoading = mGame->GetSceneSystem()->GetHasPendingStageChange() && mGame->GetSceneSystem()->GetFadeTimer() <= 0.1f;
     if (isLoading) 
         DrawLoading();
 }
 
 void UIRenderer::DrawBattleTutorial() {
-    auto battleTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "battleTutorialText");
+    const UILoadSystem::TextInfo* battleTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "battleTutorialText");
     if (!battleTutorialTextInfo) return;
 
     std::vector<std::string> battleTutorialTexts = battleTutorialTextInfo->texts;
-    int tutorialUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    int tutorialUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
 
     if (tutorialUIIndex < battleTutorialTexts.size()) {
-        DrawTalkUI(battleTutorialTexts, tutorialUIIndex);
+        DrawTalkUI(battleTutorialTextInfo, tutorialUIIndex);
         return;
     }
 
-    mGame->GetUIState()->FinishTutorial();
     mGame->StartPlayingScene();
+    mGame->GetSceneSystem()->GetUIState()->FinishTutorial();
 }
 
 void UIRenderer::DrawBreakTutorial() {
-    auto breakTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "breakTutorialText");
+    const UILoadSystem::TextInfo* breakTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "breakTutorialText");
     if (!breakTutorialTextInfo) return;
 
     std::vector<std::string> breakTutorialTexts = breakTutorialTextInfo->texts;
-    int tutorialUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    int tutorialUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
 
     if (tutorialUIIndex < breakTutorialTexts.size()) {
-        DrawTalkUI(breakTutorialTexts, tutorialUIIndex);
+        DrawTalkUI(breakTutorialTextInfo, tutorialUIIndex);
         return;
     }
 
-    mGame->GetUIState()->FinishTutorial();
     mGame->StartPlayingScene();
+    mGame->GetSceneSystem()->GetUIState()->FinishTutorial();
+}
+
+void UIRenderer::DrawJewelTutorial() {
+    const UILoadSystem::TextInfo* jewelTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "jewelTutorialText");
+    if (!jewelTutorialTextInfo) return;
+
+    std::vector<std::string> jewelTutorialTexts = jewelTutorialTextInfo->texts;
+    int tutorialUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
+
+    if (tutorialUIIndex < jewelTutorialTexts.size()) {
+        DrawTalkUI(jewelTutorialTextInfo, tutorialUIIndex);
+        return;
+    }
+
+    mGame->StartPlayingScene();
+    mGame->GetSceneSystem()->GetUIState()->FinishTutorial();
 }
 
 void UIRenderer::DrawStageClear() {
     auto stageClearTextInfo = mUILoadSystem->GetTextInfo("state", "stageClearText");
     if (!stageClearTextInfo) return;
 
-    DrawText(mFbWidth * stageClearTextInfo->xRatio, stageClearTextInfo->y, stageClearTextInfo->scaleRatio, stageClearTextInfo->texts[0], true);
+    DrawText(mFbWidth * stageClearTextInfo->xRatio, mFbHeight * stageClearTextInfo->yRatio, mFbWidth * stageClearTextInfo->scaleRatio, stageClearTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
     auto talkBgTextureInfo = mUILoadSystem->GetTextureInfo("state", "talkBgTexture");
     if (!talkBgTextureInfo) return;
 
-    DrawTexture(talkBgTextureInfo->x, talkBgTextureInfo->y, mFbWidth * talkBgTextureInfo->widthRatio, mFbHeight * talkBgTextureInfo->heightRatio, "textBg");
+    DrawTexture(mFbWidth * talkBgTextureInfo->xRatio, mFbHeight * talkBgTextureInfo->yRatio, mFbWidth * talkBgTextureInfo->widthRatio, mFbHeight * talkBgTextureInfo->heightRatio, "textBg");
     
     auto talkTextInfo = mUILoadSystem->GetTextInfo("state", "talkText");
     if (!talkTextInfo) return;
@@ -325,30 +385,42 @@ void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
     DrawText(mFbWidth * talkTextInfo->xRatio, mFbHeight * talkTextInfo->yRatio, mFbWidth * talkTextInfo->scaleRatio, texts[index], false, textColor);
 }
 
+void UIRenderer::DrawTalkUI(const UILoadSystem::TextInfo* textInfo, int index) {
+    auto talkBgTextureInfo = mUILoadSystem->GetTextureInfo("state", "talkBgTexture");
+    if (!talkBgTextureInfo) return;
+
+    float textureMarginX = 0.0275f;
+    float textureMarginY = 0.0845f;
+    DrawTexture(mFbWidth * (textInfo->xRatio - textureMarginX), mFbHeight * (textInfo->yRatio - textureMarginY), mFbWidth * talkBgTextureInfo->widthRatio, mFbHeight * talkBgTextureInfo->heightRatio, "textBg");
+
+    glm::vec4 textColor{0.0f, 0.0f, 0.0f, 0.0f};
+    DrawText(mFbWidth * textInfo->xRatio, mFbHeight * textInfo->yRatio, mFbWidth * textInfo->scaleRatio, textInfo->texts[index], false, textColor);
+}
+
 void UIRenderer::DrawTalkWithNPC() {
-    NPC* talkingNPC = mGame->GetPlayers()[0]->GetTalkingNPC();
-    std::vector<std::string> talkTexts = talkingNPC->GetTalkTexts();
-    int talkUIIndex = mGame->GetUIState()->GetTalkUIIndex();
+    NPC* talkableNPC = mGame->GetPlayers()[0]->GetTalkableNPC();
+    std::vector<std::string> talkTexts = talkableNPC->GetTalkTexts();
+    int talkUIIndex = mGame->GetSceneSystem()->GetTalkUIIndex();
 
     if (talkUIIndex < talkTexts.size()) {
         DrawTalkUI(talkTexts, talkUIIndex);
         return;
     } 
 
-    mGame->GetUIState()->FinishTalkWith();
     mGame->StartPlayingScene();
+    mGame->GetSceneSystem()->GetUIState()->FinishTalkWith();
 }
 
 void UIRenderer::DrawLoading() {
     auto loadingTextInfo = mUILoadSystem->GetTextInfo("state", "loadingText");
     if (!loadingTextInfo) return;
 
-    DrawText(loadingTextInfo->x, mFbHeight - loadingTextInfo->y, loadingTextInfo->scaleRatio, loadingTextInfo->texts[0], false);
+    DrawText(mFbWidth * loadingTextInfo->xRatio, mFbHeight - mFbHeight * loadingTextInfo->yRatio, mFbWidth * loadingTextInfo->scaleRatio, loadingTextInfo->texts[0], false);
 
     auto loadingTextureInfo = mUILoadSystem->GetTextureInfo("state", "loadingTexture");
     if (!loadingTextureInfo) return;
 
-    DrawTexture(loadingTextureInfo->x, mFbHeight - loadingTextureInfo->y, loadingTextureInfo->width, loadingTextureInfo->height, "slime");
+    DrawTexture(mFbWidth * loadingTextureInfo->xRatio, mFbHeight - mFbHeight * loadingTextureInfo->yRatio, mFbWidth * loadingTextureInfo->widthRatio, mFbHeight * loadingTextureInfo->heightRatio, "slime");
 }
 
 void UIRenderer::DrawSkyBox() {
@@ -366,6 +438,10 @@ void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector
     glUniformMatrix4fv(mUIShader->GetLocProj(), 1, GL_FALSE, glm::value_ptr(proj));
     glUniform1i(mUIShader->GetLocUseTexture(), 0);
     glUniform4fv(mUIShader->GetLocObjectColor(), 1, color.data());
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     mVertexArrays.at("text")->SetActive();
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
@@ -412,7 +488,7 @@ void UIRenderer::DrawText(float x, float y, float scale, std::string message, bo
         model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f))
                     * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
     } else if (isNewLine) {
-        model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f - 20.0f, 0.0f))
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f - mFbHeight * 0.0222f, 0.0f))
                     * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
     } else {
         model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f, 0.0f))
@@ -453,10 +529,10 @@ void UIRenderer::DrawText(float x, float y, float scale, std::string message, bo
         SDL_FreeSurface(rgba);
 
         if (isCenterBase) {
-            model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y + 40.0f, 0.0f))
+            model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y + mFbHeight * 0.0444f, 0.0f))
                         * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
         }else{
-            model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f + 40.0f, 0.0f))
+            model = glm::translate(glm::mat4(1.0f), glm::vec3(x + textWidth * 0.5f, y + textHeight * 0.5f + mFbHeight * 0.0444f, 0.0f))
                         * glm::scale(glm::mat4(1.0f), glm::vec3(textWidth, textHeight, 1.0f));
         }
         view = glm::mat4(1.0f);

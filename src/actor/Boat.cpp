@@ -38,14 +38,15 @@ glm::vec3 Boat::CalculateDestPos() {
     glm::vec3 toDestPlanet = glm::normalize(destPlanetCenter - mPos);
     const float destPlanetRadius = mDestPlanet->GetRadius();
 
-    glm::vec3 destPos = destPlanetCenter - toDestPlanet * (destPlanetRadius + 3.0f);
+    glm::vec3 destPos = destPlanetCenter - toDestPlanet * (destPlanetRadius + 4.0f);
     return destPos;
 }
 
 void Boat::UpdateActor(float deltaTime) {
     bool isAllBoatPartsCollected = mCurrentPlanet->GetIsAllBoatPartsCollected();
+    bool isAllEnemiesDead = mCurrentPlanet->GetIsAllEnemiesDead();
     bool isFocused = mFocusComponent->GetIsFocused();
-    if (isAllBoatPartsCollected && !isFocused)
+    if ((isAllBoatPartsCollected || isAllEnemiesDead) && !isFocused)
         mFocusComponent->StartFocus();
 
     const int currentStageNum = mGame->GetCurrentStageNum();

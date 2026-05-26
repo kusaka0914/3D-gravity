@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "system/UILoadSystem.h"
 #include <GL/glew.h>
 #include <vector>
 #include <unordered_map>
@@ -7,7 +8,6 @@
 
 class Game;
 class UIShader;
-class UILoadSystem;
 class VertexArray;
 
 class UIRenderer : public Renderer {
@@ -24,8 +24,8 @@ private:
     void RegisterUITextures();
 
     void DrawTitle();
-
     void DrawOpening();
+    void DrawGameOver();
 
     void DrawOpeningIntro();
     void DrawOpeningTalkWithMother();
@@ -35,17 +35,19 @@ private:
 
     void DrawOperationSupportUI();
     void DrawHpUI();
-    void DrawSpecialAttackUI();
+    void DrawJewelUI();
     void DrawTalkableUI();
     void DrawRemainPartsUI();
 
     void DrawStateUI();
-   
+    
     void DrawBattleTutorial();
     void DrawBreakTutorial();
+    void DrawJewelTutorial();
     void DrawTalkWithNPC();
     void DrawStageClear();
     void DrawTalkUI(const std::vector<std::string>& texts, int index);
+    void DrawTalkUI(const UILoadSystem::TextInfo* textInfo, int index);
     void DrawLoading();
 
     void DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color);

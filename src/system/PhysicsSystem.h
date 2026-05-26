@@ -22,7 +22,6 @@ class btKinematicCharacterController;
 
 class Game;
 class Actor;
-class Player;
 
 class PhysicsSystem {
 public:
@@ -33,7 +32,7 @@ public:
 
     btDiscreteDynamicsWorld* GetBulletWorld() const { return mBulletWorld.get(); }
     
-    glm::vec3 CheckCollision(Player* player, const glm::vec3& moveDelta, const glm::vec3& desiredPos);
+    glm::vec3 CheckCollision(Actor* Actor, const glm::vec3& moveDelta, const glm::vec3& desiredPos);
 
 private:
     void ClearBulletWorld();
@@ -43,9 +42,9 @@ private:
     void CreatePlayerShape();
     std::unique_ptr<btTriangleMesh> CreateTriangleMesh(const glm::vec3& actorScale, const std::vector<float>& pos, const std::vector<unsigned int>& idx);
 
-    std::optional<glm::vec3> CheckConflictActors(Player* player, const glm::vec3& desiredPos);
+    std::optional<glm::vec3> CheckConflictActors(Actor* actor, const glm::vec3& desiredPos);
     std::optional<glm::vec3> CheckConflictActor(Actor* actor, const glm::vec3& desiredPos);
-    std::optional<glm::vec3> CheckConflictWall(Player* player, const glm::vec3& moveDelta, const glm::vec3& desiredPos);
+    std::optional<glm::vec3> CheckConflictWall(Actor* actor, const glm::vec3& moveDelta, const glm::vec3& desiredPos);
 
 private:
     Game* mGame;

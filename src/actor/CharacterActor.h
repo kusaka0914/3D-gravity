@@ -16,15 +16,11 @@ public:
 
     void UpdateActor(float deltaTime) override;
 
-    void OnLanded(const glm::vec3& hitPos);
-    void NotOnLanded();
-
-    void SetFacingYaw(float facingYaw) { mFacingYaw = facingYaw; }
+    void Land(const glm::vec3& hitPos);
+    void NotLand();
 
     bool GetOnGround() const { return mOnGround; }
     bool GetIsJudgeLanding() const { return mIsJudgeLanding; }
-
-    float GetFacingYaw() const { return mFacingYaw; }
 
     const glm::vec3& GetFacingForwardVec() const { return mFacingForwardVec; }
 
@@ -35,12 +31,11 @@ private:
     void JudgeLanding();
     bool TryLandByRay(const glm::vec3& rayOffset, const glm::vec3& hitPosCorrection);
     RayInfo CreateRayInfo(const glm::vec3& rayOffset) const;
+    virtual void OnLanded() {};
 
 protected:
     bool mOnGround;
     bool mIsJudgeLanding;
-
-    float mFacingYaw;
 
     glm::vec3 mVelocity;
     glm::vec3 mFacingForwardVec;

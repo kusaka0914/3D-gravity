@@ -14,11 +14,10 @@
 #include "actor/NPC.h"
 #include "utils/MathUtils.h"
 #include "actor/Platform.h"
-#include "state/UIState.h"
+#include "system/SceneSystem.h"
 #include "system/CameraSystem.h"
 #include "thirdParty/stb_image.h"
 #include "component/FocusComponent.h"
-#include "state/GameProgressState.h"
 #include "system/MeshLoadSystem.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -45,10 +44,29 @@ void Renderer3D::Initialize() {
     }
 
     RegisterTexture("../assets/textures/guard.png", "guard");
+
+    glGenVertexArrays(1, &mAttackRangeVAO);
+    glGenBuffers(1, &mAttackRangeVBO);
+
+    glBindVertexArray(mAttackRangeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, mAttackRangeVBO);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(glm::vec3),
+        reinterpret_cast<void*>(0)
+    );
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
 void Renderer3D::Draw() {
-    bool isTitle = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Title;
+    bool isTitle = mGame->GetSceneSystem()->IsTitle();
     if (isTitle) return;
 
     GLFWwindow* window = mGame->GetWindow();
@@ -152,55 +170,8 @@ void Renderer3D::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
     }
 
     if (players[0]->GetAttackMotionTimer() >= 0.0f) {
-        glm::vec3 up = players[0]->GetUpVec();
-        float yaw = players[0]->GetFacingYaw();
-        glm::vec3 upN = glm::normalize(up);
-        glm::vec3 worldLeft = glm::cross(upN, glm::vec3(0, 0, 1));
-        if (glm::length(worldLeft) < 0.01f){
-            worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 1, 0)));
-        }
-        else 
-            worldLeft = glm::normalize(worldLeft);
-        
-        worldLeft = glm::normalize(worldLeft);
-        glm::vec3 fwd = glm::normalize(glm::cross(worldLeft, upN) * std::cos(yaw) - std::sin(yaw) * worldLeft);
-        glm::vec3 left = glm::normalize(glm::cross(upN, fwd));
-        glm::vec3 right = -left;
-        glm::mat4 orient = glm::mat4(1.0f);
-        orient[0] = glm::vec4(-fwd, 0.0f);
-        orient[1] = glm::vec4(up, 0.0f);
-        orient[2] = glm::vec4(right, 0.0f);
-        orient[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-        glm::mat4 model = glm::translate(glm::mat4(1.0), players[0]->GetPos() + -fwd * players[0]->GetAttackRange() /2.0f + upN * 0.1f) * orient * glm::scale(glm::mat4(1.0f), glm::vec3(players[0]->GetAttackRange(), 0.1f, 1.0f));
-        glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
-        mVertexArrays.at("text")->SetActive();
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        DrawAttackRange(players[0]);
     }
-
-    glm::vec3 up = players[0]->GetUpVec();
-        float yaw = players[0]->GetFacingYaw();
-        glm::vec3 upN = glm::normalize(up);
-        glm::vec3 worldLeft = glm::cross(upN, glm::vec3(0, 0, 1));
-        if (glm::length(worldLeft) < 0.01f){
-            worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 1, 0)));
-        }
-        else 
-            worldLeft = glm::normalize(worldLeft);
-        glm::vec3 fwd = glm::normalize(glm::cross(worldLeft, upN) * std::cos(yaw) - std::sin(yaw) * worldLeft);
-        glm::vec3 left = glm::normalize(glm::cross(upN, fwd));
-        glm::vec3 right = -left;
-        glm::mat4 orient = glm::mat4(1.0f);
-        orient[0] = glm::vec4(-fwd, 0.0f);
-        orient[1] = glm::vec4(up, 0.0f);
-        orient[2] = glm::vec4(right, 0.0f);
-        orient[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-        std::vector<Player::RaySegment> rayCasts = players[0]->GetRayCasts();
-        for (auto rayCast : rayCasts) {
-            glm::mat4 model = glm::translate(glm::mat4(1.0), (rayCast.from)) * orient * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, glm::length(rayCast.from - rayCast.to), 1.0f));
-            glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
-            mVertexArrays.at("text")->SetActive();
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
 
     Planet* currentPlanet = players[0]->GetCurrentPlanet();
     if (!currentPlanet) return;
@@ -244,7 +215,7 @@ void Renderer3D::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
             if (boat->GetIsActive())
             {
                 glm::vec3 boatScale = glm::vec3(0.8f);
-                DrawCharacter(boat->GetPos(), boatScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), boat->GetUpVec(), 0.0f, boat->GetMeshes());
+                DrawCharacter(boat->GetPos(), boatScale, glm::vec4(0.4f, 0.25f, 0.1f, 1.0f), boat->GetUpVec(), boat->GetFacingYaw(), boat->GetMeshes());
             }
         }
     }
@@ -421,10 +392,10 @@ void Renderer3D::DrawGuard(glm::mat4 viewMat, Enemy* enemy) {
 std::vector<glm::mat4> Renderer3D::GetViews() {
     std::vector<glm::mat4> views;
 
-    bool isOpening = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::Opening;
+    bool isOpening = mGame->GetSceneSystem()->IsOpening();
     if (isOpening) {
-        bool isTalkWithMother = mGame->GetUIState()->GetCurrentTalkWith() == UIState::TalkWith::Mother;
-        bool isTalkWithDoctor = mGame->GetUIState()->GetCurrentTalkWith() == UIState::TalkWith::Doctor;
+        bool isTalkWithMother = mGame->GetSceneSystem()->IsTalkWithMother();
+        bool isTalkWithDoctor = mGame->GetSceneSystem()->IsTalkWithDoctor();
 
         if (isTalkWithMother) {
             glm::mat4 view = glm::lookAt(glm::vec3(-2.0f, 4.0f, -2.0f), glm::vec3(4.0f, 2.0f, 4.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -460,7 +431,7 @@ std::vector<glm::mat4> Renderer3D::GetViews() {
         }
     }
     
-    bool isStageClear = mGame->GetGameProgressState()->GetSceneState() == GameProgressState::SceneState::StageClear;
+    bool isStageClear = mGame->GetSceneSystem()->IsStageClear();
     if (isStageClear) {
         glm::mat4 view = mGame->GetCameraSystem()->GetPlayerView(4.0f, true);
         views.emplace_back(view);
@@ -478,4 +449,130 @@ std::vector<glm::mat4> Renderer3D::GetViews() {
     }
 
     return views;
+}
+
+void Renderer3D::DrawAttackRange(Player* player) {
+    if (!player) return;
+
+    constexpr int segments = 48;
+
+    const float radius = player->GetAttackRange();
+    const float attackAngleDeg = player->GetAttackAngle();
+
+    if (radius <= 0.0f || attackAngleDeg <= 0.0f) return;
+
+    const glm::vec3 center = player->GetPos();
+    const glm::vec3 upN = glm::normalize(player->GetUpVec());
+    const float yaw = player->GetFacingYaw();
+
+    glm::vec3 worldLeft = glm::cross(upN, glm::vec3(0.0f, 0.0f, 1.0f));
+    if (glm::length(worldLeft) < 0.01f) {
+        worldLeft = glm::cross(upN, glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+    worldLeft = glm::normalize(worldLeft);
+
+    glm::vec3 forward = glm::normalize(
+        glm::cross(worldLeft, upN) * std::cos(yaw)
+        - worldLeft * std::sin(yaw)
+    );
+
+    glm::vec3 side = glm::normalize(glm::cross(upN, forward));
+
+    const float halfAngle = attackAngleDeg * 0.5f;
+    const float yOffset = 0.06f;
+
+    std::vector<glm::vec3> fillVertices;
+    fillVertices.reserve(segments + 2);
+
+    fillVertices.emplace_back(center + upN * yOffset);
+
+    for (int i = 0; i <= segments; i++) {
+        const float t = static_cast<float>(i) / static_cast<float>(segments);
+        const float angle = -halfAngle + halfAngle * 2.0f * t;
+
+        glm::vec3 dir = glm::normalize(
+            -forward * std::cos(angle)
+            + side * std::sin(angle)
+        );
+
+        fillVertices.emplace_back(center + dir * radius + upN * yOffset);
+    }
+
+    DrawAttackRangeVertices(
+        fillVertices,
+        GL_TRIANGLE_FAN,
+        glm::vec4(1.0f, 0.1f, 0.1f, 0.18f)
+    );
+
+    const float thickness = 0.08f;
+    const float innerRadius = std::max(0.0f, radius - thickness * 0.5f);
+    const float outerRadius = radius + thickness * 0.5f;
+
+    std::vector<glm::vec3> arcVertices;
+    arcVertices.reserve((segments + 1) * 2);
+
+    for (int i = 0; i <= segments; i++) {
+        const float t = static_cast<float>(i) / static_cast<float>(segments);
+        const float angle = -halfAngle + halfAngle * 2.0f * t;
+
+        glm::vec3 dir = glm::normalize(
+            -forward * std::cos(angle)
+            + side * std::sin(angle)
+        );
+
+        arcVertices.emplace_back(center + dir * outerRadius + upN * yOffset);
+        arcVertices.emplace_back(center + dir * innerRadius + upN * yOffset);
+    }
+
+    DrawAttackRangeVertices(
+        arcVertices,
+        GL_TRIANGLE_STRIP,
+        glm::vec4(1.0f, 0.1f, 0.1f, 0.75f)
+    );
+}
+
+void Renderer3D::DrawAttackRangeVertices(
+    const std::vector<glm::vec3>& vertices,
+    GLenum drawMode,
+    const glm::vec4& color
+) {
+    if (vertices.empty()) return;
+
+    glUniformMatrix4fv(
+        mShader3D->GetLocModel(),
+        1,
+        GL_FALSE,
+        glm::value_ptr(glm::mat4(1.0f))
+    );
+
+    glUniform1i(mShader3D->GetLocUseTexture(), 0);
+    glUniform4f(
+        mShader3D->GetLocObjectColor(),
+        color.r,
+        color.g,
+        color.b,
+        color.a
+    );
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+
+    glBindVertexArray(mAttackRangeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, mAttackRangeVBO);
+
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        vertices.size() * sizeof(glm::vec3),
+        vertices.data(),
+        GL_DYNAMIC_DRAW
+    );
+
+    glDrawArrays(drawMode, 0, static_cast<GLsizei>(vertices.size()));
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
 }
