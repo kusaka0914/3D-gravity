@@ -79,6 +79,8 @@ public:
     float GetHitStopTimer() const { return mHitStopTimer; }
     bool GetIsPlayer2Joined() const { return mIsPlayer2Joined; }
 
+    bool IsInBase() const { return mCurrentStageNum == 0; }
+
 private:
     bool InitializeGLFW();
     void InitializeGameController();
