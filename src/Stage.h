@@ -1,20 +1,16 @@
-#include "Actor.h"
-#include "Mesh.h"
-#include <glm/glm.hpp>
-#include <string>
+#pragma once
+
 #include <vector>
-#include <unordered_map>
 
-class Stage : public Actor {
+class Planet;
+
+class Stage {
 public:
-    Stage(class Game* game);
-    void Initialize() override;
-    void AddPlanet(class Planet* planet) { mPlanets.emplace_back(planet); }
-    void AddPlanetMesh(std::string modelPath, std::vector<LoadedMesh> meshes) { mPlanetMeshesByPath[modelPath] = meshes; }
+    Stage();
+    void AddPlanet(Planet* planet) { mPlanets.emplace_back(planet); }
+    void RemoveAllPlanet() { mPlanets.clear(); }
 
-    const std::vector<class Planet*>& GetPlanets() const { return mPlanets; }
-    const std::unordered_map<std::string, std::vector<LoadedMesh>>& GetPlanetMeshesByPath() const { return mPlanetMeshesByPath; }
+    const std::vector<Planet*>& GetPlanets() const { return mPlanets; }
 private:
-    std::vector<class Planet*> mPlanets;
-    std::unordered_map<std::string, std::vector<LoadedMesh>> mPlanetMeshesByPath;
+    std::vector<Planet*> mPlanets;
 };

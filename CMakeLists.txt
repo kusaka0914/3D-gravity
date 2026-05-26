@@ -1,32 +1,14 @@
-# このプロジェクトをビルドするのに必要なバージョンの最低ラインの設定
 cmake_minimum_required(VERSION 3.10)
-# これを呼ぶとPROJECT_NAMEとかの変数を自動で設定してくれる
-project(engine)
+project(game)
 
-# c++20を使いますという指示
 set(CMAKE_CXX_STANDARD 20)
 
-# .cppをコンパイルして、engineという名前の実行ファイルを作成するという指示
-add_executable(engine
-    src/Actor.cpp
-    src/AudioSystem.cpp
-    src/Boat.cpp
-    src/Component.cpp
-    src/Enemy.cpp
-    src/Game.cpp
-    src/Key.cpp
-    src/Loader.cpp
-    src/Main.cpp
-    src/Mesh.cpp
-    src/Planet.cpp
-    src/Player.cpp
-    src/Shader.cpp
-    src/Stage.cpp
-    src/Star.cpp
-    src/VertexArray.cpp
+file(GLOB_RECURSE GAME_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*/*.cpp"
 )
+add_executable(game ${GAME_SOURCES})
 
-# OpenGLを使うのに必要なヘッダやライブラリを探して見つかったら変数に格納
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
@@ -38,15 +20,15 @@ find_package(SDL2_mixer REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
-# #includeをしてヘッダを指定できるようにする
-target_include_directories(engine PRIVATE
+target_include_directories(game PRIVATE
     ${OPENGL_INCLUDE_DIR}
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
-target_link_directories(engine PRIVATE /opt/homebrew/lib)
-# OpenGLなどの関数を呼べるようにするためにリンクする
-target_link_libraries(engine
+target_link_directories(game PRIVATE /opt/homebrew/lib)
+
+target_link_libraries(game
     GLEW::GLEW
     glfw
     OpenGL::GL
@@ -59,7 +41,9 @@ target_link_libraries(engine
     yaml-cpp
 )
 
-# 実行時にプロジェクトルートをカレントにする（shaders を読むため）
-set_target_properties(engine PROPERTIES
+set_target_properties(game PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_C_FLAGS_DEBUG "-g -O0")

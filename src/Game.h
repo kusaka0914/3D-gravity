@@ -1,65 +1,133 @@
-#include "Actor.h"
-#include "AudioSystem.h"
-#include <map>
-#include <unordered_map>
-#include <GLFW/glfw3.h>
-#include <SDL.h>
-#include <SDL_mixer.h>
+#pragma once
+
 #include <memory>
 #include <vector>
-#include <SDL_ttf.h>
+#include <string>
+#include <GLFW/glfw3.h>
+#include <SDL.h>
+
+class Actor;
+class Player;
+class Boat;
+class Stage;
+class PhysicsSystem;
+class MeshLoadSystem;
+class ActorLoadSystem;
+class CameraSystem;
+class MathUtils;
+class Renderer3D;
+class UIRenderer;
+class AudioSystem;
+class SceneSystem;
 
 class Game {
 public:
     Game();
     ~Game();
+
     bool Initialize();
     void RunLoop();
     void Shutdown();
 
-    void AddActor(std::unique_ptr<class Actor> actor) { mActors.emplace_back(std::move(actor)); };
-	void RemoveActor(std::unique_ptr<class Actor> actor);
-    void AddPlayer(class Player* player) { mPlayers.emplace_back(player); };
+    void LoadData(bool isLoadPlayer);
+    void ReloadCurrentStage();
+    void ChangeStage(int stageNum);
+
+    void OnBoatStageChangeRequested(int destStage);
+    void OnBoatArrived(Boat* boat);
+    void OnStarObtained();
+    void OnEnemyLaunched();
+    void OnStrongAttacked();
+    void OnLanded();
+    void OnPlayerDied();
+
+    void FinishGame();
+    void RestartGame();
+    void StartPlayingScene();
+    void StartFocusingScene();
+
+    void AddActor(std::unique_ptr<Actor> actor);
+    void RemoveActor(Actor* actor);
+    void RemoveAllActor();
+
+    void AddPlayer(Player* player) { mPlayers.emplace_back(player); }
+    void RemoveAllPlayer() { mPlayers.clear(); }
+
+    void SetHitStopTimer(float hitStopTimer) { mHitStopTimer = hitStopTimer; }
 
     GLFWwindow* GetWindow() const { return mWindow; }
-    SDL_GameController* GetSdlController() const { return mSdlController;}
-    const std::vector<std::unique_ptr<class Actor>>& GetActors() const { return mActors; }
-    const std::vector<class Player*>& GetPlayers() const { return mPlayers; }
-    const std::vector<class Stage*>& GetStages() const { return mStages; }
-    AudioSystem* GetAudioSystem() const { return mAudioSystem.get(); }
+    SDL_GameController* GetSdlController() const { return mSdlController; }
 
+    const std::vector<Player*>& GetPlayers() const { return mPlayers; }
+    Player* GetMainPlayer() const {
+        return mPlayers.empty() ? nullptr : mPlayers[0];
+    }
+
+    const std::vector<Stage*>& GetStages() const { return mStages; }
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }
-    bool GetIsStageClear() const { return mIsStageClear; }
+    std::string GetCurrentStageYamlPath() const { return mCurrentStageYamlPath; }
+
+    AudioSystem* GetAudioSystem() const { return mAudioSystem.get(); }
+    PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }
+    MeshLoadSystem* GetMeshLoadSystem() const { return mMeshLoadSystem.get(); }
+    SceneSystem* GetSceneSystem() const { return mSceneSystem.get(); }
+    ActorLoadSystem* GetActorLoadSystem() const { return mActorLoadSystem.get(); }
+    CameraSystem* GetCameraSystem() const { return mCameraSystem.get(); }
+    MathUtils* GetMathUtils() const { return mMathUtils.get(); }
+
+    float GetHitStopTimer() const { return mHitStopTimer; }
     bool GetIsPlayer2Joined() const { return mIsPlayer2Joined; }
 
 private:
+    bool InitializeGLFW();
+    void InitializeGameController();
+    void CreateGameSystems();
+    void CreateStages(int stageCount);
+
     void ProcessInput();
+    void ProcessGameInput();
+    void ProcessActorsInput();
+
     void UpdateGame();
+    void UpdateActors(float deltaTime);
+
     void GenerateOutput();
 
-    GLFWwindow* mWindow;
-    SDL_GameController* mSdlController;
-    TTF_Font* mFont;
+    void CreatePlayer2();
+    void CheckGameControllerConnected();
 
-    std::unordered_map<const char*, std::unique_ptr<class VertexArray>> mVertexArrays;
+private:
+    GLFWwindow* mWindow = nullptr;
+    SDL_GameController* mSdlController = nullptr;
 
-    std::vector<class Player*> mPlayers;
-    std::vector<std::unique_ptr<class Actor>> mActors;
-    std::vector<class Stage*> mStages;
+    std::vector<Player*> mPlayers;
+    std::vector<std::unique_ptr<Actor>> mActors;
+    std::vector<Stage*> mStages;
+    std::vector<std::unique_ptr<Stage>> mStagesUnique;
 
-    std::unique_ptr<class AudioSystem> mAudioSystem;
-    std::unique_ptr<class Shader> mShader;
-    std::unique_ptr<class Loader> mLoader;
-    std::unique_ptr<class Mesh> mMesh;
+    std::unique_ptr<AudioSystem> mAudioSystem;
+    std::unique_ptr<UIRenderer> mUIRenderer;
+    std::unique_ptr<Renderer3D> mRenderer3D;
+    std::unique_ptr<PhysicsSystem> mPhysicsSystem;
+    std::unique_ptr<CameraSystem> mCameraSystem;
+    std::unique_ptr<ActorLoadSystem> mActorLoadSystem;
+    std::unique_ptr<MeshLoadSystem> mMeshLoadSystem;
+    std::unique_ptr<MathUtils> mMathUtils;
+    std::unique_ptr<SceneSystem> mSceneSystem;
 
-    Stage* mCurrentStage;
+    Stage* mCurrentStage = nullptr;
 
-    int mCurrentStageNum;
+    int mCurrentStageNum = 0;
+    float mHitStopTimer = -1.0f;
 
-    double mLastTime;
+    double mLastTime = 0.0;
 
-    bool mReloadKeyPressedPrev;
-    bool mIsStageClear;
-    bool mIsPlayer2Joined;
+    bool mReloadKeyPressedPrev = false;
+    bool mUIReloadKeyPressedPrev = false;
+    bool mAPressedPrev = false;
+    bool mStartPressedPrev = false;
+    bool mIsPlayer2Joined = false;
+
+    std::string mCurrentStageYamlPath;
 };

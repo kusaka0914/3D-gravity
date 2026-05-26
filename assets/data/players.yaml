@@ -2,10 +2,32 @@
 # theta: 周方向 [rad], u: 高さ, currentPlanetNum: 惑星番号
 # hp: 体力, attack: 攻撃力, camera_pitch: カメラのピッチ
 players:
-  - theta: 0.0
-    u: 0.3
-    currentPlanetNum: 0
-    hp: 100
-    # attack: 10
-    attack: 60
+  - hp: 10
+    attack: 10
+    attackSpeed: 5.0
     camera_pitch: 0.4
+    modelPath: player.obj
+    
+    moveSpeed: 4.0
+    # moveSpeed: 10.2
+    dodgeDuration: 0.1
+    dodgeCooldownTime: 0.3
+    dodgeDistance: 3.0
+    normalAttackRange: 3.5
+    normalAttackAngle: 6.283
+    normalAttack: 10
+    wideAttackRange: 2.8
+    wideAttackAngle: 2.2
+    wideAttack: 5
+    strongAttackRange: 6.0
+    strongAttack: 50
+    strongAttackSpeed: 100.0
+    specialAttackCooldown: 30.0
+    defaultInvincibleTimer: 2.0
+    defaultDamageTimer: 1.0
+    defaultAttackMotionTimer: 0.1
+    attackCooldown: 0.3
+    lastAttackCooldown: 1.0
+    defaultAttackPressTimer: 0.5
+    chargeMoveSpeed: 6.0
+    defaultStrongAttackTimer: 0.06

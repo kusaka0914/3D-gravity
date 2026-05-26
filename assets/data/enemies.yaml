@@ -4,53 +4,31 @@
 # speed: 移動速度（省略時 2.0）, attack: 接触時のダメージ（省略時 20.0）
 # type: boss にするとボス（撃破でスター出現）
 enemies:
-  - theta: 0.0
-    u: 0.0
-    currentPlanetNum: 0
-    hp: 60
+  - type: common
+    knockBackSpeed: 5.0
+    defaultLaunchedTimer: 4.0
+    detectionRange: 6.0
+
+  - type: normal
+    hp: 80
     modelPath: enemy.obj
     scale: 0.25
-    speed: 2.0
-    attack: 20.0
-  # - theta: 2.056
-  #   u: 1.0
-  #   currentPlanetNum: 0
-  #   hp: 60
-  #   modelPath: enemy.obj
-  #   scale: 0.25
-  #   speed: 2.0
-  #   attack: 20.0
-  # - theta: 3.513
-  #   u: -0.6
-  #   currentPlanetNum: 0
-  #   hp: 60
-  #   modelPath: enemy.obj
-  #   scale: 0.25
-  #   speed: 2.0
-  #   attack: 20.0
-  # - theta: 3.969
-  #   u: 0.8
-  #   currentPlanetNum: 0
-  #   hp: 60
-  #   modelPath: enemy.obj
-  #   scale: 0.25
-  #   speed: 2.0
-  #   attack: 20.0
-  # - theta: 5.026
-  #   u: 1.6
-  #   currentPlanetNum: 0
-  #   hp: 60
-  #   modelPath: enemy.obj
-  #   scale: 0.25
-  #   speed: 2.0
-  #   attack: 20.0
-  # # ボス（撃破でスター出現）
-  - isBoss : 1
-    theta: 6.083
-    u: -0.8
-    currentPlanetNum: 1
-    hp: 300
+    speed: 1.0
+    attack: 1.0
+    breakCountMax: 1
+    radius: 0.75
+    defaultStandByAttackTimer: 6.0
+    defaultAttackMotionTimer: 3.0
+    attackSpeed: 1.5
+
+  - type: boss
+    hp: 400
     modelPath: enemy.obj
     scale: 1.0
-    speed: 4.0
-    attack: 20.0
+    speed: 3.0
+    attack: 2.0
+    breakCountMax: 3
+    radius: 1.5
+    defaultStandByAttackTimer: 3.0
+    defaultAttackMotionTimer: 1.5
+    attackSpeed: 3.0

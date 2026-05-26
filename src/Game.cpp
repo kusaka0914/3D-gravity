@@ -1,410 +1,145 @@
-// 学習用にコメントをつけています。
 #include <GL/glew.h>
-#include "Shader.h"
-#include "Planet.h"
-#include "Stage.h"
-#include "Player.h"
-#include "Enemy.h"
-#include "VertexArray.h"
-#include "Actor.h"
-#include "AudioSystem.h"
-#include "Mesh.h"
-#include "Loader.h"
-#include "Key.h"
-#include "Boat.h"
-#include "Star.h"
+
 #include "Game.h"
-#include <GLFW/glfw3.h>
-#include <SDL.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <SDL_mixer.h>
-#include <SDL_ttf.h>
+#include "Stage.h"
+
+#include "actor/Actor.h"
+#include "actor/Player.h"
+
+#include "system/AudioSystem.h"
+#include "system/CameraSystem.h"
+#include "system/MeshLoadSystem.h"
+#include "system/ActorLoadSystem.h"
+#include "system/PhysicsSystem.h"
+#include "system/UILoadSystem.h"
+#include "system/SceneSystem.h"
+
+#include "gfx/UIRenderer.h"
+#include "gfx/Renderer3D.h"
+
+#include "utils/MathUtils.h"
+
+#include <algorithm>
 #include <iostream>
-#include <memory>
-#include <unordered_map>
-#include <string>
-#include <cmath>
-#include <vector>
-#include <fstream>
-#include <sstream>
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
-#include <BulletDynamics/Character/btKinematicCharacterController.h>
 
 Game::Game()
-    :mReloadKeyPressedPrev(false)
-    ,mCurrentStageNum(0) 
-    ,mIsPlayer2Joined(false)
+    : mWindow(nullptr)
+    , mSdlController(nullptr)
+    , mCurrentStage(nullptr)
+    , mCurrentStageNum(0)
+    , mHitStopTimer(-1.0f)
+    , mLastTime(0.0)
+    , mReloadKeyPressedPrev(false)
+    , mUIReloadKeyPressedPrev(false)
+    , mAPressedPrev(false)
+    , mIsPlayer2Joined(false)
+    , mCurrentStageYamlPath("../assets/data/stage0.yaml")
 {
-    
 }
 
 Game::~Game() = default;
 
-bool Game::Initialize()
+bool Game::Initialize() 
 {
-    // glfwの初期化
-    if (!glfwInit())
-    {
+    if (!InitializeGLFW()) {
+        return false;
+    }
+
+    InitializeGameController();
+    CreateGameSystems();
+
+    constexpr int stageCount = 5;
+    CreateStages(stageCount);
+
+    ReloadCurrentStage();
+
+    mLastTime = glfwGetTime();
+    glEnable(GL_DEPTH_TEST);
+
+    return true;
+}
+
+bool Game::InitializeGLFW() 
+{
+    if (!glfwInit()) {
         std::cerr << "Failed to init GLFW" << std::endl;
         return false;
     }
 
-    // OpenGLのバージョンを3.3に設定
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // OpenGLのプロファイルをCoreプロファイルにする
-    // 学習用・・・プロファイルは2種類ある（CompatibilityがglBeginなどの古い処理も使える,Coreはシェーダー必須で古いのは使えない）
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // メインのモニタを取得
-    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+    // GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    // const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    // mWindow = glfwCreateWindow(mode->width, mode->height, "Engine", monitor, nullptr);
 
-    // ゲーム用のウィンドウを作成する
-    mWindow = glfwCreateWindow(mode->width, mode->height, "Engine", monitor, nullptr);
-    if (!mWindow)
-    {
-        std::cerr << "Failed to create mWindow" << std::endl;
+    mWindow = glfwCreateWindow(800, 450, "Engine", nullptr, nullptr);
+    if (!mWindow) {
+        std::cerr << "Failed to create window" << std::endl;
         glfwTerminate();
         return false;
     }
+
     glfwMakeContextCurrent(mWindow);
 
-    // glewの初期化（これがないとOpenGLのシェーダー周りなどの関数が使えない）
     glewExperimental = GL_TRUE;
-    if (glewInit() != GLEW_OK)
-    {
+    if (glewInit() != GLEW_OK) {
         std::cerr << "Failed to init GLEW" << std::endl;
         glfwDestroyWindow(mWindow);
         glfwTerminate();
         return false;
     }
 
-    // コントローラー接続
-    mSdlController = nullptr;
-    // SDLのゲームパッド用サブシステムを有効にする
-    if (SDL_Init(SDL_INIT_GAMECONTROLLER) == 0)
-    {
-        // SDL_ttfの初期化
-        if (TTF_Init() != 0)
-            std::cerr << "TTF_Init failed: " << TTF_GetError() << std::endl;
-        // 今つながっているコントローラーの数を取得してループ
-        for (int i = 0; i < SDL_NumJoysticks(); ++i)
-        {
-            // i番目がゲームコントローラーとして認識できるか判定
-            if (SDL_IsGameController(i))
-            {
-                // それをゲームコントローラーとして開く
-                mSdlController = SDL_GameControllerOpen(i);
-            }
-        }
-    }
-
-    mAudioSystem = std::make_unique<AudioSystem>(this);
-    mShader = std::make_unique<Shader>();
-    if (!mShader->GetShaderProgram())
-    {
-        glfwTerminate();
-        return false;
-    }
-
-    // ステージ作成
-    auto stageUnique = std::make_unique<Stage>(this);
-    Stage* stage = stageUnique.get();
-    mActors.emplace_back(std::move(stageUnique));
-    mStages.emplace_back(stage);
-    mCurrentStage = mStages[0];
-
-    // フォント
-    mFont = nullptr;
-    const char *fontPaths[] = {
-        "../assets/fonts/font.ttf",
-        "/System/Library/Fonts/Supplemental/Arial.ttf",
-        "/Library/Fonts/Arial.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    };
-    // 最初に見つかったフォントを用いる
-    for (const char *path : fontPaths)
-    {
-        mFont = TTF_OpenFont(path, 24);
-        if (mFont)
-            break;
-    }
-
-    std::unordered_map<std::string, std::pair<GLuint, glm::ivec2>> textTextureCache;
-
-    std::vector<float> textLabel = {
-        -0.5f,
-        -0.5f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        1.0f,
-        0.5f,
-        -0.5f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        1.0f,
-        1.0f,
-        0.5f,
-        0.5f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        1.0f,
-        0.0f,
-        -0.5f,
-        -0.5f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        1.0f,
-        0.5f,
-        0.5f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        1.0f,
-        0.0f,
-        -0.5f,
-        0.5f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        0.0f,
-    };
-    mVertexArrays["text"] = std::make_unique<VertexArray>(textLabel.data(), 972, nullptr, 0);
-
-    mLoader = std::make_unique<Loader>(this); 
-    // 惑星をYAMLから読み込み
-    if (!mLoader->loadPlanetsFromYaml("../assets/data/planets.yaml")) {
-        std::cerr << "Planet YAML load failed" << std::endl;
-    }
-    std::vector<Planet*> planets = mCurrentStage->GetPlanets();
-    for (auto planet : planets)
-    {
-        planet->Initialize();
-    }
-    // プレイヤーをYAMLから読み込み
-    if (!mLoader->loadPlayersFromYaml("../assets/data/players.yaml")) {
-        std::cerr << "Player YAML load failed" << std::endl;
-    }
-    // 敵をYAMLから読み込み
-    if (!mLoader->loadEnemiesFromYaml("../assets/data/enemies.yaml"))
-    {
-        std::cerr << "Enemy YAML load failed" << std::endl;
-    }
-    // ボートをYAMLから読み込み
-    if (!mLoader->loadBoatsFromYaml("../assets/data/boats.yaml"))
-    {
-        std::cerr << "Boats YAML load failed" << std::endl;
-    }
-
-    mMesh = std::make_unique<Mesh>();
-    // プレイヤーモデルをロード
-    for (auto player : mPlayers) {
-        std::string path = "../assets/models/player.obj";
-        std::vector<LoadedMesh> playerMeshes = mMesh->loadMeshFromFile(path.c_str());
-        player->SetMeshes(playerMeshes);
-    }
-    // 惑星モデルをロード
-    for (auto planet : planets)
-    {
-        std::unordered_map<std::string, std::vector<LoadedMesh>> planetMeshesByPath = mCurrentStage->GetPlanetMeshesByPath();
-        if (planetMeshesByPath.find(planet->GetModelPath()) == planetMeshesByPath.end())
-        {
-            std::string path = "../assets/models/" + planet->GetModelPath();
-            auto planetMeshes = mMesh->loadMeshFromFile(path.c_str());
-            mCurrentStage->AddPlanetMesh(planet->GetModelPath(), planetMeshes);
-        }
-    }
-    // 敵モデルをロード
-    std::vector<Enemy*> enemies = GetCurrentStage()->GetPlanets()[0]->GetEnemies();
-    for (auto enemy : enemies)
-    {
-        std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = mCurrentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
-        if (enemyMeshesByPath.find(enemy->GetModelPath()) == enemyMeshesByPath.end())
-        {
-            std::string path = "../assets/models/" + enemy->GetModelPath();
-            auto enemyMeshes = mMesh->loadMeshFromFile(path.c_str());
-            mCurrentStage->GetPlanets()[0]->AddEnemyMesh(enemy->GetModelPath(), enemyMeshes);
-        }
-    }
-    Planet* currentPlanet = mPlayers[0]->GetCurrentPlanet();
-    // 鍵モデルをロード
-    Key* key = currentPlanet->GetKey();
-    std::vector<LoadedMesh> keyMeshes = mMesh->loadMeshFromFile("../assets/models/key.obj");
-    key->SetMeshes(keyMeshes);
-    // スターモデルをロード
-    Star* star = currentPlanet->GetStar();
-    std::vector<LoadedMesh> starMeshes = mMesh->loadMeshFromFile("../assets/models/star.obj");
-    star->SetMeshes(starMeshes);
-    // ボートモデルをロード
-    std::vector<Boat*> boats = currentPlanet->GetBoats();
-    std::vector<LoadedMesh> boatMeshes = mMesh->loadMeshFromFile("../assets/models/boat.obj");
-    for (auto boat : boats) {
-        boat->SetMeshes(boatMeshes);
-    }
-
-    // 時間情報
-    mLastTime = glfwGetTime();
-
-    // 深度テストをONにして奥行きに応じて描画できるようにする（描画順ではなく、手前にあるものが上書きされて描画される）
-    glEnable(GL_DEPTH_TEST);
-
-    // // Bullet Physics：惑星メッシュの当たり判定（惑星ごとに modelPath のメッシュを使用）
-    // bool bulletOk = false;
-    // btDefaultCollisionConfiguration *bulletCollisionConfig = nullptr;
-    // btCollisionDispatcher *bulletDispatcher = nullptr;
-    // btBroadphaseInterface *bulletBroadphase = nullptr;
-    // btSequentialImpulseConstraintSolver *bulletSolver = nullptr;
-    // btDiscreteDynamicsWorld *bulletWorld = nullptr;
-    // std::vector<btTriangleMesh *> bulletPlanetMeshes;
-    // std::vector<btBvhTriangleMeshShape *> bulletPlanetShapes;
-    // std::vector<btRigidBody *> bulletPlanetBodies;
-    // btPairCachingGhostObject *bulletGhost = nullptr;
-    // btCapsuleShape *bulletCapsule = nullptr;
-    // btSphereShape *bulletWallSphere = nullptr; // 壁当たり用スイープ
-    // btKinematicCharacterController *bulletCharController = nullptr;
-
-    // if (!planets.empty())
-    // {
-    //     bulletCollisionConfig = new btDefaultCollisionConfiguration();
-    //     bulletDispatcher = new btCollisionDispatcher(bulletCollisionConfig);
-    //     bulletBroadphase = new btDbvtBroadphase();
-    //     bulletSolver = new btSequentialImpulseConstraintSolver();
-    //     bulletWorld = new btDiscreteDynamicsWorld(bulletDispatcher, bulletBroadphase, bulletSolver, bulletCollisionConfig);
-    //     bulletWorld->setGravity(btVector3(0, -9.8f, 0));
-    //     bulletBroadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
-
-    //     std::vector<float> pos;
-    //     std::vector<unsigned int> idx;
-    //     for (size_t p = 0; p < planets.size(); p++)
-    //     {
-    //         pos.clear();
-    //         idx.clear();
-    //         std::string meshPath = "../assets/models/" + planets[p]->GetModelPath();
-    //         if (!loadMeshPositionsAndIndices(meshPath.c_str(), pos, idx) || pos.size() < 9 || idx.size() < 3)
-    //             continue;
-    //         const glm::vec3 &center = planets[p]->GetCenter();
-    //         float radius = planets[p]->GetRadius();
-    //         btTriangleMesh *triMesh = new btTriangleMesh();
-    //         for (size_t i = 0; i + 2 < idx.size(); i += 3)
-    //         {
-    //             unsigned int i0 = idx[i], i1 = idx[i + 1], i2 = idx[i + 2];
-    //             if (i0 * 3 + 2 >= pos.size() || i1 * 3 + 2 >= pos.size() || i2 * 3 + 2 >= pos.size())
-    //                 continue;
-    //             btVector3 v0(center.x + radius * pos[i0 * 3], center.y + radius * pos[i0 * 3 + 1], center.z + radius * pos[i0 * 3 + 2]);
-    //             btVector3 v1(center.x + radius * pos[i1 * 3], center.y + radius * pos[i1 * 3 + 1], center.z + radius * pos[i1 * 3 + 2]);
-    //             btVector3 v2(center.x + radius * pos[i2 * 3], center.y + radius * pos[i2 * 3 + 1], center.z + radius * pos[i2 * 3 + 2]);
-    //             triMesh->addTriangle(v0, v1, v2);
-    //         }
-    //         bulletPlanetMeshes.emplace_back(triMesh);
-    //         // #region agent log
-    //         {
-    //             std::ostringstream ds;
-    //             ds << "{\"planet\":" << p << ",\"numTriangles\":" << triMesh->getNumTriangles() << "}";
-    //             debug_log("E", "planet_mesh_built", ds.str());
-    //         }
-    //         // #endregion
-    //         btBvhTriangleMeshShape *shape = new btBvhTriangleMeshShape(triMesh, true);
-    //         bulletPlanetShapes.emplace_back(shape);
-    //         btTransform startTransform;
-    //         startTransform.setIdentity();
-    //         startTransform.setOrigin(btVector3(0, 0, 0));
-    //         btRigidBody::btRigidBodyConstructionInfo rbInfo(0, nullptr, shape);
-    //         btRigidBody *body = new btRigidBody(rbInfo);
-    //         body->setWorldTransform(startTransform);
-    //         body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-    //         bulletWorld->addRigidBody(body, (short)btBroadphaseProxy::DefaultFilter, (short)-1);
-    //         bulletPlanetBodies.emplace_back(body);
-    //     }
-    //     bulletOk = !bulletPlanetBodies.empty();
-    //     // #region agent log
-    //     {
-    //         debug_log("A", "collision_setup", "{\"ghostGroup\":\"CharacterFilter\",\"ghostMask\":\"-1\",\"staticGroup\":\"DefaultFilter\",\"staticMask\":\"-1\",\"ghostSpawnOffset\":true}");
-    //     }
-    //     // #endregion
-
-    //     const float capRadius = 0.35f;
-    //     const float capHeight = 0.8f;
-    //     bulletCapsule = new btCapsuleShape(capRadius, capHeight);
-    //     bulletWallSphere = new btSphereShape(0.35f); // 壁スイープ用（キャラ半径程度）
-    //     bulletGhost = new btPairCachingGhostObject();
-    //     bulletGhost->setCollisionShape(bulletCapsule);
-    //     bulletGhost->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
-    //     btTransform ghostTrans;
-    //     ghostTrans.setIdentity();
-    //     glm::vec3 spawnUp = glm::normalize(mPlayers[0]->GetPos() - planets[0]->GetCenter());
-    //     float capHalf = capHeight * 0.5f;
-    //     glm::vec3 ghostOrigin = mPlayers[0]->GetPos() + spawnUp * (capHalf + 0.15f);
-    //     ghostTrans.setOrigin(btVector3(ghostOrigin.x, ghostOrigin.y, ghostOrigin.z));
-    //     bulletGhost->setWorldTransform(ghostTrans);
-    //     bulletWorld->addCollisionObject(bulletGhost, (short)btBroadphaseProxy::CharacterFilter, (short)-1);
-    //     bulletCharController = new btKinematicCharacterController(bulletGhost, bulletCapsule, 0.35f);
-    //     bulletCharController->setGravity(btVector3(0, -9.8f, 0));
-    //     bulletCharController->setJumpSpeed(5.0f);
-    //     bulletCharController->setFallSpeed(55.0f);
-    //     bulletWorld->addAction(bulletCharController);
-    // }
-    // else
-    // {
-    //     if (!bulletOk)
-    //         std::cerr << "Bullet: planet mesh load failed, using sphere collision." << std::endl;
-    //     bulletOk = false;
-    // }
-
-    // // 文字列→テクスチャ（敵ID表示用、キャッシュ付き）
-    // auto getTextTexture = [&](const std::string &s) -> std::pair<GLuint, glm::ivec2>
-    // {
-    //     if (!mFont || s.empty())
-    //         return {0, {0, 0}};
-    //     auto it = textTextureCache.find(s);
-    //     if (it != textTextureCache.end())
-    //         return it->second;
-    //     SDL_Color white = {255, 255, 255, 255};
-    //     SDL_Surface *surf = TTF_RenderText_Blended(mFont, s.c_str(), white);
-    //     if (!surf)
-    //         return {0, {0, 0}};
-    //     SDL_Surface *rgba = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
-    //     SDL_FreeSurface(surf);
-    //     if (!rgba)
-    //         return {0, {0, 0}};
-    //     int tw = rgba->w, th = rgba->h;
-    //     GLuint tex;
-    //     glGenTextures(1, &tex);
-    //     glBindTexture(GL_TEXTURE_2D, tex);
-    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tw, th, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba->pixels);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    //     SDL_FreeSurface(rgba);
-    //     textTextureCache[s] = {tex, {tw, th}};
-    //     return {tex, {tw, th}};
-    // };
     return true;
+}
+
+void Game::InitializeGameController() 
+{
+    if (SDL_Init(SDL_INIT_GAMECONTROLLER) == 0) {
+        CheckGameControllerConnected();
+    }
+}
+
+void Game::CreateGameSystems()
+{
+    mAudioSystem = std::make_unique<AudioSystem>(this);
+    mUIRenderer = std::make_unique<UIRenderer>(this);
+    mRenderer3D = std::make_unique<Renderer3D>(this);
+    mSceneSystem = std::make_unique<SceneSystem>(this);
+    mMathUtils = std::make_unique<MathUtils>();
+    mCameraSystem = std::make_unique<CameraSystem>(this);
+    mMeshLoadSystem = std::make_unique<MeshLoadSystem>(this);
+    mActorLoadSystem = std::make_unique<ActorLoadSystem>(this);
+    mPhysicsSystem = std::make_unique<PhysicsSystem>(this);
+}
+
+void Game::CreateStages(int stageCount)
+{
+    for (int i = 0; i < stageCount; i++) {
+        auto stageUnique = std::make_unique<Stage>();
+        Stage* stage = stageUnique.get();
+
+        mStagesUnique.emplace_back(std::move(stageUnique));
+        mStages.emplace_back(stage);
+
+        if (i == 0) {
+            mCurrentStage = stage;
+        }
+    }
+}
+
+void Game::ReloadCurrentStage()
+{
+    LoadData(true);
+    mPhysicsSystem->Initialize();
+    mAudioSystem->TryChangeBGM();
 }
 
 void Game::RunLoop()
 {
-    // ゲームループ
-    while (!glfwWindowShouldClose(mWindow))
-    {
-        glfwPollEvents(); // 入力などのイベントを処理する
+    while (!glfwWindowShouldClose(mWindow)) {
+        glfwPollEvents();
         ProcessInput();
         UpdateGame();
         GenerateOutput();
@@ -413,383 +148,272 @@ void Game::RunLoop()
 
 void Game::Shutdown()
 {
-    // ゲーム終了処理
-    if (mSdlController)
-    {
+    if (mSdlController) {
         SDL_GameControllerClose(mSdlController);
+        mSdlController = nullptr;
     }
-    // for (auto &p : textTextureCache)
-    //     glDeleteTextures(1, &p.second.first);
-    if (mFont) TTF_CloseFont(mFont);
-    TTF_Quit();
+
+    if (mAudioSystem) {
+        mAudioSystem->Shutdown();
+    }
+
     SDL_Quit();
 
-    // 再生中の曲を止める（オーディオは開いたままだから他の曲を流せる）
-    Mix_HaltMusic();
-    Mix_CloseAudio();
+    if (mWindow) {
+        glfwDestroyWindow(mWindow);
+        mWindow = nullptr;
+    }
 
-    // if (bulletWorld)
-    // {
-    //     if (bulletCharController)
-    //     {
-    //         bulletWorld->removeAction(bulletCharController);
-    //         delete bulletCharController;
-    //         bulletCharController = nullptr;
-    //     }
-    //     if (bulletGhost)
-    //     {
-    //         bulletWorld->removeCollisionObject(bulletGhost);
-    //         delete bulletGhost;
-    //         bulletGhost = nullptr;
-    //     }
-    //     if (bulletCapsule)
-    //     {
-    //         delete bulletCapsule;
-    //         bulletCapsule = nullptr;
-    //     }
-    //     if (bulletWallSphere)
-    //     {
-    //         delete bulletWallSphere;
-    //         bulletWallSphere = nullptr;
-    //     }
-    //     for (btRigidBody *b : bulletPlanetBodies)
-    //     {
-    //         if (b)
-    //         {
-    //             bulletWorld->removeRigidBody(b);
-    //             delete b;
-    //         }
-    //     }
-    //     for (btBvhTriangleMeshShape *s : bulletPlanetShapes)
-    //     {
-    //         if (s)
-    //             delete s;
-    //     }
-    //     for (btTriangleMesh *m : bulletPlanetMeshes)
-    //     {
-    //         if (m)
-    //             delete m;
-    //     }
-    //     delete bulletWorld;
-    //     bulletWorld = nullptr;
-    //     delete bulletSolver;
-    //     delete bulletBroadphase;
-    //     delete bulletDispatcher;
-    //     delete bulletCollisionConfig;
-    // }
-
-    glfwDestroyWindow(mWindow);
     glfwTerminate();
 }
 
 void Game::ProcessInput()
 {
-    for (const auto& actor_unique : mActors) {
-        Actor* actor = actor_unique.get();
-        actor->ProcessInput();
+    SDL_PumpEvents();
+    SDL_GameControllerUpdate();
+
+    ProcessGameInput();
+    ProcessActorsInput();
+    mCameraSystem->ProcessInput();
+}
+
+void Game::ProcessGameInput()
+{
+    const bool reloadKeyPressed = glfwGetKey(mWindow, GLFW_KEY_R) == GLFW_PRESS;
+    if (reloadKeyPressed && !mReloadKeyPressedPrev) {
+        ReloadCurrentStage();
     }
-    // 敵データのホットリロード
-    bool reloadPressed = (glfwGetKey(mWindow, GLFW_KEY_R) == GLFW_PRESS);
-    if (reloadPressed && !mReloadKeyPressedPrev)
-    {
-        if (!mLoader->loadEnemiesFromYaml("../assets/data/enemies.yaml"))
-        {
-            std::cerr << "Enemy YAML load failed" << std::endl;
-        }
-        std::vector<Enemy*> enemies = GetCurrentStage()->GetPlanets()[0]->GetEnemies();
-        for (auto enemy : enemies)
-        {
-            std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = mCurrentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
-            if (enemyMeshesByPath.find(enemy->GetModelPath()) == enemyMeshesByPath.end())
-            {
-                std::string path = "../assets/models/" + enemy->GetModelPath();
-                auto enemyMeshes = mMesh->loadMeshFromFile(path.c_str());
-                mCurrentStage->GetPlanets()[0]->AddEnemyMesh(enemy->GetModelPath(), enemyMeshes);
-            }
-        }
+    mReloadKeyPressedPrev = reloadKeyPressed;
+
+    const bool uiReloadKeyPressed = glfwGetKey(mWindow, GLFW_KEY_U) == GLFW_PRESS;
+    if (uiReloadKeyPressed && !mUIReloadKeyPressedPrev) {
+        mUIRenderer->GetUILoadSystem()->Initialize();
     }
-    mReloadKeyPressedPrev = reloadPressed;
+    mUIReloadKeyPressedPrev = uiReloadKeyPressed;
 
-    // Pキーで2P参加（1回だけ反応）
-    bool pKeyNow = (glfwGetKey(mWindow, GLFW_KEY_P) == GLFW_PRESS);
-    if (pKeyNow && !mIsPlayer2Joined)
-    {
-        // 2P作成
-        mIsPlayer2Joined = true;
-        std::unique_ptr<Player> player2 =std::make_unique<Player>(this);
-        Player* player2_ptr = player2.get();
-        mActors.emplace_back(std::move(player2));
-        mPlayers.emplace_back(player2_ptr);
+    const bool pPressed = glfwGetKey(mWindow, GLFW_KEY_P) == GLFW_PRESS;
+    if (pPressed && !mIsPlayer2Joined) {
+        CreatePlayer2();
+    }
 
-        // 2Pモデルロード
-        std::string path = "../assets/models/player.obj";
-        std::vector<LoadedMesh> playerMeshes = mMesh->loadMeshFromFile(path.c_str());
-        mPlayers[1]->SetMeshes(playerMeshes);
-    } 
+    const bool aPressed = mSdlController &&
+        SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_A);
 
-    if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS || (mSdlController && SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_BACK)))
-        glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
+    if (aPressed && !mAPressedPrev) {
+        mSceneSystem->OnConfirmPressed();
+    }
+    mAPressedPrev = aPressed;
+
+    const bool escapePressed = glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS;
+    const bool backPressed = mSdlController &&
+        SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_BACK);
+
+    if (escapePressed || backPressed) {
+        FinishGame();
+    }
+
+    const bool startPressed= mSdlController &&
+        SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_START);
+    if (startPressed && !mStartPressedPrev) {
+        mSceneSystem->OnStartPressed();
+    }
+    mStartPressedPrev = startPressed;
+}
+
+void Game::ProcessActorsInput()
+{
+    if (!mSceneSystem->IsPlaying()) {
+        return;
+    }
+
+    for (const auto& actorUnique : mActors) {
+        actorUnique->ProcessInput();
+    }
 }
 
 void Game::UpdateGame()
 {
-    double currentTime = glfwGetTime(); 
-    float deltaTime = static_cast<float>(currentTime - mLastTime);
+    CheckGameControllerConnected();
+
+    const double currentTime = glfwGetTime();
+    const float deltaTime = std::min(0.04f, static_cast<float>(currentTime - mLastTime));
     mLastTime = currentTime;
 
-    for (const auto& actor_unique : mActors) {
-        Actor* actor = actor_unique.get();
-        actor->Update(deltaTime);
+    if (mHitStopTimer >= 0.0f) {
+        mHitStopTimer -= deltaTime;
+        return;
     }
 
-    AudioSystem* audioSystem = mAudioSystem.get();
-    audioSystem->Update();
+    mSceneSystem->Update(deltaTime);
+
+    if (mSceneSystem->CanUpdateWorld()) {
+        UpdateActors(deltaTime);
+        mCameraSystem->Update(deltaTime);
+    }
+}
+
+void Game::UpdateActors(float deltaTime)
+{
+    for (const auto& actorUnique : mActors) {
+        actorUnique->Update(deltaTime);
+    }
 }
 
 void Game::GenerateOutput()
 {
-    glm::mat4 view = mPlayers[0]->getPlayerView();
-    glm::mat4 view2P = mIsPlayer2Joined ? mPlayers[1]->getPlayerView() : view;
-
     glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // これから描画するときにどのプログラムを使うのか設定
-    glUseProgram(mShader->GetShaderProgram());
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    mUIRenderer->DrawSkyBox();
 
-    int fbWidth, fbHeight;
-    glfwGetFramebufferSize(mWindow, &fbWidth, &fbHeight);
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
 
-    auto drawScene = [&](const glm::mat4 &viewMat, const glm::mat4 &projMat)
-    {
-        GLint locModel = mShader->GetLocModel();
-        GLint locView = mShader->GetLocView();
-        GLint locProj = mShader->GetLocProj();
-        GLint locObjectColor = mShader->GetLocObjectColor();
-        GLint locUseTexture = mShader->GetLocUseTexture();
-        GLint locDiffuseTexture = mShader->GetLocDiffuseTexture();
-        // CPU側のMVPをシェーダーのそれぞれのuniformに渡して使えるようにしている
-        // 惑星描画
-        glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(viewMat));
-        glUniformMatrix4fv(locProj, 1, GL_FALSE, glm::value_ptr(projMat));
+    mRenderer3D->Draw();
 
-        std::vector<Planet*> planets = mStages[mCurrentStageNum]->GetPlanets();
-        auto planetMeshesByPath = mStages[mCurrentStageNum]->GetPlanetMeshesByPath();
-        // 惑星描画
-        for (size_t i = 0; i < planets.size(); i++)
-        {
-            glm::mat4 planetModel = glm::translate(glm::mat4(1.0f), planets[i]->GetCenter()) * glm::scale(glm::mat4(1.0f), glm::vec3(planets[i]->GetRadius()));
-            glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(planetModel));
-            glUniform3f(locObjectColor, planets[i]->GetColor().x, planets[i]->GetColor().y, planets[i]->GetColor().z);
-            auto it = planetMeshesByPath.find(planets[i]->GetModelPath());
-            if (it != planetMeshesByPath.end() && !it->second.empty())
-            {
-                for (const LoadedMesh &m : it->second)
-                {
-                    glBindVertexArray(m.VAO);
-                    if (m.textureID != 0)
-                    {
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, m.textureID);
-                        glUniform1i(locDiffuseTexture, 0);
-                        glUniform1i(locUseTexture, 1);
-                    }
-                    else
-                    {
-                        glUniform1i(locUseTexture, 0);
-                    }
-                    glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, 0);
-                }
-                glUniform1i(locUseTexture, 0);
-            }
-            else
-            {
-                // glBindVertexArray(sphereVAO);
-                // glUniform1i(locUseTexture, 0);
-                // glDrawElements(GL_TRIANGLES, sphereIndexCount, GL_UNSIGNED_INT, 0);
-            }
-        }
+    glDisable(GL_DEPTH_TEST);
+    mUIRenderer->Draw();
+    glEnable(GL_DEPTH_TEST);
 
-        auto drawCharacter = [&](const glm::vec3 &pos, float scale, const glm::vec3 &fallbackColor,
-                                 const glm::vec3 &up, float yaw, const std::vector<LoadedMesh> &meshes,
-                                 const glm::vec3 *colorOverride = nullptr)
-        {
-            glm::vec3 fwd, left;
-            mPlayers[0]->getForwardLeft(up, yaw, fwd, left);
-            glm::vec3 right = -left;
-            glm::mat4 orient = glm::mat4(1.0f);
-            orient[0] = glm::vec4(-fwd, 0.0f);
-            orient[1] = glm::vec4(up, 0.0f);
-            orient[2] = glm::vec4(right, 0.0f);
-            orient[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) * orient * glm::scale(glm::mat4(1.0f), glm::vec3(scale));
-            if (!meshes.empty())
-            {
-                glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
-                for (const LoadedMesh &m : meshes)
-                {
-                    glBindVertexArray(m.VAO);
-                    if (m.textureID != 0)
-                    {
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, m.textureID);
-                        glUniform1i(locDiffuseTexture, 0);
-                        glUniform1i(locUseTexture, 1);
-                    }
-                    else
-                    {
-                        glUniform1i(locUseTexture, 0);
-                    }
-                    if (colorOverride)
-                    {
-                        glUniform3f(locObjectColor, colorOverride->x, colorOverride->y, colorOverride->z);
-                    }
-                    else
-                    {
-                        glUniform3f(locObjectColor, m.diffuseColor[0], m.diffuseColor[1], m.diffuseColor[2]);
-                    }
-                    glDrawElements(GL_TRIANGLES, m.indexCount, GL_UNSIGNED_INT, 0);
-                }
-                glUniform1i(locUseTexture, 0);
-            }
-            else
-            {
-                // glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
-                // glBindVertexArray(VAO);
-                // glm::vec3 c = colorOverride ? *colorOverride : fallbackColor;
-                // glUniform3f(locObjectColor, c.x, c.y, c.z);
-                // glDrawArrays(GL_TRIANGLES, 0, 3);
-            }
-        };
-
-        const float playerScale = 0.25f;
-        // 1Pの描画
-        glm::vec3 up0 = glm::normalize(mPlayers[0]->GetPos() - planets[mPlayers[0]->GetCurrentPlanetNum()]->GetCenter());
-        drawCharacter(mPlayers[0]->GetPos(), playerScale, glm::vec3(0.0f, 0.0f, 1.0f), up0, mPlayers[0]->GetFacingYaw(), mPlayers[0]->GetMeshes());
-
-        // 2Pの描画
-        if (mIsPlayer2Joined)
-        {
-            glm::vec3 up1 = glm::normalize(mPlayers[1]->GetPos() - planets[mPlayers[1]->GetCurrentPlanetNum()]->GetCenter());
-            drawCharacter(mPlayers[1]->GetPos(), playerScale, glm::vec3(1.0f, 0.5f, 0.0f), up1, mPlayers[1]->GetFacingYaw(),  mPlayers[1]->GetMeshes());
-        }
-
-        std::vector<Enemy*> enemies = mCurrentStage->GetPlanets()[mPlayers[0]->GetCurrentPlanetNum()]->GetEnemies();
-        // 敵描画
-        for (size_t ei = 0; ei < enemies.size(); ei++)
-        {
-            Enemy*& enemy = enemies[ei];
-            if (!enemy->GetIsAlive())
-                continue;
-            std::unordered_map<std::string, std::vector<LoadedMesh>> enemyMeshesByPath = mCurrentStage->GetPlanets()[0]->GetEnemyMeshesByPath();
-            auto eit = enemyMeshesByPath.find(enemy->GetModelPath());
-            if (eit == enemyMeshesByPath.end() || eit->second.empty())
-                eit = enemyMeshesByPath.find("enemy.obj");
-            if (eit == enemyMeshesByPath.end() || eit->second.empty())
-                continue;
-            glm::vec3 enemyUp = glm::normalize(enemy->GetPos() - enemy->GetCurrentPlanet()->GetCenter());
-            glm::vec3 toPlayer = glm::normalize(mPlayers[0]->GetPos() - enemy->GetPos());
-            float enemyFacingYaw = mPlayers[0]->getYawFromDirection(enemyUp, toPlayer) + 3.14159265f;
-            drawCharacter(enemy->GetPos(), enemy->GetScale(), glm::vec3(0.0f, 1.0f, 0.0f), enemyUp, enemyFacingYaw, eit->second);
-            // 敵の頭上にID（1始まり）をビルボード表示
-            // if (mFont)
-            // {
-            //     auto [texId, texSize] = getTextTexture(std::to_string(ei + 1));
-            //     if (texId != 0 && texSize.x > 0 && texSize.y > 0)
-            //     {
-            //         glm::vec3 camPos(glm::inverse(viewMat)[3]);
-            //         glm::vec3 quadCenter = e->GetPos() + enemyUp * 0.8f;
-            //         glm::vec3 forward = glm::normalize(camPos - quadCenter);
-            //         glm::vec3 right = glm::normalize(glm::cross(enemyUp, forward));
-            //         if (glm::length(right) < 0.01f)
-            //             right = glm::normalize(glm::cross(enemyUp, glm::vec3(0, 0, 1)));
-            //         glm::vec3 upQuad = glm::cross(forward, right);
-            //         敵のどれくらい上にラベルを描画するのか
-            //         const float enemyLabelHeight = 0.5f;
-            //         float w = enemyLabelHeight * static_cast<float>(texSize.x) / static_cast<float>(texSize.y);
-            //         glm::mat4 billboard(1.0f);
-            //         billboard[0] = glm::vec4(right * w, 0.0f);
-            //         billboard[1] = glm::vec4(upQuad * enemyLabelHeight, 0.0f);
-            //         billboard[2] = glm::vec4(forward, 0.0f);
-            //         billboard[3] = glm::vec4(quadCenter, 1.0f);
-            //         glEnable(GL_BLEND);
-            //         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            //         glDepthMask(GL_FALSE);
-            //         glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(billboard));
-            //         glActiveTexture(GL_TEXTURE0);
-            //         glBindTexture(GL_TEXTURE_2D, texId);
-            //         glUniform1i(locUseTexture, 1);
-            //         glUniform3f(locObjectColor, 1.0f, 1.0f, 1.0f);
-            //         glBindVertexArray(textQuadVAO);
-            //         glDrawArrays(GL_TRIANGLES, 0, 6);
-            //         glUniform1i(locUseTexture, 0);
-            //         glDepthMask(GL_TRUE);
-            //         glDisable(GL_BLEND);
-            //     }
-            // }
-        }
-
-        // 鍵描画（出現した惑星上で表示）
-        Planet* currentPlanet = mPlayers[0]->GetCurrentPlanet();
-        Key* key = currentPlanet->GetKey();
-        if (key->GetIsActive())
-        {
-            const float keyScale = 2.0f;
-            const glm::vec3 keyColor(0.85f, 0.65f, 0.13f); // 金色
-            glm::vec3 keyUp = glm::normalize(key->GetPos() - currentPlanet->GetCenter());
-            drawCharacter(key->GetPos(), keyScale, keyColor, keyUp, 0.0f, key->GetMeshes(), &keyColor);
-        }
-
-        std::vector<Boat*> boats = currentPlanet->GetBoats();
-        // ボート描画（ボートが出現した惑星にいる時か移動中のみ表示）
-        for (auto boat : boats) {
-        if (boat->GetIsActive())
-            {
-                const float boatScale = 0.8f;
-                glm::vec3 boatUp = glm::normalize(boat->GetPos() - currentPlanet->GetCenter());
-                drawCharacter(boat->GetPos(), boatScale, glm::vec3(0.4f, 0.25f, 0.1f), boatUp, 0.0f, boat->GetMeshes());
-            }
-        }
-
-        // スター描画（ボス撃破後のみ存在・描画）
-        Star* star = currentPlanet->GetStar();
-        if (star->GetIsActive())
-        {
-            glm::vec3 starUp = glm::normalize(star->GetPos() - currentPlanet->GetCenter());
-            glm::vec3 starColor(1.0f, 0.9f, 0.2f);
-            const float starScale = 0.3f;
-            drawCharacter(star->GetPos(), starScale, starColor, starUp, 0.0f, star->GetMeshes());
-        }
-    };
-
-    if (!mIsPlayer2Joined)
-    {
-        glViewport(0, 0, fbWidth, fbHeight);
-        float aspect = static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
-        glm::mat4 proj = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
-        drawScene(view, proj);
-    }
-    else
-    {
-        float halfW = fbWidth * 0.5f;
-        float aspectHalf = halfW / static_cast<float>(fbHeight);
-        glm::mat4 projHalf = glm::perspective(glm::radians(45.0f), aspectHalf, 0.1f, 100.0f);
-        glViewport(0, 0, static_cast<GLsizei>(halfW), fbHeight);
-        drawScene(view, projHalf);
-        glViewport(static_cast<GLsizei>(halfW), 0, static_cast<GLsizei>(halfW), fbHeight);
-        drawScene(view2P, projHalf);
-    }
-
-    // // バッファーを入れ替える
     glfwSwapBuffers(mWindow);
 }
 
-void Game::RemoveActor(std::unique_ptr<Actor> actor)
+void Game::AddActor(std::unique_ptr<Actor> actor)
 {
-    auto iter = std::find(mActors.begin(), mActors.end(), actor);
-    if (iter != mActors.end())
-    {
+    mActors.emplace_back(std::move(actor));
+}
+
+void Game::RemoveActor(Actor* actor)
+{
+    auto iter = std::find_if(
+        mActors.begin(),
+        mActors.end(),
+        [actor](const std::unique_ptr<Actor>& current) {
+            return current.get() == actor;
+        }
+    );
+
+    if (iter != mActors.end()) {
         std::iter_swap(iter, mActors.end() - 1);
         mActors.pop_back();
     }
+}
+
+void Game::RemoveAllActor()
+{
+    mPlayers.clear();
+    mActors.clear();
+}
+
+void Game::LoadData(bool isLoadPlayer)
+{
+    RemoveAllActor();
+    mActorLoadSystem->LoadData(isLoadPlayer);
+    mMeshLoadSystem->LoadModel();
+}
+
+void Game::ChangeStage(int stageNum)
+{
+    if (stageNum < 0 || stageNum >= static_cast<int>(mStages.size())) {
+        return;
+    }
+
+    mCurrentStage = mStages[stageNum];
+    mCurrentStageNum = stageNum;
+    mCurrentStageYamlPath = "../assets/data/stage" + std::to_string(stageNum) + ".yaml";
+}
+
+void Game::CheckGameControllerConnected()
+{
+    if (mSdlController) {
+        return;
+    }
+
+    for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+        if (SDL_IsGameController(i)) {
+            mSdlController = SDL_GameControllerOpen(i);
+            break;
+        }
+    }
+}
+
+void Game::CreatePlayer2()
+{
+    if (mIsPlayer2Joined) {
+        return;
+    }
+
+    mIsPlayer2Joined = true;
+
+    auto player2 = std::make_unique<Player>(this);
+    Player* player2Ptr = player2.get();
+
+    mActors.emplace_back(std::move(player2));
+    mPlayers.emplace_back(player2Ptr);
+
+    auto playerMeshes = mMeshLoadSystem->GetLoadedMeshes("player");
+
+    player2Ptr->SetMeshes(playerMeshes);
+}
+
+void Game::OnBoatStageChangeRequested(int destStage)
+{
+    if (mCurrentStageNum != 0) {
+        return;
+    }
+
+    mSceneSystem->RequestStageChange(destStage);
+}
+
+void Game::OnBoatArrived(Boat* boat)
+{
+    mSceneSystem->OnBoatArrived(boat);
+    mAudioSystem->TryChangeBGM();
+}
+
+void Game::OnStarObtained()
+{
+    mSceneSystem->OnStageClear();
+}
+
+void Game::OnEnemyLaunched()
+{
+    mAudioSystem->PlaySE("breakSE");
+    mSceneSystem->OnEnemyLaunched();
+}
+
+void Game::OnStrongAttacked()
+{
+    mSceneSystem->OnStrongAttacked();
+}
+
+void Game::OnLanded()
+{
+    mSceneSystem->OnLanded();
+}
+
+void Game::OnPlayerDied() {
+    mSceneSystem->OnPlayerDied();
+}
+
+void Game::FinishGame() {
+    glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
+}
+
+void Game::RestartGame() {
+    for (auto player : mPlayers) {
+        player->Restart();
+    }
+}
+
+void Game::StartPlayingScene()
+{
+    mSceneSystem->StartPlayingScene();
+}
+
+void Game::StartFocusingScene()
+{
+    mSceneSystem->StartFocusingScene();
 }

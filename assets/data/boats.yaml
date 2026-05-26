@@ -1,3 +1,2 @@
 boats :
-  - startPlanet : 0
-    destPlanet : 1
+  - modelPath: boat.obj

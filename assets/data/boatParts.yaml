@@ -1,0 +1,11 @@
+boatParts :
+  - type: parts1
+    modelPath: rocketParts1.obj
+  - type: parts2
+    modelPath: rocketParts2.obj
+  - type: parts3
+    modelPath: rocketParts3.obj
+  - type: parts4
+    modelPath: rocketParts4.obj
+  - type: parts5
+    modelPath: rocketParts5.obj
