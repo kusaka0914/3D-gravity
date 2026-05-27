@@ -1,14 +1,12 @@
 #include "Key.h"
 #include "Game.h"
-#include "system/AudioSystem.h"
 #include "actor/Boat.h"
 #include "actor/Planet.h"
-#include "component/FocusComponent.h"
 #include "component/CollectableComponent.h"
+#include "component/FocusComponent.h"
+#include "system/AudioSystem.h"
 
-Key::Key(Game* game)
-    : Actor(game)
-    , mIsActivePrev(false)
+Key::Key(Game* game) : Actor(game), mIsActivePrev(false)
 {
     mIsActive = false;
 
@@ -16,13 +14,15 @@ Key::Key(Game* game)
     AddFocusComponent();
 }
 
-void Key::AddCollectableComponent() {
+void Key::AddCollectableComponent()
+{
     std::unique_ptr<CollectableComponent> collectableComponent = std::make_unique<CollectableComponent>(this, 100);
     mCollectableComponent = collectableComponent.get();
     AddComponent(std::move(collectableComponent));
 }
 
-void Key::AddFocusComponent() {
+void Key::AddFocusComponent()
+{
     std::unique_ptr<FocusComponent> focusComponent = std::make_unique<FocusComponent>(this, 100);
     mFocusComponent = focusComponent.get();
     AddComponent(std::move(focusComponent));
@@ -30,29 +30,29 @@ void Key::AddFocusComponent() {
 
 void Key::UpdateActor(float deltaTime)
 {
-    // bool isAllEnemiesDead = mCurrentPlanet->GetIsAllEnemiesDead();
-    // bool isFocused = mFocusComponent->GetIsFocused();
-    // if (isAllEnemiesDead && !isFocused)
-    //     mFocusComponent->StartFocus();
-
-    if (!mIsActivePrev && mIsActive) 
+    const bool isJustShown = !mIsActivePrev && mIsActive;
+    if (isJustShown) {
         OnShown();
+    }
 
-    bool isObtained = mCollectableComponent->GetIsObtained();
-    if (isObtained && mIsActive)
+    const bool shouldStartOnObtained = mCollectableComponent->GetIsObtained() && mIsActive;
+    if (shouldStartOnObtained) {
         OnObtained();
+    }
+
+    mIsActivePrev = mIsActive;
 }
 
-void Key::OnShown() {
+void Key::OnShown() const
+{
     mGame->GetAudioSystem()->PlaySE("showKeySE");
-    mIsActivePrev = true;
 }
 
-void Key::OnObtained() {
+void Key::OnObtained()
+{
     mIsActive = false;
 
-    std::vector<Boat*> boats = mCurrentPlanet->GetBoats();
-    for (auto boat : boats) {
+    for (auto boat : mCurrentPlanet->GetBoats()) {
         boat->GetFocusComponent()->StartFocus();
     }
 }
