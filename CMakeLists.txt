@@ -13,7 +13,7 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glm REQUIRED)
-find_package(Assimp REQUIRED)
+find_package(assimp CONFIG REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(SDL2 REQUIRED CONFIG)
 find_package(SDL2_mixer REQUIRED)
@@ -34,7 +34,7 @@ target_link_libraries(game
     OpenGL::GL
     glm::glm
     SDL2::SDL2
-    assimp
+    assimp::assimp
     ${BULLET_LIBRARIES}
     SDL2_mixer::SDL2_mixer
     SDL2_ttf::SDL2_ttf
@@ -45,5 +45,4 @@ set_target_properties(game PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
-set(CMAKE_C_FLAGS_DEBUG "-g -O0")
+target_compile_definitions(game PRIVATE SDL_MAIN_HANDLED)

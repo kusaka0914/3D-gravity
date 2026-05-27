@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+#include <string>
 #include <GL/glew.h>
 #include <vector>
 #include <unordered_map>
@@ -24,6 +26,6 @@ private:
 protected:
     Game* mGame;
     TTF_Font* mFont;
-    std::unordered_map<const char*, std::unique_ptr<VertexArray>> mVertexArrays;
+    std::unordered_map<std::string, std::unique_ptr<VertexArray>> mVertexArrays;
     std::unordered_map<std::string, GLuint> mTextures;
 };
