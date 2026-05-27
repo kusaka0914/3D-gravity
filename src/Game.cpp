@@ -33,7 +33,7 @@ Game::Game()
     , mUIReloadKeyPressedPrev(false)
     , mAPressedPrev(false)
     , mIsPlayer2Joined(false)
-    , mCurrentStageYamlPath("../assets/data/stage0.yaml")
+    , mCurrentStageYamlPath("../assets/data/house.yaml")
 {
 }
 
@@ -70,11 +70,11 @@ bool Game::InitializeGLFW()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-    // const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-    // mWindow = glfwCreateWindow(mode->width, mode->height, "Engine", monitor, nullptr);
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    mWindow = glfwCreateWindow(mode->width, mode->height, "Engine", monitor, nullptr);
 
-    mWindow = glfwCreateWindow(800, 450, "Engine", nullptr, nullptr);
+    // mWindow = glfwCreateWindow(800, 450, "Engine", nullptr, nullptr);
     if (!mWindow) {
         std::cerr << "Failed to create window" << std::endl;
         glfwTerminate();
