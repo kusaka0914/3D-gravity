@@ -210,7 +210,6 @@ bool Actor::CastRay(const glm::vec3& offset, glm::vec3& outNormal, const btColli
     if (!cb.hasHit()
     // && !cb2.hasHit()
     ) {
-        std::cout << mModelPath << std::endl;
         return false;
     }
 

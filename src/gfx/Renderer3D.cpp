@@ -316,7 +316,6 @@ void Renderer3D::DrawCharacter(const glm::vec3 &pos, glm::vec3 scale, const glm:
         glUniform1i(locUseTexture, 0);
         return;
     }
-    std::cout << "not Mesh" << std::endl;
 }
 
 void Renderer3D::DrawGuard(glm::mat4 viewMat, Enemy* enemy) {
