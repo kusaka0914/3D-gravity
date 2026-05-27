@@ -33,7 +33,7 @@ private:
     
     void FinishMoving();
 
-    glm::vec3 CalculateDestPos();
+    glm::vec3 CalculateDestPos() const;
 
 private:
     Planet* mDestPlanet;
