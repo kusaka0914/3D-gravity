@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include <GL/glew.h>
 #include <vector>
+#include <memory>
 #include <unordered_map>
 #include <SDL_ttf.h>
 #include <glm/glm.hpp>

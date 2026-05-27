@@ -102,6 +102,7 @@ void UIRenderer::DrawOpening() {
             break;
         }
         default:
+            break;
     }
 }
 
@@ -381,7 +382,7 @@ void UIRenderer::DrawTalkUI(const std::vector<std::string>& texts, int index) {
     auto talkTextInfo = mUILoadSystem->GetTextInfo("state", "talkText");
     if (!talkTextInfo) return;
 
-    glm::vec4 textColor{0.0f, 0.0f, 0.0f, 0.0f};
+    glm::vec4 textColor{0.0f, 0.0f, 0.0f, 255.0f};
     DrawText(mFbWidth * talkTextInfo->xRatio, mFbHeight * talkTextInfo->yRatio, mFbWidth * talkTextInfo->scaleRatio, texts[index], false, textColor);
 }
 
@@ -393,7 +394,7 @@ void UIRenderer::DrawTalkUI(const UILoadSystem::TextInfo* textInfo, int index) {
     float textureMarginY = 0.0845f;
     DrawTexture(mFbWidth * (textInfo->xRatio - textureMarginX), mFbHeight * (textInfo->yRatio - textureMarginY), mFbWidth * talkBgTextureInfo->widthRatio, mFbHeight * talkBgTextureInfo->heightRatio, "textBg");
 
-    glm::vec4 textColor{0.0f, 0.0f, 0.0f, 0.0f};
+    glm::vec4 textColor{0.0f, 0.0f, 0.0f, 255.0f};
     DrawText(mFbWidth * textInfo->xRatio, mFbHeight * textInfo->yRatio, mFbWidth * textInfo->scaleRatio, textInfo->texts[index], false, textColor);
 }
 
@@ -424,11 +425,16 @@ void UIRenderer::DrawLoading() {
 }
 
 void UIRenderer::DrawSkyBox() {
-    DrawTexture(0.0f, 0.0f, mFbWidth, mFbHeight, "skyBox");
+    glfwGetFramebufferSize(mGame->GetWindow(), &mFbWidth, &mFbHeight);
+
+    glUseProgram(mUIShader->GetShaderProgram());
+
+    DrawTexture(0.0f, 0.0f, static_cast<float>(mFbWidth), static_cast<float>(mFbHeight), "skyBox");
 }
 
 void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector<GLfloat> color)
 {
+    glUseProgram(mUIShader->GetShaderProgram());
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x + width * 0.5f, y + height * 0.5f, 0.0f))
                 * glm::scale(glm::mat4(1.0f), glm::vec3(width, height, 1.0f));
     glm::mat4 view = glm::mat4(1.0f);
@@ -447,6 +453,7 @@ void UIRenderer::DrawBG(float width, float height, float x, float y, std::vector
 }
 
 void UIRenderer::DrawText(float x, float y, float scale, std::string message, bool isCenterBase, glm::vec4 color) {
+    glUseProgram(mUIShader->GetShaderProgram());
     std::string message1 = message;
     std::string message2 = "";
     int newline = message.find("\n");
@@ -510,6 +517,9 @@ void UIRenderer::DrawText(float x, float y, float scale, std::string message, bo
     mVertexArrays.at("text")->SetActive();
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
+    glDeleteTextures(1, &tex);
+    tex = 0;
+
     if (isNewLine) {
         surf = TTF_RenderUTF8_Blended(mFont, message2.c_str(), textColor);
             if (!surf) return;
@@ -545,10 +555,14 @@ void UIRenderer::DrawText(float x, float y, float scale, std::string message, bo
 
         glBindTexture(GL_TEXTURE_2D, tex);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glDeleteTextures(1, &tex);
+        tex = 0;
     }
 }
 
 void UIRenderer::DrawTexture(float x, float y, float width, float height, std::string textureName) {
+    glUseProgram(mUIShader->GetShaderProgram());
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x + width * 0.5f, y + height * 0.5f, 0.0f))
                     * glm::scale(glm::mat4(1.0f), glm::vec3(width, height, 1.0f));
     glm::mat4 view = glm::mat4(1.0f);

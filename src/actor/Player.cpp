@@ -49,6 +49,7 @@ Player::Player(Game* game)
     , mInputAvailableTimer(-1.0f)
     , mJewel(2)
     , mIsStrongAttacked(false)
+    , mTalkableNPC(nullptr)
 {
 
 }
