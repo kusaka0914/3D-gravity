@@ -71,9 +71,9 @@ bool Game::InitializeGLFW()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-    // GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-    // const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-    // mWindow = glfwCreateWindow(mode->width, mode->height, "Engine", monitor, nullptr);
+//     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+//     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+//     mWindow = glfwCreateWindow(mode->width, mode->height, "Engine", monitor, nullptr);
 
     mWindow = glfwCreateWindow(800, 450, "Slime'sSkyTravel", nullptr, nullptr);
     if (!mWindow) {
