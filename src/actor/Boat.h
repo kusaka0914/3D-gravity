@@ -26,11 +26,11 @@ public:
 private:
     void AddFocusComponent();
 
-    void OnShown();
+    void OnShown() const;
 
     void UpdateMoving(float deltaTime);
     void UpdateMovement(float deltaTime);
-    
+
     void FinishMoving();
 
     glm::vec3 CalculateDestPos() const;
@@ -42,7 +42,7 @@ private:
     bool mIsActivePrev;
 
     int mDestStage;
-    
+
     float mTransitionTimer;
     float mProgress;
 
