@@ -185,7 +185,7 @@ void Game::ProcessGameInput()
     }
     mReloadKeyPressedPrev = reloadKeyPressed;
 
-    const bool uiReloadKeyPressed = glfwGetKey(mWindow, GLFW_KEY_U) == GLFW_PRESS;
+    const bool uiReloadKeyPressed = glfwGetKey(mWindow, GLFW_KEY_I) == GLFW_PRESS;
     if (uiReloadKeyPressed && !mUIReloadKeyPressedPrev) {
         mUIRenderer->GetUILoadSystem()->Initialize();
     }

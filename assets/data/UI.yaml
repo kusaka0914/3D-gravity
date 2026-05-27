@@ -1,16 +1,16 @@
 title:
   - id: bgTexture
     type: texture
-    pos: [0.0, 0.0]
+    posRatio: [0.0, 0.0]
     scaleRatio: [1.0, 1.0]
 
-  - id: startText
+  - id: startTextForGameController
     type: text
     posRatio: [0.5, 0.75]
     scaleRatio: [0.000625, 1.0]
     text: ["START: A"]
   
-  - id: startTextKeyBoard
+  - id: startTextForKeyBoard
     type: text
     posRatio: [0.5, 0.75]
     scaleRatio: [0.000625, 1.0]
@@ -19,7 +19,7 @@ title:
 opening:
   - id: bgTexture
     type: texture
-    pos: [0.0, 0.0]
+    posRatio: [0.0, 0.0]
     scaleRatio: [1.0, 1.0]
 
   - id: openingText
@@ -80,34 +80,34 @@ gameOver:
     scaleRatio: [0.000625, 1.0]
     text: ["ゲームオーバー！"]
 
-  - id: restartText
+  - id: restartTextForGameController
     type: text
     posRatio: [0.5, 0.6111]
     scaleRatio: [0.0003125, 1.0]
     text: ["直前からリスタート: A"]
 
-  - id: restartTextKeyBoard
+  - id: restartTextForKeyBoard
     type: text
     posRatio: [0.5, 0.6111]
     scaleRatio: [0.0003125, 1.0]
     text: ["直前からリスタート: Space"]
 
 default:
-  - id: operationSupportText
+  - id: operationSupportTextForGameController
     type: text
-    posRatio: [0.0125, 0.0666]
+    posRatio: [0.0125, 0.9333]
     scaleRatio: [0.0002, 1.0]
     text: ["+:操作ガイド非表示 A:ジャンプ B:回避 X:強攻撃 Y:弱攻撃 L:スペシャル攻撃 R:回復 空中でX長押し→離す:溜め攻撃"]
 
-  - id: operationSupportTextKeyBoard
+  - id: operationSupportTextForKeyBoard
     type: text
-    posRatio: [0.0125, 0.0666]
+    posRatio: [0.0125, 0.9333]
     scaleRatio: [0.0002, 1.0]
     text: ["WASD: 移動 Space:ジャンプ U:回避 K:強攻撃 J:弱攻撃 N:スペシャル攻撃 M:回復 空中でK長押し→離す:溜め攻撃"]
   
   - id: operationSupportHiddenText
     type: text
-    posRatio: [0.0125, 0.0666]
+    posRatio: [0.0125, 0.9333]
     scaleRatio: [0.0002, 1.0]
     text: ["+:操作ガイド表示"]
   
@@ -121,13 +121,13 @@ default:
     posRatio: [0.015, 0.05]
     scaleRatio: [0.06, 0.06]
   
-  - id: talkableText
+  - id: talkableTextForGameController
     type: text
     posRatio: [0.5, 0.5]
     scaleRatio: [0.0003125, 1.0]
     text: ["会話: A"]
 
-  - id: talkableTextKeyBoard
+  - id: talkableTextForKeyBoard
     type: text
     posRatio: [0.5, 0.5]
     scaleRatio: [0.0003125, 1.0]
@@ -139,7 +139,7 @@ default:
     scaleRatio: [0.0003125, 1.0]
     text: ["残りのパーツ数: "]
 state:
-  - id: battleTutorialText
+  - id: battleTutorialTextForGameController
     type: text
     posRatio: [0.065, 0.14]
     scaleRatio: [0.000333333, 1.0]
@@ -152,7 +152,7 @@ state:
       "まずはY→Y→YまたはY→Y→Xのコンボを使って、\n敵に3回攻撃してみましょう！",
     ]
 
-  - id: battleTutorialTextKeyBoard
+  - id: battleTutorialTextForKeyBoard
     type: text
     posRatio: [0.065, 0.14]
     scaleRatio: [0.000333333, 1.0]
@@ -178,7 +178,7 @@ state:
       "覚えてますか？\n大きなクリスタルを破壊するときに使うアレです！",
       "非常に強い技なのでガードを全破壊して空中溜め攻撃で\nサクサク敵を倒していきましょう！",
     ]
-  - id: jewelTutorialText
+  - id: jewelTutorialTextForGameController
     type: text
     posRatio: [0.065, 0.74]
     scaleRatio: [0.000333333, 1.0]
@@ -193,7 +193,7 @@ state:
       "それではこれまで学んだことを活かして\n全ての敵を倒してみましょう！"
     ]
   
-  - id: jewelTutorialTextKeyBoard
+  - id: jewelTutorialTextForKeyBoard
     type: text
     posRatio: [0.065, 0.74]
     scaleRatio: [0.000333333, 1.0]
@@ -223,13 +223,13 @@ state:
 
   - id: loadingText
     type: text
-    posRatio: [0.01875, 0.0777]
+    posRatio: [0.01875, 0.9222]
     scaleRatio: [0.0003125, 1.0]
     text: ["Loading..."]
   
   - id: loadingTexture
     type: texture
-    posRatio: [0.01875, 0.1444]
+    posRatio: [0.01875, 0.8555]
     scaleRatio: [0.0625, 0.0755]
 
   - id: talkBgTexture

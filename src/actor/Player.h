@@ -86,7 +86,7 @@ public:
     bool GetIsStrongAttacked() const { return mIsStrongAttacked; }
 
     int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
-    int GetJewel() const { return mJewel; }
+    int GetJewelCount() const { return mJewelCount; }
 
     float GetAttack() const { return mAttack; }
     float GetHp() const { return mHp; }
@@ -185,7 +185,7 @@ private:
     int mAttackComboIndex;
     int mRestartPlanetIndex;
     int mPlayerNum;
-    int mJewel;
+    int mJewelCount;
 
     float mCameraYaw;
     float mCameraPitch;

@@ -38,7 +38,7 @@ Player::Player(Game* game)
     , mAttackComboIndex(0)
     , mRestartPlanetIndex(0)
     , mPlayerNum(1)
-    , mJewel(2)
+    , mJewelCount(2)
 
     , mCameraYaw(0.0f)
     , mCameraPitch(0.4f)
@@ -189,7 +189,7 @@ void Player::UpdateActor(float deltaTime) {
 void Player::UpdateAlive(float deltaTime) {
     UpdateWorldVec();
     UpdateBoatRide();
-    if (mJewel < 2 && mJewelTimer <= 0.0f) {
+    if (mJewelCount < 2 && mJewelTimer <= 0.0f) {
         StartJewelTimer();
     }
 
@@ -290,13 +290,13 @@ void Player::UpdateIdle(float deltaTime) {
         return;
     }
 
-    bool canSpecialAttack = mSpecialAttackPressed && !mSpecialAttackPressedPrev && mJewel > 0;
+    bool canSpecialAttack = mSpecialAttackPressed && !mSpecialAttackPressedPrev && mJewelCount > 0;
     if (canSpecialAttack) {
         SpecialAttack(deltaTime);
         return;
     }
 
-    bool canRecover = mRecoverPressed && !mRecoverPressedPrev && mJewel > 0 && mHp != mMaxHp;
+    bool canRecover = mRecoverPressed && !mRecoverPressedPrev && mJewelCount > 0 && mHp != mMaxHp;
     if (canRecover) {
         Recover();
     }
@@ -429,7 +429,7 @@ void Player::UpdateJewelTimer(float deltaTime) {
     mJewelTimer -= deltaTime;
     if (mJewelTimer >= 0.0f) return;
 
-    mJewel++;
+    mJewelCount++;
 }
 
 void Player::UpdateComboKeepTimer(float deltaTime) {
@@ -677,7 +677,7 @@ bool Player::IsEnemyHitByAttack(float dist, float dot, float effectiveRange) {
 }
 
 void Player::SpecialAttack(float deltaTime) {
-    mJewel--;
+    mJewelCount--;
 
     std::vector<Enemy*> enemies = mCurrentPlanet->GetEnemies();
     for (auto& enemy : enemies) {
@@ -695,7 +695,7 @@ void Player::SpecialAttack(float deltaTime) {
 }
 
 void Player::Recover() {
-    mJewel--;
+    mJewelCount--;
     mHp += 1;
     mGame->GetAudioSystem()->PlaySE("recoverSE");
 
