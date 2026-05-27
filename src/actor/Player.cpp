@@ -14,44 +14,91 @@
 
 Player::Player(Game* game)
     : CharacterActor(game)
-    , mKnockBackFrom(0.0f)
-    , mRestartPos(0.0f)
+
+    , mActionState(ActionState::Idle)
+    , mAttackKind(AttackKind::Normal)
+
+    , mDodgePressed(false)
+    , mDodgePressedPrev(false)
+    , mJumpPressed(false)
+    , mAttackPressed(false)
+    , mAttackPressedPrev(false)
+    , mWideAttackPressed(false)
+    , mWideAttackPressedPrev(false)
+    , mSpecialAttackPressed(false)
+    , mSpecialAttackPressedPrev(false)
+    , mRecoverPressed(false)
+    , mRecoverPressedPrev(false)
+    , mIsDodged(true)
+    , mIsStrongAttackHit(false)
+    , mIsStrongAttacked(false)
+    , mIsCharged(false)
+
     , mCurrentPlanetNum(0)
+    , mAttackComboIndex(0)
+    , mRestartPlanetIndex(0)
+    , mPlayerNum(1)
+    , mJewel(2)
+
     , mCameraYaw(0.0f)
     , mCameraPitch(0.4f)
     , mMoveForward(0.0f)
     , mMoveLeft(0.0f)
     , mAttackStartHeight(0.0f)
     , mDodgeTimer(0.0f)
+    , mDodgeDuration(0.1f)
     , mDodgeCooldown(0.0f)
+    , mDodgeCooldownTime(0.3f)
+    , mDodgeDistance(3.0f)
+    , mDodgeStartHeight(0.0f)
     , mMoveSpeed(10.2f)
+    , mChargeMoveSpeed(6.0f)
     , mCameraStickX(0.0f)
     , mCameraStickY(0.0f)
     , mAttack(10.0f)
+    , mAttackSpeed(5.0f)
     , mHp(100.0f)
-    , mDodgePressed(false)
-    , mJumpPressed(false)
-    , mAttackPressed(false)
-    , mSpecialAttackPressed(false)
+    , mMaxHp(100.0f)
     , mDamageTimer(0.0f)
+    , mDefaultDamageTimer(1.0f)
     , mAttackCooldownRemaining(0.0f)
+    , mAttackCooldown(0.3f)
+    , mLastAttackCooldown(1.0f)
     , mAttackMoveLockRemaining(0.0f)
     , mAttackDodgeLockRemaining(0.0f)
-    , mAttackComboIndex(0)
+    , mAttackMotionTimer(-1.0f)
+    , mDefaultAttackMotionTimer(0.3f)
+    , mJewelTimer(-1.0f)
+    , mSpecialAttackCooldown(30.0f)
     , mAttackPressTimer(-1.0f)
     , mStrongAttackTimer(-1.0f)
-    , mInvincibleTimer(-1.0f)
+    , mDefaultStrongAttackTimer(0.06f)
     , mComboKeepTimer(-1.0f)
-    , mJewelTimer(-1.0f)
+    , mInvincibleTimer(-1.0f)
+    , mDefaultInvincibleTimer(2.0f)
+    , mAttackRange(2.8f)
+    , mAttackAngle(0.8f)
+    , mNormalAttackRange(2.8f)
+    , mNormalAttackAngle(0.8f)
+    , mNormalAttack(10.0f)
+    , mWideAttackRange(2.8f)
+    , mWideAttackAngle(-0.2f)
+    , mWideAttack(5.0f)
+    , mStrongAttackRange(6.0f)
+    , mStrongAttack(50.0f)
+    , mStrongAttackSpeed(100.0f)
     , mRayCastTimer(0.5f)
-    , mIsDodged(true)
-    , mActionState(ActionState::Idle)
     , mInputAvailableTimer(-1.0f)
-    , mJewel(2)
-    , mIsStrongAttacked(false)
+
+    , mForwardVec(0.0f, 0.0f, 1.0f)
+    , mLeftVec(-1.0f, 0.0f, 0.0f)
+    , mKnockBackFrom(0.0f)
+    , mRestartPos(0.0f)
+    , mDodgeDir(0.0f)
+    , mRayCasts()
+
     , mTalkableNPC(nullptr)
 {
-
 }
 
 Player::~Player()
@@ -72,9 +119,9 @@ void Player::ProcessActor() {
 }
 
 void Player::ProcessGameController() {
-    SDL_GameController* sdlController = mGame->GetSdlController();
+    if (!mGame->IsGameControllerConnected() || mPlayerNum != 1) return;
 
-    if (!sdlController || !SDL_GameControllerGetAttached(sdlController) || mPlayerNum != 1) return;
+    SDL_GameController* sdlController = mGame->GetSdlController();
     
     constexpr float deadZone = 0.25f;
     constexpr float scale = 1.0f / 32767.0f; // SDL_GameControllerGetAxisの範囲が32767までで、scaleをかけて1.0f以内に抑えるため
@@ -96,11 +143,9 @@ void Player::ProcessGameController() {
 }
 
 void Player::ProcessKeyboard() {
-    if (!mGame->GetIsPlayer2Joined() || mPlayerNum == 1) return;
+    if (mGame->IsGameControllerConnected()) return;
     
     GLFWwindow* window = mGame->GetWindow();
-    mJumpPressed = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
-    mMoveSpeed = (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) ? 2.0f : 3.0f;
     mMoveForward = 0.0f;
     mMoveLeft = 0.0f;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -111,8 +156,22 @@ void Player::ProcessKeyboard() {
         mMoveLeft -= 1.0f;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         mMoveLeft += 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-        mSpecialAttackPressed = true;
+
+    glm::vec2 moveInput(mMoveLeft, mMoveForward);
+
+    if (glm::length(moveInput) > 1.0f) {
+        moveInput = glm::normalize(moveInput);
+    }
+    
+    mMoveLeft = moveInput.x;
+    mMoveForward = moveInput.y;
+
+    mJumpPressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+    mAttackPressed = glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS;
+    mWideAttackPressed = glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS;
+    mDodgePressed = glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS;
+    mSpecialAttackPressed = glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS;
+    mRecoverPressed = glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS;
 }
 
 void Player::UpdateActor(float deltaTime) {
@@ -494,10 +553,6 @@ void Player::MoveDuringDodging(float deltaTime) {
     
     desiredPos = mGame->GetPhysicsSystem()->CheckCollision(this, moveDelta, desiredPos);
     mPos = desiredPos;
-
-    auto sphereShape = Planet::PlanetShape::Sphere;
-    if (mCurrentPlanet->GetPlanetShape() == sphereShape)
-        FixPlanetSurface();
 }
 
 void Player::MoveDuringCharging(float deltaTime) {
@@ -525,12 +580,6 @@ void Player::MoveDuringAttacking(float deltaTime) {
 void Player::MoveDuringKnockBack(float deltaTime) {
     glm::vec3 toPlayer = glm::normalize(mPos - mKnockBackFrom);
     mPos += toPlayer * deltaTime;
-}
-
-void Player::FixPlanetSurface() {
-    glm::vec3 planetCenter = mCurrentPlanet->GetPos();
-    glm::vec3 planetSurface = planetCenter + glm::normalize(mPos - planetCenter) * mDodgeStartHeight;
-    mPos = planetSurface;
 }
 
 void Player::ChangeFaceDir() {

@@ -4,12 +4,12 @@
 #include <iostream>
 
 CharacterActor::CharacterActor(Game* game)
-    :Actor(game)
+    : Actor(game)
     , mOnGround(false)
     , mIsJudgeLanding(true)
     , mVelocity(0.0f)
+    , mFacingForwardVec(0.0f, 0.0f, 1.0f)
 {
-    
 }
 
 void CharacterActor::UpdateActor(float deltaTime) {

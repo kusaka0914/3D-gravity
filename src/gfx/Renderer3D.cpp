@@ -169,7 +169,7 @@ void Renderer3D::DrawScene(const glm::mat4 &viewMat, const glm::mat4 &projMat) {
         DrawCharacter(players[1]->GetPos(), playerScale, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f), players[1]->GetUpVec(), players[1]->GetFacingYaw(),  players[1]->GetMeshes());
     }
 
-    if (players[0]->GetAttackMotionTimer() >= 0.0f) {
+    if (players[0]->GetAttackMotionTimer() >= 0.0f || players[0]->GetIsStrongAttacked()) {
         DrawAttackRange(players[0]);
     }
 

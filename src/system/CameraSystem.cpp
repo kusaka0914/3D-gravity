@@ -4,12 +4,16 @@
 #include "actor/Player.h"
 #include <iostream>
 
-CameraSystem::CameraSystem(Game* game) 
-    :mGame(game)
-    , mCameraPitch(-1.2f)
+CameraSystem::CameraSystem(Game* game)
+    : mGame(game)
     , mCameraYaw(0.0f)
+    , mCameraPitch(-1.2f)
+    , mCameraStickY(0.0f)
+    , mCameraStickX(0.0f)
+    , mCameraUpVec(0.0f, 1.0f, 0.0f)
+    , mCameraTargetPos(0.0f)
+    , mCameraPos(0.0f)
 {
-
 }
 
 void CameraSystem::ProcessInput() {

@@ -83,6 +83,8 @@ public:
 
     void SetTalkableNPC(NPC* talkableNPC) { mTalkableNPC = talkableNPC; }
 
+    bool GetIsStrongAttacked() const { return mIsStrongAttacked; }
+
     int GetCurrentPlanetNum() const { return mCurrentPlanetNum; }
     int GetJewel() const { return mJewel; }
 
@@ -149,7 +151,6 @@ private:
     void MoveDuringKnockBack(float deltaTime);
     void SpecialAttack(float deltaTime);
     void FollowMovingBoat(Boat* boat);
-    void FixPlanetSurface();
     void OnLanded() override;
 
     bool IsAlive() const { return mHp > 0.0f; };

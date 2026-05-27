@@ -191,13 +191,13 @@ void Game::ProcessGameInput()
     }
     mUIReloadKeyPressedPrev = uiReloadKeyPressed;
 
-    const bool pPressed = glfwGetKey(mWindow, GLFW_KEY_P) == GLFW_PRESS;
-    if (pPressed && !mIsPlayer2Joined) {
-        CreatePlayer2();
-    }
+    // const bool pPressed = glfwGetKey(mWindow, GLFW_KEY_P) == GLFW_PRESS;
+    // if (pPressed && !mIsPlayer2Joined) {
+    //     CreatePlayer2();
+    // }
 
-    const bool aPressed = mSdlController &&
-        SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_A);
+    const bool aPressed = (mSdlController &&
+        SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_A)) || glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS;
 
     if (aPressed && !mAPressedPrev) {
         mSceneSystem->OnConfirmPressed();

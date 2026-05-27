@@ -13,13 +13,13 @@ players:
     dodgeDuration: 0.1
     dodgeCooldownTime: 0.3
     dodgeDistance: 3.0
-    normalAttackRange: 3.5
+    normalAttackRange: 3.2
     normalAttackAngle: 6.283
     normalAttack: 10
     wideAttackRange: 2.8
     wideAttackAngle: 2.2
     wideAttack: 5
-    strongAttackRange: 6.0
+    strongAttackRange: 3.2
     strongAttack: 50
     strongAttackSpeed: 100.0
     specialAttackCooldown: 30.0

@@ -7,13 +7,17 @@
 #include <iostream>
 
 Actor::Actor(Game* game)
-: mGame(game)
-, mUpVec(0.0f, 1.0f, 0.0f)
-, mIsActive(true)
-, mRadius(1.0f)
-, mIsUpVecInitialized(false)
+    : mGame(game)
+    , mIsActive(true)
+    , mIsUpVecInitialized(false)
+    , mRadius(1.0f)
+    , mFacingYaw(0.0f)
+    , mPos(0.0f)
+    , mUpVec(0.0f, 1.0f, 0.0f)
+    , mScale(1.0f)
+    , mCurrentPlanet(nullptr)
+    , mMeshes(nullptr)
 {
-    
 }
 
 Actor::~Actor() {

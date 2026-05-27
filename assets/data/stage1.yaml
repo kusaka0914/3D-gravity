@@ -176,14 +176,14 @@ boatParts:
     pos: [-5.5, 12.8, -0.13]
   - type: parts2
     currentPlanetNum : 0
-    theta : 19.45
+    theta : 19.55
     u : 1.05
     height : 3.3
   - type: parts3
     currentPlanetNum : 0
-    theta : 42.65
+    theta : 42.55
     u : -0.8
-    height : 2.3
+    height : 3.3
   - type: parts4
     currentPlanetNum : 0
     theta : -0.35
@@ -211,19 +211,19 @@ NPCs:
   - pos: [-3.06, -3.69, 6.3]
     modelPath: spaceSlime.obj
     name: CrystalTutorialNPC
-    talkTexts: [これはクリスタル！\nYまたはXで攻撃して壊せるよ！,中にアイテムが隠れてるかもしれないから\n見つけたらどんどん壊してね！]
+    talkTexts: [これはクリスタル！\n攻撃して壊せるよ！,中にアイテムが隠れてるかもしれないから\n見つけたらどんどん壊してね！]
   - pos: [7.14, -3.41, -0.08]
     modelPath: spaceSlime.obj
     name: BigCrystalTutorialNPC
-    talkTexts: [大きなクリスタルは空中溜め攻撃で壊せるよ！,空中溜め攻撃はAでジャンプしてX長押し！\n溜まったらXを離して！]
+    talkTexts: [大きなクリスタルは空中溜め攻撃で壊せるよ！,空中溜め攻撃はジャンプして強攻撃長押し！\n溜まったら離して！]
   - pos: [-6.95, -3.7, 1.01]
     modelPath: spaceSlime.obj
     name: JumpDodgeTutorialNPC
-    talkTexts: [遠い足場に乗りたい時はAでジャンプした後にBで回避！]
+    talkTexts: [遠い足場に乗りたい時はジャンプした後に回避！]
   - pos: [-1.35, 4.0, 6.8]
     modelPath: spaceSlime.obj
     name: JumpTutorialNPC
-    talkTexts: [高い足場に乗りたい時はAでジャンプ！]
+    talkTexts: [高い足場に乗りたい時はジャンプ！]
   - pos: [-3.62, 6.6, 2.51]
     modelPath: spaceSlime.obj
     name: WallTutorialNPC

@@ -10,6 +10,12 @@ title:
     scaleRatio: [0.000625, 1.0]
     text: ["START: A"]
   
+  - id: startTextKeyBoard
+    type: text
+    posRatio: [0.5, 0.75]
+    scaleRatio: [0.000625, 1.0]
+    text: ["START: Space"]
+  
 opening:
   - id: bgTexture
     type: texture
@@ -80,12 +86,24 @@ gameOver:
     scaleRatio: [0.0003125, 1.0]
     text: ["直前からリスタート: A"]
 
+  - id: restartTextKeyBoard
+    type: text
+    posRatio: [0.5, 0.6111]
+    scaleRatio: [0.0003125, 1.0]
+    text: ["直前からリスタート: Space"]
+
 default:
   - id: operationSupportText
     type: text
     posRatio: [0.0125, 0.0666]
     scaleRatio: [0.0002, 1.0]
     text: ["+:操作ガイド非表示 A:ジャンプ B:回避 X:強攻撃 Y:弱攻撃 L:スペシャル攻撃 R:回復 空中でX長押し→離す:溜め攻撃"]
+
+  - id: operationSupportTextKeyBoard
+    type: text
+    posRatio: [0.0125, 0.0666]
+    scaleRatio: [0.0002, 1.0]
+    text: ["WASD: 移動 Space:ジャンプ U:回避 K:強攻撃 J:弱攻撃 N:スペシャル攻撃 M:回復 空中でK長押し→離す:溜め攻撃"]
   
   - id: operationSupportHiddenText
     type: text
@@ -108,6 +126,12 @@ default:
     posRatio: [0.5, 0.5]
     scaleRatio: [0.0003125, 1.0]
     text: ["会話: A"]
+
+  - id: talkableTextKeyBoard
+    type: text
+    posRatio: [0.5, 0.5]
+    scaleRatio: [0.0003125, 1.0]
+    text: ["会話: Space"]
   
   - id: remainPartsText
     type: text
@@ -126,6 +150,19 @@ state:
       "Yは弱攻撃で攻撃力が低いですが、\n一定方向に連続して攻撃することができます！",
       "Xは強攻撃で攻撃力が高く、\n攻撃後の隙が大きいですが全方向に攻撃することができます！",
       "まずはY→Y→YまたはY→Y→Xのコンボを使って、\n敵に3回攻撃してみましょう！",
+    ]
+
+  - id: battleTutorialTextKeyBoard
+    type: text
+    posRatio: [0.065, 0.14]
+    scaleRatio: [0.000333333, 1.0]
+    text: 
+    [
+      "この惑星は敵が多そうですね...\nということで敵の倒し方を伝授します！",
+      "戦闘の基本としては敵に近づいてJまたはKで攻撃します！",
+      "Jは弱攻撃で攻撃力が低いですが、\n一定方向に連続して攻撃することができます！",
+      "Kは強攻撃で攻撃力が高く、\n攻撃後の隙が大きいですが全方向に攻撃することができます！",
+      "まずはJ→J→JまたはJ→J→Kのコンボを使って、\n敵に3回攻撃してみましょう！",
     ]
 
   - id: breakTutorialText
@@ -152,6 +189,21 @@ state:
       "ジュエルを所持している時にLまたはRを押すことで、\nジュエルを1個消費して特殊な行動を行えます。",
       "Lを押すとスペシャル攻撃を繰り出し、\n全ての敵にダメージを与えてガードを1個破壊します。",
       "一方、Rを押すと自分の体力を1個回復させることができます。",
+      "ジュエルは使っても時間経過により復活するので\nどんどん使っていくのをおすすめします。",
+      "それではこれまで学んだことを活かして\n全ての敵を倒してみましょう！"
+    ]
+  
+  - id: jewelTutorialTextKeyBoard
+    type: text
+    posRatio: [0.065, 0.74]
+    scaleRatio: [0.000333333, 1.0]
+    text: 
+    [
+      "ちょっと失礼！左上の青いジュエル、\n何に使うんだろうとお困りではないですか？",
+      "このジュエルは一定時間経過で生成されるもので、\n最大2個まで所持することができます。",
+      "ジュエルを所持している時にNまたはMを押すことで、\nジュエルを1個消費して特殊な行動を行えます。",
+      "Nを押すとスペシャル攻撃を繰り出し、\n全ての敵にダメージを与えてガードを1個破壊します。",
+      "一方、Mを押すと自分の体力を1個回復させることができます。",
       "ジュエルは使っても時間経過により復活するので\nどんどん使っていくのをおすすめします。",
       "それではこれまで学んだことを活かして\n全ての敵を倒してみましょう！"
     ]
