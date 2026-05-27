@@ -333,7 +333,7 @@ void Player::UpdateIdle(float deltaTime)
 
     bool isFalling = glm::dot(mVelocity, mUpVec) < 0.0f;
     if (isFalling)
-        mIsJudgeLanding = true;
+        mShouldJudgeLanding = true;
 }
 
 bool Player::IsFallIntoPlanetInside()
@@ -583,7 +583,7 @@ void Player::StartJumping(float deltaTime)
     mVelocity += mUpVec * jumpPower;
     mPos += mVelocity * deltaTime;
     mOnGround = false;
-    mIsJudgeLanding = false;
+    mShouldJudgeLanding = false;
     mGame->GetAudioSystem()->PlaySE("jumpSE");
 }
 

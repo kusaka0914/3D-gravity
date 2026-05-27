@@ -20,7 +20,6 @@ public:
     void NotLand();
 
     bool GetOnGround() const { return mOnGround; }
-    bool GetIsJudgeLanding() const { return mIsJudgeLanding; }
 
     const glm::vec3& GetFacingForwardVec() const { return mFacingForwardVec; }
 
@@ -33,11 +32,11 @@ private:
     RayInfo CreateRayInfo(const glm::vec3& rayOffset) const;
     virtual void OnLanded(){};
     bool ShouldUpdateUpVecEveryFrame() const override { return true; }
-    bool CheckDotAngle(const glm::vec3& hitNormal, const glm::vec3& up) override;
+    bool CheckDotAngleSteep(const glm::vec3& hitNormal, const glm::vec3& up) const override;
 
 protected:
     bool mOnGround;
-    bool mIsJudgeLanding;
+    bool mShouldJudgeLanding;
 
     glm::vec3 mVelocity;
     glm::vec3 mFacingForwardVec;

@@ -3,17 +3,12 @@
 #include "Player.h"
 #include "utils/MathUtils.h"
 
-NPC::NPC(Game* game)
-    : CharacterActor(game)
-    , mIsTalkable(false)
+NPC::NPC(Game* game) : CharacterActor(game), mIsTalkable(false)
 {
-    mIsJudgeLanding = true;
+    mShouldJudgeLanding = true;
 }
 
-NPC::~NPC()
-{
-    
-}
+NPC::~NPC() {}
 
 void NPC::UpdateActor(float deltaTime)
 {
@@ -25,7 +20,8 @@ void NPC::UpdateActor(float deltaTime)
         ApplyGravity(deltaTime);
 }
 
-void NPC::LookNearestPlayer() {
+void NPC::LookNearestPlayer()
+{
     Player* nearestPlayer = FindNearestPlayer();
 
     glm::vec3 toNearestPlayer = glm::normalize(nearestPlayer->GetPos() - mPos);
@@ -33,7 +29,8 @@ void NPC::LookNearestPlayer() {
     mFacingYaw = mGame->GetMathUtils()->GetYawFromDirection(mUpVec, toNearestPlayer) + 3.14159265f;
 }
 
-Player* NPC::FindNearestPlayer() {
+Player* NPC::FindNearestPlayer()
+{
     const std::vector<Player*>& players = mGame->GetPlayers();
 
     Player* nearestPlayer;
@@ -50,9 +47,11 @@ Player* NPC::FindNearestPlayer() {
     return nearestPlayer;
 }
 
-void NPC::CheckTalkable() {
+void NPC::CheckTalkable()
+{
     const std::vector<Player*>& players = mGame->GetPlayers();
-    if (players.empty()) return;
+    if (players.empty())
+        return;
 
     for (auto player : players) {
         if (IsPlayerInTalkableRange(player)) {
@@ -64,10 +63,11 @@ void NPC::CheckTalkable() {
     }
 }
 
-bool NPC::IsPlayerInTalkableRange(Player* player) const {
+bool NPC::IsPlayerInTalkableRange(Player* player) const
+{
     const float toPlayerDist = glm::length(player->GetPos() - mPos);
     constexpr float talkableRangeMargin = 0.5f;
     const float talkableRange = mRadius + talkableRangeMargin;
-        
+
     return toPlayerDist <= talkableRange;
 }

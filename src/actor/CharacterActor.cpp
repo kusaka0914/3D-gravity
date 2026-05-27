@@ -1,12 +1,11 @@
 #include "CharacterActor.h"
 #include "Game.h"
 #include "system/PhysicsSystem.h"
-#include <iostream>
 
 CharacterActor::CharacterActor(Game* game)
     : Actor(game),
       mOnGround(false),
-      mIsJudgeLanding(true),
+      mShouldJudgeLanding(true),
       mVelocity(0.0f),
       mFacingForwardVec(0.0f, 0.0f, 1.0f)
 {
@@ -14,8 +13,9 @@ CharacterActor::CharacterActor(Game* game)
 
 void CharacterActor::UpdateActor(float deltaTime)
 {
-    if (mIsJudgeLanding)
+    if (mShouldJudgeLanding) {
         JudgeLanding();
+    }
 }
 
 void CharacterActor::JudgeLanding()
@@ -27,24 +27,29 @@ void CharacterActor::JudgeLanding()
 
     if (mOnGround) {
         // 体中央でのレイキャスト
-        if (TryLandByRay(glm::vec3(0.0f), glm::vec3(0.0f)))
+        if (TryLandByRay(glm::vec3(0.0f), glm::vec3(0.0f))) {
             return;
+        }
 
         // 体後ろ側でのレイキャスト
-        if (TryLandByRay(backOffset, frontOffset))
+        if (TryLandByRay(backOffset, frontOffset)) {
             return;
+        }
 
         // 体前側でのレイキャスト
-        if (TryLandByRay(frontOffset, backOffset))
+        if (TryLandByRay(frontOffset, backOffset)) {
             return;
+        }
     } else {
         // 体前側でのレイキャスト
-        if (TryLandByRay(frontOffset, backOffset))
+        if (TryLandByRay(frontOffset, backOffset)) {
             return;
+        }
 
         // 体中央でのレイキャスト
-        if (TryLandByRay(glm::vec3(0.0f), glm::vec3(0.0f)))
+        if (TryLandByRay(glm::vec3(0.0f), glm::vec3(0.0f))) {
             return;
+        }
     }
 }
 
@@ -65,18 +70,20 @@ bool CharacterActor::TryLandByRay(const glm::vec3& rayOffset, const glm::vec3& h
     }
 
     const btDiscreteDynamicsWorld* bulletWorld = mGame->GetPhysicsSystem()->GetBulletWorld();
-    if (!bulletWorld)
+    if (!bulletWorld) {
         return false;
+    }
 
     btCollisionWorld::ClosestRayResultCallback rayCallback(rayInfo.rayFrom, rayInfo.rayTo);
 
     bulletWorld->rayTest(rayInfo.rayFrom, rayInfo.rayTo, rayCallback);
 
-    if (!rayCallback.hasHit())
+    if (!rayCallback.hasHit()) {
         return false;
+    }
 
     const btVector3 hitPt = rayCallback.m_hitPointWorld;
-    glm::vec3 hitPos(hitPt.x(), hitPt.y(), hitPt.z());
+    const glm::vec3 hitPos(hitPt.x(), hitPt.y(), hitPt.z());
 
     Land(hitPos + hitPosCorrection);
     return true;
@@ -119,11 +126,13 @@ void CharacterActor::ApplyGravity(float deltaTime)
     mPos += mVelocity * deltaTime;
 }
 
-bool CharacterActor::CheckDotAngle(const glm::vec3& hitNormal, const glm::vec3& up)
+bool CharacterActor::CheckDotAngleSteep(const glm::vec3& hitNormal, const glm::vec3& up) const
 {
     const float minDotAngle50 = 0.6428f;
     const float minDotAngleMinus50 = -0.6428f;
-    if (glm::dot(hitNormal, up) < minDotAngle50 && glm::dot(hitNormal, up) > minDotAngleMinus50) {
+    const float dot = glm::dot(hitNormal, up);
+    const bool isDotAngleSteep = dot < minDotAngle50 && dot > minDotAngleMinus50;
+    if (isDotAngleSteep) {
         return true;
     }
     return false;

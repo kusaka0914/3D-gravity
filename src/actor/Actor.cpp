@@ -197,7 +197,7 @@ bool Actor::CastRay(const glm::vec3& offset, glm::vec3& outNormal, const btColli
 
     hitNormal = glm::normalize(hitNormal);
 
-    if (CheckDotAngle(hitNormal, up)) {
+    if (CheckDotAngleSteep(hitNormal, up)) {
         return false;
     }
 

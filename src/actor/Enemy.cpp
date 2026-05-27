@@ -1,114 +1,120 @@
 #include "Enemy.h"
-#include "actor/Star.h"
 #include "Game.h"
-#include "utils/MathUtils.h"
+#include "Stage.h"
 #include "actor/Planet.h"
 #include "actor/Player.h"
-#include "Stage.h"
+#include "actor/Star.h"
 #include "state/UIState.h"
-#include "system/SceneSystem.h"
-#include "system/PhysicsSystem.h"
 #include "system/AudioSystem.h"
+#include "system/PhysicsSystem.h"
+#include "system/SceneSystem.h"
+#include "utils/MathUtils.h"
 #include <btBulletDynamicsCommon.h>
 
 Enemy::Enemy(Game* game)
-    : CharacterActor(game)
-    , mLifeState(LifeState::Alive)
-    , mActionState(ActionState::Idle)
-    , mIsCountered(false)
-    , mIsBoss(false)
-    , mIsHit(false)
-    , mIsStrongAttacked(false)
-    , mIsJustBeforeAttack(false)
-    , mBreakCount(0)
-    , mBreakCountMax(0)
-    , mAttack(20.0f)
-    , mHp(10.0f)
-    , mMaxHp(10.0f)
-    , mDetectionRange(6.0f)
-    , mMoveSpeed(2.0f)
-    , mKnockBackSpeed(5.0f)
-    , mAttackSpeed(1.5f)
-    , mStandByAttackTimer(-1.0f)
-    , mDefaultStandByAttackTimer(-1.0f)
-    , mLaunchedTimer(-1.0f)
-    , mDefaultLaunchedTimer(-1.0f)
-    , mAttackMotionTimer(-1.0f)
-    , mDefaultAttackMotionTimer(-1.0f)
-    , mDyingTimer(-1.0f)
-    , mKnockBackTimer(-1.0f)
-    , mKnockBackFrom(0.0f)
+    : CharacterActor(game),
+      mLifeState(LifeState::Alive),
+      mActionState(ActionState::Idle),
+      mIsCountered(false),
+      mIsBoss(false),
+      mIsHit(false),
+      mIsStrongAttacked(false),
+      mIsJustBeforeAttack(false),
+      mBreakCount(0),
+      mBreakCountMax(0),
+      mAttack(20.0f),
+      mHp(10.0f),
+      mMaxHp(10.0f),
+      mDetectionRange(6.0f),
+      mMoveSpeed(2.0f),
+      mKnockBackSpeed(5.0f),
+      mAttackSpeed(1.5f),
+      mStandByAttackTimer(-1.0f),
+      mDefaultStandByAttackTimer(-1.0f),
+      mLaunchedTimer(-1.0f),
+      mDefaultLaunchedTimer(-1.0f),
+      mAttackMotionTimer(-1.0f),
+      mDefaultAttackMotionTimer(-1.0f),
+      mDyingTimer(-1.0f),
+      mKnockBackTimer(-1.0f),
+      mKnockBackFrom(0.0f)
 {
 }
 
-void Enemy::UpdateActor(float deltaTime) {
+void Enemy::UpdateActor(float deltaTime)
+{
     CharacterActor::UpdateActor(deltaTime);
     bool isPlaying = mGame->GetSceneSystem()->IsPlaying();
-    if (!isPlaying) return;
-    
-    switch (mLifeState) {
-        case LifeState::Alive:
-            UpdateAlive(deltaTime); 
-            break;
-        
-        case LifeState::Dying:
-            UpdateDying(deltaTime);
-            break;
+    if (!isPlaying)
+        return;
 
-        case LifeState::Dead:
-            break;
+    switch (mLifeState) {
+    case LifeState::Alive:
+        UpdateAlive(deltaTime);
+        break;
+
+    case LifeState::Dying:
+        UpdateDying(deltaTime);
+        break;
+
+    case LifeState::Dead:
+        break;
     }
 }
 
-void Enemy::UpdateAlive(float deltaTime) {
+void Enemy::UpdateAlive(float deltaTime)
+{
     std::vector<Player*> players = mGame->GetPlayers();
-    for(auto player : players) {
-        if(mOnGround)
+    for (auto player : players) {
+        if (mOnGround)
             UpdateBehavior(deltaTime, player);
-        else 
+        else
             UpdateInAir(deltaTime);
     }
 }
 
-void Enemy::UpdateDying(float deltaTime) {
+void Enemy::UpdateDying(float deltaTime)
+{
     std::vector<Player*> players = mGame->GetPlayers();
-    for(auto player : players) {
+    for (auto player : players) {
         MoveDuringKnockBack(deltaTime, player);
-        
+
         if (!mOnGround)
             UpdateInAir(deltaTime);
-            
+
         mDyingTimer -= deltaTime;
         if (mDyingTimer <= 0.0f)
             FinishDying();
     }
 }
 
-void Enemy::UpdateBehavior(float deltaTime, Player* player) {
+void Enemy::UpdateBehavior(float deltaTime, Player* player)
+{
     switch (mActionState) {
-        case ActionState::Idle:
-            UpdateIdle(player);
-            break;
-            
-        case ActionState::Tracking:
-            UpdateTracking(deltaTime, player);
-            break;
+    case ActionState::Idle:
+        UpdateIdle(player);
+        break;
 
-        case ActionState::PreparingAttack: 
-            UpdatePreparingAttack(deltaTime);
-            break;
+    case ActionState::Tracking:
+        UpdateTracking(deltaTime, player);
+        break;
 
-        case ActionState::Attacking:
-            UpdateAttacking(deltaTime, player);
-            break;
+    case ActionState::PreparingAttack:
+        UpdatePreparingAttack(deltaTime);
+        break;
 
-        case ActionState::KnockedBack:
-            UpdateKnockedBack(deltaTime, player);
-            break;
+    case ActionState::Attacking:
+        UpdateAttacking(deltaTime, player);
+        break;
+
+    case ActionState::KnockedBack:
+        UpdateKnockedBack(deltaTime, player);
+        break;
     }
 }
 
-void Enemy::UpdateFacingVec() {
+void Enemy::UpdateFacingVec()
+{
     Player* player = mGame->GetPlayers()[0];
     glm::vec3 toPlayer = glm::normalize(player->GetPos() - mPos);
 
@@ -116,12 +122,14 @@ void Enemy::UpdateFacingVec() {
     mFacingYaw = mGame->GetMathUtils()->GetYawFromDirection(mUpVec, toPlayer) + 3.14159265f;
 }
 
-void Enemy::UpdateIdle(Player* player) {
+void Enemy::UpdateIdle(Player* player)
+{
     if (IsPlayerInRange(mDetectionRange, player))
         StartTracking();
 }
 
-void Enemy::UpdateTracking(float deltaTime, Player* player) {
+void Enemy::UpdateTracking(float deltaTime, Player* player)
+{
     UpdateFacingVec();
     MoveToPlayer(deltaTime, player);
 
@@ -131,15 +139,17 @@ void Enemy::UpdateTracking(float deltaTime, Player* player) {
         StartPreparingAttack();
 }
 
-void Enemy::UpdatePreparingAttack(float deltaTime) {
+void Enemy::UpdatePreparingAttack(float deltaTime)
+{
     UpdateFacingVec();
     mStandByAttackTimer -= deltaTime;
     if (mStandByAttackTimer <= 0.0f) {
         StartAttacking();
         return;
     }
-    
-    if (mIsJustBeforeAttack) return;
+
+    if (mIsJustBeforeAttack)
+        return;
 
     if (IsJustBeforeAttack()) {
         mIsJustBeforeAttack = true;
@@ -147,13 +157,15 @@ void Enemy::UpdatePreparingAttack(float deltaTime) {
     }
 }
 
-void Enemy::UpdateAttacking(float deltaTime, Player* player) {
+void Enemy::UpdateAttacking(float deltaTime, Player* player)
+{
     MoveDuringAttacking(deltaTime, player);
 
     constexpr float hitRangeMargin = 0.2f;
     const float hitRange = mRadius + hitRangeMargin;
     const float wrapTime = mDefaultAttackMotionTimer / 2;
-    if (IsPlayerInRange(hitRange, player) && !mIsHit && player->GetInvincibleTimer() <= 0.0f && mAttackMotionTimer >= wrapTime) {
+    if (IsPlayerInRange(hitRange, player) && !mIsHit && player->GetInvincibleTimer() <= 0.0f &&
+        mAttackMotionTimer >= wrapTime) {
         player->ApplyDamage(mAttack, mPos);
         mIsHit = true;
     }
@@ -163,7 +175,8 @@ void Enemy::UpdateAttacking(float deltaTime, Player* player) {
         StartIdle();
 }
 
-void Enemy::UpdateKnockedBack(float deltaTime, Player* player) {
+void Enemy::UpdateKnockedBack(float deltaTime, Player* player)
+{
     MoveDuringKnockBack(deltaTime, player);
 
     mKnockBackTimer -= deltaTime;
@@ -171,33 +184,39 @@ void Enemy::UpdateKnockedBack(float deltaTime, Player* player) {
         StartIdle();
 }
 
-void Enemy::StartIdle() {
+void Enemy::StartIdle()
+{
     mActionState = ActionState::Idle;
 }
 
-void Enemy::StartTracking() {
+void Enemy::StartTracking()
+{
     mActionState = ActionState::Tracking;
 }
 
-void Enemy::StartPreparingAttack() {
+void Enemy::StartPreparingAttack()
+{
     mActionState = ActionState::PreparingAttack;
     mStandByAttackTimer = mDefaultStandByAttackTimer;
 }
 
-void Enemy::StartAttacking() {
+void Enemy::StartAttacking()
+{
     mActionState = ActionState::Attacking;
     mAttackMotionTimer = mDefaultAttackMotionTimer;
     mIsHit = false;
     mIsJustBeforeAttack = false;
 }
 
-void Enemy::StartKnockedBack(float knockBackTimer, Player* player) {
+void Enemy::StartKnockedBack(float knockBackTimer, Player* player)
+{
     mActionState = ActionState::KnockedBack;
     mKnockBackTimer = knockBackTimer;
     mKnockBackFrom = glm::normalize(mPos - player->GetPos());
 }
 
-void Enemy::StartDying(Player* player) {
+void Enemy::StartDying(Player* player)
+{
     mLifeState = LifeState::Dying;
     mDyingTimer = 1.0f;
     mHp = 0;
@@ -206,38 +225,44 @@ void Enemy::StartDying(Player* player) {
     mGame->GetAudioSystem()->PlaySE("defeatSE");
 }
 
-void Enemy::FinishDying() {
+void Enemy::FinishDying()
+{
     mLifeState = LifeState::Dead;
     mIsActive = false;
-    
+
     if (mIsBoss) {
         Star* star = GetCurrentPlanet()->GetStar();
-        if (!star) return;
+        if (!star)
+            return;
 
-        star->SetIsActive(true); 
+        star->SetIsActive(true);
         star->SetPos(mPos);
     }
 }
 
-void Enemy::FinishLaunched() {
+void Enemy::FinishLaunched()
+{
     mBreakCount = mBreakCountMax;
-    mIsJudgeLanding = true;
+    mShouldJudgeLanding = true;
     mLaunchedTimer = -1.0f;
 }
 
-bool Enemy::IsPlayerInRange(float range, Player* player) {
+bool Enemy::IsPlayerInRange(float range, Player* player)
+{
     glm::vec3 playerPos = player->GetPos();
     const float distToPlayer = glm::length(playerPos - mPos);
 
     return distToPlayer <= range;
 }
 
-bool Enemy::IsJustBeforeAttack() {
+bool Enemy::IsJustBeforeAttack()
+{
     constexpr float justBeforeAttackTime = 0.5f;
     return mStandByAttackTimer <= justBeforeAttackTime;
 }
 
-void Enemy::MoveToPlayer(float deltaTime, Player* player) {
+void Enemy::MoveToPlayer(float deltaTime, Player* player)
+{
     glm::vec3 moveDelta = mFacingForwardVec * mMoveSpeed * deltaTime;
     glm::vec3 desiredPos = mPos + moveDelta;
 
@@ -245,13 +270,13 @@ void Enemy::MoveToPlayer(float deltaTime, Player* player) {
     mPos = desiredPos;
 }
 
-void Enemy::MoveDuringAttacking(float deltaTime, Player* player) {
+void Enemy::MoveDuringAttacking(float deltaTime, Player* player)
+{
     const float wrapTime = mDefaultAttackMotionTimer / 2;
     glm::vec3 moveDelta;
     if (mAttackMotionTimer >= wrapTime) {
         moveDelta = mFacingForwardVec * mAttackSpeed * deltaTime;
-    }
-    else {
+    } else {
         moveDelta = -mFacingForwardVec * mAttackSpeed * deltaTime;
     }
 
@@ -261,15 +286,18 @@ void Enemy::MoveDuringAttacking(float deltaTime, Player* player) {
     mPos = desiredPos;
 }
 
-void Enemy::MoveDuringKnockBack(float deltaTime, Player* player) {
+void Enemy::MoveDuringKnockBack(float deltaTime, Player* player)
+{
     mPos += mKnockBackFrom * mKnockBackSpeed * deltaTime;
 }
 
-void Enemy::UpdateInAir(float deltaTime) {
+void Enemy::UpdateInAir(float deltaTime)
+{
     if (mLaunchedTimer >= 0.0f) {
         mLaunchedTimer -= deltaTime;
 
-        if (mLaunchedTimer >= 0.0f) return;
+        if (mLaunchedTimer >= 0.0f)
+            return;
 
         FinishLaunched();
         return;
@@ -277,16 +305,17 @@ void Enemy::UpdateInAir(float deltaTime) {
 
     glm::vec3 prevVelocity = mVelocity;
     ApplyGravity(deltaTime);
-    
+
     const float vPrev = dot(prevVelocity, mUpVec);
-    const float vNow  = dot(mVelocity, mUpVec);
+    const float vNow = dot(mVelocity, mUpVec);
 
     // 頂点で固定開始
     if (vPrev > 0.0f && vNow <= 0.0f)
         mLaunchedTimer = mDefaultLaunchedTimer;
 }
 
-void Enemy::ApplyCounter(Player* player) {
+void Enemy::ApplyCounter(Player* player)
+{
     constexpr float knockBackTimer = 0.6f;
     StartKnockedBack(knockBackTimer, player);
 
@@ -298,7 +327,8 @@ void Enemy::ApplyCounter(Player* player) {
         StartDying(player);
 }
 
-void Enemy::LaunchIntoAir(float deltaTime) {
+void Enemy::LaunchIntoAir(float deltaTime)
+{
     mGame->OnEnemyLaunched();
 
     constexpr float launchSpeed = 5.0f;
@@ -307,14 +337,16 @@ void Enemy::LaunchIntoAir(float deltaTime) {
     mOnGround = false;
     mStandByAttackTimer = -1.0f;
     mAttackMotionTimer = -1.0f;
-    mIsJudgeLanding = false;
+    mShouldJudgeLanding = false;
     mGame->SetHitStopTimer(0.3f);
 
     StartIdle();
 }
 
-void Enemy::ApplyDamage(float damage, Player* player) {
-    if (mLifeState != LifeState::Alive) return;
+void Enemy::ApplyDamage(float damage, Player* player)
+{
+    if (mLifeState != LifeState::Alive)
+        return;
 
     mHp -= damage;
 
@@ -331,8 +363,10 @@ void Enemy::ApplyDamage(float damage, Player* player) {
     }
 }
 
-void Enemy::ApplyBreak(float deltaTime) {
-    if (mLifeState != LifeState::Alive) return;
+void Enemy::ApplyBreak(float deltaTime)
+{
+    if (mLifeState != LifeState::Alive)
+        return;
 
     mBreakCount--;
 

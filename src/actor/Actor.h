@@ -65,7 +65,7 @@ protected:
     virtual bool ShouldUpdateUpVecEveryFrame() const { return false; }
     virtual void OnUpVecUpdateFailed();
     void UpdateFallbackUpVec();
-    virtual bool CheckDotAngle(const glm::vec3& hitNormal, const glm::vec3& up) { return false; };
+    virtual bool CheckDotAngleSteep(const glm::vec3& hitNormal, const glm::vec3& up) const { return false; };
     virtual void OnCastSucceeded(){};
 
 protected:
