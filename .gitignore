@@ -1,6 +1,6 @@
 build/
 .cursor/
 .vscode/
+.vs/
 
 .DS_Store
-src/thirdParty/stb_image.h

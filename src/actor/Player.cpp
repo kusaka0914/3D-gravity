@@ -49,6 +49,7 @@ Player::Player(Game* game)
     , mInputAvailableTimer(-1.0f)
     , mJewel(2)
     , mIsStrongAttacked(false)
+    , mTalkableNPC(nullptr)
 {
 
 }
@@ -116,7 +117,6 @@ void Player::ProcessKeyboard() {
 
 void Player::UpdateActor(float deltaTime) {
     CharacterActor::UpdateActor(deltaTime);
-    // std::cout << mPos.x  << " " << mPos.y << " " << mPos.z << std::endl;
 
     bool isPlaying = mGame->GetSceneSystem()->IsPlaying();
     if(!isPlaying) return;

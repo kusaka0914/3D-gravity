@@ -105,15 +105,24 @@ void Actor::UpdateUpVec() {
 }
 
 void Actor::UpdateFallbackUpVec() {
-    auto normalShape = Planet::PlanetShape::Normal;
-
-    if (mCurrentPlanet->GetPlanetShape() == normalShape) {
-        mUpVec = {0.0f, 1.0f, 0.0f};
+    if (!mCurrentPlanet) {
+        mUpVec = glm::vec3(0.0f, 1.0f, 0.0f);
         return;
     }
 
-    glm::vec3 planetCenter = mCurrentPlanet->GetPos();
-    mUpVec = glm::normalize(mPos - planetCenter);
+    if (mCurrentPlanet->GetPlanetShape() == Planet::PlanetShape::Normal) {
+        mUpVec = glm::vec3(0.0f, 1.0f, 0.0f);
+        return;
+    }
+
+    const glm::vec3 toActor = mPos - mCurrentPlanet->GetPos();
+
+    if (glm::length(toActor) < 1e-6f) {
+        mUpVec = glm::vec3(0.0f, 1.0f, 0.0f);
+        return;
+    }
+
+    mUpVec = glm::normalize(toActor);
 }
 
 glm::vec3 Actor::GetAverageNormal() {
@@ -156,13 +165,27 @@ glm::vec3 Actor::GetAverageNormal() {
         weightSum += 1.0f;
     }
 
-    return glm::normalize(normalSum / weightSum);
+    const glm::vec3 averageNormal = normalSum / weightSum;
+
+    if (glm::length(averageNormal) < 1e-6f) {
+        return glm::vec3(0.0f);
+    }
+
+    return glm::normalize(averageNormal);
 }
 
 bool Actor::CastRay(const glm::vec3& offset, glm::vec3& outNormal, const btCollisionObject*& outObj) {  
+    if (glm::length(mUpVec) < 1e-6f) {
+        UpdateFallbackUpVec();
+    }
+
+    if (glm::length(mUpVec) < 1e-6f) {
+        return false;
+    }
+
+    const glm::vec3 up = glm::normalize(mUpVec);
     constexpr float rayStartOffset = 0.2f;
     constexpr float rayLength = 30.0f;
-    glm::vec3 up = glm::normalize(mUpVec);
 
     glm::vec3 downRayFromPos = mPos + offset + up * rayStartOffset;
     glm::vec3 downRayToPos   = mPos + offset - up * rayLength;
@@ -187,7 +210,6 @@ bool Actor::CastRay(const glm::vec3& offset, glm::vec3& outNormal, const btColli
     if (!cb.hasHit()
     // && !cb2.hasHit()
     ) {
-        std::cout << mModelPath << std::endl;
         return false;
     }
 
