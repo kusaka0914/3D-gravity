@@ -7,6 +7,7 @@
 
 Renderer::Renderer(Game* game)
     : mGame(game)
+    , mFont(nullptr)
 {
     Initialize();
 }

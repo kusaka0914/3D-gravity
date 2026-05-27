@@ -6,12 +6,15 @@
 
 Boat::Boat(Game* game)
     : Actor(game)
-    , mDestStage(0)
+    , mDestPlanet(nullptr)
     , mIsMoving(false)
     , mIsActivePrev(false)
+    , mDestStage(0)
     , mTransitionTimer(0.0f)
     , mProgress(0.0f)
+    , mStartPos(0.0f)
     , mDestPos(0.0f)
+    , mFocusComponent(nullptr)
 {
     mIsActive = mGame->IsInBase();
     AddFocusComponent();

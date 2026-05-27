@@ -5,13 +5,17 @@
 
 Planet::Planet(Game* game)
     : Actor(game)
-    , mColor(1.0f)
-    , mKey(nullptr)
     , mIsAllEnemiesDead(false)
     , mIsAllBoatPartsCollected(false)
+    , mStageNum(0)
+    , mRemainBoatPartsCount(0)
+    , mColor(1.0f)
+    , mKey(nullptr)
     , mStar(nullptr)
+    , mCurrentStage(nullptr)
+    , mKeySpawnCondition(KeySpawnCondition::None)
+    , mPlanetShape(PlanetShape::Normal)
 {
-    
 }
 
 void Planet::Initialize()
