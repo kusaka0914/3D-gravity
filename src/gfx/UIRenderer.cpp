@@ -85,9 +85,10 @@ void UIRenderer::DrawTitle() {
     } else {
         startTextInfo = mUILoadSystem->GetTextInfo("title", "startTextKeyBoard");
     }
+
+    if (!startTextInfo) return;
     
-    if (startTextInfo)
-        DrawText(mFbWidth * startTextInfo->xRatio, mFbHeight * startTextInfo->yRatio, mFbWidth * startTextInfo->scaleRatio, startTextInfo->texts[0], true);
+    DrawText(mFbWidth * startTextInfo->xRatio, mFbHeight * startTextInfo->yRatio, mFbWidth * startTextInfo->scaleRatio, startTextInfo->texts[0], true);
 }
 
 void UIRenderer::DrawOpening() {
