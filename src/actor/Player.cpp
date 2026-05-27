@@ -50,6 +50,7 @@ Player::Player(Game* game)
     , mJewel(2)
     , mIsStrongAttacked(false)
     , mTalkableNPC(nullptr)
+    , mAttackMotionTimer(-1.0f)
 {
 
 }
@@ -72,9 +73,9 @@ void Player::ProcessActor() {
 }
 
 void Player::ProcessGameController() {
-    SDL_GameController* sdlController = mGame->GetSdlController();
+    if (!mGame->IsGameControllerConnected() || mPlayerNum != 1) return;
 
-    if (!sdlController || !SDL_GameControllerGetAttached(sdlController) || mPlayerNum != 1) return;
+    SDL_GameController* sdlController = mGame->GetSdlController();
     
     constexpr float deadZone = 0.25f;
     constexpr float scale = 1.0f / 32767.0f; // SDL_GameControllerGetAxisの範囲が32767までで、scaleをかけて1.0f以内に抑えるため
@@ -96,11 +97,9 @@ void Player::ProcessGameController() {
 }
 
 void Player::ProcessKeyboard() {
-    if (!mGame->GetIsPlayer2Joined() || mPlayerNum == 1) return;
+    if (mGame->IsGameControllerConnected()) return;
     
     GLFWwindow* window = mGame->GetWindow();
-    mJumpPressed = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
-    mMoveSpeed = (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) ? 2.0f : 3.0f;
     mMoveForward = 0.0f;
     mMoveLeft = 0.0f;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -111,8 +110,22 @@ void Player::ProcessKeyboard() {
         mMoveLeft -= 1.0f;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         mMoveLeft += 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-        mSpecialAttackPressed = true;
+
+    glm::vec2 moveInput(mMoveLeft, mMoveForward);
+
+    if (glm::length(moveInput) > 1.0f) {
+        moveInput = glm::normalize(moveInput);
+    }
+    
+    mMoveLeft = moveInput.x;
+    mMoveForward = moveInput.y;
+
+    mJumpPressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+    mAttackPressed = glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS;
+    mWideAttackPressed = glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS;
+    mDodgePressed = glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS;
+    mSpecialAttackPressed = glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS;
+    mRecoverPressed = glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS;
 }
 
 void Player::UpdateActor(float deltaTime) {
@@ -494,10 +507,6 @@ void Player::MoveDuringDodging(float deltaTime) {
     
     desiredPos = mGame->GetPhysicsSystem()->CheckCollision(this, moveDelta, desiredPos);
     mPos = desiredPos;
-
-    auto sphereShape = Planet::PlanetShape::Sphere;
-    if (mCurrentPlanet->GetPlanetShape() == sphereShape)
-        FixPlanetSurface();
 }
 
 void Player::MoveDuringCharging(float deltaTime) {
@@ -525,12 +534,6 @@ void Player::MoveDuringAttacking(float deltaTime) {
 void Player::MoveDuringKnockBack(float deltaTime) {
     glm::vec3 toPlayer = glm::normalize(mPos - mKnockBackFrom);
     mPos += toPlayer * deltaTime;
-}
-
-void Player::FixPlanetSurface() {
-    glm::vec3 planetCenter = mCurrentPlanet->GetPos();
-    glm::vec3 planetSurface = planetCenter + glm::normalize(mPos - planetCenter) * mDodgeStartHeight;
-    mPos = planetSurface;
 }
 
 void Player::ChangeFaceDir() {

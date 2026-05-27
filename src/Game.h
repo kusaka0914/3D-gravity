@@ -80,6 +80,7 @@ public:
     bool GetIsPlayer2Joined() const { return mIsPlayer2Joined; }
 
     bool IsInBase() const { return mCurrentStageNum == 0; }
+    bool IsGameControllerConnected() const { return mSdlController != nullptr; }
 
 private:
     bool InitializeGLFW();

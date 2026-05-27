@@ -248,6 +248,7 @@ void SceneSystem::ApplySceneChange()
             mGameProgressState->SetNextSceneState(GameProgressState::SceneState::None);
             mUIState->SetCurrentTalkWith(UIState::TalkWith::None);
             mGame->ChangeStage(0);
+            mUIState->SetTalkUIIndex(0);
             mHasPendingStageChange = true;
             break;
 

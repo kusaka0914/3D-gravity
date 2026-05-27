@@ -1,6 +1,7 @@
 #include "DestructibleComponent.h"
 #include "Game.h"
 #include "actor/Player.h"
+#include "system/AudioSystem.h"
 
 DestructibleComponent::DestructibleComponent(Actor* owner, int updateOrder)
     : Component(owner, updateOrder)
@@ -35,13 +36,14 @@ void DestructibleComponent::TryApplyDamage() {
 }
 
 bool DestructibleComponent::IsPlayerInHitRange(Player* player) const {
-    const glm::vec3 toOwner = glm::normalize(mOwner->GetPos() - player->GetPos());
+    const glm::vec3 toOwner = mOwner->GetPos() - player->GetPos();
     const float distTo = glm::length(toOwner); 
 
     constexpr float hitRangeMargin = 2.0f;
     const float hitRange = mOwner->GetRadius() + hitRangeMargin;
 
-    const float dot = glm::dot(player->GetFacingForwardVec(), toOwner);
+    const glm::vec3 toOwnerN = glm::normalize(toOwner);
+    const float dot = glm::dot(player->GetFacingForwardVec(), toOwnerN);
     float threshold = std::cos(player->GetAttackAngle() * 0.5f);
 
     return distTo <= hitRange && dot >= threshold;
@@ -50,7 +52,10 @@ bool DestructibleComponent::IsPlayerInHitRange(Player* player) const {
 void DestructibleComponent::ApplyDamage(float attack) {
     mIsHitCurrentAttack = true;
     mDestroyHp -= attack;
+    if (mDestroyHp > 0.0f) {
+        mOwner->GetGame()->GetAudioSystem()->PlaySE("attackSE");
+        return;
+    }
 
-    if (mDestroyHp <= 0.0f)
-        mIsDestroyed = true;
+    mIsDestroyed = true;
 }

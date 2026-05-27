@@ -78,8 +78,14 @@ void UIRenderer::DrawTitle() {
     auto titleBgTextureInfo = mUILoadSystem->GetTextureInfo("title", "bgTexture");
     if (titleBgTextureInfo)
         DrawTexture(titleBgTextureInfo->x, titleBgTextureInfo->y, mFbWidth * titleBgTextureInfo->widthRatio, mFbHeight * titleBgTextureInfo->heightRatio, "titleBg");
-
-    auto startTextInfo = mUILoadSystem->GetTextInfo("title", "startText");
+    
+    const UILoadSystem::TextInfo* startTextInfo;
+    if (mGame->IsGameControllerConnected()) {
+        startTextInfo = mUILoadSystem->GetTextInfo("title", "startText");
+    } else {
+        startTextInfo = mUILoadSystem->GetTextInfo("title", "startTextKeyBoard");
+    }
+    
     if (startTextInfo)
         DrawText(mFbWidth * startTextInfo->xRatio, mFbHeight * startTextInfo->yRatio, mFbWidth * startTextInfo->scaleRatio, startTextInfo->texts[0], true);
 }
@@ -114,7 +120,13 @@ void UIRenderer::DrawGameOver() {
 
     DrawText(mFbWidth * gameOverTextInfo->xRatio, mFbHeight * gameOverTextInfo->yRatio, mFbWidth * gameOverTextInfo->scaleRatio, gameOverTextInfo->texts[0], true);
 
-    auto restartTextInfo = mUILoadSystem->GetTextInfo("gameOver", "restartText");
+    const UILoadSystem::TextInfo* restartTextInfo;
+    if (mGame->IsGameControllerConnected()) {
+        restartTextInfo = mUILoadSystem->GetTextInfo("gameOver", "restartText");
+    } else {
+        restartTextInfo = mUILoadSystem->GetTextInfo("gameOver", "restartTextKeyBoard");
+    }
+
     if (!restartTextInfo) return;
 
     DrawText(mFbWidth * restartTextInfo->xRatio, mFbHeight * restartTextInfo->yRatio, mFbWidth * restartTextInfo->scaleRatio, restartTextInfo->texts[0], true);
@@ -193,7 +205,13 @@ void UIRenderer::DrawDefaultUI() {
 void UIRenderer::DrawOperationSupportUI() {
     bool isOperationUIShow = mGame->GetSceneSystem()->GetUIState()->GetIsOperationUIShow();
     if (isOperationUIShow) {
-        auto operationSupportTextInfo = mUILoadSystem->GetTextInfo("default", "operationSupportText");
+        const UILoadSystem::TextInfo* operationSupportTextInfo;
+        if (mGame->IsGameControllerConnected()) {
+            operationSupportTextInfo = mUILoadSystem->GetTextInfo("default", "operationSupportText");
+        } else {
+            operationSupportTextInfo = mUILoadSystem->GetTextInfo("default", "operationSupportTextKeyBoard");
+        }
+
         if (!operationSupportTextInfo) return;
         
         DrawText(mFbWidth * operationSupportTextInfo->xRatio, mFbHeight - mFbHeight * operationSupportTextInfo->yRatio, mFbWidth * operationSupportTextInfo->scaleRatio, operationSupportTextInfo->texts[0], false);
@@ -246,7 +264,13 @@ void UIRenderer::DrawJewelUI() {
 }
 
 void UIRenderer::DrawTalkableUI() {
-    auto talkableTextInfo = mUILoadSystem->GetTextInfo("default", "talkableText");
+    const UILoadSystem::TextInfo* talkableTextInfo;
+    if (mGame->IsGameControllerConnected()) {
+        talkableTextInfo = mUILoadSystem->GetTextInfo("default", "talkableText");
+    } else {
+        talkableTextInfo = mUILoadSystem->GetTextInfo("default", "talkableTextKeyBoard");
+    }
+
     if (!talkableTextInfo) return;
 
     DrawText(mFbWidth * talkableTextInfo->xRatio, mFbHeight * talkableTextInfo->yRatio, mFbWidth * talkableTextInfo->scaleRatio, talkableTextInfo->texts[0], true);
@@ -319,7 +343,13 @@ void UIRenderer::DrawStateUI() {
 }
 
 void UIRenderer::DrawBattleTutorial() {
-    const UILoadSystem::TextInfo* battleTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "battleTutorialText");
+    const UILoadSystem::TextInfo* battleTutorialTextInfo;
+    if (mGame->IsGameControllerConnected()) {
+        battleTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "battleTutorialText");
+    } else {
+        battleTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "battleTutorialTextKeyBoard");
+    }
+
     if (!battleTutorialTextInfo) return;
 
     std::vector<std::string> battleTutorialTexts = battleTutorialTextInfo->texts;
@@ -351,7 +381,13 @@ void UIRenderer::DrawBreakTutorial() {
 }
 
 void UIRenderer::DrawJewelTutorial() {
-    const UILoadSystem::TextInfo* jewelTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "jewelTutorialText");
+    const UILoadSystem::TextInfo* jewelTutorialTextInfo;
+    if (mGame->IsGameControllerConnected()) {
+        jewelTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "jewelTutorialText");
+    } else {
+        jewelTutorialTextInfo = mUILoadSystem->GetTextInfo("state", "jewelTutorialTextKeyBoard");
+    }
+
     if (!jewelTutorialTextInfo) return;
 
     std::vector<std::string> jewelTutorialTexts = jewelTutorialTextInfo->texts;
