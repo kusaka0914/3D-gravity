@@ -31,7 +31,9 @@ private:
     void JudgeLanding();
     bool TryLandByRay(const glm::vec3& rayOffset, const glm::vec3& hitPosCorrection);
     RayInfo CreateRayInfo(const glm::vec3& rayOffset) const;
-    virtual void OnLanded() {};
+    virtual void OnLanded(){};
+    bool ShouldUpdateUpVecEveryFrame() const override { return true; }
+    bool CheckDotAngle(const glm::vec3& hitNormal, const glm::vec3& up) override;
 
 protected:
     bool mOnGround;

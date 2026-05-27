@@ -12,20 +12,9 @@ class Enemy;
 
 class Player : public CharacterActor {
 public:
-    enum class ActionState {
-        Idle,
-        Dodging,
-        Attacking,
-        Charging,
-        StrongAttacking,
-        KnockedBack
-    };
+    enum class ActionState { Idle, Dodging, Attacking, Charging, StrongAttacking, KnockedBack };
 
-    enum class AttackKind {
-        Normal,
-        Wide,
-        Strong
-    };
+    enum class AttackKind { Normal, Wide, Strong };
 
     struct RaySegment {
         glm::vec3 from;
@@ -54,12 +43,15 @@ public:
     void SetMoveSpeed(float moveSpeed) { mMoveSpeed = moveSpeed; }
     void SetAttackSpeed(float attackSpeed) { mAttackSpeed = attackSpeed; }
     void SetChargeMoveSpeed(float chargeMoveSpeed) { mChargeMoveSpeed = chargeMoveSpeed; }
-    void SetHp(float hp) { mHp = hp; }  
-    void SetMaxHp(float maxHp) { mMaxHp = maxHp; }  
+    void SetHp(float hp) { mHp = hp; }
+    void SetMaxHp(float maxHp) { mMaxHp = maxHp; }
     void SetDefaultDamageTimer(float defaultDamageTimer) { mDefaultDamageTimer = defaultDamageTimer; }
     void SetAttackCooldown(float attackCooldown) { mAttackCooldown = attackCooldown; }
     void SetLastAttackCooldown(float lastAttackCooldown) { mLastAttackCooldown = lastAttackCooldown; }
-    void SetDefaultAttackPressTimer(float defaultAttackPressTimer) { mDefaultAttackPressTimer = defaultAttackPressTimer; }
+    void SetDefaultAttackPressTimer(float defaultAttackPressTimer)
+    {
+        mDefaultAttackPressTimer = defaultAttackPressTimer;
+    }
     void SetSpecialAttackCooldown(float specialAttackCooldown) { mSpecialAttackCooldown = specialAttackCooldown; }
     void SetDodgeDuration(float dodgeDuration) { mDodgeDuration = dodgeDuration; }
     void SetDefaultInvincibleTimer(float defaultInvincibleTimer) { mDefaultInvincibleTimer = defaultInvincibleTimer; }
@@ -74,8 +66,14 @@ public:
     void SetStrongAttackRange(float strongAttackRange) { mStrongAttackRange = strongAttackRange; }
     void SetStrongAttack(float strongAttack) { mStrongAttack = strongAttack; }
     void SetStrongAttackSpeed(float strongAttackSpeed) { mStrongAttackSpeed = strongAttackSpeed; }
-    void SetDefaultStrongAttackTimer(float defaultStrongAttackTimer) { mDefaultStrongAttackTimer = defaultStrongAttackTimer; }
-    void SetDefaultAttackMotionTimer(float defaultAttackMotionTimer) { mDefaultAttackMotionTimer = defaultAttackMotionTimer; }
+    void SetDefaultStrongAttackTimer(float defaultStrongAttackTimer)
+    {
+        mDefaultStrongAttackTimer = defaultStrongAttackTimer;
+    }
+    void SetDefaultAttackMotionTimer(float defaultAttackMotionTimer)
+    {
+        mDefaultAttackMotionTimer = defaultAttackMotionTimer;
+    }
     void SetRayCastTimer(float rayCastTimer) { mRayCastTimer = rayCastTimer; }
     void SetInputAvailableTimer(float inputAvailableTimer) { mInputAvailableTimer = inputAvailableTimer; }
 
@@ -128,7 +126,7 @@ private:
     void UpdateWalk(float deltaTime);
     void UpdateBoatRide();
 
-    void StartIdle();    
+    void StartIdle();
     void StartDodging();
     void StartAttacking(float deltaTime);
     void StartCharging(float deltaTime);
@@ -136,7 +134,7 @@ private:
     void StartRidingBoat(Boat* boat);
     void StartJumping(float deltaTime);
     void StartJewelTimer();
-    
+
     void FinishCharging();
 
     void ChangeFaceDir();
@@ -159,7 +157,8 @@ private:
     bool IsEnemyHitByAttack(float dist, float dot, float effectiveRange);
     bool CanWalk() const { return mAttackMoveLockRemaining <= 0.0f; }
     std::vector<Enemy*> FindHitEnemies();
-
+    void OnUpVecUpdateFailed() override;
+    void OnCastSucceeded() override;
 
 private:
     ActionState mActionState;

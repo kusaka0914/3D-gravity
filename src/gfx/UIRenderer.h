@@ -11,18 +11,15 @@ class UIShader;
 class VertexArray;
 
 class UIRenderer : public Renderer {
-  public:
+public:
     UIRenderer(Game* game);
     ~UIRenderer();
     void Draw();
     void DrawSkyBox();
 
-    UILoadSystem* GetUILoadSystem() const
-    {
-        return mUILoadSystem;
-    }
+    UILoadSystem* GetUILoadSystem() const { return mUILoadSystem; }
 
-  private:
+private:
     void Initialize();
     void RegisterUITextures();
 
@@ -72,7 +69,7 @@ class UIRenderer : public Renderer {
                       glm::vec4 color);
     void DrawTexture(float x, float y, float width, float height, std::string textureName);
 
-  private:
+private:
     std::unique_ptr<UIShader> mUIShaderUnique;
     UIShader* mUIShader;
 

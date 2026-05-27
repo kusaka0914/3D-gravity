@@ -1,10 +1,10 @@
 #pragma once
 
+#include <btBulletDynamicsCommon.h>
+#include <glm/glm.hpp>
 #include <memory>
 #include <string>
 #include <vector>
-#include <glm/glm.hpp>
-#include <btBulletDynamicsCommon.h>
 
 class Game;
 class Component;
@@ -24,7 +24,6 @@ public:
     virtual void ProcessActor();
 
     void UpdateUpVec();
-    void UpdateFallbackUpVec();
 
     void AddComponent(std::unique_ptr<Component> component);
     void RemoveComponent(std::unique_ptr<Component> component);
@@ -61,6 +60,13 @@ public:
 private:
     glm::vec3 GetAverageNormal();
     bool CastRay(const glm::vec3& offset, glm::vec3& outNormal, const btCollisionObject*& outObj);
+
+protected:
+    virtual bool ShouldUpdateUpVecEveryFrame() const { return false; }
+    virtual void OnUpVecUpdateFailed();
+    void UpdateFallbackUpVec();
+    virtual bool CheckDotAngle(const glm::vec3& hitNormal, const glm::vec3& up) { return false; };
+    virtual void OnCastSucceeded(){};
 
 protected:
     bool mIsActive;
