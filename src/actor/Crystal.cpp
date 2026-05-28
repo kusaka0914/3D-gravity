@@ -27,5 +27,5 @@ void Crystal::UpdateActor(float deltaTime)
 void Crystal::OnDestroyed()
 {
     mIsActive = false;
-    mGame->GetAudioSystem()->PlaySE("destroySE");
+    mGame->GetAudioSystem()->PlaySE("destroy_se");
 }

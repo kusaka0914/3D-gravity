@@ -531,7 +531,7 @@ void Player::StartDodging()
 
     mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetPos());
     mVelocity = glm::vec3(0.0f);
-    mGame->GetAudioSystem()->PlaySE("dodgeSE");
+    mGame->GetAudioSystem()->PlaySE("dodge_se");
     mIsDodged = true;
 }
 
@@ -560,7 +560,7 @@ void Player::StartCharging(float deltaTime)
 {
     mActionState = ActionState::Charging;
     mAttackPressTimer = mDefaultAttackPressTimer;
-    mGame->GetAudioSystem()->PlaySE("chargingSE");
+    mGame->GetAudioSystem()->PlaySE("charging_se");
 }
 
 void Player::StartStrongAttacking(float deltaTime)
@@ -584,12 +584,12 @@ void Player::StartJumping(float deltaTime)
     mPos += mVelocity * deltaTime;
     mOnGround = false;
     mShouldJudgeLanding = false;
-    mGame->GetAudioSystem()->PlaySE("jumpSE");
+    mGame->GetAudioSystem()->PlaySE("jump_se");
 }
 
 void Player::FinishCharging()
 {
-    mGame->GetAudioSystem()->PlaySE("chargedSE");
+    mGame->GetAudioSystem()->PlaySE("charged_se");
     mIsCharged = true;
 }
 
@@ -646,7 +646,7 @@ void Player::Attack(float deltaTime)
     std::vector<Enemy*> hitEnemies = FindHitEnemies();
     if (hitEnemies.empty()) {
         StartAfterAttackReaction();
-        GetGame()->GetAudioSystem()->PlaySE("attackMissSE");
+        GetGame()->GetAudioSystem()->PlaySE("attack_miss_se");
 
         if (mAttackComboIndex != 3)
             return;
@@ -661,12 +661,12 @@ void Player::Attack(float deltaTime)
             enemy->ApplyDamage(mAttack, this);
 
         if (mAttackComboIndex != 3) {
-            mGame->GetAudioSystem()->PlaySE("attackSE");
+            mGame->GetAudioSystem()->PlaySE("attack_se");
             return;
         }
 
         mAttackComboIndex = 0;
-        mGame->GetAudioSystem()->PlaySE("destroySE");
+        mGame->GetAudioSystem()->PlaySE("destroy_se");
         for (Enemy* enemy : hitEnemies) {
             if (enemy->GetOnGround()) {
                 enemy->ApplyBreak(deltaTime);
@@ -675,7 +675,7 @@ void Player::Attack(float deltaTime)
         return;
     }
 
-    GetGame()->GetAudioSystem()->PlaySE("attackAirSE");
+    GetGame()->GetAudioSystem()->PlaySE("attack_air_se");
     for (Enemy* enemy : hitEnemies) {
         enemy->SetIsStrongAttacked(true);
         enemy->ApplyDamage(mAttack, this);
@@ -748,7 +748,7 @@ void Player::SpecialAttack(float deltaTime)
 
         if (enemy->GetOnGround()) {
             enemy->ApplyBreak(deltaTime);
-            mGame->GetAudioSystem()->PlaySE("destroySE");
+            mGame->GetAudioSystem()->PlaySE("destroy_se");
         }
     }
 }
@@ -757,7 +757,7 @@ void Player::Recover()
 {
     mJewelCount--;
     mHp += 1;
-    mGame->GetAudioSystem()->PlaySE("recoverSE");
+    mGame->GetAudioSystem()->PlaySE("recover_se");
 
     if (mHp >= mMaxHp) {
         mHp = mMaxHp;
@@ -771,7 +771,7 @@ void Player::ApplyDamage(float damage, glm::vec3 knockBackFrom)
     mDamageTimer = mDefaultDamageTimer;
     mInvincibleTimer = mDefaultInvincibleTimer;
     mActionState = ActionState::KnockedBack;
-    mGame->GetAudioSystem()->PlaySE("damagedSE");
+    mGame->GetAudioSystem()->PlaySE("damaged_se");
 }
 
 void Player::FollowMovingBoat(Boat* boat)

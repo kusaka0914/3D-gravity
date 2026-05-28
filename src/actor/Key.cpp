@@ -45,7 +45,7 @@ void Key::UpdateActor(float deltaTime)
 
 void Key::OnShown() const
 {
-    mGame->GetAudioSystem()->PlaySE("showKeySE");
+    mGame->GetAudioSystem()->PlaySE("show_key_se");
 }
 
 void Key::OnObtained()

@@ -34,7 +34,7 @@ Game::Game()
       mUIReloadKeyPressedPrev(false),
       mAPressedPrev(false),
       mIsPlayer2Joined(false),
-      mCurrentStageYamlPath("../assets/data/stage1.yaml")
+      mCurrentStageYamlPath("../assets/data/stage/stage1.yaml")
 {
 }
 
@@ -317,7 +317,7 @@ void Game::ChangeStage(int stageNum)
 
     mCurrentStage = mStages[stageNum];
     mCurrentStageNum = stageNum;
-    mCurrentStageYamlPath = "../assets/data/stage" + std::to_string(stageNum) + ".yaml";
+    mCurrentStageYamlPath = "../assets/data/stage/stage" + std::to_string(stageNum) + ".yaml";
 }
 
 void Game::CheckGameControllerConnected()
@@ -375,7 +375,7 @@ void Game::OnStarObtained()
 
 void Game::OnEnemyLaunched()
 {
-    mAudioSystem->PlaySE("breakSE");
+    mAudioSystem->PlaySE("break_se");
     mSceneSystem->OnEnemyLaunched();
 }
 
@@ -396,7 +396,7 @@ void Game::OnPlayerDied()
 
 void Game::OnBoatPartsObtained()
 {
-    mAudioSystem->PlaySE("pickUpSE");
+    mAudioSystem->PlaySE("pickup_se");
     mPlayers[0]->GetCurrentPlanet()->OnBoatPartsObtained();
 }
 

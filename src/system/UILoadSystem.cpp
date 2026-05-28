@@ -1,17 +1,19 @@
 #include "UILoadSystem.h"
 
-UILoadSystem::UILoadSystem() 
+UILoadSystem::UILoadSystem()
 {
     Initialize();
 }
 
-void UILoadSystem::Initialize() {
-    LoadUIInfo("../assets/data/UI.yaml");
+void UILoadSystem::Initialize()
+{
+    LoadUIInfo("../assets/data/ui/ui.yaml");
 }
 
-void UILoadSystem::LoadUIInfo(const std::string& path) {
+void UILoadSystem::LoadUIInfo(const std::string& path)
+{
     const YAML::Node root = YAML::LoadFile(path);
-    
+
     for (auto screen : root) {
         const std::string screenName = screen.first.as<std::string>();
         const YAML::Node elements = screen.second;
@@ -24,11 +26,12 @@ void UILoadSystem::LoadUIInfo(const std::string& path) {
             } else if (type == "text") {
                 LoadTextInfo(screenName, node);
             }
-        } 
+        }
     }
 }
 
-void UILoadSystem::LoadTextureInfo(const std::string& screenName, YAML::Node& node) {
+void UILoadSystem::LoadTextureInfo(const std::string& screenName, YAML::Node& node)
+{
     TextureInfo info;
     info.x = node["pos"][0] ? node["pos"][0].as<float>() : 0.0f;
     info.y = node["pos"][1] ? node["pos"][1].as<float>() : 0.0f;
@@ -43,7 +46,8 @@ void UILoadSystem::LoadTextureInfo(const std::string& screenName, YAML::Node& no
     mTextureInfo[textureId] = info;
 }
 
-void UILoadSystem::LoadTextInfo(const std::string& screenName, YAML::Node& node) {
+void UILoadSystem::LoadTextInfo(const std::string& screenName, YAML::Node& node)
+{
     TextInfo info;
     info.x = node["pos"][0] ? node["pos"][0].as<float>() : 0.0f;
     info.y = node["pos"][1] ? node["pos"][1].as<float>() : 0.0f;

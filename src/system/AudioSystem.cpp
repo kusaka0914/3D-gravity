@@ -30,34 +30,36 @@ void AudioSystem::AdjustVolume(int volumeBGM, int volumeSE)
 
 void AudioSystem::CreateBGMList()
 {
-    AddBGM("../assets/audio/normalBGM.wav", "normalBGM");
-    AddBGM("../assets/audio/boss.wav", "bossBGM");
-    AddBGM("../assets/audio/title.wav", "titleBGM");
-    AddBGM("../assets/audio/opening.wav", "openingBGM");
-    AddBGM("../assets/audio/base.wav", "baseBGM");
+    std::string basePath = "../assets/audio/bgm/";
+    AddBGM(basePath + "stage.wav", "stage_bgm");
+    AddBGM(basePath + "boss.wav", "boss_bgm");
+    AddBGM(basePath + "title.wav", "title_bgm");
+    AddBGM(basePath + "opening.wav", "opening_bgm");
+    AddBGM(basePath + "base.wav", "base_bgm");
 }
 
 void AudioSystem::CreateSEList()
 {
-    AddSE("../assets/audio/attack.wav", "attackSE");
-    AddSE("../assets/audio/attack_miss.wav", "attackMissSE");
-    AddSE("../assets/audio/attack_pre.wav", "attackPreSE");
-    AddSE("../assets/audio/counter.wav", "counterSE");
-    AddSE("../assets/audio/clear.wav", "clearSE");
-    AddSE("../assets/audio/attackAir.wav", "attackAirSE");
-    AddSE("../assets/audio/Defeat.wav", "defeatSE");
-    AddSE("../assets/audio/Damaged.wav", "damagedSE");
-    AddSE("../assets/audio/Destroy.wav", "destroySE");
-    AddSE("../assets/audio/Break.wav", "breakSE");
-    AddSE("../assets/audio/Charged.wav", "chargedSE");
-    AddSE("../assets/audio/ShowBoat.wav", "showBoatSE");
-    AddSE("../assets/audio/ShowKey.wav", "showKeySE");
-    AddSE("../assets/audio/PickUp.wav", "pickUpSE");
-    AddSE("../assets/audio/Dodge.wav", "dodgeSE");
-    AddSE("../assets/audio/Jump.wav", "jumpSE");
-    AddSE("../assets/audio/Charging.wav", "chargingSE");
-    AddSE("../assets/audio/recover.wav", "recoverSE");
-    AddSE("../assets/audio/message.wav", "messageSE");
+    std::string basePath = "../assets/audio/se/";
+    AddSE(basePath + "attack.wav", "attack_se");
+    AddSE(basePath + "attack_miss.wav", "attack_miss_se");
+    AddSE(basePath + "attack_pre.wav", "attack_pre_se");
+    AddSE(basePath + "counter.wav", "counter_se");
+    AddSE(basePath + "clear.wav", "clear_se");
+    AddSE(basePath + "attack_air.wav", "attack_air_se");
+    AddSE(basePath + "defeat.wav", "defeat_se");
+    AddSE(basePath + "damaged.wav", "damaged_se");
+    AddSE(basePath + "destroy.wav", "destroy_se");
+    AddSE(basePath + "break.wav", "break_se");
+    AddSE(basePath + "charged.wav", "charged_se");
+    AddSE(basePath + "show_boat.wav", "show_boat_se");
+    AddSE(basePath + "show_key.wav", "show_key_se");
+    AddSE(basePath + "pickup.wav", "pickup_se");
+    AddSE(basePath + "dodge.wav", "dodge_se");
+    AddSE(basePath + "jump.wav", "jump_se");
+    AddSE(basePath + "charging.wav", "charging_se");
+    AddSE(basePath + "recover.wav", "recover_se");
+    AddSE(basePath + "message.wav", "message_se");
 }
 
 void AudioSystem::Update() {}
@@ -67,34 +69,34 @@ void AudioSystem::TryChangeBGM()
     bool isTitle = mGame->GetSceneSystem()->IsTitle();
     if (isTitle) {
         Mix_HaltMusic();
-        PlayBGM("titleBGM");
+        PlayBGM("title_bgm");
         return;
     }
 
     bool isOpening = mGame->GetSceneSystem()->IsOpening();
     if (isOpening) {
         Mix_HaltMusic();
-        PlayBGM("openingBGM");
+        PlayBGM("opening_bgm");
         return;
     }
 
     int currentStageNum = mGame->GetCurrentStageNum();
     if (currentStageNum == 0) {
         Mix_HaltMusic();
-        PlayBGM("baseBGM");
+        PlayBGM("base_bgm");
         return;
     }
 
     int currentPlanetNum = mGame->GetPlayers()[0]->GetCurrentPlanetNum();
     if (currentPlanetNum == 0) {
         Mix_HaltMusic();
-        PlayBGM("normalBGM");
+        PlayBGM("stage_bgm");
         return;
     }
 
     if (currentPlanetNum == 2) {
         Mix_HaltMusic();
-        PlayBGM("bossBGM");
+        PlayBGM("boss_bgm");
         return;
     }
 }

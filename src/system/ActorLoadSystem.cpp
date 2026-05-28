@@ -58,7 +58,7 @@ void ActorLoadSystem::LoadPlayers(const char* path)
         glm::vec3 pos = CalculatePos(node, currentPlanet);
         player->SetPos(pos);
 
-        YAML::Node playerRoot = YAML::LoadFile("../assets/data/players.yaml");
+        YAML::Node playerRoot = YAML::LoadFile("../assets/data/actor/players.yaml");
         for (auto playerNode : playerRoot["players"]) {
             float hp = playerNode["hp"] ? playerNode["hp"].as<float>() : 0.0f;
             player->SetHp(hp);
@@ -231,7 +231,7 @@ void ActorLoadSystem::LoadEnemies(const char* path)
         std::string type = node["type"] ? node["type"].as<std::string>() : "";
         if (type == "boss")
             enemy->SetIsBoss(true);
-        YAML::Node enemyRoot = YAML::LoadFile("../assets/data/enemies.yaml");
+        YAML::Node enemyRoot = YAML::LoadFile("../assets/data/actor/enemies.yaml");
         for (auto enemyNode : enemyRoot["enemies"]) {
             if (enemyNode["type"].as<std::string>() == "common") {
                 float knockBackSpeed = enemyNode["knockBackSpeed"] ? enemyNode["knockBackSpeed"].as<float>() : 0.0f;
@@ -389,7 +389,7 @@ void ActorLoadSystem::LoadBoats(const char* path)
         glm::vec3 pos = CalculatePos(node, currentPlanet);
         boat->SetPos(pos);
 
-        YAML::Node boatRoot = YAML::LoadFile("../assets/data/boats.yaml");
+        YAML::Node boatRoot = YAML::LoadFile("../assets/data/actor/boats.yaml");
         for (auto boatNode : boatRoot["boats"]) {
             std::string modelPath = boatNode["modelPath"] ? boatNode["modelPath"].as<std::string>() : "";
             boat->SetModelPath(modelPath);
@@ -427,7 +427,7 @@ void ActorLoadSystem::LoadBoatParts(const char* path)
         boatParts->SetPos(pos);
 
         std::string type = node["type"] ? node["type"].as<std::string>() : "";
-        YAML::Node boatPartsRoot = YAML::LoadFile("../assets/data/boatParts.yaml");
+        YAML::Node boatPartsRoot = YAML::LoadFile("../assets/data/actor/boatparts.yaml");
         for (auto boatPartsNode : boatPartsRoot["boatParts"]) {
             if (type != boatPartsNode["type"].as<std::string>())
                 continue;
@@ -466,7 +466,7 @@ void ActorLoadSystem::LoadKeys(const char* path)
         glm::vec3 pos = CalculatePos(node, currentPlanet);
         key->SetPos(pos);
 
-        YAML::Node keyRoot = YAML::LoadFile("../assets/data/keys.yaml");
+        YAML::Node keyRoot = YAML::LoadFile("../assets/data/actor/keys.yaml");
         for (auto keyNode : keyRoot["keys"]) {
             std::string modelPath = keyNode["modelPath"] ? keyNode["modelPath"].as<std::string>() : "key.obj";
             key->SetModelPath(modelPath);
@@ -500,7 +500,7 @@ void ActorLoadSystem::LoadCrystals(const char* path)
         crystal->SetCurrentPlanet(currentPlanet);
 
         std::string type = node["type"] ? node["type"].as<std::string>() : "";
-        YAML::Node crystalRoot = YAML::LoadFile("../assets/data/crystals.yaml");
+        YAML::Node crystalRoot = YAML::LoadFile("../assets/data/actor/crystals.yaml");
         for (auto crystalNode : crystalRoot["crystals"]) {
             if (crystalNode["type"].as<std::string>() == "common") {
                 std::string modelPath = crystalNode["modelPath"] ? crystalNode["modelPath"].as<std::string>() : "";
@@ -577,7 +577,7 @@ void ActorLoadSystem::LoadPlatforms(const char* path)
         platform->SetCurrentPlanet(currentPlanet);
 
         std::string type = node["type"] ? node["type"].as<std::string>() : "";
-        YAML::Node platformRoot = YAML::LoadFile("../assets/data/platforms.yaml");
+        YAML::Node platformRoot = YAML::LoadFile("../assets/data/actor/platforms.yaml");
         for (auto platformNode : platformRoot["platforms"]) {
             if (type != platformNode["type"].as<std::string>())
                 continue;

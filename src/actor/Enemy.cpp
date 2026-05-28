@@ -155,7 +155,7 @@ void Enemy::UpdatePreparingAttack(float deltaTime)
 
     if (IsJustBeforeAttack()) {
         mIsJustBeforeAttack = true;
-        mGame->GetAudioSystem()->PlaySE("attackPreSE");
+        mGame->GetAudioSystem()->PlaySE("attack_pre_se");
     }
 
     if (mStandByAttackTimer <= 0.0f) {
@@ -235,7 +235,7 @@ void Enemy::StartDying()
     mHp = 0;
     constexpr float dyingKnockBackTimer = 1.0f;
     StartKnockedBack(dyingKnockBackTimer);
-    mGame->GetAudioSystem()->PlaySE("defeatSE");
+    mGame->GetAudioSystem()->PlaySE("defeat_se");
 }
 
 void Enemy::FinishDying()

@@ -69,7 +69,7 @@ void Boat::StartFocus()
 
 void Boat::OnShown() const
 {
-    mGame->GetAudioSystem()->PlaySE("showBoatSE");
+    mGame->GetAudioSystem()->PlaySE("show_boat_se");
 }
 
 void Boat::UpdateMoving(float deltaTime)

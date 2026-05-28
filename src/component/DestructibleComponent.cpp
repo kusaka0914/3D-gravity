@@ -58,7 +58,7 @@ void DestructibleComponent::ApplyDamage(float attack)
     mDestroyHp -= attack;
 
     if (mDestroyHp > 0.0f) {
-        mOwner->GetGame()->GetAudioSystem()->PlaySE("attackSE");
+        mOwner->GetGame()->GetAudioSystem()->PlaySE("attack_se");
         return;
     }
 
