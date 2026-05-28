@@ -3,29 +3,35 @@
 #include "actor/Player.h"
 
 CollectableComponent::CollectableComponent(Actor* owner, int updateOrder)
-    : Component(owner, updateOrder)
-    , mIsObtained(false)
+    : Component(owner, updateOrder),
+      mIsObtained(false)
 {
 }
 
-void CollectableComponent::Update(float deltaTime) {
-    if (!mIsObtained && IsCollectablePlayerInPickUpRadius())
+void CollectableComponent::Update(float deltaTime)
+{
+    if (mIsObtained) {
+        return;
+    }
+
+    if (IsCollectablePlayerInPickUpRadius()) {
         mIsObtained = true;
+    }
 }
 
-bool CollectableComponent::IsCollectablePlayerInPickUpRadius() const {
-    const std::vector<Player*>& players = mOwner->GetGame()->GetPlayers();
-    if (players.empty()) return false;
+bool CollectableComponent::IsCollectablePlayerInPickUpRadius() const
+{
+    const Player* nearestPlayer = mOwner->GetGame()->FindNearestPlayer(mOwner);
 
-    glm::vec3 ownerPos = mOwner->GetPos();
-    constexpr float pickupRadius = 0.8f;
-
-    for (auto player : players) {
-        if (player->GetActionState() == Player::ActionState::Attacking) continue;
-
-        const float distTo = glm::length(player->GetPos() - ownerPos);    
-        if (distTo <= pickupRadius)
-            return true;
+    if (nearestPlayer->IsAttacking()) {
+        return false;
     }
+
+    const float distTo = glm::length(nearestPlayer->GetPos() - mOwner->GetPos());
+    constexpr float pickupRadius = 0.8f;
+    if (distTo <= pickupRadius) {
+        return true;
+    }
+
     return false;
 }

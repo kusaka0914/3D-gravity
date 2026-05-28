@@ -32,6 +32,10 @@ public:
     void OnBoatArrived(Boat* boat);
     void Restart();
     bool IsInvincible() const { return mInvincibleTimer > 0.0f; };
+    bool IsAttacking() const
+    {
+        return mActionState == ActionState::Attacking || mActionState == ActionState::StrongAttacking;
+    }
 
     void SetIsDodged(bool isDodged) { mIsDodged = isDodged; }
 
