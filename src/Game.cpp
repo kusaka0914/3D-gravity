@@ -63,7 +63,7 @@ bool Game::Initialize()
 bool Game::InitializeGLFW()
 {
     if (!glfwInit()) {
-        std::cerr << "Failed to init GLFW" << std::endl;
+        // std::cerr << "Failed to init GLFW" << std::endl;
         return false;
     }
 
@@ -77,7 +77,7 @@ bool Game::InitializeGLFW()
 
     mWindow = glfwCreateWindow(800, 450, "Slime'sSkyTravel", nullptr, nullptr);
     if (!mWindow) {
-        std::cerr << "Failed to create window" << std::endl;
+        // std::cerr << "Failed to create window" << std::endl;
         glfwTerminate();
         return false;
     }
@@ -86,7 +86,7 @@ bool Game::InitializeGLFW()
 
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
-        std::cerr << "Failed to init GLEW" << std::endl;
+        // std::cerr << "Failed to init GLEW" << std::endl;
         glfwDestroyWindow(mWindow);
         glfwTerminate();
         return false;

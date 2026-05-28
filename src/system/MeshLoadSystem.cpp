@@ -133,7 +133,7 @@ std::vector<LoadedMesh> MeshLoadSystem::LoadMeshFromFile(const char* path)
 
     std::vector<LoadedMesh> results;
     if (!scene) {
-        std::cerr << "Assimp error: " << importer.GetErrorString() << std::endl;
+        // std::cerr << "Assimp error: " << importer.GetErrorString() << std::endl;
         return results;
     }
 
@@ -234,7 +234,7 @@ bool MeshLoadSystem::LoadMeshPositionsAndIndices(const char* path, std::vector<f
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate);
 
     if (!scene || !scene->mMeshes || scene->mNumMeshes == 0) {
-        std::cerr << "Assimp error (mesh positions): " << importer.GetErrorString() << std::endl;
+        // std::cerr << "Assimp error (mesh positions): " << importer.GetErrorString() << std::endl;
         return false;
     }
 
@@ -271,7 +271,7 @@ unsigned int MeshLoadSystem::loadTexture(const char* path)
     stbi_set_flip_vertically_on_load(1);
     unsigned char* data = stbi_load(path, &w, &h, &nrChannels, 0);
     if (!data) {
-        std::cerr << "Failed to load texture: " << path << std::endl;
+        // std::cerr << "Failed to load texture: " << path << std::endl;
         glDeleteTextures(1, &texID);
         return 0;
     }

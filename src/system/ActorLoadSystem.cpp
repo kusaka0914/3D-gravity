@@ -38,7 +38,7 @@ void ActorLoadSystem::LoadPlayers(const char* path)
     YAML::Node root = YAML::LoadFile(path);
 
     if (!root["players"] || !root["players"].IsSequence()) {
-        std::cerr << "ActorLoadSystem: missing or invalid 'players' sequence" << std::endl;
+        // std::cerr << "ActorLoadSystem: missing or invalid 'players' sequence" << std::endl;
         return;
     }
 
@@ -166,7 +166,7 @@ void ActorLoadSystem::LoadNPCs(const char* path)
 {
     YAML::Node root = YAML::LoadFile(path);
     if (!root["NPCs"] || !root["NPCs"].IsSequence()) {
-        std::cerr << "ActorLoadSystem: missing or invalid 'NPCs' sequence" << std::endl;
+        // std::cerr << "ActorLoadSystem: missing or invalid 'NPCs' sequence" << std::endl;
         return;
     }
     for (const YAML::Node& node : root["NPCs"]) {
@@ -209,7 +209,7 @@ void ActorLoadSystem::LoadEnemies(const char* path)
     int currentPlanetNum = 0;
     YAML::Node root = YAML::LoadFile(path);
     if (!root["enemies"] || !root["enemies"].IsSequence()) {
-        std::cerr << "ActorLoadSystem: missing or invalid 'enemies' sequence" << std::endl;
+        // std::cerr << "ActorLoadSystem: missing or invalid 'enemies' sequence" << std::endl;
         return;
     }
     for (const YAML::Node& node : root["enemies"]) {
@@ -296,7 +296,7 @@ void ActorLoadSystem::LoadPlanets(const char* path)
     YAML::Node root = YAML::LoadFile(path);
 
     if (!root["planets"] || !root["planets"].IsSequence()) {
-        std::cerr << "ActorLoadSystem: missing or invalid 'planets' sequence" << std::endl;
+        // std::cerr << "ActorLoadSystem: missing or invalid 'planets' sequence" << std::endl;
         return;
     }
 
@@ -360,7 +360,7 @@ void ActorLoadSystem::LoadBoats(const char* path)
     int currentPlanetNum = 0;
     YAML::Node root = YAML::LoadFile(path);
     if (!root["boats"] || !root["boats"].IsSequence()) {
-        std::cerr << "ActorLoadSystem: missing or invalid 'boats' sequence" << std::endl;
+        // std::cerr << "ActorLoadSystem: missing or invalid 'boats' sequence" << std::endl;
         return;
     }
     for (const YAML::Node& node : root["boats"]) {
@@ -407,7 +407,7 @@ void ActorLoadSystem::LoadBoatParts(const char* path)
     int currentPlanetNum = 0;
     YAML::Node root = YAML::LoadFile(path);
     if (!root["boatParts"] || !root["boatParts"].IsSequence()) {
-        std::cerr << "ActorLoadSystem: missing or invalid 'boatParts' sequence" << std::endl;
+        // std::cerr << "ActorLoadSystem: missing or invalid 'boatParts' sequence" << std::endl;
         return;
     }
     for (const YAML::Node& node : root["boatParts"]) {
@@ -447,7 +447,7 @@ void ActorLoadSystem::LoadKeys(const char* path)
     int currentPlanetNum = 0;
     YAML::Node root = YAML::LoadFile(path);
     if (!root["keys"] || !root["keys"].IsSequence()) {
-        std::cerr << "ActorLoadSystem: missing or invalid 'keys' sequence" << std::endl;
+        // std::cerr << "ActorLoadSystem: missing or invalid 'keys' sequence" << std::endl;
         return;
     }
     for (const YAML::Node& node : root["keys"]) {
@@ -483,7 +483,7 @@ void ActorLoadSystem::LoadCrystals(const char* path)
     int currentPlanetNum = 0;
     YAML::Node root = YAML::LoadFile(path);
     if (!root["crystals"] || !root["crystals"].IsSequence()) {
-        std::cerr << "ActorLoadSystem: missing or invalid 'crystals' sequence" << std::endl;
+        // std::cerr << "ActorLoadSystem: missing or invalid 'crystals' sequence" << std::endl;
         return;
     }
     for (const YAML::Node& node : root["crystals"]) {
@@ -535,7 +535,7 @@ void ActorLoadSystem::LoadStar(const char* path)
     int currentPlanetNum = 0;
     YAML::Node root = YAML::LoadFile(path);
     if (!root["star"] || !root["star"].IsSequence()) {
-        std::cerr << "ActorLoadSystem: missing or invalid 'star' sequence" << std::endl;
+        // std::cerr << "ActorLoadSystem: missing or invalid 'star' sequence" << std::endl;
         return;
     }
 
@@ -560,7 +560,7 @@ void ActorLoadSystem::LoadPlatforms(const char* path)
     int currentPlanetNum = 0;
     YAML::Node root = YAML::LoadFile(path);
     if (!root["platforms"] || !root["platforms"].IsSequence()) {
-        std::cerr << "ActorLoadSystem: missing or invalid 'platforms' sequence" << std::endl;
+        // std::cerr << "ActorLoadSystem: missing or invalid 'platforms' sequence" << std::endl;
         return;
     }
     for (const YAML::Node& node : root["platforms"]) {
