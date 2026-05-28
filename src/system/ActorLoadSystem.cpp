@@ -64,6 +64,9 @@ void ActorLoadSystem::LoadPlayers(const char* path)
             player->SetHp(hp);
             player->SetMaxHp(hp);
 
+            float scale = playerNode["scale"] ? playerNode["scale"].as<float>() : 0.25f;
+            player->SetScale(glm::vec3(scale));
+
             float attackSpeed = playerNode["attackSpeed"] ? playerNode["attackSpeed"].as<float>() : 0.0f;
             player->SetAttackSpeed(attackSpeed);
 
@@ -178,9 +181,6 @@ void ActorLoadSystem::LoadNPCs(const char* path)
         float radius = node["radius"] ? node["radius"].as<float>() : 0.75f;
         npc->SetRadius(radius);
 
-        std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "player.obj";
-        npc->SetModelPath(modelPath);
-
         std::string name = node["name"] ? node["name"].as<std::string>() : "";
         npc->SetName(name);
 
@@ -197,6 +197,20 @@ void ActorLoadSystem::LoadNPCs(const char* path)
 
         glm::vec3 pos = CalculatePos(node, currentPlanet);
         npc->SetPos(pos);
+
+        std::string type = node["type"] ? node["type"].as<std::string>() : "";
+        YAML::Node npcRoot = YAML::LoadFile("../assets/data/actor/npcs.yaml");
+        for (auto npcNode : npcRoot["npcs"]) {
+            if (type != npcNode["type"].as<std::string>()) {
+                continue;
+            }
+
+            std::string modelPath = npcNode["modelPath"] ? npcNode["modelPath"].as<std::string>() : "npc.obj";
+            npc->SetModelPath(modelPath);
+
+            float scale = npcNode["scale"] ? npcNode["scale"].as<float>() : 0.0f;
+            npc->SetScale(glm::vec3(scale));
+        }
 
         NPC* npc_ptr = npc.get();
         mGame->AddActor(std::move(npc));
@@ -393,6 +407,9 @@ void ActorLoadSystem::LoadBoats(const char* path)
         for (auto boatNode : boatRoot["boats"]) {
             std::string modelPath = boatNode["modelPath"] ? boatNode["modelPath"].as<std::string>() : "";
             boat->SetModelPath(modelPath);
+
+            float scale = boatNode["scale"] ? boatNode["scale"].as<float>() : 0.25f;
+            boat->SetScale(glm::vec3(scale));
         }
 
         boat->Initialize();
@@ -429,6 +446,11 @@ void ActorLoadSystem::LoadBoatParts(const char* path)
         std::string type = node["type"] ? node["type"].as<std::string>() : "";
         YAML::Node boatPartsRoot = YAML::LoadFile("../assets/data/actor/boatparts.yaml");
         for (auto boatPartsNode : boatPartsRoot["boatParts"]) {
+            if (boatPartsNode["type"].as<std::string>() == "common") {
+                float scale = boatPartsNode["scale"] ? boatPartsNode["scale"].as<float>() : 0.25f;
+                boatParts->SetScale(glm::vec3(scale));
+            }
+
             if (type != boatPartsNode["type"].as<std::string>())
                 continue;
             std::string modelPath = boatPartsNode["modelPath"] ? boatPartsNode["modelPath"].as<std::string>() : "";
@@ -470,6 +492,9 @@ void ActorLoadSystem::LoadKeys(const char* path)
         for (auto keyNode : keyRoot["keys"]) {
             std::string modelPath = keyNode["modelPath"] ? keyNode["modelPath"].as<std::string>() : "key.obj";
             key->SetModelPath(modelPath);
+
+            float scale = keyNode["scale"] ? keyNode["scale"].as<float>() : 0.25f;
+            key->SetScale(glm::vec3(scale));
         }
 
         Key* key_ptr = key.get();
@@ -546,8 +571,15 @@ void ActorLoadSystem::LoadStar(const char* path)
         Planet* currentPlanet = mGame->GetCurrentStage()->GetPlanets()[currentPlanetNum];
         star->SetCurrentPlanet(currentPlanet);
 
-        std::string modelPath = node["modelPath"] ? node["modelPath"].as<std::string>() : "star.obj";
-        star->SetModelPath(modelPath);
+        YAML::Node starRoot = YAML::LoadFile("../assets/data/actor/stars.yaml");
+        for (auto starNode : starRoot["stars"]) {
+
+            std::string modelPath = starNode["modelPath"] ? starNode["modelPath"].as<std::string>() : "star.obj";
+            star->SetModelPath(modelPath);
+
+            float scale = starNode["scale"] ? starNode["scale"].as<float>() : 0.0f;
+            star->SetScale(glm::vec3(scale));
+        }
 
         Star* starPtr = star.get();
         mGame->AddActor(std::move(star));

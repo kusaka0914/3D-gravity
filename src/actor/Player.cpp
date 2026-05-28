@@ -609,6 +609,8 @@ void Player::MoveDuringCharging(float deltaTime)
     glm::vec3 desiredPos = mPos + moveDelta;
     desiredPos = mGame->GetPhysicsSystem()->CheckCollision(this, moveDelta, desiredPos);
     mPos = desiredPos;
+
+    UpdateFacingForwardVec();
 }
 
 void Player::MoveDuringStrongAttacking(float deltaTime)
@@ -617,6 +619,8 @@ void Player::MoveDuringStrongAttacking(float deltaTime)
     glm::vec3 desiredPos = mPos + moveDelta;
     desiredPos = mGame->GetPhysicsSystem()->CheckCollision(this, moveDelta, desiredPos);
     mPos = desiredPos;
+
+    UpdateFacingForwardVec();
 }
 
 void Player::MoveDuringAttacking(float deltaTime)
@@ -626,6 +630,8 @@ void Player::MoveDuringAttacking(float deltaTime)
 
     desiredPos = mGame->GetPhysicsSystem()->CheckCollision(this, moveDelta, desiredPos);
     mPos = desiredPos;
+
+    UpdateFacingForwardVec();
 }
 
 void Player::MoveDuringKnockBack(float deltaTime)
@@ -639,6 +645,30 @@ void Player::ChangeFaceDir()
     glm::vec3 moveDir = glm::normalize(mForwardVec * mMoveForward + mLeftVec * mMoveLeft);
     mFacingForwardVec = moveDir;
     mFacingYaw = mGame->GetMathUtils()->GetYawFromDirection(mUpVec, moveDir) + 3.14159265f;
+}
+
+void Player::UpdateFacingForwardVec()
+{
+    glm::vec3 up = mUpVec;
+    if (glm::length(up) < 1e-6f) {
+        up = glm::vec3(0.0f, 1.0f, 0.0f);
+    }
+    up = glm::normalize(up);
+
+    glm::vec3 forward = mFacingForwardVec;
+    forward = forward - up * glm::dot(forward, up);
+
+    if (glm::length(forward) < 1e-6f) {
+        forward = mForwardVec;
+        forward = forward - up * glm::dot(forward, up);
+    }
+
+    if (glm::length(forward) < 1e-6f) {
+        return;
+    }
+
+    mFacingForwardVec = glm::normalize(forward);
+    mFacingYaw = mGame->GetMathUtils()->GetYawFromDirection(up, mFacingForwardVec) + 3.14159265f;
 }
 
 void Player::Attack(float deltaTime)

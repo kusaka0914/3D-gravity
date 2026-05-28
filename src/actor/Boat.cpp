@@ -98,6 +98,7 @@ void Boat::FinishMoving()
 {
     mPos = mDestPos;
     mIsMoving = false;
+    mIsActive = false;
 
     mGame->OnBoatArrived(this);
 }

@@ -27,14 +27,14 @@ Game::Game()
     : mWindow(nullptr),
       mSdlController(nullptr),
       mCurrentStage(nullptr),
-      mCurrentStageNum(1),
+      mCurrentStageNum(0),
       mHitStopTimer(-1.0f),
       mLastTime(0.0),
       mReloadKeyPressedPrev(false),
       mUIReloadKeyPressedPrev(false),
       mAPressedPrev(false),
       mIsPlayer2Joined(false),
-      mCurrentStageYamlPath("../assets/data/stage/stage1.yaml")
+      mCurrentStageYamlPath("../assets/data/stage/stage0.yaml")
 {
 }
 

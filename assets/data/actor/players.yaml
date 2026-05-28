@@ -3,6 +3,7 @@
 # hp: 体力, attack: 攻撃力, camera_pitch: カメラのピッチ
 players:
   - hp: 10
+    scale: 0.25
     attack: 10
     attackSpeed: 5.0
     camera_pitch: 0.4

@@ -32,6 +32,7 @@ void Actor::ProcessActor() {}
 void Actor::Update(float deltaTime)
 {
     UpdateUpVec();
+    UpdateDirectionVectors();
 
     UpdateActor(deltaTime);
 
@@ -80,6 +81,28 @@ void Actor::UpdateUpVec()
     OnUpVecUpdateFailed();
 }
 
+void Actor::UpdateDirectionVectors()
+{
+    glm::vec3 upN = mUpVec;
+    if (glm::length(upN) < 1e-6f) {
+        upN = glm::vec3(0.0f, 1.0f, 0.0f);
+    }
+    upN = glm::normalize(upN);
+
+    glm::vec3 worldLeft = glm::cross(upN, glm::vec3(0.0f, 0.0f, 1.0f));
+    if (glm::length(worldLeft) < 0.01f) {
+        worldLeft = glm::cross(upN, glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+    if (glm::length(worldLeft) < 0.01f) {
+        worldLeft = glm::cross(upN, glm::vec3(1.0f, 0.0f, 0.0f));
+    }
+    worldLeft = glm::normalize(worldLeft);
+
+    mForwardVec = glm::normalize(glm::cross(worldLeft, upN) * std::cos(mFacingYaw) - worldLeft * std::sin(mFacingYaw));
+
+    mLeftVec = glm::normalize(glm::cross(upN, mForwardVec));
+}
+
 void Actor::OnUpVecUpdateFailed()
 {
     UpdateFallbackUpVec();
@@ -122,17 +145,9 @@ glm::vec3 Actor::GetAverageNormal()
     glm::vec3 normalSum = mainNormal * mainWeight;
     float weightSum = mainWeight;
 
-    const glm::vec3 up = glm::normalize(mUpVec);
-    glm::vec3 side = glm::cross(up, glm::vec3(0.0f, 0.0f, 1.0f));
-    if (glm::length(side) < 0.01f)
-        side = glm::cross(up, glm::vec3(1.0f, 0.0f, 0.0f));
-
-    side = glm::normalize(side);
-    const glm::vec3 forward = glm::normalize(glm::cross(side, up));
-
     constexpr float footRadius = 0.25f;
-    const std::vector<glm::vec3> offsets = {forward * footRadius, -forward * footRadius, side * footRadius,
-                                            -side * footRadius};
+    const std::vector<glm::vec3> offsets = {mForwardVec * footRadius, -mForwardVec * footRadius, mLeftVec * footRadius,
+                                            -mLeftVec * footRadius};
 
     for (const auto& offset : offsets) {
         glm::vec3 hitNormal;

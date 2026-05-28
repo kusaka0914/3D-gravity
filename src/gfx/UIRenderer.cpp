@@ -34,14 +34,15 @@ void UIRenderer::Initialize()
 
 void UIRenderer::RegisterUITextures()
 {
-    RegisterTexture("../assets/textures/titleBg.png", "titleBg");
-    RegisterTexture("../assets/textures/opening.png", "opening");
-    RegisterTexture("../assets/textures/textBg.png", "textBg");
-    RegisterTexture("../assets/textures/slime.png", "slime");
-    RegisterTexture("../assets/textures/hp.png", "hp");
-    RegisterTexture("../assets/textures/special.png", "special");
-    RegisterTexture("../assets/textures/skyBox.png", "skyBox");
-    RegisterTexture("../assets/textures/jewel.png", "jewel");
+    std::string basePath = "../assets/textures/";
+    RegisterTexture(basePath + "titleBg.png", "titleBg");
+    RegisterTexture(basePath + "opening.png", "opening");
+    RegisterTexture(basePath + "textBg.png", "textBg");
+    RegisterTexture(basePath + "slime.png", "slime");
+    RegisterTexture(basePath + "hp.png", "hp");
+    RegisterTexture(basePath + "special.png", "special");
+    RegisterTexture(basePath + "skyBox.png", "skyBox");
+    RegisterTexture(basePath + "jewel.png", "jewel");
 }
 
 void UIRenderer::Draw()

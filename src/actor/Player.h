@@ -143,6 +143,7 @@ private:
     void FinishCharging();
 
     void ChangeFaceDir();
+    void UpdateFacingForwardVec();
     void MoveDuringDodging(float deltaTime);
     void MoveDuringAttacking(float deltaTime);
     void MoveDuringCharging(float deltaTime);

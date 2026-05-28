@@ -1,2 +1,3 @@
 keys :
   - modelPath: key.obj
+    scale: 2.0
