@@ -137,3 +137,11 @@ bool CharacterActor::CheckDotAngleSteep(const glm::vec3& hitNormal, const glm::v
     }
     return false;
 }
+
+glm::vec3 CharacterActor::CalculateCollisionAdjustedPos(const glm::vec3& moveDelta)
+{
+    glm::vec3 desiredPos = mPos + moveDelta;
+
+    desiredPos = mGame->GetPhysicsSystem()->CheckCollision(this, moveDelta, desiredPos);
+    return desiredPos;
+}

@@ -23,29 +23,11 @@ void NPC::UpdateActor(float deltaTime)
 
 void NPC::LookNearestPlayer()
 {
-    const Player* nearestPlayer = FindNearestPlayer();
+    const Player* nearestPlayer = mGame->FindNearestPlayer(this);
     const glm::vec3 toNearestPlayer = glm::normalize(nearestPlayer->GetPos() - mPos);
 
     mFacingForwardVec = toNearestPlayer;
     mFacingYaw = mGame->GetMathUtils()->GetYawFromDirection(mUpVec, toNearestPlayer) + 3.14159265f;
-}
-
-Player* NPC::FindNearestPlayer() const
-{
-    const std::vector<Player*>& players = mGame->GetPlayers();
-
-    Player* nearestPlayer;
-    float nearestToPlayerDist = 1e9;
-
-    for (auto player : players) {
-        const float toPlayerDist = glm::length(player->GetPos() - mPos);
-        if (toPlayerDist <= nearestToPlayerDist) {
-            nearestToPlayerDist = toPlayerDist;
-            nearestPlayer = player;
-        }
-    }
-
-    return nearestPlayer;
 }
 
 void NPC::CheckTalkable()

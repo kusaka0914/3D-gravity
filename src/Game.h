@@ -42,6 +42,8 @@ public:
     void OnPlayerDied();
     void OnBoatPartsObtained();
 
+    Player* FindNearestPlayer(Actor* actor) const;
+
     void FinishGame();
     void RestartGame();
     void StartPlayingScene();

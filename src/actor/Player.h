@@ -31,6 +31,7 @@ public:
     void ApplyDamage(float damage, glm::vec3 knockBackFrom);
     void OnBoatArrived(Boat* boat);
     void Restart();
+    bool IsInvincible() const { return mInvincibleTimer > 0.0f; };
 
     void SetIsDodged(bool isDodged) { mIsDodged = isDodged; }
 

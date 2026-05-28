@@ -18,11 +18,11 @@ planets:
     shape : Sphere
 
 enemies:
-  # - type: normal
-  #   theta: 0.0
-  #   u: 0.0
-  #   height : 1.0
-  #   currentPlanetNum: 0
+  - type: normal
+    theta: 0.0
+    u: 0.0
+    height : 1.0
+    currentPlanetNum: 0
   - type: normal
     theta: 2.056
     u: 1.0
@@ -166,38 +166,40 @@ boats:
     destPlanet : 2
 
 boatParts:
-  # - type: parts1
-  #   currentPlanetNum : 0
-  #   theta : 1.0
-  #   u : 0.0
-  #   height : 0.0
   - type: parts1
     currentPlanetNum : 0
-    pos: [-5.5, 12.8, -0.13]
-  - type: parts2
-    currentPlanetNum : 0
-    theta : 19.55
-    u : 1.05
-    height : 3.3
-  - type: parts3
-    currentPlanetNum : 0
-    theta : 42.55
-    u : -0.8
-    height : 3.3
-  - type: parts4
-    currentPlanetNum : 0
-    theta : -0.35
-    u : 0.3
-    height : 1.0
-  - type: parts5
-    currentPlanetNum : 0
-    theta : 79.7
-    u : 1.2
-    height: 0.1
+    theta : 1.0
+    u : 0.0
+    height : 0.0
+  # - type: parts1
+  #   currentPlanetNum : 0
+  #   pos: [-5.5, 12.8, -0.13]
+  # - type: parts2
+  #   currentPlanetNum : 0
+  #   theta : 19.55
+  #   u : 1.05
+  #   height : 3.3
+  # - type: parts3
+  #   currentPlanetNum : 0
+  #   theta : 42.55
+  #   u : -0.8
+  #   height : 3.3
+  # - type: parts4
+  #   currentPlanetNum : 0
+  #   theta : -0.35
+  #   u : 0.3
+  #   height : 1.0
+  # - type: parts5
+  #   currentPlanetNum : 0
+  #   theta : 79.7
+  #   u : 1.2
+  #   height: 0.1
 
 players:
   - pos: [3.0, 7.5, 0.0]
     currentPlanetNum: 0
+  # - pos: [1.0, 9.5, 0.0]
+  #   currentPlanetNum: 0
   
 star:
   - currentPlanetNum : 2

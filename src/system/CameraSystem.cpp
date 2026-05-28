@@ -5,22 +5,24 @@
 #include <iostream>
 
 CameraSystem::CameraSystem(Game* game)
-    : mGame(game)
-    , mCameraYaw(0.0f)
-    , mCameraPitch(-1.2f)
-    , mCameraStickY(0.0f)
-    , mCameraStickX(0.0f)
-    , mCameraUpVec(0.0f, 1.0f, 0.0f)
-    , mCameraTargetPos(0.0f)
-    , mCameraPos(0.0f)
+    : mGame(game),
+      mCameraYaw(0.0f),
+      mCameraPitch(-1.2f),
+      mCameraStickY(0.0f),
+      mCameraStickX(0.0f),
+      mCameraUpVec(0.0f, 1.0f, 0.0f),
+      mCameraTargetPos(0.0f),
+      mCameraPos(0.0f)
 {
 }
 
-void CameraSystem::ProcessInput() {
+void CameraSystem::ProcessInput()
+{
     SDL_GameController* sdlController = mGame->GetSdlController();
     constexpr float deadZone = 0.25f;
-    constexpr float scale = 1.0f / 32767.0f; // SDL_GameControllerGetAxisの範囲が32767までで、scaleをかけて1.0f以内に抑えるため
-    
+    constexpr float scale =
+        1.0f / 32767.0f; // SDL_GameControllerGetAxisの範囲が32767までで、scaleをかけて1.0f以内に抑えるため
+
     mCameraStickX = SDL_GameControllerGetAxis(sdlController, SDL_CONTROLLER_AXIS_RIGHTX) * scale;
 
     if (std::abs(mCameraStickY) < deadZone)
@@ -29,29 +31,31 @@ void CameraSystem::ProcessInput() {
         mCameraStickX = 0.0f;
 }
 
-void CameraSystem::Update(float deltaTime) {
+void CameraSystem::Update(float deltaTime)
+{
     UpdateCamera(deltaTime);
 }
 
-void CameraSystem::UpdateCamera(float deltaTime) {
+void CameraSystem::UpdateCamera(float deltaTime)
+{
     constexpr float cameraSensitivity = 2.5f;
 
     const float yawDelta = mCameraStickX * cameraSensitivity * deltaTime;
-
-    Player* player = mGame->GetPlayers()[0];
-    player->SetCameraYaw(yawDelta);
-
     const float upSmooth = 1.0f - std::exp(-8.0f * deltaTime);
-    mCameraUpVec = glm::normalize(glm::mix(mCameraUpVec, player->GetUpVec(), upSmooth));
-
     const float targetSmooth = 1.0f - std::exp(-10.0f * deltaTime);
-    mCameraTargetPos = glm::mix(mCameraTargetPos, player->GetPos(), targetSmooth);
+
+    std::vector<Player*> players = mGame->GetPlayers();
+    players[0]->SetCameraYaw(yawDelta);
+    for (auto player : players) {
+        mCameraUpVec = glm::normalize(glm::mix(mCameraUpVec, player->GetUpVec(), upSmooth));
+        mCameraTargetPos = glm::mix(mCameraTargetPos, player->GetPos(), targetSmooth);
+    }
 }
 
-glm::mat4 CameraSystem::GetPlayerView(float cameraDistance, bool isFixed) {
+glm::mat4 CameraSystem::GetPlayerView(Player* player, float cameraDistance, bool isFixed)
+{
     glm::vec3 toPosX;
     glm::vec3 cameraDir;
-    Player* player = mGame->GetPlayers()[0];
 
     if (isFixed) {
         glm::vec3 facingForwardVec = player->GetFacingForwardVec();
@@ -69,17 +73,18 @@ glm::mat4 CameraSystem::GetPlayerView(float cameraDistance, bool isFixed) {
     return glm::lookAt(mCameraPos, mCameraTargetPos, mCameraUpVec);
 }
 
-glm::mat4 CameraSystem::GetFocusView(Actor* focusActor) {
+glm::mat4 CameraSystem::GetFocusView(Actor* focusActor)
+{
     const glm::vec3 upVec = focusActor->GetUpVec();
     glm::vec3 worldLeft = glm::cross(upVec, glm::vec3(0, 0, 1));
 
-    if (glm::length(worldLeft) < 0.01f){
+    if (glm::length(worldLeft) < 0.01f) {
         worldLeft = glm::normalize(glm::cross(upVec, glm::vec3(0, 1, 0)));
-    }
-    else 
+    } else
         worldLeft = glm::normalize(worldLeft);
-    
-    const glm::vec3 forwardVec = glm::normalize(glm::cross(worldLeft, upVec) * std::cos(0.6f) - std::sin(0.6f) * worldLeft);
+
+    const glm::vec3 forwardVec =
+        glm::normalize(glm::cross(worldLeft, upVec) * std::cos(0.6f) - std::sin(0.6f) * worldLeft);
     const glm::vec3 back = glm::normalize(-forwardVec);
     const glm::vec3 cameraDir = glm::normalize(std::cos(-0.5f) * back + std::sin(-0.5f) * upVec);
 

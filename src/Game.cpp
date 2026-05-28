@@ -400,6 +400,32 @@ void Game::OnBoatPartsObtained()
     mPlayers[0]->GetCurrentPlanet()->OnBoatPartsObtained();
 }
 
+Player* Game::FindNearestPlayer(Actor* actor) const
+{
+    if (!actor) {
+        return nullptr;
+    }
+
+    Player* nearestPlayer = nullptr;
+    float nearestDist = std::numeric_limits<float>::max();
+
+    for (Player* player : mPlayers) {
+        if (!player) {
+            continue;
+        }
+
+        const glm::vec3 toPlayer = player->GetPos() - actor->GetPos();
+        const float dist = glm::dot(toPlayer, toPlayer);
+
+        if (dist < nearestDist) {
+            nearestDist = dist;
+            nearestPlayer = player;
+        }
+    }
+
+    return nearestPlayer;
+}
+
 void Game::FinishGame()
 {
     glfwSetWindowShouldClose(mWindow, GLFW_TRUE);

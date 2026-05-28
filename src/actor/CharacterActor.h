@@ -25,6 +25,7 @@ public:
 
 protected:
     void ApplyGravity(float deltaTime);
+    glm::vec3 CalculateCollisionAdjustedPos(const glm::vec3& moveDelta);
 
 private:
     void JudgeLanding();
