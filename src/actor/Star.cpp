@@ -5,7 +5,6 @@
 Star::Star(Game* game) : Actor(game)
 {
     mIsActive = false;
-
     AddCollectableComponent();
 }
 
@@ -18,9 +17,10 @@ void Star::AddCollectableComponent()
 
 void Star::UpdateActor(float deltaTime)
 {
-    bool isObtained = mCollectableComponent->GetIsObtained();
-    if (isObtained && mIsActive)
+    const bool shouldStartOnObtained = mCollectableComponent->GetIsObtained() && mIsActive;
+    if (shouldStartOnObtained) {
         OnObtained();
+    }
 }
 
 void Star::OnObtained()
