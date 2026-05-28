@@ -229,6 +229,7 @@ void Enemy::FinishDying()
 {
     mLifeState = LifeState::Dead;
     mIsActive = false;
+    mCurrentPlanet->OnEnemyDead();
 
     if (mIsBoss) {
         Star* star = GetCurrentPlanet()->GetStar();
