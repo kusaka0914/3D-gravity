@@ -70,8 +70,6 @@ public:
     }
 
     Stage* GetCurrentStage() const { return mCurrentStage; }
-    bool GetIsAllEnemiesDead() const { return mIsAllEnemiesDead; }
-    bool GetIsAllBoatPartsCollected() const { return mIsAllBoatPartsCollected; }
 
     int GetRemainBoatPartsCount() const { return mRemainBoatPartsCount; }
 
@@ -89,13 +87,11 @@ public:
 
 private:
     void InitRemainBoatPartsCount();
-    void CheckIsAllEnemiesDead();
-    void CheckIsAllBoatPartsCollected();
+    bool CheckIsAllEnemiesDead();
+    bool CheckIsAllBoatPartsCollected();
+    void StartBoatFocus();
 
 private:
-    bool mIsAllEnemiesDead;
-    bool mIsAllBoatPartsCollected;
-
     int mStageNum;
     int mRemainBoatPartsCount;
 

@@ -13,6 +13,7 @@ public:
     void UpdateActor(float deltaTime) override;
 
     void StartTravel();
+    void StartFocus();
 
     void SetDestPlanet(Planet* destPlanet) { mDestPlanet = destPlanet; }
     void SetDestStage(int destStage) { mDestStage = destStage; }

@@ -49,11 +49,6 @@ glm::vec3 Boat::CalculateDestPos() const
 
 void Boat::UpdateActor(float deltaTime)
 {
-    const bool canFocus = mCurrentPlanet->GetIsAllBoatPartsCollected() || mCurrentPlanet->GetIsAllEnemiesDead();
-    if (canFocus && !mFocusComponent->GetIsFocused()) {
-        mFocusComponent->StartFocus();
-    }
-
     const bool isInStage = !mGame->IsInBase();
     const bool isJustShown = !mIsActivePrev && mIsActive;
     if (isInStage && isJustShown) {
@@ -65,6 +60,11 @@ void Boat::UpdateActor(float deltaTime)
     }
 
     mIsActivePrev = mIsActive;
+}
+
+void Boat::StartFocus()
+{
+    mFocusComponent->StartFocus();
 }
 
 void Boat::OnShown() const

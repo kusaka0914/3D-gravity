@@ -1,12 +1,11 @@
 #include "Planet.h"
 #include "Game.h"
+#include "actor/Boat.h"
 #include "actor/BoatParts.h"
 #include "actor/Enemy.h"
 
 Planet::Planet(Game* game)
     : Actor(game),
-      mIsAllEnemiesDead(false),
-      mIsAllBoatPartsCollected(false),
       mStageNum(0),
       mRemainBoatPartsCount(0),
       mColor(1.0f),
@@ -41,46 +40,57 @@ void Planet::InitRemainBoatPartsCount()
 
 void Planet::OnEnemyDead()
 {
-    bool shouldCheckIsAllEnemiesDead =
-        mRocketSpawnCondition == RocketSpawnCondition::AllEnemiesDead && !mIsAllEnemiesDead;
-    if (shouldCheckIsAllEnemiesDead) {
-        CheckIsAllEnemiesDead();
+    bool shouldCheckIsAllEnemiesDead = mRocketSpawnCondition == RocketSpawnCondition::AllEnemiesDead;
+    if (!shouldCheckIsAllEnemiesDead) {
+        return;
+    }
+
+    if (CheckIsAllEnemiesDead()) {
+        StartBoatFocus();
     }
 }
 
-void Planet::CheckIsAllEnemiesDead()
+bool Planet::CheckIsAllEnemiesDead()
 {
-    mIsAllEnemiesDead = true;
     for (auto enemy : mEnemies) {
         if (enemy->GetIsDead()) {
             continue;
         }
 
-        mIsAllEnemiesDead = false;
-        return;
+        return false;
     }
+    return true;
 }
 
 void Planet::OnBoatPartsObtained()
 {
     mRemainBoatPartsCount--;
 
-    bool shouldCheckAllBoatPartsCollected =
-        mRocketSpawnCondition == RocketSpawnCondition::AllBoatPartsCollected && !mIsAllBoatPartsCollected;
-    if (shouldCheckAllBoatPartsCollected) {
-        CheckIsAllBoatPartsCollected();
+    bool shouldCheckAllBoatPartsCollected = mRocketSpawnCondition == RocketSpawnCondition::AllBoatPartsCollected;
+    if (!shouldCheckAllBoatPartsCollected) {
+        return;
+    }
+
+    if (CheckIsAllBoatPartsCollected()) {
+        StartBoatFocus();
     }
 }
 
-void Planet::CheckIsAllBoatPartsCollected()
+void Planet::StartBoatFocus()
 {
-    mIsAllBoatPartsCollected = true;
+    for (auto boat : mBoats) {
+        boat->StartFocus();
+    }
+}
+
+bool Planet::CheckIsAllBoatPartsCollected()
+{
     for (auto parts : mBoatParts) {
         if (!parts->GetIsActive()) {
             continue;
         }
 
-        mIsAllBoatPartsCollected = false;
-        return;
+        return false;
     }
+    return true;
 }
