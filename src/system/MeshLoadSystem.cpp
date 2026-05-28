@@ -1,41 +1,43 @@
 #include <GL/glew.h>
+
+#include "Game.h"
 #include "MeshLoadSystem.h"
+#include "Stage.h"
 #include "actor/Actor.h"
-#include "actor/Player.h"
-#include "actor/Planet.h"
 #include "actor/Boat.h"
 #include "actor/BoatParts.h"
-#include "actor/Star.h"
 #include "actor/Crystal.h"
 #include "actor/Enemy.h"
 #include "actor/Key.h"
-#include "actor/Platform.h"
 #include "actor/NPC.h"
-#include "Game.h"
-#include "Stage.h"
+#include "actor/Planet.h"
+#include "actor/Platform.h"
+#include "actor/Player.h"
+#include "actor/Star.h"
 
+#include <assimp/Importer.hpp>
 #include <assimp/material.h>
 #include <assimp/mesh.h>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <assimp/scene.h>
 #include <string>
 #include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "thirdParty/stb_image.h"
 
-MeshLoadSystem::MeshLoadSystem(Game* game) 
-    : mGame(game)
+MeshLoadSystem::MeshLoadSystem(Game* game) : mGame(game)
 {
     Initialize();
 }
 
-void MeshLoadSystem::Initialize() {
+void MeshLoadSystem::Initialize()
+{
     CreateLoadedMeshes();
 }
 
-void MeshLoadSystem::CreateLoadedMeshes() {
+void MeshLoadSystem::CreateLoadedMeshes()
+{
     mLoadedMeshes["player"] = LoadMeshFromFile("../assets/models/player.obj");
     mLoadedMeshes["enemy"] = LoadMeshFromFile("../assets/models/enemy.obj");
     mLoadedMeshes["key"] = LoadMeshFromFile("../assets/models/key.obj");
@@ -64,15 +66,15 @@ void MeshLoadSystem::CreateLoadedMeshes() {
     mLoadedMeshes["skyBox"] = LoadMeshFromFile("../assets/models/skyBox.obj");
 }
 
-void MeshLoadSystem::LoadModel() {
+void MeshLoadSystem::LoadModel()
+{
     auto players = mGame->GetPlayers();
     for (auto player : players) {
         SetActorMesh(player);
     }
 
     std::vector<Planet*> planets = mGame->GetCurrentStage()->GetPlanets();
-    for (auto planet : planets)
-    {
+    for (auto planet : planets) {
         SetActorMesh(planet);
 
         std::vector<NPC*> NPCs = planet->GetNPCs();
@@ -84,11 +86,11 @@ void MeshLoadSystem::LoadModel() {
             SetActorMesh(enemy);
 
         Key* key = planet->GetKey();
-        if (key) 
+        if (key)
             SetActorMesh(key);
 
         Star* star = planet->GetStar();
-        if (star) 
+        if (star)
             SetActorMesh(star);
 
         std::vector<Boat*> boats = planet->GetBoats();
@@ -117,17 +119,18 @@ void MeshLoadSystem::LoadModel() {
     }
 }
 
-void MeshLoadSystem::SetActorMesh(Actor* actor) {
+void MeshLoadSystem::SetActorMesh(Actor* actor)
+{
     auto it = actor->GetModelPath().find(".");
-    std::string meshName = actor->GetModelPath().substr(0, it);
+    const std::string& meshName = actor->GetModelPath().substr(0, it);
     actor->SetMeshes(GetLoadedMeshes(meshName));
 }
 
-std::vector<LoadedMesh> MeshLoadSystem::LoadMeshFromFile(const char* path) {
+std::vector<LoadedMesh> MeshLoadSystem::LoadMeshFromFile(const char* path)
+{
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(path,
-        aiProcess_Triangulate | aiProcess_GenSmoothNormals);
-        
+    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals);
+
     std::vector<LoadedMesh> results;
     if (!scene) {
         std::cerr << "Assimp error: " << importer.GetErrorString() << std::endl;
@@ -136,7 +139,8 @@ std::vector<LoadedMesh> MeshLoadSystem::LoadMeshFromFile(const char* path) {
 
     for (unsigned int meshId = 0; meshId < scene->mNumMeshes; meshId++) {
         const aiMesh* mesh = scene->mMeshes[meshId];
-        if (!mesh) return results;
+        if (!mesh)
+            return results;
 
         bool hasNormals = (mesh->mNormals != nullptr);
         bool hasUV = (mesh->mTextureCoords[0] != nullptr);
@@ -220,8 +224,9 @@ std::vector<LoadedMesh> MeshLoadSystem::LoadMeshFromFile(const char* path) {
     return results;
 }
 
-bool MeshLoadSystem::LoadMeshPositionsAndIndices(const char* path,
-    std::vector<float>& outPositions, std::vector<unsigned int>& outIndices) {
+bool MeshLoadSystem::LoadMeshPositionsAndIndices(const char* path, std::vector<float>& outPositions,
+                                                 std::vector<unsigned int>& outIndices)
+{
     outPositions.clear();
     outIndices.clear();
 
@@ -252,7 +257,8 @@ bool MeshLoadSystem::LoadMeshPositionsAndIndices(const char* path,
     return true;
 }
 
-unsigned int MeshLoadSystem::loadTexture(const char* path) {
+unsigned int MeshLoadSystem::loadTexture(const char* path)
+{
     unsigned int texID;
     glGenTextures(1, &texID);
     glBindTexture(GL_TEXTURE_2D, texID);

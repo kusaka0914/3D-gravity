@@ -53,21 +53,22 @@ private:
     void DrawTalkUI(const UILoadSystem::TextInfo* textInfo);
     void DrawLoading();
 
-    void DrawSceneText(std::string sceneName, std::string UIName, bool isCenterBase, int index,
+    void DrawSceneText(const std::string& sceneName, const std::string& UIName, bool isCenterBase, int index,
                        glm::vec4 color = {255, 255, 255, 255});
-    bool DrawSceneTalkUI(std::string sceneName, std::string UIName);
-    void DrawTextDependsOnGameController(std::string sceneName, std::string UIName, bool isCenterBase);
-    bool DrawSceneTalkUIDependsOnGameController(std::string sceneName, std::string UIName);
-    void DrawSceneTexture(std::string sceneName, std::string UIName, std::string textureName);
-    void DrawLinedUpTexture(std::string sceneName, std::string UIName, std::string textureName, float gap, int count);
+    bool DrawSceneTalkUI(const std::string& sceneName, const std::string& UIName);
+    void DrawTextDependsOnGameController(const std::string& sceneName, const std::string& UIName, bool isCenterBase);
+    bool DrawSceneTalkUIDependsOnGameController(const std::string& sceneName, const std::string& UIName);
+    void DrawSceneTexture(const std::string& sceneName, const std::string& UIName, const std::string& textureName);
+    void DrawLinedUpTexture(const std::string& sceneName, const std::string& UIName, const std::string& textureName,
+                            float gap, int count);
 
     void DrawBG(float x, float y, float width, float height, std::vector<GLfloat> color);
-    void DrawText(float x, float y, float scale, std::string message, bool isCenterBase,
+    void DrawText(float x, float y, float scale, const std::string& message, bool isCenterBase,
                   glm::vec4 color = {255, 255, 255, 255});
     bool SplitText(const std::string& message, std::string& message1, std::string& message2) const;
     void DrawTextLine(const std::string& message, float x, float y, float scale, bool isCenterBase, float yOffset,
                       glm::vec4 color);
-    void DrawTexture(float x, float y, float width, float height, std::string textureName);
+    void DrawTexture(float x, float y, float width, float height, const std::string& textureName);
 
 private:
     std::unique_ptr<UIShader> mUIShaderUnique;

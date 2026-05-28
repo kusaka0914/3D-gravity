@@ -67,7 +67,7 @@ public:
     const std::vector<Stage*>& GetStages() const { return mStages; }
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }
-    std::string GetCurrentStageYamlPath() const { return mCurrentStageYamlPath; }
+    const std::string& GetCurrentStageYamlPath() const { return mCurrentStageYamlPath; }
 
     AudioSystem* GetAudioSystem() const { return mAudioSystem.get(); }
     PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }

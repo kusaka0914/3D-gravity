@@ -19,7 +19,7 @@ ActorLoadSystem::ActorLoadSystem(Game* game) : mGame(game) {}
 
 void ActorLoadSystem::LoadData(bool isLoadPlayer)
 {
-    std::string path = mGame->GetCurrentStageYamlPath();
+    const std::string& path = mGame->GetCurrentStageYamlPath();
 
     LoadPlanets(path.c_str());
     LoadEnemies(path.c_str());

@@ -1,11 +1,11 @@
 #pragma once
 
+#include <GL/glew.h>
+#include <SDL_ttf.h>
 #include <memory>
 #include <string>
-#include <GL/glew.h>
-#include <vector>
 #include <unordered_map>
-#include <SDL_ttf.h>
+#include <vector>
 
 class Game;
 class VertexArray;
@@ -16,7 +16,7 @@ public:
     ~Renderer();
 
 protected:
-    void RegisterTexture(std::string path, std::string name);
+    void RegisterTexture(const std::string& path, const std::string& name);
 
 private:
     void Initialize();

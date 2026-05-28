@@ -340,7 +340,8 @@ void UIRenderer::DrawSkyBox()
     DrawTexture(0.0f, 0.0f, mFbWidth, mFbHeight, "skyBox");
 }
 
-void UIRenderer::DrawSceneText(std::string sceneName, std::string UIName, bool isCenterBase, int index, glm::vec4 color)
+void UIRenderer::DrawSceneText(const std::string& sceneName, const std::string& UIName, bool isCenterBase, int index,
+                               glm::vec4 color)
 {
     const auto textInfo = mUILoadSystem->GetTextInfo(sceneName, UIName);
     if (!textInfo) {
@@ -383,7 +384,7 @@ void UIRenderer::DrawTalkUI(const UILoadSystem::TextInfo* textInfo)
              textInfo->texts[talkUIIndex], false, black);
 }
 
-bool UIRenderer::DrawSceneTalkUI(std::string sceneName, std::string UIName)
+bool UIRenderer::DrawSceneTalkUI(const std::string& sceneName, const std::string& UIName)
 {
     const UILoadSystem::TextInfo* textInfo = mUILoadSystem->GetTextInfo(sceneName, UIName);
     if (!textInfo) {
@@ -398,7 +399,8 @@ bool UIRenderer::DrawSceneTalkUI(std::string sceneName, std::string UIName)
     return false;
 }
 
-void UIRenderer::DrawTextDependsOnGameController(std::string sceneName, std::string UIName, bool isCenterBase)
+void UIRenderer::DrawTextDependsOnGameController(const std::string& sceneName, const std::string& UIName,
+                                                 bool isCenterBase)
 {
     const UILoadSystem::TextInfo* textInfo;
     if (mGame->IsGameControllerConnected()) {
@@ -415,7 +417,7 @@ void UIRenderer::DrawTextDependsOnGameController(std::string sceneName, std::str
              textInfo->texts[0], isCenterBase);
 }
 
-bool UIRenderer::DrawSceneTalkUIDependsOnGameController(std::string sceneName, std::string UIName)
+bool UIRenderer::DrawSceneTalkUIDependsOnGameController(const std::string& sceneName, const std::string& UIName)
 {
     const UILoadSystem::TextInfo* textInfo;
     if (mGame->IsGameControllerConnected()) {
@@ -436,7 +438,8 @@ bool UIRenderer::DrawSceneTalkUIDependsOnGameController(std::string sceneName, s
     return false;
 }
 
-void UIRenderer::DrawSceneTexture(std::string sceneName, std::string UIName, std::string textureName)
+void UIRenderer::DrawSceneTexture(const std::string& sceneName, const std::string& UIName,
+                                  const std::string& textureName)
 {
     const auto textureInfo = mUILoadSystem->GetTextureInfo(sceneName, UIName);
     if (!textureInfo) {
@@ -447,8 +450,8 @@ void UIRenderer::DrawSceneTexture(std::string sceneName, std::string UIName, std
                 mFbHeight * textureInfo->heightRatio, textureName);
 }
 
-void UIRenderer::DrawLinedUpTexture(std::string sceneName, std::string UIName, std::string textureName, float gap,
-                                    int count)
+void UIRenderer::DrawLinedUpTexture(const std::string& sceneName, const std::string& UIName,
+                                    const std::string& textureName, float gap, int count)
 {
     const auto textureInfo = mUILoadSystem->GetTextureInfo(sceneName, UIName);
     if (!textureInfo) {
@@ -486,7 +489,7 @@ void UIRenderer::DrawBG(float x, float y, float width, float height, std::vector
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void UIRenderer::DrawText(float x, float y, float scale, std::string message, bool isCenterBase, glm::vec4 color)
+void UIRenderer::DrawText(float x, float y, float scale, const std::string& message, bool isCenterBase, glm::vec4 color)
 {
     glUseProgram(mUIShader->GetShaderProgram());
 
@@ -583,7 +586,7 @@ void UIRenderer::DrawTextLine(const std::string& message, float x, float y, floa
     glDeleteTextures(1, &tex);
 }
 
-void UIRenderer::DrawTexture(float x, float y, float width, float height, std::string textureName)
+void UIRenderer::DrawTexture(float x, float y, float width, float height, const std::string& textureName)
 {
     glUseProgram(mUIShader->GetShaderProgram());
 
