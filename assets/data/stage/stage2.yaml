@@ -4,19 +4,19 @@ planets:
     color: [1.0, 1.0, 1.0, 1.0]
     model: planet9.obj
     shape : Normal
-    keySpawnCondition: AllBoatPartsCollected
+    rocketSpawnCondition: AllBoatPartsCollected
   # - center: [0.0, 0.0, 0.0]
   #   scale: [8.0, 10.0, 8.0]
   #   color: [1.0, 0.0, 0.0, 1.0]
   #   model: planet.obj
   #   shape : Ellipse
-  #   keySpawnCondition: AllBoatPartsCollected
+  #   rocketSpawnCondition: AllBoatPartsCollected
   - center: [32.0, 0.0, 0.0]
     scale: [4.0, 4.0, 4.0]
     color: [1.0, 1.0, 1.0, 1.0]
     model: planet.obj
     shape : Sphere
-    keySpawnCondition: AllEnemiesDead
+    rocketSpawnCondition: AllEnemiesDead
   - center: [64.0, 0.0, 0.0]
     scale: [4.0, 4.0, 4.0]
     color: [1.0, 1.0, 1.0, 1.0]

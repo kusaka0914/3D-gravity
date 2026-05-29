@@ -11,11 +11,7 @@ class Player;
 
 class Enemy : public CharacterActor {
 public:
-    enum class LifeState {
-        Alive,
-        Dying,
-        Dead
-    };
+    enum class LifeState { Alive, Dying, Dead };
 
     enum class ActionState {
         Idle,
@@ -42,8 +38,14 @@ public:
     void SetDefaultLaunchedTimer(float defaultLaunchedTimer) { mDefaultLaunchedTimer = defaultLaunchedTimer; }
     void SetMoveSpeed(float moveSpeed) { mMoveSpeed = moveSpeed; }
     void SetAttack(float attack) { mAttack = attack; }
-    void SetDefaultAttackMotionTimer(float defaultAttackMotionTimer) { mDefaultAttackMotionTimer = defaultAttackMotionTimer; }
-    void SetDefaultStandByAttackTimer(float defaultStandByAttackTimer) { mDefaultStandByAttackTimer = defaultStandByAttackTimer; }
+    void SetDefaultAttackMotionTimer(float defaultAttackMotionTimer)
+    {
+        mDefaultAttackMotionTimer = defaultAttackMotionTimer;
+    }
+    void SetDefaultStandByAttackTimer(float defaultStandByAttackTimer)
+    {
+        mDefaultStandByAttackTimer = defaultStandByAttackTimer;
+    }
     void SetDetectionRange(float detectionRange) { mDetectionRange = detectionRange; }
     void SetKnockBackSpeed(float knockBackSpeed) { mKnockBackSpeed = knockBackSpeed; }
     void SetAttackSpeed(float attackSpeed) { mAttackSpeed = attackSpeed; }
@@ -51,7 +53,7 @@ public:
     bool GetIsDead() const { return mLifeState == LifeState::Dead; }
 
     int GetBreakCount() const { return mBreakCount; }
-    
+
     float GetHp() const { return mHp; }
     float GetMaxHp() const { return mMaxHp; }
 
@@ -59,30 +61,35 @@ private:
     void UpdateAlive(float deltaTime);
     void UpdateDying(float deltaTime);
 
-    void UpdateBehavior(float deltaTime, Player* player);
+    void UpdateBehavior(float deltaTime);
     void UpdateFacingVec();
-    void UpdateIdle(Player* player);
-    void UpdateTracking(float deltaTime, Player* player);
+    void UpdateIdle();
+    void UpdateTracking(float deltaTime);
     void UpdatePreparingAttack(float deltaTime);
-    void UpdateAttacking(float deltaTime, Player* player);
-    void UpdateKnockedBack(float deltaTime, Player* player);
+    void UpdateAttacking(float deltaTime);
+    void UpdateKnockedBack(float deltaTime);
 
     void StartIdle();
     void StartTracking();
+    void TryStartPreparingAttack();
     void StartPreparingAttack();
+    void TryApplyAttack();
     void StartAttacking();
-    void StartKnockedBack(float knockBackTimer, Player* player);
-    void StartDying(Player* player);
-    
+    void StartKnockedBack(float knockBackTimer);
+    void StartDying();
+
     void FinishLaunched();
     void FinishDying();
 
-    bool IsPlayerInRange(float range, Player* player);
-    bool IsJustBeforeAttack();
+    bool IsPlayerInRange(float range) const;
+    bool IsJustBeforeAttack() const;
+    bool IsProgressing() const { return mAttackMotionTimer >= mDefaultAttackMotionTimer / 2; }
+    bool IsHp0() const { return mHp <= 0.0f; }
+    bool IsAlive() const { return mLifeState == LifeState::Alive; }
 
-    void MoveToPlayer(float deltaTime, Player* player);
-    void MoveDuringAttacking(float deltaTime, Player* player);
-    void MoveDuringKnockBack(float deltaTime, Player* player);
+    void MoveToPlayer(float deltaTime);
+    void MoveDuringAttacking(float deltaTime);
+    void MoveDuringKnockBack(float deltaTime);
     void LaunchIntoAir(float deltaTime);
     void ApplyCounter(Player* player);
     void UpdateInAir(float deltaTime);
@@ -118,4 +125,6 @@ private:
     float mKnockBackTimer;
 
     glm::vec3 mKnockBackFrom;
+
+    Player* mNearestPlayer;
 };

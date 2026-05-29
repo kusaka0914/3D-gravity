@@ -15,17 +15,16 @@ public:
 
     void AddTalkTexts(const std::string& talkTexts) { mTalkTexts.emplace_back(talkTexts); }
 
-    void SetName(std::string name) { mName = name; }
+    void SetName(const std::string& name) { mName = name; }
 
     bool GetIsTalkable() const { return mIsTalkable; }
-    std::string GetName() const { return mName; }
     const std::vector<std::string>& GetTalkTexts() const { return mTalkTexts; }
 
 private:
     void LookNearestPlayer();
     void CheckTalkable();
 
-    Player* FindNearestPlayer();
+    Player* FindNearestPlayer() const;
     bool IsPlayerInTalkableRange(Player* player) const;
 
 private:

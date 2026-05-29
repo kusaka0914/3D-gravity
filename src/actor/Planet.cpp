@@ -1,79 +1,96 @@
 #include "Planet.h"
 #include "Game.h"
-#include "actor/Enemy.h"
+#include "actor/Boat.h"
 #include "actor/BoatParts.h"
+#include "actor/Enemy.h"
 
 Planet::Planet(Game* game)
-    : Actor(game)
-    , mIsAllEnemiesDead(false)
-    , mIsAllBoatPartsCollected(false)
-    , mStageNum(0)
-    , mRemainBoatPartsCount(0)
-    , mColor(1.0f)
-    , mKey(nullptr)
-    , mStar(nullptr)
-    , mCurrentStage(nullptr)
-    , mKeySpawnCondition(KeySpawnCondition::None)
-    , mPlanetShape(PlanetShape::Normal)
+    : Actor(game),
+      mStageNum(0),
+      mRemainBoatPartsCount(0),
+      mColor(1.0f),
+      mKey(nullptr),
+      mStar(nullptr),
+      mCurrentStage(nullptr),
+      mRocketSpawnCondition(RocketSpawnCondition::None),
+      mPlanetShape(PlanetShape::Normal)
 {
 }
 
 void Planet::Initialize()
 {
-    
+    InitRemainBoatPartsCount();
 }
 
-void Planet::UpdateActor(float deltaTime) {  
-    UpdateRemainBoatPartsCount();  
-    CheckKeySpawnCondition();
-}
-
-void Planet::UpdateRemainBoatPartsCount() {
-    if (mBoatParts.empty()) return;
+void Planet::InitRemainBoatPartsCount()
+{
+    if (mBoatParts.empty()) {
+        return;
+    }
 
     mRemainBoatPartsCount = 0;
     for (auto parts : mBoatParts) {
-        if (!parts->GetIsActive()) continue;
+        if (!parts->GetIsActive()) {
+            continue;
+        }
 
         mRemainBoatPartsCount++;
     }
 }
 
-void Planet::CheckKeySpawnCondition() {
-    switch(mKeySpawnCondition) {
-        case KeySpawnCondition::AllEnemiesDead: 
-            if (mIsAllEnemiesDead) break;
-            
-            CheckIsAllEnemiesDead();
-            break;
-        
-        case KeySpawnCondition::AllBoatPartsCollected: 
-            if (mIsAllBoatPartsCollected) break;
+void Planet::OnEnemyDead()
+{
+    bool shouldCheckIsAllEnemiesDead = mRocketSpawnCondition == RocketSpawnCondition::AllEnemiesDead;
+    if (!shouldCheckIsAllEnemiesDead) {
+        return;
+    }
 
-            CheckIsAllBoatPartsCollected();            
-            break;
-        
-        default:
-            break;
+    if (CheckIsAllEnemiesDead()) {
+        StartBoatFocus();
     }
 }
 
-void Planet::CheckIsAllEnemiesDead() {
-    mIsAllEnemiesDead = true;
+bool Planet::CheckIsAllEnemiesDead()
+{
     for (auto enemy : mEnemies) {
-        if (enemy->GetIsDead()) continue;
+        if (enemy->GetIsDead()) {
+            continue;
+        }
 
-        mIsAllEnemiesDead = false;
+        return false;
+    }
+    return true;
+}
+
+void Planet::OnBoatPartsObtained()
+{
+    mRemainBoatPartsCount--;
+
+    bool shouldCheckAllBoatPartsCollected = mRocketSpawnCondition == RocketSpawnCondition::AllBoatPartsCollected;
+    if (!shouldCheckAllBoatPartsCollected) {
         return;
+    }
+
+    if (CheckIsAllBoatPartsCollected()) {
+        StartBoatFocus();
     }
 }
 
-void Planet::CheckIsAllBoatPartsCollected() {
-    mIsAllBoatPartsCollected = true;
-    for (auto parts : mBoatParts) {
-        if (!parts->GetIsActive()) continue;
-
-        mIsAllBoatPartsCollected = false;
-        return;
+void Planet::StartBoatFocus()
+{
+    for (auto boat : mBoats) {
+        boat->StartFocus();
     }
+}
+
+bool Planet::CheckIsAllBoatPartsCollected()
+{
+    for (auto parts : mBoatParts) {
+        if (!parts->GetIsActive()) {
+            continue;
+        }
+
+        return false;
+    }
+    return true;
 }

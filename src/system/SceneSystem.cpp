@@ -16,12 +16,12 @@
 #include <SDL2/SDL_mixer.h>
 
 SceneSystem::SceneSystem(Game* game)
-    : mGame(game)
-    , mFadeTimer(-1.0f)
-    , mClearTimer(-1.0f)
-    , mIsFadeOut(false)
-    , mHasPendingStageChange(false)
-    , mNextStageNum(-1)
+    : mGame(game),
+      mFadeTimer(-1.0f),
+      mClearTimer(-1.0f),
+      mIsFadeOut(false),
+      mHasPendingStageChange(false),
+      mNextStageNum(-1)
 {
     mGameProgressState = std::make_unique<GameProgressState>(game);
     mUIState = std::make_unique<UIState>(game);
@@ -43,35 +43,35 @@ void SceneSystem::OnConfirmPressed()
 
     const auto sceneState = mGameProgressState->GetSceneState();
 
-    switch (sceneState)
-    {
-        case GameProgressState::SceneState::Title:
-            StartOpening();
-            break;
+    switch (sceneState) {
+    case GameProgressState::SceneState::Title:
+        StartOpening();
+        break;
 
-        case GameProgressState::SceneState::Opening:
-            mUIState->IncTalkUIIndex();
-            mGame->GetAudioSystem()->PlaySE("messageSE");
-            break;
+    case GameProgressState::SceneState::Opening:
+        mUIState->IncTalkUIIndex();
+        mGame->GetAudioSystem()->PlaySE("message_se");
+        break;
 
-        case GameProgressState::SceneState::Talking:
-            mUIState->IncTalkUIIndex();
-            mGame->GetAudioSystem()->PlaySE("messageSE");
-            break;
+    case GameProgressState::SceneState::Talking:
+        mUIState->IncTalkUIIndex();
+        mGame->GetAudioSystem()->PlaySE("message_se");
+        break;
 
-        case GameProgressState::SceneState::Playing:
-            TryStartTalkWithNPC();
-            break;
+    case GameProgressState::SceneState::Playing:
+        TryStartTalkWithNPC();
+        break;
 
-        case GameProgressState::SceneState::GameOver:
-            RestartGame();
+    case GameProgressState::SceneState::GameOver:
+        RestartGame();
 
-        default:
-            break;
+    default:
+        break;
     }
 }
 
-void SceneSystem::OnStartPressed() {
+void SceneSystem::OnStartPressed()
+{
     bool operationUIShow = mUIState->GetIsOperationUIShow();
     mUIState->SetIsOperationUIShow(!operationUIShow);
 }
@@ -83,7 +83,8 @@ void SceneSystem::StartOpening()
     mGameProgressState->SetNextSceneState(GameProgressState::SceneState::Opening);
 }
 
-void SceneSystem::RestartGame() {
+void SceneSystem::RestartGame()
+{
     StartPlayingScene();
     mGame->RestartGame();
 }
@@ -91,7 +92,7 @@ void SceneSystem::RestartGame() {
 void SceneSystem::StartPlayingScene()
 {
     mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Playing);
-    
+
     for (Player* player : mGame->GetPlayers()) {
         player->SetInputAvailableTimer(0.15f);
     }
@@ -106,7 +107,7 @@ void SceneSystem::StartTalkWithNPC()
 {
     mUIState->SetCurrentTalkWith(UIState::TalkWith::NPC);
     mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
-    mGame->GetAudioSystem()->PlaySE("messageSE");
+    mGame->GetAudioSystem()->PlaySE("message_se");
 }
 
 void SceneSystem::StartFadeIn()
@@ -162,7 +163,7 @@ void SceneSystem::OnStageClear()
     Mix_HaltMusic();
 
     if (mGame->GetAudioSystem()) {
-        mGame->GetAudioSystem()->PlaySE("clearSE");
+        mGame->GetAudioSystem()->PlaySE("clear_se");
     }
 
     mClearTimer = 12.0f;
@@ -179,7 +180,8 @@ void SceneSystem::OnEnemyLaunched()
     mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
 }
 
-void SceneSystem::OnStrongAttacked() {
+void SceneSystem::OnStrongAttacked()
+{
     if (!mGameProgressState->GetIsFirstBreak() || mGameProgressState->GetIsFirstStrongAttack()) {
         return;
     }
@@ -187,7 +189,8 @@ void SceneSystem::OnStrongAttacked() {
     mGameProgressState->SetIsFirstStrongAttack(true);
 }
 
-void SceneSystem::OnLanded() {
+void SceneSystem::OnLanded()
+{
     if (!mGameProgressState->GetIsFirstStrongAttack() || mUIState->GetIsSpecialAttackTutorialShown()) {
         return;
     }
@@ -197,7 +200,8 @@ void SceneSystem::OnLanded() {
     mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Talking);
 }
 
-void SceneSystem::OnPlayerDied() {
+void SceneSystem::OnPlayerDied()
+{
     mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::GameOver);
 }
 
@@ -236,24 +240,23 @@ void SceneSystem::ApplySceneChange()
 
     const auto nextSceneState = mGameProgressState->GetNextSceneState();
 
-    switch (nextSceneState)
-    {
-        case GameProgressState::SceneState::Opening:
-            mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Opening);
-            mGameProgressState->SetNextSceneState(GameProgressState::SceneState::None);
-            break;
+    switch (nextSceneState) {
+    case GameProgressState::SceneState::Opening:
+        mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Opening);
+        mGameProgressState->SetNextSceneState(GameProgressState::SceneState::None);
+        break;
 
-        case GameProgressState::SceneState::Playing:
-            mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Playing);
-            mGameProgressState->SetNextSceneState(GameProgressState::SceneState::None);
-            mUIState->SetCurrentTalkWith(UIState::TalkWith::None);
-            mGame->ChangeStage(0);
-            mUIState->SetTalkUIIndex(0);
-            mHasPendingStageChange = true;
-            break;
+    case GameProgressState::SceneState::Playing:
+        mGameProgressState->SetCurrentSceneState(GameProgressState::SceneState::Playing);
+        mGameProgressState->SetNextSceneState(GameProgressState::SceneState::None);
+        mUIState->SetCurrentTalkWith(UIState::TalkWith::None);
+        mGame->ChangeStage(0);
+        mUIState->SetTalkUIIndex(0);
+        mHasPendingStageChange = true;
+        break;
 
-        default:
-            break;
+    default:
+        break;
     }
 
     mGame->GetAudioSystem()->TryChangeBGM();

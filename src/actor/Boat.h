@@ -13,6 +13,7 @@ public:
     void UpdateActor(float deltaTime) override;
 
     void StartTravel();
+    void StartFocus();
 
     void SetDestPlanet(Planet* destPlanet) { mDestPlanet = destPlanet; }
     void SetDestStage(int destStage) { mDestStage = destStage; }
@@ -26,11 +27,11 @@ public:
 private:
     void AddFocusComponent();
 
-    void OnShown();
+    void OnShown() const;
 
     void UpdateMoving(float deltaTime);
     void UpdateMovement(float deltaTime);
-    
+
     void FinishMoving();
 
     glm::vec3 CalculateDestPos() const;
@@ -42,7 +43,7 @@ private:
     bool mIsActivePrev;
 
     int mDestStage;
-    
+
     float mTransitionTimer;
     float mProgress;
 
