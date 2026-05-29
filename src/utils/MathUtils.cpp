@@ -1,12 +1,58 @@
 #include "MathUtils.h"
+#include "actor/Actor.h"
 
-float MathUtils::GetYawFromDirection(const glm::vec3& up, const glm::vec3& dir) {
+float MathUtils::GetYawFromDirection(const glm::vec3& up, const glm::vec3& dir) const
+{
     glm::vec3 worldLeft = glm::cross(up, glm::vec3(0, 0, 1));
-    if (glm::length(worldLeft) < 0.01f){
+    if (glm::length(worldLeft) < 0.01f) {
         worldLeft = glm::normalize(glm::cross(up, glm::vec3(0, 1, 0)));
-    }
-    else 
+    } else
         worldLeft = glm::normalize(worldLeft);
     glm::vec3 right = glm::cross(worldLeft, up);
     return std::atan2(-glm::dot(dir, worldLeft), glm::dot(dir, right));
+}
+
+glm::mat4 MathUtils::CreateOrient(Actor* actor) const
+{
+    glm::vec3 upN = glm::normalize(actor->GetUpVec());
+    glm::vec3 worldLeft = glm::cross(upN, glm::vec3(0, 0, 1));
+    if (glm::length(worldLeft) < 0.01f) {
+        worldLeft = glm::normalize(glm::cross(upN, glm::vec3(0, 1, 0)));
+    } else
+        worldLeft = glm::normalize(worldLeft);
+
+    float actorYaw = actor->GetFacingYaw();
+    glm::vec3 fwd = glm::normalize(glm::cross(worldLeft, upN) * std::cos(actorYaw) - std::sin(actorYaw) * worldLeft);
+    glm::vec3 left = glm::normalize(glm::cross(upN, fwd));
+    glm::vec3 right = -left;
+    glm::mat4 orient = glm::mat4(1.0f);
+    orient[0] = glm::vec4(-fwd, 0.0f);
+    orient[1] = glm::vec4(upN, 0.0f);
+    orient[2] = glm::vec4(right, 0.0f);
+    orient[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+    return orient;
+}
+
+glm::mat4 MathUtils::CreateBillBoard(const glm::mat4& viewMat, const Actor* actor, float upMargin, float rightMargin,
+                                     float width, float height) const
+{
+    glm::vec3 cameraPos(glm::inverse(viewMat)[3]);
+    glm::vec3 actorPos = actor->GetPos();
+    glm::vec3 actorUpVec = actor->GetUpVec();
+    glm::vec3 quadCenter = actorPos + actorUpVec * 0.8f;
+    glm::vec3 forward = glm::normalize(cameraPos - quadCenter);
+    glm::vec3 right = glm::normalize(glm::cross(actorUpVec, forward));
+    if (glm::length(right) < 0.01f)
+        right = glm::normalize(glm::cross(actorUpVec, glm::vec3(0, 0, 1)));
+    glm::vec3 upQuad = glm::cross(forward, right);
+
+    glm::mat4 billboard(1.0f);
+    billboard[0] = glm::vec4(right * width, 0.0f);
+    billboard[1] = glm::vec4(-upQuad * height, 0.0f);
+    billboard[2] = glm::vec4(forward, 0.0f);
+    glm::vec3 drawPos = actorPos + actorUpVec * upMargin + right * rightMargin;
+    billboard[3] = glm::vec4(drawPos, 1.0f);
+
+    return billboard;
 }

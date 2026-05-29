@@ -18,14 +18,14 @@ players:
   
 NPCs:
   - pos: [-1.0, 10.5, -8.0]
-    modelPath: spaceSlime.obj
-    name: BoatPartsNPC
+    type: spaceSlime
+    name: RocketGuideNPC
     talkTexts: [こちら惑星マルッコイ行きロケット〜まもなく発射します〜。\nお乗りの方はお急ぎください〜。]
   - pos: [-3.0, 2.0, 0.0]
-    modelPath: spaceSlime.obj
-    name: BoatPartsNPC
+    type: spaceSlime
+    name: BaseGuideNPC
     talkTexts: [ここはロケット発着所！\n他の惑星に行きたいならこの上のロケット乗り場からどうぞ！]
   - pos: [0.0, -2.5, 0.0]
-    modelPath: spaceSlime.obj
-    name: BoatPartsNPC
+    type: spaceSlime
+    name: BackSideNPC
     talkTexts: [ムッ！よくぞ私に気がついた。\n今日から君も裏側のスライムだ。]

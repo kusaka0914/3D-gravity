@@ -1,8 +1,8 @@
 #pragma once
 
-#include <unordered_map>
-#include <string>
 #include <SDL_mixer.h>
+#include <string>
+#include <unordered_map>
 
 class Game;
 
@@ -18,17 +18,18 @@ public:
 
     void AdjustVolume(int volumeBGM, int volumeSE);
     void TryChangeBGM();
-    void PlayBGM(std::string name);
-    void PlaySE(std::string name);
+    void PlayBGM(const std::string& name);
+    void PlaySE(const std::string& name);
+
 private:
     void CreateBGMList();
     void CreateSEList();
-    void AddBGM(std::string path, std::string name);
-    void AddSE(std::string path, std::string name);
+    void AddBGM(const std::string& path, const std::string& name);
+    void AddSE(const std::string& path, const std::string& name);
 
 private:
     Game* mGame;
-    
+
     std::unordered_map<std::string, Mix_Music*> mBGMList;
     std::unordered_map<std::string, Mix_Chunk*> mSEList;
 };

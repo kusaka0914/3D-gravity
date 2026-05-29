@@ -18,21 +18,14 @@ class Star;
 
 class Planet : public Actor {
 public:
-    enum class KeySpawnCondition {
-        AllEnemiesDead,
-        AllBoatPartsCollected,
-        None
-    };
+    enum class RocketSpawnCondition { AllEnemiesDead, AllBoatPartsCollected, None };
 
-    enum class PlanetShape {
-        Normal,
-        Sphere,
-        Ellipse
-    };
+    enum class PlanetShape { Normal, Sphere, Ellipse };
 
     Planet(Game* game);
     void Initialize() override;
-    void UpdateActor(float deltaTime) override;
+    void OnBoatPartsObtained();
+    void OnEnemyDead();
 
     void AddEnemy(Enemy* enemy) { mEnemies.emplace_back(enemy); }
     void AddBoat(Boat* boat) { mBoats.emplace_back(boat); }
@@ -55,33 +48,33 @@ public:
     void SetColor(glm::vec4 color) { mColor = color; }
     void SetKey(Key* key) { mKey = key; }
     void SetStar(Star* star) { mStar = star; }
-    void SetKeySpawnCondition(std::string keySpawnCondition) { 
-        if(keySpawnCondition == "AllEnemiesDead") {
-            mKeySpawnCondition = KeySpawnCondition::AllEnemiesDead;
-        }else if(keySpawnCondition == "AllBoatPartsCollected") {
-            mKeySpawnCondition = KeySpawnCondition::AllBoatPartsCollected;
-        }else {
-            mKeySpawnCondition = KeySpawnCondition::None;
+    void SetRocketSpawnCondition(const std::string& rocketSpawnCondition)
+    {
+        if (rocketSpawnCondition == "AllEnemiesDead") {
+            mRocketSpawnCondition = RocketSpawnCondition::AllEnemiesDead;
+        } else if (rocketSpawnCondition == "AllBoatPartsCollected") {
+            mRocketSpawnCondition = RocketSpawnCondition::AllBoatPartsCollected;
+        } else {
+            mRocketSpawnCondition = RocketSpawnCondition::None;
         }
     }
-    void SetPlanetShape(std::string PlanetShape) { 
-        if(PlanetShape == "Normal") {
+    void SetPlanetShape(const std::string& PlanetShape)
+    {
+        if (PlanetShape == "Normal") {
             mPlanetShape = PlanetShape::Normal;
-        }else if (PlanetShape == "Sphere") {
+        } else if (PlanetShape == "Sphere") {
             mPlanetShape = PlanetShape::Sphere;
-        }else if (PlanetShape == "Ellipse") {
+        } else if (PlanetShape == "Ellipse") {
             mPlanetShape = PlanetShape::Ellipse;
         }
     }
 
     Stage* GetCurrentStage() const { return mCurrentStage; }
-    bool GetIsAllEnemiesDead() const { return mIsAllEnemiesDead; }
-    bool GetIsAllBoatPartsCollected() const { return mIsAllBoatPartsCollected; }
 
-    int GetStageNum() const { return mStageNum; }
     int GetRemainBoatPartsCount() const { return mRemainBoatPartsCount; }
 
     const glm::vec4& GetColor() const { return mColor; }
+
     const std::vector<Enemy*>& GetEnemies() const { return mEnemies; }
     const std::vector<Boat*>& GetBoats() const { return mBoats; }
     const std::vector<BoatParts*>& GetBoatParts() const { return mBoatParts; }
@@ -93,15 +86,12 @@ public:
     PlanetShape GetPlanetShape() const { return mPlanetShape; }
 
 private:
-    void UpdateRemainBoatPartsCount();
-    void CheckKeySpawnCondition();
-    void CheckIsAllEnemiesDead();
-    void CheckIsAllBoatPartsCollected();
+    void InitRemainBoatPartsCount();
+    bool CheckIsAllEnemiesDead();
+    bool CheckIsAllBoatPartsCollected();
+    void StartBoatFocus();
 
 private:
-    bool mIsAllEnemiesDead;
-    bool mIsAllBoatPartsCollected;
-
     int mStageNum;
     int mRemainBoatPartsCount;
 
@@ -118,6 +108,6 @@ private:
     Star* mStar;
     Stage* mCurrentStage;
 
-    KeySpawnCondition mKeySpawnCondition;
+    RocketSpawnCondition mRocketSpawnCondition;
     PlanetShape mPlanetShape;
 };

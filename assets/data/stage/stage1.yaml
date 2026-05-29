@@ -4,13 +4,13 @@ planets:
     color: [1.0, 0.0, 0.0, 1.0]
     model: planet_3.obj
     shape : Sphere
-    keySpawnCondition: AllBoatPartsCollected
+    rocketSpawnCondition: AllBoatPartsCollected
   - center: [32.0, 0.0, 0.0]
     scale: [4.0, 4.0, 4.0]
     color: [0.0, 1.0, 0.0, 1.0]
     model: planet.obj
     shape : Sphere
-    keySpawnCondition: AllEnemiesDead
+    rocketSpawnCondition: AllEnemiesDead
   - center: [64.0, 0.0, 0.0]
     scale: [4.0, 4.0, 4.0]
     color: [0.0, 1.0, 0.0, 1.0]
@@ -198,6 +198,8 @@ boatParts:
 players:
   - pos: [3.0, 7.5, 0.0]
     currentPlanetNum: 0
+  # - pos: [1.0, 9.5, 0.0]
+  #   currentPlanetNum: 0
   
 star:
   - currentPlanetNum : 2
@@ -205,26 +207,26 @@ star:
 
 NPCs:
   - pos: [3.0, 7.5, -2.0]
-    modelPath: spaceSlime.obj
+    type: spaceSlime
     name: BoatPartsNPC
     talkTexts: [星を探している？残念だがこの惑星にはそんなものないぞ。,あー、確か近くの惑星にいいものを持っている\nでっかいやつがいるって噂を聞いたことあるな。,そこに行ってみたらどうだ？,隣の惑星に行くならそこらへんに落ちている\nパーツを拾ってロケットで行くんだな！]
   - pos: [-3.06, -3.69, 6.3]
-    modelPath: spaceSlime.obj
+    type: spaceSlime
     name: CrystalTutorialNPC
     talkTexts: [これはクリスタル！\n攻撃して壊せるよ！,中にアイテムが隠れてるかもしれないから\n見つけたらどんどん壊してね！]
   - pos: [7.14, -3.41, -0.08]
-    modelPath: spaceSlime.obj
+    type: spaceSlime
     name: BigCrystalTutorialNPC
     talkTexts: [大きなクリスタルは空中溜め攻撃で壊せるよ！,空中溜め攻撃はジャンプして強攻撃長押し！\n溜まったら離して！]
   - pos: [-6.95, -3.7, 1.01]
-    modelPath: spaceSlime.obj
+    type: spaceSlime
     name: JumpDodgeTutorialNPC
     talkTexts: [遠い足場に乗りたい時はジャンプした後に回避！]
   - pos: [-1.35, 4.0, 6.8]
-    modelPath: spaceSlime.obj
+    type: spaceSlime
     name: JumpTutorialNPC
     talkTexts: [高い足場に乗りたい時はジャンプ！]
   - pos: [-3.62, 6.6, 2.51]
-    modelPath: spaceSlime.obj
+    type: spaceSlime
     name: WallTutorialNPC
     talkTexts: [緩やかな壁は歩けるんだよぉ〜楽しいねぇ〜]

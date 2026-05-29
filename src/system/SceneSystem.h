@@ -42,9 +42,14 @@ public:
     bool IsStageClear() const { return mGameProgressState->GetSceneState() == GameProgressState::SceneState::StageClear; }
     bool IsGameOver() const { return mGameProgressState->GetSceneState() == GameProgressState::SceneState::GameOver; }
     bool IsGameClear() const { return mGameProgressState->GetSceneState() == GameProgressState::SceneState::GameClear; }
+    bool IsTalkWithOpening() const { return mUIState->GetCurrentTalkWith() == UIState::TalkWith::Opening; }
     bool IsTalkWithMother() const { return mUIState->GetCurrentTalkWith() == UIState::TalkWith::Mother; }
     bool IsTalkWithDoctor() const { return mUIState->GetCurrentTalkWith() == UIState::TalkWith::Doctor; }
     bool IsTalkWithNPC() const { return mUIState->GetCurrentTalkWith() == UIState::TalkWith::NPC; }
+    bool IsBattleTutorialShowing() const { return mUIState->GetCurrentTutorialKind() == UIState::TutorialKind::Battle; }
+    bool IsBreakTutorialShowing() const { return mUIState->GetCurrentTutorialKind() == UIState::TutorialKind::Break; }
+    bool IsJewelTutorialShowing() const { return mUIState->GetCurrentTutorialKind() == UIState::TutorialKind::Jewel; }
+    
     bool GetHasPendingStageChange() const { return mHasPendingStageChange; }
     float GetFadeTimer() const { return mFadeTimer; }
     UIState::TalkWith GetCurrentTalkWith() const { return mUIState->GetCurrentTalkWith(); }

@@ -1,10 +1,10 @@
 #pragma once
 
+#include <btBulletDynamicsCommon.h>
+#include <glm/glm.hpp>
 #include <memory>
 #include <string>
 #include <vector>
-#include <glm/glm.hpp>
-#include <btBulletDynamicsCommon.h>
 
 class Game;
 class Component;
@@ -24,7 +24,6 @@ public:
     virtual void ProcessActor();
 
     void UpdateUpVec();
-    void UpdateFallbackUpVec();
 
     void AddComponent(std::unique_ptr<Component> component);
     void RemoveComponent(std::unique_ptr<Component> component);
@@ -32,10 +31,18 @@ public:
     void SetIsActive(bool isActive) { mIsActive = isActive; }
 
     void SetRadius(float radius) { mRadius = radius; }
-    void SetFacingYaw(float facingYaw) { mFacingYaw = facingYaw; }
+    void SetFacingYaw(float facingYaw)
+    {
+        mFacingYaw = facingYaw;
+        UpdateDirectionVectors();
+    }
 
     void SetPos(const glm::vec3& pos) { mPos = pos; }
-    void SetUpVec(const glm::vec3& upVec) { mUpVec = upVec; }
+    void SetUpVec(const glm::vec3& upVec)
+    {
+        mUpVec = upVec;
+        UpdateDirectionVectors();
+    }
     void SetScale(const glm::vec3& scale) { mScale = scale; }
 
     void SetModelPath(const std::string& modelPath) { mModelPath = modelPath; }
@@ -50,6 +57,9 @@ public:
 
     const glm::vec3& GetPos() const { return mPos; }
     const glm::vec3& GetUpVec() const { return mUpVec; }
+    const glm::vec3& GetForwardVec() const { return mForwardVec; }
+    const glm::vec3& GetLeftVec() const { return mLeftVec; }
+    glm::vec3 GetRightVec() const { return -mLeftVec; }
     const glm::vec3& GetScale() const { return mScale; }
 
     const std::string& GetModelPath() const { return mModelPath; }
@@ -63,6 +73,14 @@ private:
     bool CastRay(const glm::vec3& offset, glm::vec3& outNormal, const btCollisionObject*& outObj);
 
 protected:
+    void UpdateDirectionVectors();
+    virtual bool ShouldUpdateUpVecEveryFrame() const { return false; }
+    virtual void OnUpVecUpdateFailed();
+    void UpdateFallbackUpVec();
+    virtual bool CheckDotAngleSteep(const glm::vec3& hitNormal, const glm::vec3& up) const { return false; };
+    virtual void OnCastSucceeded(){};
+
+protected:
     bool mIsActive;
     bool mIsUpVecInitialized;
 
@@ -71,6 +89,8 @@ protected:
 
     glm::vec3 mPos;
     glm::vec3 mUpVec;
+    glm::vec3 mForwardVec{0.0f, 0.0f, 1.0f};
+    glm::vec3 mLeftVec{-1.0f, 0.0f, 0.0f};
     glm::vec3 mScale;
 
     std::string mModelPath;

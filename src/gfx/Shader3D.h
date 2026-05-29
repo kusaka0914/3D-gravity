@@ -17,6 +17,7 @@ public:
     int GetLocToonStrength() const { return mLocToonStrength; }
     int GetLocRimStrength() const { return mLocRimStrength; }
     int GetLocRimPower() const { return mLocRimPower; }
+
 private:
     int mLocLightPos;
     int mLocLightColor;
