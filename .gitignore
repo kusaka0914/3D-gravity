@@ -1,7 +1,7 @@
 build/
+dist/
 .cursor/
 .vscode/
 .vs/
 
 .DS_Store
-.clang-format
