@@ -12,13 +12,9 @@
 #include <iostream>
 
 Player::Player(Game* game)
-    : CharacterActor(game)
-
-      ,
+    : CharacterActor(game),
       mActionState(ActionState::Idle),
-      mAttackKind(AttackKind::Normal)
-
-      ,
+      mAttackKind(AttackKind::Normal),
       mDodgePressed(false),
       mDodgePressedPrev(false),
       mJumpPressed(false),
@@ -33,16 +29,12 @@ Player::Player(Game* game)
       mIsDodged(true),
       mIsStrongAttackHit(false),
       mIsStrongAttacked(false),
-      mIsCharged(false)
-
-      ,
+      mIsCharged(false),
       mCurrentPlanetNum(0),
       mAttackComboIndex(0),
       mRestartPlanetIndex(0),
       mPlayerNum(1),
-      mJewelCount(2)
-
-      ,
+      mJewelCount(2),
       mCameraYaw(0.0f),
       mCameraPitch(0.4f),
       mMoveForward(0.0f),
@@ -91,17 +83,13 @@ Player::Player(Game* game)
       mStrongAttack(50.0f),
       mStrongAttackSpeed(100.0f),
       mRayCastTimer(0.5f),
-      mInputAvailableTimer(-1.0f)
-
-      ,
+      mInputAvailableTimer(-1.0f),
       mForwardVec(0.0f, 0.0f, 1.0f),
       mLeftVec(-1.0f, 0.0f, 0.0f),
       mKnockBackFrom(0.0f),
       mRestartPos(0.0f),
       mDodgeDir(0.0f),
-      mRayCasts()
-
-      ,
+      mRayCasts(),
       mTalkableNPC(nullptr)
 {
 }
@@ -166,6 +154,15 @@ void Player::ProcessKeyboard()
         mMoveLeft -= 1.0f;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         mMoveLeft += 1.0f;
+
+    constexpr float cameraKeySpeed = 0.02f;
+
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        mCameraYaw += cameraKeySpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        mCameraYaw -= cameraKeySpeed;
+    }
 
     glm::vec2 moveInput(mMoveLeft, mMoveForward);
 
