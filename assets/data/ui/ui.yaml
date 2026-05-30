@@ -103,7 +103,7 @@ default:
     type: text
     posRatio: [0.0125, 0.9333]
     scaleRatio: [0.0002, 1.0]
-    text: ["WASD: 移動 Space:ジャンプ U:回避 K:強攻撃 J:弱攻撃 N:スペシャル攻撃 M:回復 空中でK長押し→離す:溜め攻撃"]
+    text: ["WASD: 移動 矢印キー←→: カメラ回転 Space:ジャンプ U:回避 K:強攻撃 J:弱攻撃 N:スペシャル攻撃 M:回復 空中でK長押し→離す:溜め攻撃"]
   
   - id: operationSupportHiddenText
     type: text
