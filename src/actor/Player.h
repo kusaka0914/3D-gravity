@@ -28,7 +28,7 @@ public:
     void ProcessActor() override;
     void UpdateActor(float deltaTime) override;
 
-    void ApplyDamage(float damage, glm::vec3 knockBackFrom);
+    void ApplyDamage(Enemy* enemy, float deltaTime);
     void OnBoatArrived(Boat* boat);
     void Restart();
     bool IsInvincible() const { return mInvincibleTimer > 0.0f; };

@@ -465,7 +465,9 @@ void Player::UpdateJewelTimer(float deltaTime)
     if (mJewelTimer >= 0.0f)
         return;
 
-    mJewelCount++;
+    if (mJewelCount < 2) {
+        mJewelCount++;
+    }
 }
 
 void Player::UpdateComboKeepTimer(float deltaTime)
@@ -530,7 +532,7 @@ void Player::StartDodging()
 
     mDodgeTimer = (mOnGround) ? mDodgeDuration : mDodgeDuration * 4.0f;
     mDodgeCooldown = mDodgeCooldownTime;
-    mInvincibleTimer = mDodgeDuration + 0.5f;
+    mInvincibleTimer = mDodgeDuration;
 
     mVelocity = glm::vec3(0.0f);
     mGame->GetAudioSystem()->PlaySE("dodge_se");
@@ -823,7 +825,6 @@ void Player::SpecialAttack(float deltaTime)
 
         if (enemy->GetOnGround()) {
             enemy->ApplyBreak(deltaTime);
-            mGame->GetAudioSystem()->PlaySE("destroy_se");
         }
     }
 }
@@ -839,10 +840,22 @@ void Player::Recover()
     }
 }
 
-void Player::ApplyDamage(float damage, glm::vec3 knockBackFrom)
+void Player::ApplyDamage(Enemy* enemy, float deltaTime)
 {
-    mHp -= damage;
-    mKnockBackFrom = knockBackFrom;
+    if (mActionState == ActionState::Dodging) {
+        enemy->ApplyBreak(deltaTime, true);
+        if (mJewelCount < 2) {
+            mJewelCount++;
+        }
+        return;
+    }
+
+    if (mInvincibleTimer >= 0.0f) {
+        return;
+    }
+
+    mHp -= enemy->GetAttack();
+    mKnockBackFrom = enemy->GetPos();
     mDamageTimer = mDefaultDamageTimer;
     mInvincibleTimer = mDefaultInvincibleTimer;
     mActionState = ActionState::KnockedBack;

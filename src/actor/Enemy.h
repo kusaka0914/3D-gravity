@@ -25,7 +25,7 @@ public:
     void UpdateActor(float deltaTime) override;
 
     void ApplyDamage(float damage, Player* player);
-    void ApplyBreak(float deltaTime);
+    void ApplyBreak(float deltaTim, bool isAllBrea = false);
 
     void SetIsBoss(bool isBoss) { mIsBoss = isBoss; }
     void SetIsStrongAttacked(bool isStrongAttacked) { mIsStrongAttacked = isStrongAttacked; }
@@ -56,6 +56,7 @@ public:
 
     float GetHp() const { return mHp; }
     float GetMaxHp() const { return mMaxHp; }
+    float GetAttack() const { return mAttack; }
 
 private:
     void UpdateAlive(float deltaTime);
@@ -73,7 +74,7 @@ private:
     void StartTracking();
     void TryStartPreparingAttack();
     void StartPreparingAttack();
-    void TryApplyAttack();
+    void TryApplyAttack(float deltaTime);
     void StartAttacking();
     void StartKnockedBack(float knockBackTimer);
     void StartDying();

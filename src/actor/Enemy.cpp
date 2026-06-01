@@ -166,7 +166,7 @@ void Enemy::UpdatePreparingAttack(float deltaTime)
 void Enemy::UpdateAttacking(float deltaTime)
 {
     MoveDuringAttacking(deltaTime);
-    TryApplyAttack();
+    TryApplyAttack(deltaTime);
 
     mAttackMotionTimer -= deltaTime;
     if (mAttackMotionTimer <= 0.0f) {
@@ -174,15 +174,14 @@ void Enemy::UpdateAttacking(float deltaTime)
     }
 }
 
-void Enemy::TryApplyAttack()
+void Enemy::TryApplyAttack(float deltaTime)
 {
     constexpr float hitRangeMargin = 0.2f;
     const float hitRange = mRadius + hitRangeMargin;
 
-    const bool canApplyDamage =
-        IsPlayerInRange(hitRange) && !mIsHit && !mNearestPlayer->IsInvincible() && IsProgressing();
+    const bool canApplyDamage = IsPlayerInRange(hitRange) && !mIsHit && IsProgressing();
     if (canApplyDamage) {
-        mNearestPlayer->ApplyDamage(mAttack, mPos);
+        mNearestPlayer->ApplyDamage(this, deltaTime);
         mIsHit = true;
     }
 }
@@ -381,13 +380,20 @@ void Enemy::ApplyDamage(float damage, Player* player)
     }
 }
 
-void Enemy::ApplyBreak(float deltaTime)
+void Enemy::ApplyBreak(float deltaTime, bool isAllBreak)
 {
     if (!IsAlive()) {
         return;
     }
 
-    mBreakCount--;
+    if (isAllBreak) {
+        while (mBreakCount) {
+            mBreakCount--;
+        }
+    } else {
+        mBreakCount--;
+    }
+    mGame->GetAudioSystem()->PlaySE("destroy_se");
 
     if (mBreakCount <= 0) {
         LaunchIntoAir(deltaTime);
