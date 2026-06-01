@@ -4,18 +4,19 @@
 #include "Stage.h"
 
 #include "actor/Actor.h"
+#include "actor/Planet.h"
 #include "actor/Player.h"
 
+#include "system/ActorLoadSystem.h"
 #include "system/AudioSystem.h"
 #include "system/CameraSystem.h"
 #include "system/MeshLoadSystem.h"
-#include "system/ActorLoadSystem.h"
 #include "system/PhysicsSystem.h"
-#include "system/UILoadSystem.h"
 #include "system/SceneSystem.h"
+#include "system/UILoadSystem.h"
 
-#include "gfx/UIRenderer.h"
 #include "gfx/Renderer3D.h"
+#include "gfx/UIRenderer.h"
 
 #include "utils/MathUtils.h"
 
@@ -23,23 +24,23 @@
 #include <iostream>
 
 Game::Game()
-    : mWindow(nullptr)
-    , mSdlController(nullptr)
-    , mCurrentStage(nullptr)
-    , mCurrentStageNum(0)
-    , mHitStopTimer(-1.0f)
-    , mLastTime(0.0)
-    , mReloadKeyPressedPrev(false)
-    , mUIReloadKeyPressedPrev(false)
-    , mAPressedPrev(false)
-    , mIsPlayer2Joined(false)
-    , mCurrentStageYamlPath("../assets/data/house.yaml")
+    : mWindow(nullptr),
+      mSdlController(nullptr),
+      mCurrentStage(nullptr),
+      mCurrentStageNum(0),
+      mHitStopTimer(-1.0f),
+      mLastTime(0.0),
+      mReloadKeyPressedPrev(false),
+      mUIReloadKeyPressedPrev(false),
+      mAPressedPrev(false),
+      mIsPlayer2Joined(false),
+      mCurrentStageYamlPath("../assets/data/stage/house.yaml")
 {
 }
 
 Game::~Game() = default;
 
-bool Game::Initialize() 
+bool Game::Initialize()
 {
     if (!InitializeGLFW()) {
         return false;
@@ -59,10 +60,10 @@ bool Game::Initialize()
     return true;
 }
 
-bool Game::InitializeGLFW() 
+bool Game::InitializeGLFW()
 {
     if (!glfwInit()) {
-        std::cerr << "Failed to init GLFW" << std::endl;
+        // std::cerr << "Failed to init GLFW" << std::endl;
         return false;
     }
 
@@ -70,13 +71,14 @@ bool Game::InitializeGLFW()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-//     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-//     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-//     mWindow = glfwCreateWindow(mode->width, mode->height, "Engine", monitor, nullptr);
+    //     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    //     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    //     mWindow = glfwCreateWindow(mode->width, mode->height, "Engine",
+    //     monitor, nullptr);
 
     mWindow = glfwCreateWindow(800, 450, "Slime'sSkyTravel", nullptr, nullptr);
     if (!mWindow) {
-        std::cerr << "Failed to create window" << std::endl;
+        // std::cerr << "Failed to create window" << std::endl;
         glfwTerminate();
         return false;
     }
@@ -85,7 +87,7 @@ bool Game::InitializeGLFW()
 
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
-        std::cerr << "Failed to init GLEW" << std::endl;
+        // std::cerr << "Failed to init GLEW" << std::endl;
         glfwDestroyWindow(mWindow);
         glfwTerminate();
         return false;
@@ -94,7 +96,7 @@ bool Game::InitializeGLFW()
     return true;
 }
 
-void Game::InitializeGameController() 
+void Game::InitializeGameController()
 {
     if (SDL_Init(SDL_INIT_GAMECONTROLLER) == 0) {
         CheckGameControllerConnected();
@@ -185,7 +187,7 @@ void Game::ProcessGameInput()
     }
     mReloadKeyPressedPrev = reloadKeyPressed;
 
-    const bool uiReloadKeyPressed = glfwGetKey(mWindow, GLFW_KEY_U) == GLFW_PRESS;
+    const bool uiReloadKeyPressed = glfwGetKey(mWindow, GLFW_KEY_I) == GLFW_PRESS;
     if (uiReloadKeyPressed && !mUIReloadKeyPressedPrev) {
         mUIRenderer->GetUILoadSystem()->Initialize();
     }
@@ -196,8 +198,8 @@ void Game::ProcessGameInput()
     //     CreatePlayer2();
     // }
 
-    const bool aPressed = (mSdlController &&
-        SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_A)) || glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS;
+    const bool aPressed = (mSdlController && SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_A)) ||
+                          glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS;
 
     if (aPressed && !mAPressedPrev) {
         mSceneSystem->OnConfirmPressed();
@@ -205,15 +207,14 @@ void Game::ProcessGameInput()
     mAPressedPrev = aPressed;
 
     const bool escapePressed = glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS;
-    const bool backPressed = mSdlController &&
-        SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_BACK);
+    const bool backPressed = mSdlController && SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_BACK);
 
     if (escapePressed || backPressed) {
         FinishGame();
     }
 
-    const bool startPressed= mSdlController &&
-        SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_START);
+    const bool startPressed =
+        mSdlController && SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_START);
     if (startPressed && !mStartPressedPrev) {
         mSceneSystem->OnStartPressed();
     }
@@ -287,13 +288,8 @@ void Game::AddActor(std::unique_ptr<Actor> actor)
 
 void Game::RemoveActor(Actor* actor)
 {
-    auto iter = std::find_if(
-        mActors.begin(),
-        mActors.end(),
-        [actor](const std::unique_ptr<Actor>& current) {
-            return current.get() == actor;
-        }
-    );
+    auto iter = std::find_if(mActors.begin(), mActors.end(),
+                             [actor](const std::unique_ptr<Actor>& current) { return current.get() == actor; });
 
     if (iter != mActors.end()) {
         std::iter_swap(iter, mActors.end() - 1);
@@ -322,7 +318,7 @@ void Game::ChangeStage(int stageNum)
 
     mCurrentStage = mStages[stageNum];
     mCurrentStageNum = stageNum;
-    mCurrentStageYamlPath = "../assets/data/stage" + std::to_string(stageNum) + ".yaml";
+    mCurrentStageYamlPath = "../assets/data/stage/stage" + std::to_string(stageNum) + ".yaml";
 }
 
 void Game::CheckGameControllerConnected()
@@ -380,7 +376,7 @@ void Game::OnStarObtained()
 
 void Game::OnEnemyLaunched()
 {
-    mAudioSystem->PlaySE("breakSE");
+    mAudioSystem->PlaySE("break_se");
     mSceneSystem->OnEnemyLaunched();
 }
 
@@ -394,15 +390,50 @@ void Game::OnLanded()
     mSceneSystem->OnLanded();
 }
 
-void Game::OnPlayerDied() {
+void Game::OnPlayerDied()
+{
     mSceneSystem->OnPlayerDied();
 }
 
-void Game::FinishGame() {
+void Game::OnBoatPartsObtained()
+{
+    mAudioSystem->PlaySE("pickup_se");
+    mPlayers[0]->GetCurrentPlanet()->OnBoatPartsObtained();
+}
+
+Player* Game::FindNearestPlayer(Actor* actor) const
+{
+    if (!actor) {
+        return nullptr;
+    }
+
+    Player* nearestPlayer = nullptr;
+    float nearestDist = std::numeric_limits<float>::max();
+
+    for (Player* player : mPlayers) {
+        if (!player) {
+            continue;
+        }
+
+        const glm::vec3 toPlayer = player->GetPos() - actor->GetPos();
+        const float dist = glm::dot(toPlayer, toPlayer);
+
+        if (dist < nearestDist) {
+            nearestDist = dist;
+            nearestPlayer = player;
+        }
+    }
+
+    return nearestPlayer;
+}
+
+void Game::FinishGame()
+{
     glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
 }
 
-void Game::RestartGame() {
+void Game::RestartGame()
+{
     for (auto player : mPlayers) {
         player->Restart();
     }

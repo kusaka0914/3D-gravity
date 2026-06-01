@@ -10,12 +10,13 @@ public:
     void Update(float deltaTime) override;
     void StartFocus();
 
-    bool GetIsFocused() const { return mIsFocused; }
     float GetFocusTimer() const { return mFocusTimer; }
 
 private:
-    
+    void UpdateFocusTimer(float deltaTime);
+    void TryShowOwner();
+    void TryFinishFocus();
+
 private:
-    bool mIsFocused;
     float mFocusTimer;
 };

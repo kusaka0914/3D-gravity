@@ -16,11 +16,11 @@ public:
     int GetLocDiffuseTexture() const { return mLocDiffuseTexture; }
 
 protected:
-    unsigned int CreateShaderProgram(const std::string& vertexPath, const std::string& fragmentPath);
+    unsigned int CreateShaderProgram(const std::string& vertexPath, const std::string& fragmentPath) const;
 
 private:
-    std::string GetShaderSrcFromFile(const std::string& path);
-    unsigned int CompileShader(unsigned int type, const std::string& source);
+    std::string GetShaderSrcFromFile(const std::string& path) const;
+    unsigned int CompileShader(unsigned int type, const std::string& source) const;
 
 protected:
     unsigned int mShaderProgram;

@@ -9,7 +9,6 @@ public:
     CollectableComponent(Actor* owner, int updateOrder = 100);
 
     void Update(float deltaTime) override;
-
     bool GetIsObtained() const { return mIsObtained; }
 
 private:

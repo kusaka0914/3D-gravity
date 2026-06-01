@@ -1,4 +1,7 @@
 boatParts :
+  - type: common
+    scale: 1.0
+
   - type: parts1
     modelPath: rocketParts1.obj
   - type: parts2

@@ -1,0 +1,16 @@
+npcs:
+  - type: spaceSlime
+    modelPath: spaceSlime.obj
+    scale: 0.25
+  - type: motherSlime
+    modelPath: motherSlime.obj
+    scale: 0.25
+  - type: player
+    modelPath: player.obj
+    scale: 0.25
+  - type: badMotherSlime
+    modelPath: badMotherSlime.obj
+    scale: 0.25
+  - type: doctorSlime
+    modelPath: doctorSlime.obj
+    scale: 0.25

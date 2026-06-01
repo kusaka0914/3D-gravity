@@ -1,18 +1,15 @@
 #include "UIShader.h"
 #include <GL/glew.h>
 
-UIShader::UIShader()
-    :Shader()
+UIShader::UIShader() : Shader()
 {
     Initialize();
 }
 
-UIShader::~UIShader()
-{
-    
-}
+UIShader::~UIShader() {}
 
-void UIShader::Initialize() {
+void UIShader::Initialize()
+{
     mShaderProgram = CreateShaderProgram("../shaders/vertex.glsl", "../shaders/UIfragment.glsl");
     mLocModel = glGetUniformLocation(mShaderProgram, "model");
     mLocView = glGetUniformLocation(mShaderProgram, "view");

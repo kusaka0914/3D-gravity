@@ -1,10 +1,10 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-#include <string>
 #include <GLFW/glfw3.h>
 #include <SDL.h>
+#include <memory>
+#include <string>
+#include <vector>
 
 class Actor;
 class Player;
@@ -40,6 +40,9 @@ public:
     void OnStrongAttacked();
     void OnLanded();
     void OnPlayerDied();
+    void OnBoatPartsObtained();
+
+    Player* FindNearestPlayer(Actor* actor) const;
 
     void FinishGame();
     void RestartGame();
@@ -59,14 +62,12 @@ public:
     SDL_GameController* GetSdlController() const { return mSdlController; }
 
     const std::vector<Player*>& GetPlayers() const { return mPlayers; }
-    Player* GetMainPlayer() const {
-        return mPlayers.empty() ? nullptr : mPlayers[0];
-    }
+    Player* GetMainPlayer() const { return mPlayers.empty() ? nullptr : mPlayers[0]; }
 
     const std::vector<Stage*>& GetStages() const { return mStages; }
     Stage* GetCurrentStage() const { return mCurrentStage; }
     int GetCurrentStageNum() const { return mCurrentStageNum; }
-    std::string GetCurrentStageYamlPath() const { return mCurrentStageYamlPath; }
+    const std::string& GetCurrentStageYamlPath() const { return mCurrentStageYamlPath; }
 
     AudioSystem* GetAudioSystem() const { return mAudioSystem.get(); }
     PhysicsSystem* GetPhysicsSystem() const { return mPhysicsSystem.get(); }
