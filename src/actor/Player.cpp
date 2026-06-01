@@ -59,7 +59,7 @@ Player::Player(Game* game)
       mAttackCooldownRemaining(0.0f),
       mAttackCooldown(0.3f),
       mLastAttackCooldown(1.0f),
-      mAttackMoveLockRemaining(0.0f),
+      mAttackMoveLockRemaining(-1.0f),
       mAttackDodgeLockRemaining(0.0f),
       mAttackMotionTimer(-1.0f),
       mDefaultAttackMotionTimer(0.3f),
@@ -90,7 +90,8 @@ Player::Player(Game* game)
       mRestartPos(0.0f),
       mDodgeDir(0.0f),
       mRayCasts(),
-      mTalkableNPC(nullptr)
+      mTalkableNPC(nullptr),
+      mAirAttackFloatingTimer(-1.0f)
 {
 }
 
@@ -284,8 +285,9 @@ void Player::UpdateIdle(float deltaTime)
         StartCharging(deltaTime);
         return;
     }
-
-    ApplyGravity(deltaTime);
+    if (mAirAttackFloatingTimer <= 0.0f) {
+        ApplyGravity(deltaTime);
+    }
 
     bool canStartDodging = mDodgeCooldown <= 0.0f && mAttackDodgeLockRemaining <= 0.0f && !mIsDodged && mDodgePressed &&
                            !mDodgePressedPrev;
@@ -294,7 +296,7 @@ void Player::UpdateIdle(float deltaTime)
         return;
     }
 
-    bool canStartAttacking = mAttackCooldownRemaining <= 0.0f && mOnGround &&
+    bool canStartAttacking = mAttackCooldownRemaining <= 0.0f &&
                              ((mAttackPressed || mWideAttackPressed) && !mAttackPressedPrev && !mWideAttackPressedPrev);
     if (canStartAttacking) {
         StartAttacking(deltaTime);
@@ -422,6 +424,10 @@ void Player::UpdateKnockedBack(float deltaTime)
 
 void Player::UpdateTimer(float deltaTime)
 {
+    if (mAirAttackFloatingTimer > 0.0f) {
+        mAirAttackFloatingTimer -= deltaTime;
+    }
+
     if (mDodgeCooldown > 0.0f)
         mDodgeCooldown -= deltaTime;
 
@@ -522,11 +528,10 @@ void Player::StartDodging()
     else
         mDodgeDir = -mFacingForwardVec;
 
-    mDodgeTimer = mDodgeDuration;
+    mDodgeTimer = (mOnGround) ? mDodgeDuration : mDodgeDuration * 4.0f;
     mDodgeCooldown = mDodgeCooldownTime;
-    mInvincibleTimer = mDodgeDuration;
+    mInvincibleTimer = mDodgeDuration + 0.5f;
 
-    mDodgeStartHeight = glm::length(mPos - mCurrentPlanet->GetPos());
     mVelocity = glm::vec3(0.0f);
     mGame->GetAudioSystem()->PlaySE("dodge_se");
     mIsDodged = true;
@@ -535,6 +540,21 @@ void Player::StartDodging()
 void Player::StartAttacking(float deltaTime)
 {
     mActionState = ActionState::Attacking;
+
+    if (!mOnGround && mWideAttackPressed) {
+        mAttackKind = AttackKind::Wide;
+        mAttackRange = mWideAttackRange;
+        mAttackAngle = mWideAttackAngle;
+        mAttackCooldownRemaining = mAttackCooldown;
+        mAttack = mWideAttack / 2.0f;
+        mAirAttackFloatingTimer = 0.5f;
+        Attack(deltaTime);
+        return;
+    }
+
+    if (!mOnGround) {
+        return;
+    }
 
     if (mAttackPressed) {
         mAttackKind = AttackKind::Normal;
@@ -592,7 +612,8 @@ void Player::FinishCharging()
 
 void Player::MoveDuringDodging(float deltaTime)
 {
-    const float dodgeSpeed = mDodgeDistance / mDodgeDuration;
+    const float dodgeSpeed =
+        (mOnGround) ? (mDodgeDistance / mDodgeDuration) : (mDodgeDistance / (mDodgeDuration * 4.0f));
     const glm::vec3 moveDelta = mDodgeDir * dodgeSpeed * deltaTime;
     glm::vec3 desiredPos = mPos + moveDelta;
 
@@ -673,7 +694,7 @@ void Player::Attack(float deltaTime)
     std::vector<Enemy*> hitEnemies = FindHitEnemies();
     if (hitEnemies.empty()) {
         StartAfterAttackReaction();
-        GetGame()->GetAudioSystem()->PlaySE("attack_miss_se");
+        mGame->GetAudioSystem()->PlaySE("attack_miss_se");
 
         if (mAttackComboIndex != 3)
             return;
@@ -684,8 +705,26 @@ void Player::Attack(float deltaTime)
 
     if (mAttackKind != AttackKind::Strong) {
         StartAfterAttackReaction();
-        for (Enemy* enemy : hitEnemies)
-            enemy->ApplyDamage(mAttack, this);
+        if (mOnGround) {
+            for (Enemy* enemy : hitEnemies) {
+                enemy->ApplyDamage(mAttack, this);
+            }
+        } else {
+            bool isHit = false;
+            for (Enemy* enemy : hitEnemies) {
+                if (enemy->GetOnGround()) {
+                    continue;
+                }
+                enemy->ApplyDamage(mAttack, this);
+                isHit = true;
+            }
+            if (isHit) {
+                mGame->GetAudioSystem()->PlaySE("attack_se");
+            } else {
+                mGame->GetAudioSystem()->PlaySE("attack_miss_se");
+            }
+            return;
+        }
 
         if (mAttackComboIndex != 3) {
             mGame->GetAudioSystem()->PlaySE("attack_se");
@@ -725,8 +764,17 @@ void Player::StartAfterAttackReaction()
         return;
     }
 
-    if (mAttackKind == AttackKind::Wide && mAttackComboIndex == 3) {
+    if (mAttackComboIndex != 3) {
+        return;
+    }
+
+    if (mAttackKind == AttackKind::Normal) {
+        mAttackMoveLockRemaining = 1.0f;
+    }
+
+    if (mAttackKind == AttackKind::Wide && mOnGround) {
         mAttackCooldownRemaining = mLastAttackCooldown;
+        mAttackMoveLockRemaining = 0.8f;
     }
 }
 

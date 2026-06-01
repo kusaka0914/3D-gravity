@@ -14,21 +14,21 @@ players:
     dodgeDuration: 0.1
     dodgeCooldownTime: 0.3
     dodgeDistance: 3.0
-    normalAttackRange: 3.2
+    normalAttackRange: 2.6
     normalAttackAngle: 6.283
-    normalAttack: 10
-    wideAttackRange: 2.8
+    normalAttack: 20
+    wideAttackRange: 2.0
     wideAttackAngle: 2.2
     wideAttack: 5
-    strongAttackRange: 3.2
+    strongAttackRange: 2.6
     strongAttack: 50
-    strongAttackSpeed: 100.0
+    strongAttackSpeed: 50.0
     specialAttackCooldown: 30.0
     defaultInvincibleTimer: 2.0
     defaultDamageTimer: 1.0
     defaultAttackMotionTimer: 0.1
-    attackCooldown: 0.3
+    attackCooldown: 0.15
     lastAttackCooldown: 1.0
-    defaultAttackPressTimer: 0.5
-    chargeMoveSpeed: 6.0
+    defaultAttackPressTimer: 1.0
+    chargeMoveSpeed: 3.0
     defaultStrongAttackTimer: 0.06

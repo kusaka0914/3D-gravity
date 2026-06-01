@@ -125,13 +125,13 @@ default:
     type: text
     posRatio: [0.5, 0.5]
     scaleRatio: [0.0003125, 1.0]
-    text: ["会話: A"]
+    text: ["会話: Y"]
 
   - id: talkableTextForKeyBoard
     type: text
     posRatio: [0.5, 0.5]
     scaleRatio: [0.0003125, 1.0]
-    text: ["会話: Space"]
+    text: ["会話: J"]
   
   - id: remainPartsText
     type: text

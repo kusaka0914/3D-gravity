@@ -274,7 +274,7 @@ bool Enemy::IsJustBeforeAttack() const
         return false;
     }
 
-    constexpr float justBeforeAttackTime = 0.5f;
+    constexpr float justBeforeAttackTime = 1.0f;
     return mStandByAttackTimer <= justBeforeAttackTime;
 }
 

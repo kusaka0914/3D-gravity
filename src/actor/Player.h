@@ -220,6 +220,7 @@ private:
     float mAttackDodgeLockRemaining;
     float mAttackMotionTimer;
     float mDefaultAttackMotionTimer;
+    float mAirAttackFloatingTimer;
     float mJewelTimer;
     float mSpecialAttackCooldown;
     float mAttackPressTimer;

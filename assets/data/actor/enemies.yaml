@@ -30,5 +30,5 @@ enemies:
     breakCountMax: 3
     radius: 1.5
     defaultStandByAttackTimer: 3.0
-    defaultAttackMotionTimer: 1.5
-    attackSpeed: 3.0
+    defaultAttackMotionTimer: 0.5
+    attackSpeed: 9.0

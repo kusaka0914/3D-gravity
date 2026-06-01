@@ -27,14 +27,14 @@ Game::Game()
     : mWindow(nullptr),
       mSdlController(nullptr),
       mCurrentStage(nullptr),
-      mCurrentStageNum(0),
+      mCurrentStageNum(1),
       mHitStopTimer(-1.0f),
       mLastTime(0.0),
       mReloadKeyPressedPrev(false),
       mUIReloadKeyPressedPrev(false),
       mAPressedPrev(false),
       mIsPlayer2Joined(false),
-      mCurrentStageYamlPath("../assets/data/stage/house.yaml")
+      mCurrentStageYamlPath("../assets/data/stage/stage1.yaml")
 {
 }
 
@@ -198,8 +198,8 @@ void Game::ProcessGameInput()
     //     CreatePlayer2();
     // }
 
-    const bool aPressed = (mSdlController && SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_A)) ||
-                          glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS;
+    const bool aPressed = (mSdlController && SDL_GameControllerGetButton(mSdlController, SDL_CONTROLLER_BUTTON_Y)) ||
+                          glfwGetKey(mWindow, GLFW_KEY_J) == GLFW_PRESS;
 
     if (aPressed && !mAPressedPrev) {
         mSceneSystem->OnConfirmPressed();
